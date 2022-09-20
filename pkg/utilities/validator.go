@@ -3,6 +3,8 @@ package utilities
 import (
 	"bytes"
 	"fmt"
+
+	"github.com/go-playground/validator/v10"
 )
 
 // ErrorField contains information on JSON validation errors.
@@ -29,4 +31,24 @@ func (err *ErrorValidation) Error() string {
 		buffer.WriteString(item.Error())
 	}
 	return buffer.String()
+}
+
+var structValidator = validator.New()
+
+// ValidateStruct will validate a struct and list all deficiencies.
+func ValidateStruct(body any) error {
+	var validationErr ErrorValidation
+	if err := structValidator.Struct(body); err != nil {
+		for _, issue := range err.(validator.ValidationErrors) {
+			var ev ErrorField
+			ev.Field = issue.Field()
+			ev.Tag = issue.Tag()
+			ev.Value = issue.Param()
+			validationErr.Errors = append(validationErr.Errors, &ev)
+		}
+	}
+	if validationErr.Errors == nil {
+		return nil
+	}
+	return &validationErr
 }
