@@ -15,8 +15,6 @@
         - [Quiz Core](#quiz-core)
         - [CQL Query](#cql-query)
     - [Responses Table Schema](#responses-table-schema)
-        - [User Defined Type(s)](#user-defined-types)
-            - [Answers](#answers)
         - [Quizzes](#quizzes)
         - [CQL Query](#cql-query)
  
@@ -119,31 +117,26 @@ The query to generate the user table can be found [here](quiz.cql).
 
 ## Responses Table Schema
 
-### User Defined Type(s)
-
-##### Answers
-
-A users answer card to a quiz.
-The rows indices are the question numbers and the columns indices are the selected option numbers.
-
-| Name (Struct) | Data Type (Struct) | Column Name | Column Type             | Description                                          |
-|---------------|--------------------|-------------|-------------------------|------------------------------------------------------|
-| Response      | [ ][ ] int         | response    | list<frozen<list<int>>> | [Question Number][List of options indices selected]. |
-
 ### Quizzes
 
 This `struct` creates a representation of the user account table.
 
-| Name (Struct) | Data Type (Struct) | Column Name | Column Type      | Description                                         |
-|---------------|--------------------|-------------|------------------|-----------------------------------------------------|
-| Username      | string             | username    | text             | Username of the test taker. Compound Partition Key. |
-| Quiz_ID       | string             | quiz_id     | uuid             | Taken quiz's id. Compound Partition Key.            |
-| Score         | float64            | score       | double           | Score for this submission. Clustering Key.          |
-| Responses     | Response           | responses   | frozen<answers>, | Recorded responses for the submission.              |
+| Name (Struct) | Data Type (Struct) | Column Name | Column Type              | Description                                         |
+|---------------|--------------------|-------------|--------------------------|-----------------------------------------------------|
+| Username      | string             | username    | text                     | Username of the test taker. Compound Partition Key. |
+| Quiz_ID       | string             | quiz_id     | uuid                     | Taken quiz's id. Compound Partition Key.            |
+| Score         | float64            | score       | double                   | Score for this submission. Clustering Key.          |
+| Responses     | Response           | responses   | frozen<list<list<int>>>, | Recorded responses for the submission.              |
 
-The Compound Primary/Partition Key (`username`, `quiz_id`) should be unique enough to help distribute the records evenly
-across the cluster nodes. The rationale behind the selection of this key is that there will be more users taking the quizzes than users who
-are also authors and requesting statistics of their quizzes. The Clustering Index of `score` will sort the records on each node by `score`.
+It would not be an arbitrary assumption that some quizzes will be more popular than others, leading to a hot partition. The
+Compound Primary/Partition Key (`username`, `quiz_id`) should be unique enough to help distribute the records evenly
+across the cluster nodes. The rationale behind the selection of this key is there will be more users taking the
+quizzes than users who are also authors and requesting statistics of their quizzes. A Clustering Index of `score` will
+sort the records on each node by `score`.
+
+A secondary index will be constructed on just the `quiz_id` column. This is an ideal candidate for a secondary index because
+of its perceived high cardinality. When a quiz author requests statistics for their published quiz by its `quiz_id`,
+this index will be used to retrieve all the required records.
 
 ### CQL Query
 The query to generate the user table can be found [here](responses.cql).

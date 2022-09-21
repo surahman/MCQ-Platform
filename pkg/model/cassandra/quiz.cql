@@ -17,3 +17,17 @@ CREATE TABLE IF NOT EXISTS mcq_platform.quizzes (
     is_published    boolean,                        // Status indicating whether the quiz can be viewed or taken by other users.
     PRIMARY KEY ( (quiz_id), author )
 );
+
+
+-- Insertion example.
+INSERT INTO mcq_platform.quizzes (quiz_id, author, title, questions, is_published)
+VALUES (8748e21a-3a00-11ed-a261-0242ac120002,
+        'user-1',
+        'Quiz Title',
+        [{description: 'Question Description', options: ['one', 'two', 'three'], answers: [1]}],
+        false)
+IF NOT EXISTS ;
+
+-- Retrieval example.
+SELECT * FROM mcq_platform.quizzes
+WHERE quiz_id = 8748e21a-3a00-11ed-a261-0242ac120002;
