@@ -73,6 +73,9 @@ export CASSANDRA_AUTHENTICATION.USERNAME=admin
 export CASSANDRA_AUTHENTICATION.PASSWORD=root
 ```
 
+### Design Documentation
+The technology selection case study and table schema design documentation can be found [here](../model/cassandra).
+
 <br/>
 
 ## Redis
