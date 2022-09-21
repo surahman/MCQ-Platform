@@ -12,7 +12,7 @@ override the settings in the configuration files. The configuration files are al
 ## Table of contents
 
 
-
+---
 
 ## Locations
 
@@ -27,6 +27,7 @@ The configuration loader will search for the configurations in the following ord
 
 <br/>
 
+---
 
 ## Apache Cassandra
 
@@ -77,13 +78,16 @@ export CASSANDRA_AUTHENTICATION.PASSWORD=root
 
 <br/>
 
+---
+
 ### Redis
 Redis will be used as an in-memory, fault-tolerant, and replicated cache.
 
 The expected file name is `RedisConfig.yaml`.
 
-
 <br/>
+
+---
 
 ### Authentication
 Configurations in this file will be used to setup all authentication settings (password hashing key etc.).

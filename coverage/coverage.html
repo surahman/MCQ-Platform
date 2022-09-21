@@ -59,11 +59,13 @@
 				
 				<option value="file1">github.com/surahman/mcq-platform/pkg/config/cassandra.go (87.5%)</option>
 				
-				<option value="file2">github.com/surahman/mcq-platform/pkg/config/constants.go (0.0%)</option>
+				<option value="file2">github.com/surahman/mcq-platform/pkg/config/config.go (100.0%)</option>
 				
-				<option value="file3">github.com/surahman/mcq-platform/pkg/config/testdata.go (100.0%)</option>
+				<option value="file3">github.com/surahman/mcq-platform/pkg/config/constants.go (0.0%)</option>
 				
-				<option value="file4">github.com/surahman/mcq-platform/pkg/utilities/validator.go (100.0%)</option>
+				<option value="file4">github.com/surahman/mcq-platform/pkg/config/testdata.go (100.0%)</option>
+				
+				<option value="file5">github.com/surahman/mcq-platform/pkg/utilities/validator.go (100.0%)</option>
 				
 				</select>
 			</div>
@@ -121,7 +123,7 @@ type CassandraConfig struct {
 }
 
 // newCassandraConfig creates a blank configuration struct for Cassandra.
-func newCassandraConfig() *CassandraConfig <span class="cov1" title="1">{
+func newCassandraConfig() *CassandraConfig <span class="cov3" title="2">{
         return &amp;CassandraConfig{}
 }</span>
 
@@ -155,6 +157,40 @@ func (cfg *CassandraConfig) Load(fs afero.Fs) (err error) <span class="cov10" ti
 		
 		<pre class="file" id="file2" style="display: none">package config
 
+import (
+        "errors"
+
+        "github.com/spf13/afero"
+)
+
+// Type is an enum for the type of configuration file to be created.
+type Type uint16
+
+// Enum values indicating the configuration types.
+const (
+        Cassandra = iota
+        Redis
+        Authorization
+)
+
+// IConfig is the base configuration type interface.
+type IConfig interface {
+        Load(afero.Fs) error // Loads the configuration file from a supplied file system.
+}
+
+// Factory will return a blank config struct to be populated.
+func Factory(configType Type) (IConfig, error) <span class="cov10" title="2">{
+        switch configType </span>{
+        case Cassandra:<span class="cov1" title="1">
+                return newCassandraConfig(), nil</span>
+        default:<span class="cov1" title="1">
+                return nil, errors.New("invalid config type provided")</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package config
+
 const (
         // Configuration file directories
         configEtcDir  = "/etc/CassandraTutorial.conf/"
@@ -183,7 +219,7 @@ func GetCassandraFileName() string <span class="cov0" title="0">{
 }</span>
 </pre>
 		
-		<pre class="file" id="file3" style="display: none">package config
+		<pre class="file" id="file4" style="display: none">package config
 
 // CassandraConfigTestData will return a map of test data containing valid and invalid Cassandra configs.
 func CassandraConfigTestData() map[string]string <span class="cov8" title="1">{
@@ -285,7 +321,7 @@ connection:
 }</span>
 </pre>
 		
-		<pre class="file" id="file4" style="display: none">package utilities
+		<pre class="file" id="file5" style="display: none">package utilities
 
 import (
         "bytes"
