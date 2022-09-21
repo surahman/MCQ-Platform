@@ -1,5 +1,11 @@
 package config
 
+import (
+	"github.com/spf13/afero"
+	"github.com/spf13/viper"
+	"github.com/surahman/mcq-platform/pkg/utilities"
+)
+
 // CassandraConfig is the configuration container for connecting to the Cassandra cluster
 type CassandraConfig struct {
 	Authentication struct {
@@ -22,4 +28,31 @@ type CassandraConfig struct {
 // newCassandraConfig creates a blank configuration struct for Cassandra.
 func newCassandraConfig() *CassandraConfig {
 	return &CassandraConfig{}
+}
+
+// Load will attempt to load configurations from a file on a file system and then overwrite values using environment variables.
+func (cfg *CassandraConfig) Load(fs afero.Fs) (err error) {
+	viper.SetFs(fs)
+	viper.SetConfigName(cassandraConfigFileName)
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath(configEtcDir)
+	viper.AddConfigPath(configHomeDir)
+	viper.AddConfigPath(".")
+
+	viper.SetEnvPrefix(cassandraPrefix)
+	viper.AutomaticEnv()
+
+	if err = viper.ReadInConfig(); err != nil {
+		return
+	}
+
+	if err = viper.Unmarshal(cfg); err != nil {
+		return
+	}
+
+	if err = utilities.ValidateStruct(cfg); err != nil {
+		return
+	}
+
+	return nil
 }
