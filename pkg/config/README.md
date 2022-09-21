@@ -11,8 +11,7 @@ override the settings in the configuration files. The configuration files are al
 
 ## Table of contents
 
-
----
+<br/>
 
 ## Locations
 
@@ -26,8 +25,6 @@ The configuration loader will search for the configurations in the following ord
 | Environment variables    | Finally, the configurations will be loaded from environment variables and override configuration files |
 
 <br/>
-
----
 
 ## Apache Cassandra
 
@@ -78,18 +75,15 @@ export CASSANDRA_AUTHENTICATION.PASSWORD=root
 
 <br/>
 
----
-
-### Redis
+## Redis
 Redis will be used as an in-memory, fault-tolerant, and replicated cache.
 
 The expected file name is `RedisConfig.yaml`.
 
 <br/>
 
----
 
-### Authentication
+## Authentication
 Configurations in this file will be used to setup all authentication settings (password hashing key etc.).
 
 The expected file name is `AuthenticationConfig.yaml`.
