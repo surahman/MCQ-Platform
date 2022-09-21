@@ -1,0 +1,12 @@
+authentication:
+  username: admin
+  password: root
+keyspace:
+  name: mcq_platform
+  replication_class: SimpleStrategy
+  replication_factor: 3
+connection:
+  consistency: quorum
+  cluster_ip: [127.0.0.1]
+  proto_version: 4
+  timeout: 10

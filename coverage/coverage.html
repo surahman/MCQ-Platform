@@ -57,7 +57,15 @@
 				
 				<option value="file0">github.com/surahman/mcq-platform/cmd/main.go (0.0%)</option>
 				
-				<option value="file1">github.com/surahman/mcq-platform/pkg/utilities/validator.go (100.0%)</option>
+				<option value="file1">github.com/surahman/mcq-platform/pkg/config/cassandra.go (87.5%)</option>
+				
+				<option value="file2">github.com/surahman/mcq-platform/pkg/config/config.go (100.0%)</option>
+				
+				<option value="file3">github.com/surahman/mcq-platform/pkg/config/constants.go (0.0%)</option>
+				
+				<option value="file4">github.com/surahman/mcq-platform/pkg/config/testdata.go (100.0%)</option>
+				
+				<option value="file5">github.com/surahman/mcq-platform/pkg/utilities/validator.go (100.0%)</option>
 				
 				</select>
 			</div>
@@ -87,7 +95,233 @@ func main() {<span class="cov0" title="0">
 }</span>
 </pre>
 		
-		<pre class="file" id="file1" style="display: none">package utilities
+		<pre class="file" id="file1" style="display: none">package config
+
+import (
+        "github.com/spf13/afero"
+        "github.com/spf13/viper"
+        "github.com/surahman/mcq-platform/pkg/utilities"
+)
+
+// CassandraConfig is the configuration container for connecting to the Cassandra cluster
+type CassandraConfig struct {
+        Authentication struct {
+                Username string `json:"username,omitempty" yaml:"username,omitempty" mapstructure:"username" validate:"required"`
+                Password string `json:"password,omitempty" yaml:"password,omitempty" mapstructure:"password" validate:"required"`
+        } `json:"authentication,omitempty" yaml:"authentication,omitempty" mapstructure:"authentication"`
+        Keyspace struct {
+                Name              string `json:"name,omitempty" yaml:"name,omitempty" mapstructure:"name" validate:"required"`
+                ReplicationClass  string `json:"replication_class,omitempty" yaml:"replication_class,omitempty" mapstructure:"replication_class" validate:"required"`
+                ReplicationFactor int    `json:"replication_factor,omitempty" yaml:"replication_factor,omitempty" mapstructure:"replication_factor" validate:"required,numeric,min=1"`
+        } `json:"keyspace,omitempty" yaml:"keyspace,omitempty" mapstructure:"keyspace"`
+        Connection struct {
+                Consistency  string   `json:"consistency,omitempty" yaml:"consistency,omitempty" mapstructure:"consistency" validate:"required"`
+                ClusterIP    []string `json:"cluster_ip,omitempty" yaml:"cluster_ip,omitempty" mapstructure:"cluster_ip" validate:"required,min=1"`
+                ProtoVersion int      `json:"proto_version,omitempty" yaml:"proto_version,omitempty" mapstructure:"proto_version" validate:"required,numeric,min=4"`
+                Timeout      int      `json:"timeout,omitempty" yaml:"timeout,omitempty" mapstructure:"timeout" validate:"required,numeric,min=1"`
+        } `json:"connection,omitempty" yaml:"connection,omitempty" mapstructure:"connection"`
+}
+
+// newCassandraConfig creates a blank configuration struct for Cassandra.
+func newCassandraConfig() *CassandraConfig <span class="cov3" title="2">{
+        return &amp;CassandraConfig{}
+}</span>
+
+// Load will attempt to load configurations from a file on a file system and then overwrite values using environment variables.
+func (cfg *CassandraConfig) Load(fs afero.Fs) (err error) <span class="cov10" title="9">{
+        viper.SetFs(fs)
+        viper.SetConfigName(cassandraConfigFileName)
+        viper.SetConfigType("yaml")
+        viper.AddConfigPath(configEtcDir)
+        viper.AddConfigPath(configHomeDir)
+        viper.AddConfigPath(".")
+
+        viper.SetEnvPrefix(cassandraPrefix)
+        viper.AutomaticEnv()
+
+        if err = viper.ReadInConfig(); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov10" title="9">if err = viper.Unmarshal(cfg); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov10" title="9">if err = utilities.ValidateStruct(cfg); err != nil </span><span class="cov8" title="7">{
+                return
+        }</span>
+
+        <span class="cov3" title="2">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package config
+
+import (
+        "errors"
+
+        "github.com/spf13/afero"
+)
+
+// Type is an enum for the type of configuration file to be created.
+type Type uint16
+
+// Enum values indicating the configuration types.
+const (
+        Cassandra = iota
+        Redis
+        Authorization
+)
+
+// IConfig is the base configuration type interface.
+type IConfig interface {
+        Load(afero.Fs) error // Loads the configuration file from a supplied file system.
+}
+
+// Factory will return a blank config struct to be populated.
+func Factory(configType Type) (IConfig, error) <span class="cov10" title="2">{
+        switch configType </span>{
+        case Cassandra:<span class="cov1" title="1">
+                return newCassandraConfig(), nil</span>
+        default:<span class="cov1" title="1">
+                return nil, errors.New("invalid config type provided")</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package config
+
+const (
+        // Configuration file directories
+        configEtcDir  = "/etc/CassandraTutorial.conf/"
+        configHomeDir = "$HOME/.CassandraTutorial/"
+
+        // Configuration file names
+        cassandraConfigFileName = "CassandraConfig.yaml"
+
+        // Environment variables
+        cassandraPrefix = "CASSANDRA"
+)
+
+// GetEtcDir returns the configuration directory in Etc.
+func GetEtcDir() string <span class="cov0" title="0">{
+        return configEtcDir
+}</span>
+
+// GetHomeDir returns the configuration directory in users home.
+func GetHomeDir() string <span class="cov0" title="0">{
+        return configHomeDir
+}</span>
+
+// GetCassandraFileName returns the Cassandra configuration file name.
+func GetCassandraFileName() string <span class="cov0" title="0">{
+        return cassandraConfigFileName
+}</span>
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package config
+
+// CassandraConfigTestData will return a map of test data containing valid and invalid Cassandra configs.
+func CassandraConfigTestData() map[string]string <span class="cov8" title="1">{
+        testData := make(map[string]string)
+
+        testData["empty"] = ``
+        testData["valid"] = `
+authentication:
+  username: admin
+  password: root
+keyspace:
+  name: mcq_platform
+  replication_class: SimpleStrategy
+  replication_factor: 3
+connection:
+  consistency: quorum
+  cluster_ip: [127.0.0.1]
+  proto_version: 4
+  timeout: 10`
+        testData["password_empty"] = `
+authentication:
+  username: admin
+  password:
+keyspace:
+  name: mcq_platform
+  replication_class: SimpleStrategy
+  replication_factor: 3
+connection:
+  consistency: quorum
+  cluster_ip: [127.0.0.1]
+  proto_version: 4
+  timeout: 10`
+        testData["username_empty"] = `
+authentication:
+  username:
+  password: root
+keyspace:
+  name: mcq_platform
+  replication_class: SimpleStrategy
+  replication_factor: 3
+connection:
+  consistency: quorum
+  cluster_ip: [127.0.0.1]
+  proto_version: 4
+  timeout: 10`
+        testData["keyspace_empty"] = `
+authentication:
+  username: admin
+  password: root
+keyspace:
+  name:
+  replication_class: SimpleStrategy
+  replication_factor: 3
+connection:
+  consistency: quorum
+  cluster_ip: [127.0.0.1]
+  proto_version: 4
+  timeout: 10`
+        testData["consistency_missing"] = `
+authentication:
+  username: admin
+  password: root
+keyspace:
+  name: mcq_platform
+  replication_class: SimpleStrategy
+  replication_factor: 3
+connection:
+  cluster_ip: [127.0.0.1]
+  proto_version: 4
+  timeout: 10`
+        testData["ip_empty"] = `
+authentication:
+  username: admin
+  password: root
+keyspace:
+  name: mcq_platform
+  replication_class: SimpleStrategy
+  replication_factor: 3
+connection:
+  consistency: quorum
+  cluster_ip: []
+  proto_version: 4
+  timeout: 10`
+        testData["timeout_zero"] = `
+authentication:
+  username: admin
+  password: root
+keyspace:
+  name: mcq_platform
+  replication_class: SimpleStrategy
+  replication_factor: 3
+connection:
+  consistency: quorum
+  cluster_ip: [127.0.0.1]
+  proto_version: 4
+  timeout: 0`
+
+        return testData
+}</span>
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package utilities
 
 import (
         "bytes"
@@ -104,7 +338,7 @@ type ErrorField struct {
 }
 
 // Error will output the validation error for a single structs data member.
-func (err *ErrorField) Error() string <span class="cov10" title="7">{
+func (err *ErrorField) Error() string <span class="cov6" title="7">{
         return fmt.Sprintf("Field: %s, Tag: %s, Value: %s\n", err.Field, err.Tag, err.Value)
 }</span>
 
@@ -114,21 +348,21 @@ type ErrorValidation struct {
 }
 
 // Error will output the validation error for all struct data members.
-func (err *ErrorValidation) Error() string <span class="cov6" title="3">{
+func (err *ErrorValidation) Error() string <span class="cov4" title="3">{
         var buffer bytes.Buffer
-        for _, item := range err.Errors </span><span class="cov6" title="3">{
+        for _, item := range err.Errors </span><span class="cov4" title="3">{
                 buffer.WriteString(item.Error())
         }</span>
-        <span class="cov6" title="3">return buffer.String()</span>
+        <span class="cov4" title="3">return buffer.String()</span>
 }
 
 var structValidator = validator.New()
 
 // ValidateStruct will validate a struct and list all deficiencies.
-func ValidateStruct(body any) error <span class="cov9" title="6">{
+func ValidateStruct(body any) error <span class="cov8" title="15">{
         var validationErr ErrorValidation
-        if err := structValidator.Struct(body); err != nil </span><span class="cov8" title="5">{
-                for _, issue := range err.(validator.ValidationErrors) </span><span class="cov10" title="7">{
+        if err := structValidator.Struct(body); err != nil </span><span class="cov8" title="12">{
+                for _, issue := range err.(validator.ValidationErrors) </span><span class="cov10" title="22">{
                         var ev ErrorField
                         ev.Field = issue.Field()
                         ev.Tag = issue.Tag()
@@ -136,10 +370,10 @@ func ValidateStruct(body any) error <span class="cov9" title="6">{
                         validationErr.Errors = append(validationErr.Errors, &amp;ev)
                 }</span>
         }
-        <span class="cov9" title="6">if validationErr.Errors == nil </span><span class="cov1" title="1">{
+        <span class="cov8" title="15">if validationErr.Errors == nil </span><span class="cov4" title="3">{
                 return nil
         }</span>
-        <span class="cov8" title="5">return &amp;validationErr</span>
+        <span class="cov8" title="12">return &amp;validationErr</span>
 }
 </pre>
 		
