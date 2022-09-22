@@ -6,6 +6,9 @@ import (
 	"github.com/surahman/mcq-platform/pkg/utilities"
 )
 
+// Ensure full IConfig interface implementation
+var _ IConfig = &CassandraConfig{}
+
 // CassandraConfig is the configuration container for connecting to the Cassandra cluster
 type CassandraConfig struct {
 	Authentication struct {
