@@ -9,9 +9,9 @@ CREATE TYPE IF NOT EXISTS mcq_platform.answers (
 
 -- Responses table creation.
 CREATE TABLE IF NOT EXISTS mcq_platform.responses (
-    username text,                              // Username of the test taker.
-    quiz_id uuid,                               // Taken quiz's id.
-    score double,                               // Score for this submission.
+    username text,                                      // Username of the test taker.
+    quiz_id uuid,                                       // Taken quiz's id.
+    score double,                                       // Score for this submission.
     responses frozen<list<list<int>>>,                  // Recorded responses for the submission.
     PRIMARY KEY ( (username, quiz_id), score)
 )

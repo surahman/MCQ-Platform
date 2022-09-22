@@ -50,15 +50,15 @@ As such, Apache Cassandra fits these requirements perfectly:
 
 This `struct` embeds the `UserAccount` `struct` to create a representation of the user account table.
 
-| Name (Struct) | Data Type (Struct) | Column Name | Column Type | Description                                                                     |
-|---------------|--------------------|-------------|-------------|---------------------------------------------------------------------------------|
-| Account_ID    | string             | account_id  | text        | The account id unique identifier. Partition Key and Clustering Key.             |
-| Username      | string             | username    | text        | The username unique identifier. Partition Key and Clustering Key.               |
-| Password      | string             | password    | text        | User's hashed password.                                                         |
-| FirstName     | string             | first_name  | text        | User's first name.                                                              |
-| LastName      | string             | last_name   | text        | User's last name.                                                               |
-| Email         | string             | email       | text        | Email address.                                                                  |
-| IsDeleted     | bool               | is_deleted  | boolean     | Indicator as to whether the account is deleted. Prevents username reassignment. |
+| Name (Struct) | Data Type (Struct) | Column Name | Column Type | Description                                                                                              |
+|---------------|--------------------|-------------|-------------|----------------------------------------------------------------------------------------------------------|
+| Account_ID    | string             | account_id  | text        | The account id unique identifier is a SHA3-256 hash of the `username`. Partition Key and Clustering Key. |
+| Username      | string             | username    | text        | The username unique identifier. Partition Key and Clustering Key.                                        |
+| Password      | string             | password    | text        | User's hashed password.                                                                                  |
+| FirstName     | string             | first_name  | text        | User's first name.                                                                                       |
+| LastName      | string             | last_name   | text        | User's last name.                                                                                        |
+| Email         | string             | email       | text        | Email address.                                                                                           |
+| IsDeleted     | bool               | is_deleted  | boolean     | Indicator as to whether the account is deleted. Prevents username reassignment.                          |
 
 The Primary/Partition Key (`username`) might result in a hot partition. To potentially alleviate this issue the column
 `account_id` has been created and is a SHA3-256 hash of `username`. This will allow the creation of a Compound
@@ -67,7 +67,7 @@ generate the consistent hash to use in the queries.
 
 ### User Account
 
-This struct is created to be exposed for use with the HTTP request handlers. This ensures consistency with the `User` `struct`.
+This struct is created to be exposed for use with the HTTP handlers. This ensures consistency with the `User` `struct`.
 It contains the `Username`, `Password`, `FirstName`, `LastName`, and `Email` fields.
 
 ### CQL Query
@@ -95,11 +95,12 @@ This `struct` embeds the `QuizCore` `struct` to create a representation of the q
 
 | Name (Struct) | Data Type (Struct) | Column Name  | Column Type                    | Description                                                               |
 |---------------|--------------------|--------------|--------------------------------|---------------------------------------------------------------------------|
-| Quiz_ID       | string             | quiz_id      | uuid                           | Account id unique identifier. Partition Key.                              |
+| Quiz_ID       | gocql.UUID         | quiz_id      | uuid                           | Account id unique identifier. Partition Key.                              |
 | Author        | string             | author       | text                           | Username of the quiz creator. Clustering Key.                             |
 | Title         | string             | title        | text                           | Description of the quiz.                                                  |
 | Questions     | [ ] Question       | questions    | frozen<list<frozen<question>>> | A list of `question` UDTs in the quiz.                                    |
-| IsPublished   | string             | is_published | text                           | Status indicating whether the quiz can be viewed or taken by other users. |
+| IsPublished   | bool               | is_published | boolean                        | Status indicating whether the quiz can be viewed or taken by other users. |
+| IsDeleted     | bool               | is_deleted   | boolean                        | Status indicating whether the quiz has been deleted.                      |
 
 Since the Primary/Partition Key (`quiz_id`) is a `UUID`, it should help distribute the records evenly across the cluster
 nodes. Quizzes are requested by their unique `quiz_id`'s. The Clustering Index of `author` should sort the records on
@@ -107,8 +108,9 @@ each node by `author`.
 
 ### Quiz Core
 
-This struct is created to be exposed for use with the HTTP request handlers. This ensures consistency with the `Quiz` `struct`.
-It contains the `Author`, `Title`, `FirstName`, `LastName`, and `Email` fields.
+This struct is created to be exposed for use with the HTTP handlers. This ensures consistency with the `Quiz` `struct`.
+It contains the `Title` and `Question` fields and is the actual data used to create as well as what is presented when
+viewing a quiz.
 
 ### CQL Query
 The query to generate the user table can be found [here](quiz.cql).
@@ -117,16 +119,16 @@ The query to generate the user table can be found [here](quiz.cql).
 
 ## Responses Table Schema
 
-### Quizzes
+### Responses
 
-This `struct` creates a representation of the user account table.
+This `struct` creates a representation of the responses table.
 
 | Name (Struct) | Data Type (Struct) | Column Name | Column Type              | Description                                         |
 |---------------|--------------------|-------------|--------------------------|-----------------------------------------------------|
 | Username      | string             | username    | text                     | Username of the test taker. Compound Partition Key. |
-| Quiz_ID       | string             | quiz_id     | uuid                     | Taken quiz's id. Compound Partition Key.            |
+| QuizID        | gocql.UUID         | quiz_id     | uuid                     | Taken quiz's id. Compound Partition Key.            |
 | Score         | float64            | score       | double                   | Score for this submission. Clustering Key.          |
-| Responses     | Response           | responses   | frozen<list<list<int>>>, | Recorded responses for the submission.              |
+| Responses     | QuizResponse       | responses   | frozen<list<list<int>>>, | Recorded responses for the submission.              |
 
 It would not be an arbitrary assumption that some quizzes will be more popular than others, leading to a hot partition. The
 Compound Primary/Partition Key (`username`, `quiz_id`) should be unique enough to help distribute the records evenly

@@ -1,6 +1,6 @@
 package model_cassandra
 
-// User represents an account and is a row in user table.
+// User represents a users account and is a row in user table.
 type User struct {
 	*UserAccount
 	AccountID string `json:"account_id,omitempty" yaml:"account_id,omitempty"`
