@@ -36,8 +36,8 @@ A NoSQL database is ideal for this application for the following reasons:
 
 As such, Apache Cassandra fits these requirements perfectly:
 * Supports querying a table data through the `CQL` language.
-* Consistency is tunable at the query level. A `Quorum` based consistency is adequate for most tables whereas the `User`
-  table can be set to `All` in the queries that access the table.
+* Consistency is tunable at the query level. A `Local Quorum` based consistency is adequate for most tables whereas the
+  `User` table can be set to `Quorum` in the queries that access the table.
 * Multi-master architecture that provides high availability with minimal downtime.
 * Architecture also provides excellent performance for both read and write operations as it can coordinate multiple
   writes at a time.

@@ -9,9 +9,9 @@ type User struct {
 
 // UserAccount is the core user account information.
 type UserAccount struct {
-	Username  string `json:"username,omitempty" yaml:"username,omitempty" validate:"required,min=8,alphanum"`
-	Password  string `json:"password,omitempty" yaml:"password,omitempty" validate:"required,min=8,max=32"`
-	FirstName string `json:"first_name,omitempty" yaml:"first_name,omitempty" validate:"required"`
-	LastName  string `json:"last_name,omitempty" yaml:"last_name,omitempty" validate:"required"`
-	Email     string `json:"email,omitempty" yaml:"email,omitempty" validate:"required,email"`
+	Username  string `json:"username,omitempty" cql:"username,omitempty" validate:"required,min=8,alphanum"`
+	Password  string `json:"password,omitempty" cql:"password,omitempty" validate:"required,min=8,max=32"`
+	FirstName string `json:"first_name,omitempty" cql:"first_name,omitempty" validate:"required"`
+	LastName  string `json:"last_name,omitempty" cql:"last_name,omitempty" validate:"required"`
+	Email     string `json:"email,omitempty" cql:"email,omitempty" validate:"required,email"`
 }
