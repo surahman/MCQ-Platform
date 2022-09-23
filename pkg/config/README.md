@@ -49,6 +49,14 @@ All the configuration items below are _required_.
 | ↳ proto_version      | ↳ `.PROTO_VERSION`         | int          | Connection protocol version.                                                                  |
 | ↳ timeout            | ↳ `.TIMEOUT`               | int          | Connection timeout in seconds.                                                                |
 
+:warning: **_Consistency_** :warning:
+
+It is highly advised that the consistency level be set to `Quorum`. `Quorum` provides a good balance between read and
+write performance thereby providing an appropriate balance between consistency and availability. Setting the level to
+`All` can negatively impact read and write performance.
+
+A balance between consistency and availability is vital to mitigate data inconsistencies with user account credentials.
+
 #### Example Configuration File
 
 ```yaml
@@ -72,6 +80,9 @@ connection:
 export CASSANDRA_AUTHENTICATION.USERNAME=admin
 export CASSANDRA_AUTHENTICATION.PASSWORD=root
 ```
+
+### Design Documentation
+The technology selection case study and table schema design documentation can be found [here](../model/cassandra).
 
 <br/>
 
