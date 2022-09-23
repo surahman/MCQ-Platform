@@ -3,7 +3,7 @@ package config
 import (
 	"github.com/spf13/afero"
 	"github.com/spf13/viper"
-	"github.com/surahman/mcq-platform/pkg/utilities"
+	"github.com/surahman/mcq-platform/pkg/validator"
 )
 
 // Ensure full IConfig interface implementation
@@ -53,7 +53,7 @@ func (cfg *CassandraConfig) Load(fs afero.Fs) (err error) {
 		return
 	}
 
-	if err = utilities.ValidateStruct(cfg); err != nil {
+	if err = validator.ValidateStruct(cfg); err != nil {
 		return
 	}
 
