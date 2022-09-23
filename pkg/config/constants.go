@@ -7,6 +7,7 @@ const (
 
 	// Configuration file names
 	cassandraConfigFileName = "CassandraConfig.yaml"
+	loggerConfigFileName    = "LoggerConfig.yaml"
 
 	// Environment variables
 	cassandraPrefix = "CASSANDRA"
@@ -25,4 +26,9 @@ func GetHomeDir() string {
 // GetCassandraFileName returns the Cassandra configuration file name.
 func GetCassandraFileName() string {
 	return cassandraConfigFileName
+}
+
+// GetLoggerFileName returns the Zap logger configuration file name.
+func GetLoggerFileName() string {
+	return loggerConfigFileName
 }

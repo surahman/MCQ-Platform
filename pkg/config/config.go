@@ -14,6 +14,7 @@ const (
 	Cassandra = iota
 	Redis
 	Authorization
+	Logger
 )
 
 // IConfig is the base configuration type interface.
