@@ -65,7 +65,7 @@
 				
 				<option value="file4">github.com/surahman/mcq-platform/pkg/config/testdata.go (100.0%)</option>
 				
-				<option value="file5">github.com/surahman/mcq-platform/pkg/utilities/validator.go (100.0%)</option>
+				<option value="file5">github.com/surahman/mcq-platform/pkg/validator/validator.go (100.0%)</option>
 				
 				</select>
 			</div>
@@ -100,7 +100,7 @@ func main() {<span class="cov0" title="0">
 import (
         "github.com/spf13/afero"
         "github.com/spf13/viper"
-        "github.com/surahman/mcq-platform/pkg/utilities"
+        "github.com/surahman/mcq-platform/pkg/validator"
 )
 
 // Ensure full IConfig interface implementation
@@ -150,7 +150,7 @@ func (cfg *CassandraConfig) Load(fs afero.Fs) (err error) <span class="cov10" ti
                 return
         }</span>
 
-        <span class="cov10" title="9">if err = utilities.ValidateStruct(cfg); err != nil </span><span class="cov8" title="7">{
+        <span class="cov10" title="9">if err = validator.ValidateStruct(cfg); err != nil </span><span class="cov8" title="7">{
                 return
         }</span>
 
@@ -324,7 +324,7 @@ connection:
 }</span>
 </pre>
 		
-		<pre class="file" id="file5" style="display: none">package utilities
+		<pre class="file" id="file5" style="display: none">package validator
 
 import (
         "bytes"
