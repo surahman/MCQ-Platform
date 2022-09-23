@@ -10,5 +10,5 @@ CREATE TABLE IF NOT EXISTS mcq_platform.users (
     last_name   text,
     email       text,
     is_deleted  boolean,
-    PRIMARY KEY ( (username, account_id), email )
+    PRIMARY KEY ( (username, account_id) )
 );

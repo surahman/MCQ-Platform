@@ -96,15 +96,14 @@ This `struct` embeds the `QuizCore` `struct` to create a representation of the q
 | Name (Struct) | Data Type (Struct) | Column Name  | Column Type                    | Description                                                               |
 |---------------|--------------------|--------------|--------------------------------|---------------------------------------------------------------------------|
 | Quiz_ID       | gocql.UUID         | quiz_id      | uuid                           | Account id unique identifier. Partition Key.                              |
-| Author        | string             | author       | text                           | Username of the quiz creator. Clustering Key.                             |
+| Author        | string             | author       | text                           | Username of the quiz creator.                                             |
 | Title         | string             | title        | text                           | Description of the quiz.                                                  |
 | Questions     | [ ] Question       | questions    | frozen<list<frozen<question>>> | A list of `question` UDTs in the quiz.                                    |
 | IsPublished   | bool               | is_published | boolean                        | Status indicating whether the quiz can be viewed or taken by other users. |
 | IsDeleted     | bool               | is_deleted   | boolean                        | Status indicating whether the quiz has been deleted.                      |
 
 Since the Primary/Partition Key (`quiz_id`) is a `UUID`, it should help distribute the records evenly across the cluster
-nodes. Quizzes are requested by their unique `quiz_id`'s. The Clustering Index of `author` should sort the records on
-each node by `author`. 
+nodes. Quizzes are requested by their unique `quiz_id`'s.
 
 ### Quiz Core
 

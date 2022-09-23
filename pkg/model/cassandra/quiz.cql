@@ -16,19 +16,5 @@ CREATE TABLE IF NOT EXISTS mcq_platform.quizzes (
     questions       frozen<list<frozen<question>>>, // A list of questions in the quiz.
     is_published    boolean,                        // Status indicating whether the quiz can be viewed or taken by other users.
     is_deleted      boolean,                        // Status indicating whether the quiz has been deleted.
-    PRIMARY KEY ( (quiz_id), author )
+    PRIMARY KEY ( (quiz_id) )
 );
-
-
--- Insertion example.
-INSERT INTO mcq_platform.quizzes (quiz_id, author, title, questions, is_published)
-VALUES (8748e21a-3a00-11ed-a261-0242ac120002,
-        'user-1',
-        'Quiz Title',
-        [{description: 'Question Description', options: ['one', 'two', 'three'], answers: [1]}],
-        false)
-IF NOT EXISTS ;
-
--- Retrieval example.
-SELECT * FROM mcq_platform.quizzes
-WHERE quiz_id = 8748e21a-3a00-11ed-a261-0242ac120002;

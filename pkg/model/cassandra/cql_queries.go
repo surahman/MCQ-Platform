@@ -17,7 +17,7 @@ const (
     last_name   text,
     email       text,
     is_deleted  boolean,
-    PRIMARY KEY ( (username, account_id), email )
+    PRIMARY KEY ( (username, account_id) )
 );`
 
 	// CreateQuestionUDT creates the Question UDT that is used by the Questions table. CreateQuestionUDT must be called after this statement.
@@ -37,7 +37,7 @@ const (
     questions       frozen<list<frozen<question>>>, // A list of questions in the quiz.
     is_published    boolean,                        // Status indicating whether the quiz can be viewed or taken by other users.
     is_deleted      boolean,                        // Status indicating whether the quiz has been deleted.
-    PRIMARY KEY ( (quiz_id), author )
+    PRIMARY KEY ( (quiz_id) )
 );`
 
 	// CreateResponsesTable creates the Responses table. CreateResponsesIndex must be called after this statement.
@@ -47,7 +47,7 @@ const (
     quiz_id uuid,
     score double,
     responses frozen<list<list<int>>>,
-    PRIMARY KEY ( (username, quiz_id))
+    PRIMARY KEY ( (username, quiz_id) )
 );`
 
 	// CreateResponsesIndex creates an index on the Responses table to support looking up statistics based on the quiz_id.
@@ -57,14 +57,14 @@ const (
 
 	// -----   Users Table Queries   -----
 
-	// CreateUser inserts a new user row into the Users table if it does not already exist.
+	// CreateUser inserts a new user record into the Users table if it does not already exist.
 	// String Param 1: keyspace name
 	// Query Params: username, account_id, password, first_name, last_name, email, is_deleted
 	CreateUser = `INSERT INTO %s.users (username, account_id, password, first_name, last_name, email, is_deleted)
 VALUES (?, ?, ?, ?, ?, ?, ?)
 IF NOT EXISTS;`
 
-	// ReadUser retrieves a user account row from the Users table.
+	// ReadUser retrieves a user account record from the Users table.
 	// String Param 1: keyspace name
 	// Query Params: username, account_id
 	ReadUser = `SELECT * FROM %s.users WHERE username = ? AND account_id = ?;`
@@ -78,6 +78,57 @@ WHERE username = ? AND account_id = ? IF EXISTS;`
 
 	// -----   Quizzes Table Queries   -----
 
+	// CreateQuiz inserts a new Quiz record into the Quizzes table if it does not already exist.
+	// String Param 1: keyspace name
+	// Query Params: quiz_id, author, title, questions, is_published
+	CreateQuiz = `INSERT INTO %s.quizzes (quiz_id, author, title, questions, is_published)
+VALUES (?, ?, ?, ?, ?)
+IF NOT EXISTS ;`
+
+	// ReadQuiz retrieves a Quiz record from the Quizzes table.
+	// String Param 1: keyspace name
+	// Query Params: quiz_id,
+	ReadQuiz = `SELECT * FROM %s.quizzes WHERE quiz_id = ?;`
+
+	// UpdateQuiz updates a Quiz record in the Quizzes table if it is not published.
+	// String Param 1: keyspace name
+	// Query Params: title, questions, quiz_id
+	UpdateQuiz = `UPDATE %s.quizzes
+SET title = ?, questions = ?
+WHERE quiz_id = ? IF is_published = false;`
+
+	// DeleteQuiz marks a Quiz record as deleted in the Quizzes table.
+	// String Param 1: keyspace name
+	// Query Params: quiz_id
+	DeleteQuiz = `UPDATE %s.quizzes
+SET is_deleted = true
+WHERE quiz_id = ? IF EXISTS;`
+
+	// PublishQuiz marks a Quiz record as published in the Quizzes table.
+	// String Param 1: keyspace name
+	// Query Params: quiz_id
+	PublishQuiz = `UPDATE %s.quizzes
+SET is_published = true
+WHERE quiz_id = ? IF EXISTS;`
+
 	// -----   Responses Table Queries   -----
 
+	// CreateResponse inserts a new Response record into the Quizzes table if it does not already exist.
+	// String Param 1: keyspace name
+	// Query Params: username, quiz_id, score, responses
+	CreateResponse = `INSERT INTO %s.responses (username, quiz_id, score, responses)
+VALUES (?, ?, ?, ?)
+IF NOT EXISTS;`
+
+	// ReadResponse retrieves a Response record from the Responses table.
+	// String Param 1: keyspace name
+	// Query Params: username, quiz_id
+	ReadResponse = `SELECT * FROM %s.responses
+WHERE username = ? AND quiz_id = ?;`
+
+	// ReadResponseStatistics retrieves all Response statistics for a given Quiz from the Responses table.
+	// String Param 1: keyspace name
+	// Query Params: quiz_id
+	ReadResponseStatistics = `SELECT * FROM %s.responses
+WHERE quiz_id = ?;`
 )
