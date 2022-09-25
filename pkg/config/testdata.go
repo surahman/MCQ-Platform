@@ -18,6 +18,7 @@ connection:
   cluster_ip: [127.0.0.1]
   proto_version: 4
   timeout: 10`
+
 	testData["password_empty"] = `
 authentication:
   username: admin
@@ -31,6 +32,7 @@ connection:
   cluster_ip: [127.0.0.1]
   proto_version: 4
   timeout: 10`
+
 	testData["username_empty"] = `
 authentication:
   username:
@@ -44,6 +46,7 @@ connection:
   cluster_ip: [127.0.0.1]
   proto_version: 4
   timeout: 10`
+
 	testData["keyspace_empty"] = `
 authentication:
   username: admin
@@ -57,6 +60,7 @@ connection:
   cluster_ip: [127.0.0.1]
   proto_version: 4
   timeout: 10`
+
 	testData["consistency_missing"] = `
 authentication:
   username: admin
@@ -69,6 +73,7 @@ connection:
   cluster_ip: [127.0.0.1]
   proto_version: 4
   timeout: 10`
+
 	testData["ip_empty"] = `
 authentication:
   username: admin
@@ -82,6 +87,7 @@ connection:
   cluster_ip: []
   proto_version: 4
   timeout: 10`
+
 	testData["timeout_zero"] = `
 authentication:
   username: admin

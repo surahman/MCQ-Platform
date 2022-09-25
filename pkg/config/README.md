@@ -99,3 +99,69 @@ Configurations in this file will be used to setup all authentication settings (p
 
 The expected file name is `AuthenticationConfig.yaml`.
 
+<br/>
+
+
+## Logging
+
+Structured logging is handled through [Zap](https://pkg.go.dev/go.uber.org/zap).
+Please refer to the Zaps documentation on how to set the fields below.
+Any of the fields provided on the configuration file and then the environment variables will override the logger
+configurations in that order.
+
+| Name                       | Environment Variable Key      | Type         | Description                                                                                                 |
+|----------------------------|-------------------------------|--------------|-------------------------------------------------------------------------------------------------------------|
+| **_BuiltinConfig_**        | `LOGGER_BUILTINCONFIG`        | string       | Must be one of `Development` or `Production`. Required.                                                     |
+| **_BuiltinEncoderConfig_** | `LOGGER_BUILTINENCODERCONFIG` | string       | Must be one of `Development` or `Production`. Required.                                                     |
+| **_General Config_**       | `LOGGER_GENERALCONFIG`        |              | **_Parent key for general configurations._**                                                                |
+| ↳ level                    | ↳ `.LEVEL`                    | int32        | Please refer to [Zap user documentation](https://pkg.go.dev/go.uber.org/zap#Config).                        |
+| ↳ development              | ↳ `.DEVELOPMENT`              | boolean      | Please refer to [Zap user documentation](https://pkg.go.dev/go.uber.org/zap#Config).                        |
+| ↳ disableCaller            | ↳ `.DISABLECALLER`            | boolean      | Please refer to [Zap user documentation](https://pkg.go.dev/go.uber.org/zap#Config).                        |
+| ↳ disableStacktrace        | ↳ `.DISABLESTACKTRACE`        | boolean      | Please refer to [Zap user documentation](https://pkg.go.dev/go.uber.org/zap#Config).                        |
+| ↳ encoding                 | ↳ `.ENCODING`                 | string       | Please refer to [Zap user documentation](https://pkg.go.dev/go.uber.org/zap#Config).                        |
+| ↳ outputPaths              | ↳ `.OUTPUTPATHS`              | string array | Please refer to [Zap user documentation](https://pkg.go.dev/go.uber.org/zap#Config).                        |
+| ↳ errorOutputPaths         | ↳ `.ERROROUTPUTPATHS`         | string array | Please refer to [Zap user documentation](https://pkg.go.dev/go.uber.org/zap#Config).                        |
+| **_Encoder Config_**       | `LOGGER_ENCODERCONFIG`        |              | **_Parent key for encoder configurations._**                                                                |
+| ↳ messageKey               | ↳ `.MESSAGEKEY`               | string       | Please refer to [Zap user documentation](https://pkg.go.dev/go.uber.org/zap@v1.23.0/zapcore#EncoderConfig). |
+| ↳ levelKey                 | ↳ `.LEVELKEY`                 | string       | Please refer to [Zap user documentation](https://pkg.go.dev/go.uber.org/zap@v1.23.0/zapcore#EncoderConfig). |
+| ↳ timeKey                  | ↳ `.TIMEKEY`                  | string       | Please refer to [Zap user documentation](https://pkg.go.dev/go.uber.org/zap@v1.23.0/zapcore#EncoderConfig). |
+| ↳ nameKey                  | ↳ `.NAMEKEY`                  | string       | Please refer to [Zap user documentation](https://pkg.go.dev/go.uber.org/zap@v1.23.0/zapcore#EncoderConfig). |
+| ↳ callerKey                | ↳ `.CALLERKEY`                | string       | Please refer to [Zap user documentation](https://pkg.go.dev/go.uber.org/zap@v1.23.0/zapcore#EncoderConfig). |
+| ↳ functionKey              | ↳ `.FUNCTIONKEY`              | string       | Please refer to [Zap user documentation](https://pkg.go.dev/go.uber.org/zap@v1.23.0/zapcore#EncoderConfig). |
+| ↳ stacktraceKey            | ↳ `.STACKTRACEKEY`            | string       | Please refer to [Zap user documentation](https://pkg.go.dev/go.uber.org/zap@v1.23.0/zapcore#EncoderConfig). |
+| ↳ skipLineEnding           | ↳ `.SKIPLINEENDING`           | boolean      | Please refer to [Zap user documentation](https://pkg.go.dev/go.uber.org/zap@v1.23.0/zapcore#EncoderConfig). |
+| ↳ lineEnding               | ↳ `.LINEENDING`               | string       | Please refer to [Zap user documentation](https://pkg.go.dev/go.uber.org/zap@v1.23.0/zapcore#EncoderConfig). |
+| ↳ consoleSeparator         | ↳ `.CONSOLESEPARATOR`         | string       | Please refer to [Zap user documentation](https://pkg.go.dev/go.uber.org/zap@v1.23.0/zapcore#EncoderConfig). |
+
+#### Configuration File Format
+
+```yaml
+builtin_config: Development | Production
+builtin_encoder_config: Development | Production
+general_config:
+  level: int32
+  development: boolean
+  disablecaller: boolean
+  disableStacktrace: boolean
+  encoding: string
+  outputPaths: [string, array]
+  errorOutputPaths: [string, array]
+encoder_config:
+  messageKey: string
+  levelKey: string
+  timeKey: string
+  nameKey: string
+  callerKey: string
+  functionKey: string
+  stacktraceKey: string
+  skipLineEnding: boolean
+  lineEnding: string
+  consoleSeparator: string
+```
+
+#### Example Environment Variables
+
+```bash
+export LOGGER_GENERALCONFIG.DISABLESTACKTRACE=true
+export LOGGER_ENCODERCONFIG.MESSAGEKEY="Some key message"
+```
