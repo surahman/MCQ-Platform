@@ -5,6 +5,7 @@ func CassandraConfigTestData() map[string]string {
 	testData := make(map[string]string)
 
 	testData["empty"] = ``
+
 	testData["valid"] = `
 authentication:
   username: admin
@@ -101,6 +102,49 @@ connection:
   cluster_ip: [127.0.0.1]
   proto_version: 4
   timeout: 0`
+
+	return testData
+}
+
+// LoggerConfigTestData will return a map of test data containing valid and invalid logger configs.
+func LoggerConfigTestData() map[string]string {
+	testData := make(map[string]string)
+
+	testData["empty"] = ``
+
+	testData["valid_devel"] = `
+builtin_config: Development
+builtin_encoder_config: Development`
+
+	testData["valid_prod"] = `
+builtin_config: Production
+builtin_encoder_config: Production`
+
+	testData["invalid_builtin"] = `
+builtin_config: Invalid
+builtin_encoder_config: Invalid`
+
+	testData["valid_config"] = `
+builtin_config: Development
+builtin_encoder_config: Development
+general_config:
+  development: true
+  disableCaller: true
+  disableStacktrace: true
+  encoding: string
+  outputPaths: [string, array]
+  errorOutputPaths: [string, array]
+encoder_config:
+  messageKey: string
+  levelKey: string
+  timeKey: string
+  nameKey: string
+  callerKey: string
+  functionKey: string
+  stacktraceKey: string
+  skipLineEnding: true
+  lineEnding: string
+  consoleSeparator: string`
 
 	return testData
 }

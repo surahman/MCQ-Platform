@@ -109,12 +109,17 @@ Please refer to the Zaps documentation on how to set the fields below.
 Any of the fields provided on the configuration file and then the environment variables will override the logger
 configurations in that order.
 
+**_It is best practice to set the logger configurations through the configuration file._**
+
+Any configurations in the `General Config` and `Encoder Config` that is strictly set through the environment variables
+will be ignored. Environment variables are only to be used to override the configurations that have been set in the
+logger configuration file.
+
 | Name                       | Environment Variable Key      | Type         | Description                                                                                                 |
 |----------------------------|-------------------------------|--------------|-------------------------------------------------------------------------------------------------------------|
 | **_BuiltinConfig_**        | `LOGGER_BUILTINCONFIG`        | string       | Must be one of `Development` or `Production`. Required.                                                     |
 | **_BuiltinEncoderConfig_** | `LOGGER_BUILTINENCODERCONFIG` | string       | Must be one of `Development` or `Production`. Required.                                                     |
 | **_General Config_**       | `LOGGER_GENERALCONFIG`        |              | **_Parent key for general configurations._**                                                                |
-| ↳ level                    | ↳ `.LEVEL`                    | int32        | Please refer to [Zap user documentation](https://pkg.go.dev/go.uber.org/zap#Config).                        |
 | ↳ development              | ↳ `.DEVELOPMENT`              | boolean      | Please refer to [Zap user documentation](https://pkg.go.dev/go.uber.org/zap#Config).                        |
 | ↳ disableCaller            | ↳ `.DISABLECALLER`            | boolean      | Please refer to [Zap user documentation](https://pkg.go.dev/go.uber.org/zap#Config).                        |
 | ↳ disableStacktrace        | ↳ `.DISABLESTACKTRACE`        | boolean      | Please refer to [Zap user documentation](https://pkg.go.dev/go.uber.org/zap#Config).                        |
@@ -139,9 +144,8 @@ configurations in that order.
 builtin_config: Development | Production
 builtin_encoder_config: Development | Production
 general_config:
-  level: int32
   development: boolean
-  disablecaller: boolean
+  disableCaller: boolean
   disableStacktrace: boolean
   encoding: string
   outputPaths: [string, array]

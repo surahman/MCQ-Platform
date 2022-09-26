@@ -2,8 +2,8 @@ package config
 
 const (
 	// Configuration file directories
-	configEtcDir  = "/etc/CassandraTutorial.conf/"
-	configHomeDir = "$HOME/.CassandraTutorial/"
+	configEtcDir  = "/etc/MCQ_Platform.conf/"
+	configHomeDir = "$HOME/.MCQ_Platform/"
 
 	// Configuration file names
 	cassandraConfigFileName = "CassandraConfig.yaml"
@@ -11,6 +11,7 @@ const (
 
 	// Environment variables
 	cassandraPrefix = "CASSANDRA"
+	loggerPrefix    = "LOGGER"
 )
 
 // GetEtcDir returns the configuration directory in Etc.
