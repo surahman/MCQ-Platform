@@ -26,6 +26,11 @@ func TestConfigFactory(t *testing.T) {
 			Cassandra,
 			reflect.TypeOf(&CassandraConfig{}),
 			require.NoError,
+		}, {
+			"Logger (Zap) config",
+			Logger,
+			reflect.TypeOf(&ZapConfig{}),
+			require.NoError,
 		},
 		// ----- test cases end ----- //
 	}

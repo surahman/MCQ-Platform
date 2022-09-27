@@ -27,6 +27,8 @@ func Factory(configType Type) (IConfig, error) {
 	switch configType {
 	case Cassandra:
 		return newCassandraConfig(), nil
+	case Logger:
+		return newLoggerConfig(), nil
 	default:
 		return nil, errors.New("invalid config type provided")
 	}

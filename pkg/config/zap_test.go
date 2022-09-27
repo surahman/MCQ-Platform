@@ -12,16 +12,18 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func TestZapConfig_Load(t *testing.T) {
+var loggerConfigTestData = LoggerConfigTestData()
 
-	testData := LoggerConfigTestData()
-	keyspaceKey := fmt.Sprintf("%s_GENERAL_CONFIG.ENCODING", loggerPrefix)
+func TestZapConfig_Load(t *testing.T) {
+	envCfgKey := fmt.Sprintf("%s_BUILTIN_CONFIG", loggerPrefix)
+	envEncKey := fmt.Sprintf("%s_BUILTIN_ENCODER_CONFIG", loggerPrefix)
 
 	testCases := []struct {
 		name      string
 		fullPath  string
 		input     string
-		envValue  string
+		cfgKey    string
+		encKey    string
 		expectErr require.ErrorAssertionFunc
 		expectNil require.ValueAssertionFunc
 	}{
@@ -29,40 +31,41 @@ func TestZapConfig_Load(t *testing.T) {
 		{
 			"invalid - empty",
 			configEtcDir,
-			testData["empty"],
-			xid.New().String(),
+			loggerConfigTestData["empty"],
+			"Production",
+			"Production",
 			require.Error,
 			require.Nil,
-		},
-		{
+		}, {
 			"invalid - builtin",
 			configEtcDir,
-			testData["invalid_builtin"],
+			loggerConfigTestData["invalid_builtin"],
+			xid.New().String(),
 			xid.New().String(),
 			require.Error,
 			require.Nil,
-		},
-		{
+		}, {
 			"valid - development",
 			configEtcDir,
-			testData["valid_devel"],
-			xid.New().String(),
+			loggerConfigTestData["valid_devel"],
+			"Production",
+			"Production",
 			require.NoError,
 			require.Nil,
-		},
-		{
+		}, {
 			"valid - production",
 			configEtcDir,
-			testData["valid_prod"],
-			xid.New().String(),
+			loggerConfigTestData["valid_prod"],
+			"Development",
+			"Development",
 			require.NoError,
 			require.Nil,
-		},
-		{
+		}, {
 			"valid - full config",
 			configEtcDir,
-			testData["valid_config"],
-			xid.New().String(),
+			loggerConfigTestData["valid_config"],
+			"Production",
+			"Production",
 			require.NoError,
 			require.NotNil,
 		},
@@ -90,16 +93,16 @@ func TestZapConfig_Load(t *testing.T) {
 			require.True(t, reflect.DeepEqual(expected, actual))
 
 			// Test configuring of environment variable.
-			require.NoErrorf(t, os.Setenv(keyspaceKey, testCase.envValue), "Failed to set environment variable: %v", err)
+			require.NoErrorf(t, os.Setenv(envCfgKey, testCase.cfgKey), "Failed to set environment variable for config: %v", err)
+			require.NoErrorf(t, os.Setenv(envEncKey, testCase.encKey), "Failed to set environment variable for encoder: %v", err)
 			require.NoErrorf(t, actual.Load(fs), "Failed to load config file: %v", err)
-			require.NoErrorf(t, os.Unsetenv(keyspaceKey), "Failed to unset environment variable set for test")
+			require.NoErrorf(t, os.Unsetenv(envCfgKey), "Failed to unset environment variable set for config")
+			require.NoErrorf(t, os.Unsetenv(envEncKey), "Failed to unset environment variable set for encoder")
 
-			testCase.expectNil(t, actual.GeneralConfig.Encoding, "Check for nil value after environment variable loading")
+			require.Equalf(t, testCase.cfgKey, actual.BuiltinConfig, "Failed to load environment variable into config")
+			require.Equalf(t, testCase.encKey, actual.BuiltinEncoderConfig, "Failed to load environment variable into encoder")
 
-			if actual.GeneralConfig.Encoding != nil {
-				require.Equalf(t, testCase.envValue, *actual.GeneralConfig.Encoding, "Failed to load environment variable into configs")
-			}
+			testCase.expectNil(t, actual.GeneralConfig, "Check for nil general config failed")
 		})
 	}
-
 }

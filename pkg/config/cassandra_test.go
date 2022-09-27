@@ -12,15 +12,9 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func TestNewCassandraConfig(t *testing.T) {
-	conf := newCassandraConfig()
-	require.NotNilf(t, conf, "Should return a non-nil config struct")
-	require.True(t, reflect.TypeOf(conf) == reflect.TypeOf(&CassandraConfig{}), "Should return a CassandraConfig")
-}
+var cassandraConfigTestData = CassandraConfigTestData()
 
 func TestCassandraConfigs_Load(t *testing.T) {
-
-	testData := CassandraConfigTestData()
 	keyspaceKey := fmt.Sprintf("%s_KEYSPACE.REPLICATION_CLASS", cassandraPrefix)
 
 	testCases := []struct {
@@ -34,56 +28,56 @@ func TestCassandraConfigs_Load(t *testing.T) {
 		{
 			"empty - etc dir",
 			configEtcDir,
-			testData["empty"],
+			cassandraConfigTestData["empty"],
 			xid.New().String(),
 			require.Error,
 		},
 		{
 			"valid - etc dir",
 			configEtcDir,
-			testData["valid"],
+			cassandraConfigTestData["valid"],
 			xid.New().String(),
 			require.NoError,
 		},
 		{
 			"no password - etc dir",
 			configEtcDir,
-			testData["password_empty"],
+			cassandraConfigTestData["password_empty"],
 			xid.New().String(),
 			require.Error,
 		},
 		{
 			"no username - etc dir",
 			configEtcDir,
-			testData["username_empty"],
+			cassandraConfigTestData["username_empty"],
 			xid.New().String(),
 			require.Error,
 		},
 		{
 			"no keyspace - etc dir",
 			configEtcDir,
-			testData["keyspace_empty"],
+			cassandraConfigTestData["keyspace_empty"],
 			xid.New().String(),
 			require.Error,
 		},
 		{
 			"no consistency - etc dir",
 			configEtcDir,
-			testData["consistency_missing"],
+			cassandraConfigTestData["consistency_missing"],
 			xid.New().String(),
 			require.Error,
 		},
 		{
 			"no ip - etc dir",
 			configEtcDir,
-			testData["ip_empty"],
+			cassandraConfigTestData["ip_empty"],
 			xid.New().String(),
 			require.Error,
 		},
 		{
 			"timeout zero - etc dir",
 			configEtcDir,
-			testData["timeout_zero"],
+			cassandraConfigTestData["timeout_zero"],
 			xid.New().String(),
 			require.Error,
 		},
