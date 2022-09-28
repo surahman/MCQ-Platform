@@ -24,6 +24,7 @@ const (
 	// String Param 1: keyspace name
 	CreateQuestionUDT = `CREATE TYPE IF NOT EXISTS $s.question (
     description text,
+    asset       text,
     options     list<text>,
     answers     list<int>
 );`
@@ -31,12 +32,13 @@ const (
 	// CreateQuizzesTable creates the Quizzes table. CreateQuestionUDT must be called before this statement.
 	// String Param 1: keyspace name
 	CreateQuizzesTable = `CREATE TABLE IF NOT EXISTS %s.quizzes (
-    quiz_id         uuid,                           // Unique identifier for the quiz.
-    author          text,                           // Username of the quiz creator.
-    title           text,                           // Description of the quiz.
-    questions       frozen<list<frozen<question>>>, // A list of questions in the quiz.
-    is_published    boolean,                        // Status indicating whether the quiz can be viewed or taken by other users.
-    is_deleted      boolean,                        // Status indicating whether the quiz has been deleted.
+    quiz_id         uuid,
+    author          text,
+    title           text,
+    marking_type    text,
+    questions       frozen<list<frozen<question>>>,
+    is_published    boolean,
+    is_deleted      boolean,
     PRIMARY KEY ( (quiz_id) )
 );`
 
@@ -80,9 +82,9 @@ WHERE username = ? AND account_id = ? IF EXISTS;`
 
 	// CreateQuiz inserts a new Quiz record into the Quizzes table if it does not already exist.
 	// String Param 1: keyspace name
-	// Query Params: quiz_id, author, title, questions, is_published
-	CreateQuiz = `INSERT INTO %s.quizzes (quiz_id, author, title, questions, is_published)
-VALUES (?, ?, ?, ?, ?)
+	// Query Params: quiz_id, author, title, questions, marking_type, is_published, is_deleted
+	CreateQuiz = `INSERT INTO %s.quizzes (quiz_id, author, title, questions, marking_type, is_published, is_deleted)
+VALUES (?, ?, ?, ?, ?, false, false)
 IF NOT EXISTS ;`
 
 	// ReadQuiz retrieves a Quiz record from the Quizzes table.
@@ -92,9 +94,9 @@ IF NOT EXISTS ;`
 
 	// UpdateQuiz updates a Quiz record in the Quizzes table if it is not published.
 	// String Param 1: keyspace name
-	// Query Params: title, questions, quiz_id
+	// Query Params: title, questions, marking_type, quiz_id
 	UpdateQuiz = `UPDATE %s.quizzes
-SET title = ?, questions = ?
+SET title = ?, questions = ?, marking_type = ?
 WHERE quiz_id = ? IF is_published = false;`
 
 	// DeleteQuiz marks a Quiz record as deleted in the Quizzes table.
