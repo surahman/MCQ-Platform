@@ -99,3 +99,70 @@ Configurations in this file will be used to setup all authentication settings (p
 
 The expected file name is `AuthenticationConfig.yaml`.
 
+<br/>
+
+
+## Logging
+
+Structured logging is handled through [Zap](https://pkg.go.dev/go.uber.org/zap).
+Please refer to Zap's documentation on how to set the fields below.
+
+Only the `BuiltinConfig` and `BuiltinEncoder` settings can be provided through environment variables that override values
+from the configuration files.
+
+**_If specifying settings for the `General Config` or `Encoder Config`, all values must be provided._**
+
+| Name                       | Environment Variable Key      | Type                          | Description                                                                                                 |
+|----------------------------|-------------------------------|-------------------------------|-------------------------------------------------------------------------------------------------------------|
+| **_BuiltinConfig_**        | `LOGGER_BUILTINCONFIG`        | string                        | Must be one of `Development` or `Production`. Required.                                                     |
+| **_BuiltinEncoderConfig_** | `LOGGER_BUILTINENCODERCONFIG` | string                        | Must be one of `Development` or `Production`. Required.                                                     |
+| **_General Config_**       | _Not applicable._             | **_General Configurations._** | Please refer to [Zap user documentation](https://pkg.go.dev/go.uber.org/zap#Config).                        |
+| ↳ development              |                               | boolean                       |                                                                                                             |
+| ↳ disableCaller            |                               | boolean                       |                                                                                                             |
+| ↳ disableStacktrace        |                               | boolean                       |                                                                                                             |
+| ↳ encoding                 |                               | string                        |                                                                                                             |
+| ↳ outputPaths              |                               | string array                  |                                                                                                             |
+| ↳ errorOutputPaths         |                               | string array                  |                                                                                                             |
+| **_Encoder Config_**       | _Not applicable._             | **_Encoder Configurations._** | Please refer to [Zap user documentation](https://pkg.go.dev/go.uber.org/zap@v1.23.0/zapcore#EncoderConfig). |
+| ↳ messageKey               |                               | string                        |
+| ↳ levelKey                 |                               | string                        |                                                                                                             |
+| ↳ timeKey                  |                               | string                        |                                                                                                             |
+| ↳ nameKey                  |                               | string                        |                                                                                                             |
+| ↳ callerKey                |                               | string                        |                                                                                                             |
+| ↳ functionKey              |                               | string                        |                                                                                                             |
+| ↳ stacktraceKey            |                               | string                        |                                                                                                             |
+| ↳ skipLineEnding           |                               | boolean                       |                                                                                                             |
+| ↳ lineEnding               |                               | string                        |                                                                                                             |
+| ↳ consoleSeparator         |                               | string                        |                                                                                                             |
+
+#### Configuration File Format
+
+```yaml
+builtin_config: Development | Production
+builtin_encoder_config: Development | Production
+general_config:
+  development: boolean
+  disableCaller: boolean
+  disableStacktrace: boolean
+  encoding: string
+  outputPaths: [string, array]
+  errorOutputPaths: [string, array]
+encoder_config:
+  messageKey: string
+  levelKey: string
+  timeKey: string
+  nameKey: string
+  callerKey: string
+  functionKey: string
+  stacktraceKey: string
+  skipLineEnding: boolean
+  lineEnding: string
+  consoleSeparator: string
+```
+
+#### Example Environment Variables
+
+```bash
+export LOGGER_GENERALCONFIG.DISABLESTACKTRACE=true
+export LOGGER_ENCODERCONFIG.MESSAGEKEY="Some key message"
+```
