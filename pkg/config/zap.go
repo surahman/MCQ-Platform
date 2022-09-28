@@ -8,8 +8,8 @@ import (
 
 // ZapConfig contains the configurations loaded from the configuration file.
 type ZapConfig struct {
-	BuiltinConfig        string            `json:"builtin_config,omitempty" yaml:"builtin_config,omitempty" mapstructure:"builtin_config" validate:"oneof='Production' 'Development'"`
-	BuiltinEncoderConfig string            `json:"builtin_encoder_config,omitempty" yaml:"builtin_encoder_config,omitempty" mapstructure:"builtin_encoder_config" validate:"oneof='Production' 'Development''"`
+	BuiltinConfig        string            `json:"builtin_config,omitempty" yaml:"builtin_config,omitempty" mapstructure:"builtin_config" validate:"oneof='Production' 'production' 'Development' 'development'"`
+	BuiltinEncoderConfig string            `json:"builtin_encoder_config,omitempty" yaml:"builtin_encoder_config,omitempty" mapstructure:"builtin_encoder_config" validate:"oneof='Production' 'production' 'Development' 'development'"`
 	GeneralConfig        *ZapGeneralConfig `json:"general_config,omitempty" yaml:"general_config,omitempty" mapstructure:"general_config"`
 	EncoderConfig        *ZapEncoderConfig `json:"encoder_config,omitempty" yaml:"encoder_config,omitempty" mapstructure:"encoder_config"`
 }

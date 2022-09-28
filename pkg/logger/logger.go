@@ -2,6 +2,7 @@ package logger
 
 import (
 	"log"
+	"strings"
 
 	"github.com/spf13/afero"
 	"github.com/surahman/mcq-platform/pkg/config"
@@ -10,9 +11,18 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-var zapLogger *zap.Logger
+// Logger is the Zap logger object.
+type Logger struct {
+	zapLogger *zap.Logger
+}
 
-func Init(fs *afero.Fs) (err error) {
+// NewLogger will create a new uninitialized logger.
+func NewLogger() *Logger {
+	return &Logger{}
+}
+
+// Init will initialize the logger with configurations and start it.
+func (l *Logger) Init(fs *afero.Fs) (err error) {
 	var baseConfig zap.Config
 	var encConfig zapcore.EncoderConfig
 
@@ -23,11 +33,11 @@ func Init(fs *afero.Fs) (err error) {
 	}
 
 	// Base logger configuration.
-	switch userConfig.BuiltinConfig {
-	case "Development":
+	switch strings.ToLower(userConfig.BuiltinConfig) {
+	case "development":
 		baseConfig = zap.NewDevelopmentConfig()
 		break
-	case "Production":
+	case "production":
 		baseConfig = zap.NewProductionConfig()
 		break
 	default:
@@ -36,11 +46,11 @@ func Init(fs *afero.Fs) (err error) {
 	}
 
 	// Encoder logger configuration.
-	switch userConfig.BuiltinEncoderConfig {
-	case "Development":
+	switch strings.ToLower(userConfig.BuiltinEncoderConfig) {
+	case "development":
 		encConfig = zap.NewDevelopmentEncoderConfig()
 		break
-	case "Production":
+	case "production":
 		encConfig = zap.NewProductionEncoderConfig()
 		break
 	default:
@@ -48,6 +58,7 @@ func Init(fs *afero.Fs) (err error) {
 		return
 	}
 
+	// Merge configurations.
 	if err = mergeConfig[*zap.Config, *config.ZapGeneralConfig](&baseConfig, userConfig.GeneralConfig); err != nil {
 		log.Printf("failed to merge base configurations and user provided configurations for logger: %v\n", err)
 		return
@@ -57,8 +68,9 @@ func Init(fs *afero.Fs) (err error) {
 		return
 	}
 
+	// Init and create logger.
 	baseConfig.EncoderConfig = encConfig
-	if zapLogger, err = baseConfig.Build(zap.AddCallerSkip(1)); err != nil {
+	if l.zapLogger, err = baseConfig.Build(zap.AddCallerSkip(1)); err != nil {
 		log.Printf("failure configuring logger: %v\n", err)
 		return
 	}
@@ -66,28 +78,28 @@ func Init(fs *afero.Fs) (err error) {
 }
 
 // Info logs messages at the info level.
-func Info(message string, fields ...zap.Field) {
-	zapLogger.Info(message, fields...)
+func (l *Logger) Info(message string, fields ...zap.Field) {
+	l.zapLogger.Info(message, fields...)
 }
 
 // Debug logs messages at the debug level.
-func Debug(message string, fields ...zap.Field) {
-	zapLogger.Debug(message, fields...)
+func (l *Logger) Debug(message string, fields ...zap.Field) {
+	l.zapLogger.Debug(message, fields...)
 }
 
 // Warn logs messages at the warn level.
-func Warn(message string, fields ...zap.Field) {
-	zapLogger.Warn(message, fields...)
+func (l *Logger) Warn(message string, fields ...zap.Field) {
+	l.zapLogger.Warn(message, fields...)
 }
 
 // Error logs messages at the error level.
-func Error(message string, fields ...zap.Field) {
-	zapLogger.Error(message, fields...)
+func (l *Logger) Error(message string, fields ...zap.Field) {
+	l.zapLogger.Error(message, fields...)
 }
 
 // Panic logs messages at the panic level and then panics at the call site.
-func Panic(message string, fields ...zap.Field) {
-	zapLogger.Panic(message, fields...)
+func (l *Logger) Panic(message string, fields ...zap.Field) {
+	l.zapLogger.Panic(message, fields...)
 }
 
 // mergeConfig will merge the configuration files by marshalling and unmarshalling.
@@ -100,4 +112,11 @@ func mergeConfig[DST *zap.Config | *zapcore.EncoderConfig, SRC *config.ZapGenera
 		return
 	}
 	return
+}
+
+/*** Unexported methods and members to support testing. ***/
+
+// setTestLogger is an unexported utility method that set a logger base for testing.
+func (l *Logger) setTestLogger(testLogger *zap.Logger) {
+	l.zapLogger = testLogger
 }

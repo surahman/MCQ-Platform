@@ -2,6 +2,7 @@ package logger
 
 import (
 	"errors"
+	"reflect"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -14,6 +15,10 @@ import (
 )
 
 var loggerConfigTestData = config.LoggerConfigTestData()
+
+func TestNewLogger(t *testing.T) {
+	require.Equal(t, reflect.TypeOf(NewLogger()), reflect.TypeOf(&Logger{}), "creates new logger successfully")
+}
 
 func TestMergeConfig_General(t *testing.T) {
 	userGenCfg := config.ZapGeneralConfig{
@@ -91,12 +96,13 @@ func TestInit(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			// Configure mock filesystem.
+			// Init mock filesystem.
 			fs := afero.NewMemMapFs()
 			require.NoError(t, fs.MkdirAll(config.GetEtcDir(), 0644), "Failed to create in memory directory")
 			require.NoError(t, afero.WriteFile(fs, fullFilePath, []byte(testCase.input), 0644), "Failed to write in memory file")
 
-			testCase.expectErr(t, Init(&fs), "Error condition failed when trying to initialize logger")
+			logger := NewLogger()
+			testCase.expectErr(t, logger.Init(&fs), "Error condition failed when trying to initialize logger")
 		})
 	}
 }
@@ -105,15 +111,16 @@ func TestTestLogger(t *testing.T) {
 	ts := newTestLogSpy(t)
 	defer ts.AssertPassed()
 
-	zapLogger = zaptest.NewLogger(ts)
+	logger := NewLogger()
+	logger.setTestLogger(zaptest.NewLogger(ts))
 
-	Info("info message received")
-	Debug("debug message received")
-	Warn("warn message received")
-	Error("error message received", zap.Error(errors.New("ow no! woe is me!")))
+	logger.Info("info message received")
+	logger.Debug("debug message received")
+	logger.Warn("warn message received")
+	logger.Error("error message received", zap.Error(errors.New("ow no! woe is me!")))
 
 	assert.Panics(t, func() {
-		Panic("panic message received")
+		logger.Panic("panic message received")
 	}, "Panic should panic")
 
 	ts.AssertMessages(
@@ -129,15 +136,16 @@ func TestTestLoggerSupportsLevels(t *testing.T) {
 	ts := newTestLogSpy(t)
 	defer ts.AssertPassed()
 
-	zapLogger = zaptest.NewLogger(ts, zaptest.Level(zap.WarnLevel))
+	logger := NewLogger()
+	logger.setTestLogger(zaptest.NewLogger(ts, zaptest.Level(zap.WarnLevel)))
 
-	Info("info message received")
-	Debug("debug message received")
-	Warn("warn message received")
-	Error("error message received", zap.Error(errors.New("ow no! woe is me!")))
+	logger.Info("info message received")
+	logger.Debug("debug message received")
+	logger.Warn("warn message received")
+	logger.Error("error message received", zap.Error(errors.New("ow no! woe is me!")))
 
 	assert.Panics(t, func() {
-		Panic("panic message received")
+		logger.Panic("panic message received")
 	}, "Panic should panic")
 
 	ts.AssertMessages(
