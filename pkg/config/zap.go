@@ -38,8 +38,8 @@ type ZapEncoderConfig struct {
 	ConsoleSeparator string `json:"consoleSeparator" yaml:"consoleSeparator" mapstructure:"consoleSeparator" validate:"required"`
 }
 
-// newLoggerConfig creates a blank configuration struct for the Zap Logger.
-func newLoggerConfig() *ZapConfig {
+// NewLoggerConfig creates a blank configuration struct for the Zap Logger.
+func NewLoggerConfig() *ZapConfig {
 	return &ZapConfig{}
 }
 

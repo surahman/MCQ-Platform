@@ -1,13 +1,19 @@
 package logger
 
 import (
+	"errors"
 	"testing"
 
+	"github.com/spf13/afero"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/surahman/mcq-platform/pkg/config"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"go.uber.org/zap/zaptest"
 )
+
+var loggerConfigTestData = config.LoggerConfigTestData()
 
 func TestMergeConfig_General(t *testing.T) {
 	userGenCfg := config.ZapGeneralConfig{
@@ -53,4 +59,90 @@ func TestMergeConfig_Encoder(t *testing.T) {
 	require.Equalf(t, userEncCfg.SkipLineEnding, zapCfg.SkipLineEnding, "SkipLineEnding value expected %v, actual %v", userEncCfg.SkipLineEnding, zapCfg.SkipLineEnding)
 	require.Equalf(t, userEncCfg.LineEnding, zapCfg.LineEnding, "LineEnding value expected %v, actual %v", userEncCfg.LineEnding, zapCfg.LineEnding)
 	require.Equalf(t, userEncCfg.ConsoleSeparator, zapCfg.ConsoleSeparator, "ConsoleSeparator value expected %v, actual %v", userEncCfg.ConsoleSeparator, zapCfg.ConsoleSeparator)
+}
+
+func TestInit(t *testing.T) {
+	fullFilePath := config.GetEtcDir() + config.GetLoggerFileName()
+
+	testCases := []struct {
+		name      string
+		input     string
+		expectErr require.ErrorAssertionFunc
+	}{
+		// ----- test cases start ----- //
+		{
+			"invalid - empty",
+			loggerConfigTestData["empty"],
+			require.Error,
+		}, {
+			"valid - development",
+			loggerConfigTestData["valid_devel"],
+			require.NoError,
+		}, {
+			"valid - production",
+			loggerConfigTestData["valid_prod"],
+			require.NoError,
+		}, {
+			"valid full - development",
+			loggerConfigTestData["valid_config"],
+			require.NoError,
+		},
+		// ----- test cases end ----- //
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			// Configure mock filesystem.
+			fs := afero.NewMemMapFs()
+			require.NoError(t, fs.MkdirAll(config.GetEtcDir(), 0644), "Failed to create in memory directory")
+			require.NoError(t, afero.WriteFile(fs, fullFilePath, []byte(testCase.input), 0644), "Failed to write in memory file")
+
+			testCase.expectErr(t, Init(&fs), "Error condition failed when trying to initialize logger")
+		})
+	}
+}
+
+func TestTestLogger(t *testing.T) {
+	ts := newTestLogSpy(t)
+	defer ts.AssertPassed()
+
+	zapLogger = zaptest.NewLogger(ts)
+
+	Info("info message received")
+	Debug("debug message received")
+	Warn("warn message received")
+	Error("error message received", zap.Error(errors.New("ow no! woe is me!")))
+
+	assert.Panics(t, func() {
+		Panic("panic message received")
+	}, "Panic should panic")
+
+	ts.AssertMessages(
+		"INFO	info message received",
+		"DEBUG	debug message received",
+		"WARN	warn message received",
+		`ERROR	error message received	{"error": "ow no! woe is me!"}`,
+		"PANIC	panic message received",
+	)
+}
+
+func TestTestLoggerSupportsLevels(t *testing.T) {
+	ts := newTestLogSpy(t)
+	defer ts.AssertPassed()
+
+	zapLogger = zaptest.NewLogger(ts, zaptest.Level(zap.WarnLevel))
+
+	Info("info message received")
+	Debug("debug message received")
+	Warn("warn message received")
+	Error("error message received", zap.Error(errors.New("ow no! woe is me!")))
+
+	assert.Panics(t, func() {
+		Panic("panic message received")
+	}, "Panic should panic")
+
+	ts.AssertMessages(
+		"WARN	warn message received",
+		`ERROR	error message received	{"error": "ow no! woe is me!"}`,
+		"PANIC	panic message received",
+	)
 }

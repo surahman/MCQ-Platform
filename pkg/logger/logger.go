@@ -12,21 +12,14 @@ import (
 
 var zapLogger *zap.Logger
 
-func Init(fs *afero.Fs) {
-	var err error
-	var userConfig *config.ZapConfig
+func Init(fs *afero.Fs) (err error) {
 	var baseConfig zap.Config
 	var encConfig zapcore.EncoderConfig
 
-	{
-		cfg, err := config.Factory(config.Logger)
-		if err != nil {
-			log.Fatalf("failed to load logger configuration file from disk: %v", err)
-		}
-		userConfig = cfg.(*config.ZapConfig)
-		if err = cfg.Load(*fs); err != nil {
-			log.Fatalf("failed to load logger configuration file from disk: %v", err)
-		}
+	userConfig := config.NewLoggerConfig()
+	if err = userConfig.Load(*fs); err != nil {
+		log.Printf("failed to load logger configuration file from disk: %v\n", err)
+		return
 	}
 
 	// Base logger configuration.
@@ -38,7 +31,8 @@ func Init(fs *afero.Fs) {
 		baseConfig = zap.NewProductionConfig()
 		break
 	default:
-		log.Fatal("could not select the base config type")
+		log.Println("could not select the base config type")
+		return
 	}
 
 	// Encoder logger configuration.
@@ -50,20 +44,25 @@ func Init(fs *afero.Fs) {
 		encConfig = zap.NewProductionEncoderConfig()
 		break
 	default:
-		log.Fatal("could not select the base encoder config type")
+		log.Println("could not select the base encoder config type")
+		return
 	}
 
 	if err = mergeConfig[*zap.Config, *config.ZapGeneralConfig](&baseConfig, userConfig.GeneralConfig); err != nil {
-		log.Fatalf("failed to merge base configurations and user provided configurations for logger")
+		log.Printf("failed to merge base configurations and user provided configurations for logger: %v\n", err)
+		return
 	}
 	if err = mergeConfig[*zapcore.EncoderConfig, *config.ZapEncoderConfig](&encConfig, userConfig.EncoderConfig); err != nil {
-		log.Fatalf("failed to merge base encoder configurations and user provided encoder configurations for logger")
+		log.Printf("failed to merge base encoder configurations and user provided encoder configurations for logger: %v\n", err)
+		return
 	}
 
 	baseConfig.EncoderConfig = encConfig
 	if zapLogger, err = baseConfig.Build(zap.AddCallerSkip(1)); err != nil {
-		log.Fatalf("failure configuring logger: %v", err)
+		log.Printf("failure configuring logger: %v\n", err)
+		return
 	}
+	return
 }
 
 // Info logs messages at the info level.
@@ -76,14 +75,19 @@ func Debug(message string, fields ...zap.Field) {
 	zapLogger.Debug(message, fields...)
 }
 
+// Warn logs messages at the warn level.
+func Warn(message string, fields ...zap.Field) {
+	zapLogger.Warn(message, fields...)
+}
+
 // Error logs messages at the error level.
 func Error(message string, fields ...zap.Field) {
 	zapLogger.Error(message, fields...)
 }
 
-// Fatal logs messages at the fatal level.
-func Fatal(message string, fields ...zap.Field) {
-	zapLogger.Fatal(message, fields...)
+// Panic logs messages at the panic level and then panics at the call site.
+func Panic(message string, fields ...zap.Field) {
+	zapLogger.Panic(message, fields...)
 }
 
 // mergeConfig will merge the configuration files by marshalling and unmarshalling.

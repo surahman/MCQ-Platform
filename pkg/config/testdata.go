@@ -131,20 +131,20 @@ general_config:
   development: true
   disableCaller: true
   disableStacktrace: true
-  encoding: string
-  outputPaths: [string, array]
-  errorOutputPaths: [string, array]
+  encoding: json
+  outputPaths: ["stdout", "stderr"]
+  errorOutputPaths: ["stdout", "stderr"]
 encoder_config:
-  messageKey: string
-  levelKey: string
-  timeKey: string
-  nameKey: string
-  callerKey: string
-  functionKey: string
-  stacktraceKey: string
+  messageKey: message key
+  levelKey: level key
+  timeKey: time key
+  nameKey: name key
+  callerKey: caller key
+  functionKey: function key
+  stacktraceKey: stacktrace key
   skipLineEnding: true
-  lineEnding: string
-  consoleSeparator: string`
+  lineEnding: line ending
+  consoleSeparator: console separator`
 
 	return testData
 }

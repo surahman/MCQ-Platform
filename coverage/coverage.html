@@ -61,13 +61,13 @@
 				
 				<option value="file2">github.com/surahman/mcq-platform/pkg/config/config.go (100.0%)</option>
 				
-				<option value="file3">github.com/surahman/mcq-platform/pkg/config/constants.go (25.0%)</option>
+				<option value="file3">github.com/surahman/mcq-platform/pkg/config/constants.go (50.0%)</option>
 				
 				<option value="file4">github.com/surahman/mcq-platform/pkg/config/testdata.go (100.0%)</option>
 				
 				<option value="file5">github.com/surahman/mcq-platform/pkg/config/zap.go (78.9%)</option>
 				
-				<option value="file6">github.com/surahman/mcq-platform/pkg/logger/logger.go (10.0%)</option>
+				<option value="file6">github.com/surahman/mcq-platform/pkg/logger/logger.go (71.4%)</option>
 				
 				<option value="file7">github.com/surahman/mcq-platform/pkg/validator/validator.go (100.0%)</option>
 				
@@ -192,7 +192,7 @@ func Factory(configType Type) (IConfig, error) <span class="cov10" title="3">{
         case Cassandra:<span class="cov1" title="1">
                 return newCassandraConfig(), nil</span>
         case Logger:<span class="cov1" title="1">
-                return newLoggerConfig(), nil</span>
+                return NewLoggerConfig(), nil</span>
         default:<span class="cov1" title="1">
                 return nil, errors.New("invalid config type provided")</span>
         }
@@ -216,7 +216,7 @@ const (
 )
 
 // GetEtcDir returns the configuration directory in Etc.
-func GetEtcDir() string <span class="cov0" title="0">{
+func GetEtcDir() string <span class="cov6" title="5">{
         return configEtcDir
 }</span>
 
@@ -231,7 +231,7 @@ func GetCassandraFileName() string <span class="cov0" title="0">{
 }</span>
 
 // GetLoggerFileName returns the Zap logger configuration file name.
-func GetLoggerFileName() string <span class="cov10" title="8">{
+func GetLoggerFileName() string <span class="cov10" title="13">{
         return loggerConfigFileName
 }</span>
 </pre>
@@ -239,7 +239,7 @@ func GetLoggerFileName() string <span class="cov10" title="8">{
 		<pre class="file" id="file4" style="display: none">package config
 
 // CassandraConfigTestData will return a map of test data containing valid and invalid Cassandra configs.
-func CassandraConfigTestData() map[string]string <span class="cov8" title="1">{
+func CassandraConfigTestData() map[string]string <span class="cov1" title="1">{
         testData := make(map[string]string)
 
         testData["empty"] = ``
@@ -345,7 +345,7 @@ connection:
 }</span>
 
 // LoggerConfigTestData will return a map of test data containing valid and invalid logger configs.
-func LoggerConfigTestData() map[string]string <span class="cov8" title="1">{
+func LoggerConfigTestData() map[string]string <span class="cov10" title="2">{
         testData := make(map[string]string)
 
         testData["empty"] = ``
@@ -369,20 +369,20 @@ general_config:
   development: true
   disableCaller: true
   disableStacktrace: true
-  encoding: string
-  outputPaths: [string, array]
-  errorOutputPaths: [string, array]
+  encoding: json
+  outputPaths: ["stdout", "stderr"]
+  errorOutputPaths: ["stdout", "stderr"]
 encoder_config:
-  messageKey: string
-  levelKey: string
-  timeKey: string
-  nameKey: string
-  callerKey: string
-  functionKey: string
-  stacktraceKey: string
+  messageKey: message key
+  levelKey: level key
+  timeKey: time key
+  nameKey: name key
+  callerKey: caller key
+  functionKey: function key
+  stacktraceKey: stacktrace key
   skipLineEnding: true
-  lineEnding: string
-  consoleSeparator: string`
+  lineEnding: line ending
+  consoleSeparator: console separator`
 
         return testData
 }</span>
@@ -428,13 +428,13 @@ type ZapEncoderConfig struct {
         ConsoleSeparator string `json:"consoleSeparator" yaml:"consoleSeparator" mapstructure:"consoleSeparator" validate:"required"`
 }
 
-// newLoggerConfig creates a blank configuration struct for the Zap Logger.
-func newLoggerConfig() *ZapConfig <span class="cov1" title="1">{
+// NewLoggerConfig creates a blank configuration struct for the Zap Logger.
+func NewLoggerConfig() *ZapConfig <span class="cov6" title="5">{
         return &amp;ZapConfig{}
 }</span>
 
 // Load will attempt to load configurations from a file on a file system.
-func (cfg *ZapConfig) Load(fs afero.Fs) (err error) <span class="cov10" title="8">{
+func (cfg *ZapConfig) Load(fs afero.Fs) (err error) <span class="cov10" title="12">{
         viper.SetFs(fs)
         viper.SetConfigName(GetLoggerFileName())
         viper.SetConfigType("yaml")
@@ -446,23 +446,23 @@ func (cfg *ZapConfig) Load(fs afero.Fs) (err error) <span class="cov10" title="8
         if err := viper.BindEnv("builtin_config"); err != nil </span><span class="cov0" title="0">{
                 return err
         }</span>
-        <span class="cov10" title="8">if err := viper.BindEnv("builtin_encoder_config"); err != nil </span><span class="cov0" title="0">{
+        <span class="cov10" title="12">if err := viper.BindEnv("builtin_encoder_config"); err != nil </span><span class="cov0" title="0">{
                 return err
         }</span>
 
-        <span class="cov10" title="8">if err = viper.ReadInConfig(); err != nil </span><span class="cov0" title="0">{
+        <span class="cov10" title="12">if err = viper.ReadInConfig(); err != nil </span><span class="cov0" title="0">{
                 return
         }</span>
 
-        <span class="cov10" title="8">if err = viper.Unmarshal(cfg); err != nil </span><span class="cov0" title="0">{
+        <span class="cov10" title="12">if err = viper.Unmarshal(cfg); err != nil </span><span class="cov0" title="0">{
                 return
         }</span>
 
-        <span class="cov10" title="8">if err = validator.ValidateStruct(cfg); err != nil </span><span class="cov4" title="2">{
+        <span class="cov10" title="12">if err = validator.ValidateStruct(cfg); err != nil </span><span class="cov4" title="3">{
                 return
         }</span>
 
-        <span class="cov8" title="6">return</span>
+        <span class="cov8" title="9">return</span>
 }
 </pre>
 		
@@ -480,90 +480,94 @@ import (
 
 var zapLogger *zap.Logger
 
-func Init(fs *afero.Fs) <span class="cov0" title="0">{
-        var err error
-        var userConfig *config.ZapConfig
+func Init(fs *afero.Fs) (err error) <span class="cov7" title="4">{
         var baseConfig zap.Config
         var encConfig zapcore.EncoderConfig
 
-        </span><span class="cov0" title="0">{
-                cfg, err := config.Factory(config.Logger)
-                if err != nil </span><span class="cov0" title="0">{
-                        log.Fatalf("failed to load logger configuration file from disk: %v", err)
-                }</span>
-                <span class="cov0" title="0">userConfig = cfg.(*config.ZapConfig)
-                if err = cfg.Load(*fs); err != nil </span><span class="cov0" title="0">{
-                        log.Fatalf("failed to load logger configuration file from disk: %v", err)
-                }</span>
-        }
+        userConfig := config.NewLoggerConfig()
+        if err = userConfig.Load(*fs); err != nil </span><span class="cov1" title="1">{
+                log.Printf("failed to load logger configuration file from disk: %v\n", err)
+                return
+        }</span>
 
         // Base logger configuration.
-        <span class="cov0" title="0">switch userConfig.BuiltinConfig </span>{
-        case "Development":<span class="cov0" title="0">
+        <span class="cov5" title="3">switch userConfig.BuiltinConfig </span>{
+        case "Development":<span class="cov4" title="2">
                 baseConfig = zap.NewDevelopmentConfig()
                 break</span>
-        case "Production":<span class="cov0" title="0">
+        case "Production":<span class="cov1" title="1">
                 baseConfig = zap.NewProductionConfig()
                 break</span>
         default:<span class="cov0" title="0">
-                log.Fatal("could not select the base config type")</span>
+                log.Println("could not select the base config type")
+                return</span>
         }
 
         // Encoder logger configuration.
-        <span class="cov0" title="0">switch userConfig.BuiltinEncoderConfig </span>{
-        case "Development":<span class="cov0" title="0">
+        <span class="cov5" title="3">switch userConfig.BuiltinEncoderConfig </span>{
+        case "Development":<span class="cov4" title="2">
                 encConfig = zap.NewDevelopmentEncoderConfig()
                 break</span>
-        case "Production":<span class="cov0" title="0">
+        case "Production":<span class="cov1" title="1">
                 encConfig = zap.NewProductionEncoderConfig()
                 break</span>
         default:<span class="cov0" title="0">
-                log.Fatal("could not select the base encoder config type")</span>
+                log.Println("could not select the base encoder config type")
+                return</span>
         }
 
-        <span class="cov0" title="0">if err = mergeConfig[*zap.Config, *config.ZapGeneralConfig](&amp;baseConfig, userConfig.GeneralConfig); err != nil </span><span class="cov0" title="0">{
-                log.Fatalf("failed to merge base configurations and user provided configurations for logger")
+        <span class="cov5" title="3">if err = mergeConfig[*zap.Config, *config.ZapGeneralConfig](&amp;baseConfig, userConfig.GeneralConfig); err != nil </span><span class="cov0" title="0">{
+                log.Printf("failed to merge base configurations and user provided configurations for logger: %v\n", err)
+                return
         }</span>
-        <span class="cov0" title="0">if err = mergeConfig[*zapcore.EncoderConfig, *config.ZapEncoderConfig](&amp;encConfig, userConfig.EncoderConfig); err != nil </span><span class="cov0" title="0">{
-                log.Fatalf("failed to merge base encoder configurations and user provided encoder configurations for logger")
+        <span class="cov5" title="3">if err = mergeConfig[*zapcore.EncoderConfig, *config.ZapEncoderConfig](&amp;encConfig, userConfig.EncoderConfig); err != nil </span><span class="cov0" title="0">{
+                log.Printf("failed to merge base encoder configurations and user provided encoder configurations for logger: %v\n", err)
+                return
         }</span>
 
-        <span class="cov0" title="0">baseConfig.EncoderConfig = encConfig
+        <span class="cov5" title="3">baseConfig.EncoderConfig = encConfig
         if zapLogger, err = baseConfig.Build(zap.AddCallerSkip(1)); err != nil </span><span class="cov0" title="0">{
-                log.Fatalf("failure configuring logger: %v", err)
+                log.Printf("failure configuring logger: %v\n", err)
+                return
         }</span>
+        <span class="cov5" title="3">return</span>
 }
 
 // Info logs messages at the info level.
-func Info(message string, fields ...zap.Field) <span class="cov0" title="0">{
+func Info(message string, fields ...zap.Field) <span class="cov4" title="2">{
         zapLogger.Info(message, fields...)
 }</span>
 
 // Debug logs messages at the debug level.
-func Debug(message string, fields ...zap.Field) <span class="cov0" title="0">{
+func Debug(message string, fields ...zap.Field) <span class="cov4" title="2">{
         zapLogger.Debug(message, fields...)
 }</span>
 
+// Warn logs messages at the warn level.
+func Warn(message string, fields ...zap.Field) <span class="cov4" title="2">{
+        zapLogger.Warn(message, fields...)
+}</span>
+
 // Error logs messages at the error level.
-func Error(message string, fields ...zap.Field) <span class="cov0" title="0">{
+func Error(message string, fields ...zap.Field) <span class="cov4" title="2">{
         zapLogger.Error(message, fields...)
 }</span>
 
-// Fatal logs messages at the fatal level.
-func Fatal(message string, fields ...zap.Field) <span class="cov0" title="0">{
-        zapLogger.Fatal(message, fields...)
+// Panic logs messages at the panic level and then panics at the call site.
+func Panic(message string, fields ...zap.Field) <span class="cov4" title="2">{
+        zapLogger.Panic(message, fields...)
 }</span>
 
 // mergeConfig will merge the configuration files by marshalling and unmarshalling.
-func mergeConfig[DST *zap.Config | *zapcore.EncoderConfig, SRC *config.ZapGeneralConfig | *config.ZapEncoderConfig](dst DST, src SRC) (err error) <span class="cov10" title="2">{
+func mergeConfig[DST *zap.Config | *zapcore.EncoderConfig, SRC *config.ZapGeneralConfig | *config.ZapEncoderConfig](dst DST, src SRC) (err error) <span class="cov10" title="8">{
         var yamlToConv []byte
         if yamlToConv, err = yaml.Marshal(src); err != nil </span><span class="cov0" title="0">{
                 return
         }</span>
-        <span class="cov10" title="2">if err = yaml.Unmarshal(yamlToConv, dst); err != nil </span><span class="cov0" title="0">{
+        <span class="cov10" title="8">if err = yaml.Unmarshal(yamlToConv, dst); err != nil </span><span class="cov0" title="0">{
                 return
         }</span>
-        <span class="cov10" title="2">return</span>
+        <span class="cov10" title="8">return</span>
 }
 </pre>
 		
@@ -584,7 +588,7 @@ type ErrorField struct {
 }
 
 // Error will output the validation error for a single structs data member.
-func (err *ErrorField) Error() string <span class="cov6" title="7">{
+func (err *ErrorField) Error() string <span class="cov6" title="8">{
         return fmt.Sprintf("Field: %s, Tag: %s, Value: %s\n", err.Field, err.Tag, err.Value)
 }</span>
 
@@ -594,21 +598,21 @@ type ErrorValidation struct {
 }
 
 // Error will output the validation error for all struct data members.
-func (err *ErrorValidation) Error() string <span class="cov4" title="3">{
+func (err *ErrorValidation) Error() string <span class="cov4" title="4">{
         var buffer bytes.Buffer
-        for _, item := range err.Errors </span><span class="cov4" title="3">{
+        for _, item := range err.Errors </span><span class="cov4" title="4">{
                 buffer.WriteString(item.Error())
         }</span>
-        <span class="cov4" title="3">return buffer.String()</span>
+        <span class="cov4" title="4">return buffer.String()</span>
 }
 
 var structValidator = validator.New()
 
 // ValidateStruct will validate a struct and list all deficiencies.
-func ValidateStruct(body any) error <span class="cov9" title="23">{
+func ValidateStruct(body any) error <span class="cov10" title="27">{
         var validationErr ErrorValidation
-        if err := structValidator.Struct(body); err != nil </span><span class="cov8" title="14">{
-                for _, issue := range err.(validator.ValidationErrors) </span><span class="cov10" title="25">{
+        if err := structValidator.Struct(body); err != nil </span><span class="cov8" title="15">{
+                for _, issue := range err.(validator.ValidationErrors) </span><span class="cov9" title="26">{
                         var ev ErrorField
                         ev.Field = issue.Field()
                         ev.Tag = issue.Tag()
@@ -616,10 +620,10 @@ func ValidateStruct(body any) error <span class="cov9" title="23">{
                         validationErr.Errors = append(validationErr.Errors, &amp;ev)
                 }</span>
         }
-        <span class="cov9" title="23">if validationErr.Errors == nil </span><span class="cov7" title="9">{
+        <span class="cov10" title="27">if validationErr.Errors == nil </span><span class="cov7" title="12">{
                 return nil
         }</span>
-        <span class="cov8" title="14">return &amp;validationErr</span>
+        <span class="cov8" title="15">return &amp;validationErr</span>
 }
 </pre>
 		
