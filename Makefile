@@ -31,7 +31,7 @@ test_no_cache:
 	go test -count=1 ./...
 
 coverage:
-	go test ./... -covermode=count -coverpkg=./... -coverprofile ${COVERAGE_NAME}/${COVERAGE_NAME}.out
+	go test ./... -covermode=count -coverprofile ${COVERAGE_NAME}/${COVERAGE_NAME}.out
 	go tool cover -html ${COVERAGE_NAME}/${COVERAGE_NAME}.out -o ${COVERAGE_NAME}/${COVERAGE_NAME}.html
 
 coverage_report: coverage
