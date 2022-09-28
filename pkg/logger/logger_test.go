@@ -20,6 +20,12 @@ func TestNewLogger(t *testing.T) {
 	require.Equal(t, reflect.TypeOf(NewLogger()), reflect.TypeOf(&Logger{}), "creates new logger successfully")
 }
 
+func TestNewTestLogger(t *testing.T) {
+	testLogger, err := NewTestLogger()
+	require.NoError(t, err, "failed to create new logger for use in test suites")
+	require.Equal(t, reflect.TypeOf(testLogger), reflect.TypeOf(&zap.Logger{}), "creates new logger successfully")
+}
+
 func TestMergeConfig_General(t *testing.T) {
 	userGenCfg := config.ZapGeneralConfig{
 		Development:       false,

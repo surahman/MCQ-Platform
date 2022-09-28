@@ -120,3 +120,14 @@ func mergeConfig[DST *zap.Config | *zapcore.EncoderConfig, SRC *config.ZapGenera
 func (l *Logger) setTestLogger(testLogger *zap.Logger) {
 	l.zapLogger = testLogger
 }
+
+// NewTestLogger will create a new development logger to be used in test suites.
+func NewTestLogger() (zapLogger *zap.Logger, err error) {
+	baseConfig := zap.NewDevelopmentConfig()
+	baseConfig.EncoderConfig = zap.NewDevelopmentEncoderConfig()
+	if zapLogger, err = baseConfig.Build(zap.AddCallerSkip(1)); err != nil {
+		log.Printf("failure configuring logger: %v\n", err)
+		return
+	}
+	return
+}
