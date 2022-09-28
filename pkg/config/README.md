@@ -163,6 +163,6 @@ encoder_config:
 #### Example Environment Variables
 
 ```bash
-export LOGGER_GENERALCONFIG.DISABLESTACKTRACE=true
-export LOGGER_ENCODERCONFIG.MESSAGEKEY="Some key message"
+export LOGGER_BUILTINCONFIG="Development"
+export LOGGER_BUILTINENCODERCONFIG="Production"
 ```
