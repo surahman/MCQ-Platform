@@ -21,3 +21,7 @@ func TestGetCassandraFileName(t *testing.T) {
 func TestGetLoggerFileName(t *testing.T) {
 	require.Equal(t, loggerConfigFileName, GetLoggerFileName(), "Incorrect logger filename")
 }
+
+func TestGetIntegrationTestKeyspaceSuffix(t *testing.T) {
+	require.Equal(t, integrationTestKeyspaceSuffix, GetIntegrationTestKeyspaceSuffix(), "Incorrect integration test keyspace suffix")
+}

@@ -12,6 +12,9 @@ const (
 	// Environment variables
 	cassandraPrefix = "CASSANDRA"
 	loggerPrefix    = "LOGGER"
+
+	// Misc.
+	integrationTestKeyspaceSuffix = "_integration_testing"
 )
 
 // GetEtcDir returns the configuration directory in Etc.
@@ -32,4 +35,9 @@ func GetCassandraFileName() string {
 // GetLoggerFileName returns the Zap logger configuration file name.
 func GetLoggerFileName() string {
 	return loggerConfigFileName
+}
+
+// GetIntegrationTestKeyspaceSuffix is the suffix attached to the clusters keyspace and is used for integration tests.
+func GetIntegrationTestKeyspaceSuffix() string {
+	return integrationTestKeyspaceSuffix
 }

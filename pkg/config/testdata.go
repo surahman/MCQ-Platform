@@ -18,7 +18,7 @@ connection:
   consistency: quorum
   cluster_ip: [127.0.0.1]
   proto_version: 4
-  timeout: 10`
+  timeout: 30`
 
 	testData["password_empty"] = `
 authentication:
@@ -32,7 +32,7 @@ connection:
   consistency: quorum
   cluster_ip: [127.0.0.1]
   proto_version: 4
-  timeout: 10`
+  timeout: 30`
 
 	testData["username_empty"] = `
 authentication:
@@ -46,7 +46,7 @@ connection:
   consistency: quorum
   cluster_ip: [127.0.0.1]
   proto_version: 4
-  timeout: 10`
+  timeout: 30`
 
 	testData["keyspace_empty"] = `
 authentication:
@@ -60,7 +60,7 @@ connection:
   consistency: quorum
   cluster_ip: [127.0.0.1]
   proto_version: 4
-  timeout: 10`
+  timeout: 30`
 
 	testData["consistency_missing"] = `
 authentication:
@@ -73,7 +73,7 @@ keyspace:
 connection:
   cluster_ip: [127.0.0.1]
   proto_version: 4
-  timeout: 10`
+  timeout: 30`
 
 	testData["ip_empty"] = `
 authentication:
@@ -87,7 +87,7 @@ connection:
   consistency: quorum
   cluster_ip: []
   proto_version: 4
-  timeout: 10`
+  timeout: 30`
 
 	testData["timeout_zero"] = `
 authentication:
