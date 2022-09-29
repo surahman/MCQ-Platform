@@ -26,7 +26,7 @@ type IConfig interface {
 func Factory(configType Type) (IConfig, error) {
 	switch configType {
 	case Cassandra:
-		return newCassandraConfig(), nil
+		return NewCassandraConfig(), nil
 	case Logger:
 		return NewLoggerConfig(), nil
 	default:

@@ -28,15 +28,15 @@ type CassandraConfig struct {
 	} `json:"connection,omitempty" yaml:"connection,omitempty" mapstructure:"connection"`
 }
 
-// newCassandraConfig creates a blank configuration struct for Cassandra.
-func newCassandraConfig() *CassandraConfig {
+// NewCassandraConfig creates a blank configuration struct for Cassandra.
+func NewCassandraConfig() *CassandraConfig {
 	return &CassandraConfig{}
 }
 
 // Load will attempt to load configurations from a file on a file system and then overwrite values using environment variables.
 func (cfg *CassandraConfig) Load(fs afero.Fs) (err error) {
 	viper.SetFs(fs)
-	viper.SetConfigName(cassandraConfigFileName)
+	viper.SetConfigName(GetCassandraFileName())
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath(configEtcDir)
 	viper.AddConfigPath(configHomeDir)
@@ -57,5 +57,5 @@ func (cfg *CassandraConfig) Load(fs afero.Fs) (err error) {
 		return
 	}
 
-	return nil
+	return
 }
