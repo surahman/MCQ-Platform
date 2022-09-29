@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"errors"
 	"log"
 	"strings"
 
@@ -23,6 +24,9 @@ func NewLogger() *Logger {
 
 // Init will initialize the logger with configurations and start it.
 func (l *Logger) Init(fs *afero.Fs) (err error) {
+	if l.zapLogger != nil {
+		return errors.New("logger is already initialized")
+	}
 	var baseConfig zap.Config
 	var encConfig zapcore.EncoderConfig
 
@@ -122,12 +126,13 @@ func (l *Logger) setTestLogger(testLogger *zap.Logger) {
 }
 
 // NewTestLogger will create a new development logger to be used in test suites.
-func NewTestLogger() (zapLogger *zap.Logger, err error) {
+func NewTestLogger() (logger *Logger, err error) {
 	baseConfig := zap.NewDevelopmentConfig()
 	baseConfig.EncoderConfig = zap.NewDevelopmentEncoderConfig()
+	var zapLogger *zap.Logger
 	if zapLogger, err = baseConfig.Build(zap.AddCallerSkip(1)); err != nil {
 		log.Printf("failure configuring logger: %v\n", err)
-		return
+		return nil, err
 	}
-	return
+	return &Logger{zapLogger: zapLogger}, err
 }
