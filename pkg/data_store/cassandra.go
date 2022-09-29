@@ -2,6 +2,7 @@ package data_store
 
 import (
 	"errors"
+	"strconv"
 	"time"
 
 	"github.com/gocql/gocql"
@@ -62,8 +63,7 @@ func (c *CassandraImpl) Open() (err error) {
 	}
 
 	// Session connection pool.
-	if c.session, err = cluster.CreateSession(); err != nil {
-		c.logger.Error("unable to establish connection to Cassandra cluster", zap.Error(err))
+	if err = c.createSessionRetry(cluster); err != nil {
 		return
 	}
 
@@ -84,6 +84,7 @@ func (c *CassandraImpl) configureCluster() (cluster *gocql.ClusterConfig, err er
 	cluster = gocql.NewCluster(c.conf.Connection.ClusterIP...)
 	cluster.ProtoVersion = c.conf.Connection.ProtoVersion
 	cluster.ConnectTimeout = time.Duration(c.conf.Connection.Timeout) * time.Second
+	cluster.Timeout = time.Duration(c.conf.Connection.Timeout) * time.Second
 	if cluster.Consistency, err = gocql.ParseConsistencyWrapper(c.conf.Connection.Consistency); err != nil {
 		c.logger.Error("failed to parse Cassandra consistency level provided in user configs", zap.Error(err))
 		return nil, err
@@ -102,4 +103,19 @@ func (c *CassandraImpl) verifySession() error {
 		return errors.New("no session established")
 	}
 	return nil
+}
+
+// createSessionRetry will attempt to open the connection a few times stop on the first success or fail after the last one.
+func (c *CassandraImpl) createSessionRetry(cluster *gocql.ClusterConfig) (err error) {
+	maxAttempts := config.GetCassandraMaxConnectRetries()
+	for attempt := 0; attempt <= maxAttempts; attempt++ {
+		c.logger.Info("Attempting to connect to Cassandra cluster...", zap.String("attempt", strconv.Itoa(attempt)))
+		if c.session, err = cluster.CreateSession(); err == nil {
+			break
+		}
+	}
+	if err != nil {
+		c.logger.Error("unable to establish connection to Cassandra cluster", zap.Error(err))
+	}
+	return
 }

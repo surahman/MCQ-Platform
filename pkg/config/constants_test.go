@@ -25,3 +25,7 @@ func TestGetLoggerFileName(t *testing.T) {
 func TestGetIntegrationTestKeyspaceSuffix(t *testing.T) {
 	require.Equal(t, integrationTestKeyspaceSuffix, GetIntegrationTestKeyspaceSuffix(), "Incorrect integration test keyspace suffix")
 }
+
+func TestGetCassandraMaxConnectRetries(t *testing.T) {
+	require.Equal(t, cassandraMaxConnectRetries, GetCassandraMaxConnectRetries(), "Incorrect Cassandra connection retries")
+}

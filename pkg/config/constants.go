@@ -15,6 +15,7 @@ const (
 
 	// Misc.
 	integrationTestKeyspaceSuffix = "_integration_testing"
+	cassandraMaxConnectRetries    = 5
 )
 
 // GetEtcDir returns the configuration directory in Etc.
@@ -40,4 +41,9 @@ func GetLoggerFileName() string {
 // GetIntegrationTestKeyspaceSuffix is the suffix attached to the clusters keyspace and is used for integration tests.
 func GetIntegrationTestKeyspaceSuffix() string {
 	return integrationTestKeyspaceSuffix
+}
+
+// GetCassandraMaxConnectRetries is the maximum number of attempts to retry connecting to the Cassandra cluster.
+func GetCassandraMaxConnectRetries() int {
+	return cassandraMaxConnectRetries
 }

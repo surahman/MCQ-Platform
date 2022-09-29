@@ -100,7 +100,7 @@ func createTestingKeyspace(c *CassandraImpl) (err error) {
 	integrationKeyspace := c.conf.Keyspace.Name + config.GetIntegrationTestKeyspaceSuffix()
 
 	// Create keyspace connection pool.
-	if c.session, err = cluster.CreateSession(); err != nil {
+	if err = c.createSessionRetry(cluster); err != nil {
 		c.logger.Error("unable to establish connection to Cassandra cluster", zap.Error(err))
 		return
 	}
@@ -119,7 +119,7 @@ func createTestingKeyspace(c *CassandraImpl) (err error) {
 	// Close connection to create keyspace and open keyspace scoped connection.
 	c.session.Close()
 	cluster.Keyspace = integrationKeyspace
-	if c.session, err = cluster.CreateSession(); err != nil {
+	if err = c.createSessionRetry(cluster); err != nil {
 		c.logger.Error("unable to establish connection to Cassandra cluster scoped to integration test keyspace", zap.Error(err))
 		return
 	}

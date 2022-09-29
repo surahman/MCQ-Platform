@@ -9,4 +9,4 @@ connection:
   consistency: quorum
   cluster_ip: [127.0.0.1]
   proto_version: 4
-  timeout: 30
+  timeout: 10
