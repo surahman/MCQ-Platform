@@ -12,13 +12,15 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    env:
+      GITHUB_ACTIONS_CI: true
 
     steps:
       - name: Code checkout
         uses: actions/checkout@v3
 
       - name: Start Cassandra
-        run: docker compose -f "docker-compose.yaml" up -d
+        run: docker-compose up -d
 
       - name: Wait for healthy Cassandra
         uses: stringbean/docker-healthcheck-action@v1
@@ -51,4 +53,4 @@ jobs:
 
       - name: Shutdown Cassandra
         if: always()
-        run: docker compose -f "docker-compose.yaml" down
+        run: docker-compose down

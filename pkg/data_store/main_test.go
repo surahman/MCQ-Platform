@@ -45,19 +45,27 @@ var connection testConnection
 
 // setup will configure the connection to the test clusters keyspace.
 func setup() (err error) {
+
+	// Configure logger.
+	var zapLogger *logger.Logger
+	if zapLogger, err = logger.NewTestLogger(); err != nil {
+		return
+	}
+
+	// If running on a GitHub Actions runner use the default credentials for Cassandra.
+	configFileKey := "valid"
+	if _, ok := os.LookupEnv(config.GetGithubCIKey()); ok == true {
+		configFileKey = "valid-ci"
+		zapLogger.Info("Integration Test running on Github CI runner.")
+	}
+
 	// Setup mock filesystem.
 	fs := afero.NewMemMapFs()
 	if err = fs.MkdirAll(config.GetEtcDir(), 0644); err != nil {
 		return
 	}
-	cassandraConf := config.CassandraConfigTestData()["valid"]
+	cassandraConf := config.CassandraConfigTestData()[configFileKey]
 	if err = afero.WriteFile(fs, config.GetEtcDir()+config.GetCassandraFileName(), []byte(cassandraConf), 0644); err != nil {
-		return
-	}
-
-	// Configure logger.
-	var zapLogger *logger.Logger
-	if zapLogger, err = logger.NewTestLogger(); err != nil {
 		return
 	}
 
@@ -70,10 +78,6 @@ func setup() (err error) {
 	if err = createTestingKeyspace(connection.db.(*CassandraImpl)); err != nil {
 		return
 	}
-
-	// Open connection to cluster in integration test keyspace.
-
-	// Migrate schema to integration test keyspace.
 
 	return
 }

@@ -12,6 +12,7 @@ const (
 	// Environment variables
 	cassandraPrefix = "CASSANDRA"
 	loggerPrefix    = "LOGGER"
+	githubCIKey     = "GITHUB_ACTIONS_CI"
 
 	// Misc.
 	integrationTestKeyspaceSuffix = "_integration_testing"
@@ -46,4 +47,9 @@ func GetIntegrationTestKeyspaceSuffix() string {
 // GetCassandraMaxConnectRetries is the maximum number of attempts to retry connecting to the Cassandra cluster.
 func GetCassandraMaxConnectRetries() int {
 	return cassandraMaxConnectRetries
+}
+
+// GetGithubCIKey is the key for the environment variable expected to be present in the GH CI runner.
+func GetGithubCIKey() string {
+	return githubCIKey
 }

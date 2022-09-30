@@ -20,6 +20,20 @@ connection:
   proto_version: 4
   timeout: 10`
 
+	testData["valid-ci"] = `
+authentication:
+  username: cassandra
+  password: cassandra
+keyspace:
+  name: mcq_platform
+  replication_class: SimpleStrategy
+  replication_factor: 3
+connection:
+  consistency: quorum
+  cluster_ip: [localhost]
+  proto_version: 4
+  timeout: 10`
+
 	testData["password_empty"] = `
 authentication:
   username: admin

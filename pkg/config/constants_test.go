@@ -29,3 +29,7 @@ func TestGetIntegrationTestKeyspaceSuffix(t *testing.T) {
 func TestGetCassandraMaxConnectRetries(t *testing.T) {
 	require.Equal(t, cassandraMaxConnectRetries, GetCassandraMaxConnectRetries(), "Incorrect Cassandra connection retries")
 }
+
+func TestGetGithubCIKey(t *testing.T) {
+	require.Equal(t, githubCIKey, GetGithubCIKey(), "Incorrect Github CI environment key")
+}
