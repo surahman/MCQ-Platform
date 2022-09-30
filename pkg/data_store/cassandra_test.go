@@ -1,6 +1,7 @@
 package data_store
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -104,6 +105,23 @@ func TestNewCassandraImpl(t *testing.T) {
 			testCase.expectNil(t, c)
 		})
 	}
+}
+
+func TestCassandraImpl_Execute(t *testing.T) {
+	type testType struct {
+		key string
+		val string
+	}
+
+	input := &testType{key: "key", val: "value"}
+	fn := func(conn *CassandraImpl, params any) (any, error) {
+		casted := params.(*testType)
+		return casted, nil
+	}
+
+	result, err := connection.db.Execute(fn, input)
+	require.NoError(t, err)
+	require.Equal(t, reflect.TypeOf(input), reflect.TypeOf(result.(*testType)))
 }
 
 func openTestConnection(t *testing.T) (cassandra *CassandraImpl) {

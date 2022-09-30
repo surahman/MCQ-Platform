@@ -16,6 +16,7 @@ import (
 type Cassandra interface {
 	Open() error
 	Close() error
+	Execute(func(*CassandraImpl, any) (any, error), any) (any, error)
 }
 
 // Check to ensure the Cassandra interface has been implemented.
@@ -77,6 +78,11 @@ func (c *CassandraImpl) Close() error {
 	}
 	c.session.Close()
 	return nil
+}
+
+// Execute wraps the methods that create, read, update, and delete records from tables on the Cassandra cluster.
+func (c *CassandraImpl) Execute(request func(*CassandraImpl, any) (any, error), params any) (any, error) {
+	return request(c, params)
 }
 
 // configureCluster will configure the settings for the Cassandra cluster.
