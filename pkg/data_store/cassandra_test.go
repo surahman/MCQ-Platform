@@ -114,7 +114,7 @@ func TestCassandraImpl_Execute(t *testing.T) {
 	}
 
 	input := &testType{key: "key", val: "value"}
-	fn := func(conn *CassandraImpl, params any) (any, error) {
+	fn := func(conn Cassandra, params any) (any, error) {
 		casted := params.(*testType)
 		return casted, nil
 	}
@@ -124,39 +124,29 @@ func TestCassandraImpl_Execute(t *testing.T) {
 	require.Equal(t, reflect.TypeOf(input), reflect.TypeOf(result.(*testType)))
 }
 
-func openTestConnection(t *testing.T) (cassandra *CassandraImpl) {
-	// Mock file system.
-	fs := afero.NewMemMapFs()
-	require.NoError(t, fs.MkdirAll(config.GetEtcDir(), 0644), "Failed to create in memory directory")
-	require.NoError(t, afero.WriteFile(fs, config.GetEtcDir()+config.GetCassandraFileName(), []byte(configTestData["valid"]), 0644), "Failed to write in memory file")
+func TestCassandra_Open(t *testing.T) {
+	cassandra, err := getTestConfiguration()
+	require.NoError(t, err, "Failed to open a connection to the cluster")
+	cassandra.conf.Keyspace.Name = integrationKeyspace
 
-	var err error
-	testLogger, err := logger.NewTestLogger()
-	require.NoError(t, err, "Failed to create Zap logger for testing.")
-	cassandra, err = newCassandraImpl(&fs, testLogger)
-	require.NoErrorf(t, err, "Failed to load configurations: %v", err)
 	require.NoError(t, cassandra.Open(), "Failed to open a connection to the cluster")
 
-	return
-}
-
-func TestCassandra_Open(t *testing.T) {
-	// SKIP
-	t.SkipNow()
-
-	cassandra := openTestConnection(t)
 	require.Error(t, cassandra.Open(), "Attempt to leak connection pool")
 	require.NoError(t, cassandra.Close(), "Failed to close connection")
 }
 
 func TestCassandra_Close(t *testing.T) {
-	// SKIP
-	t.SkipNow()
+	var cassandra *CassandraImpl
+	var err error
 
-	var cassandra CassandraImpl
+	cassandra, err = getTestConfiguration()
+	require.NoError(t, err, "Failed to get test configuration.")
+	cassandra.conf.Keyspace.Name = integrationKeyspace
+
 	require.Error(t, cassandra.Close(), "Should return an error when a connection is not initially established")
 
-	cassandra = *openTestConnection(t)
+	require.NoError(t, cassandra.Open(), "Should establish a connection")
 	require.NoError(t, cassandra.Close(), "Should close an established connection")
+
 	require.Error(t, cassandra.Close(), "Should return an error when a connection was closed")
 }
