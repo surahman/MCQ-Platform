@@ -16,10 +16,32 @@ import (
 	"go.uber.org/zap"
 )
 
+// testConnection is the connection pool to the Cassandra cluster. The mutex is used for sequential test execution.
+type testConnection struct {
+	db Cassandra    // Test database connection.
+	mu sync.RWMutex // Mutex to enforce sequential test execution.
+}
+
+// connection pool to Cassandra cluster.
+var connection testConnection
+
+// zapLogger is the Zap logger used strictly for the test suite in this package.
+var zapLogger *logger.Logger
+
+// integrationKeyspace is the name of the keyspace in which testing is conducted.
+var integrationKeyspace string
+
 func TestMain(m *testing.M) {
+	var err error
+	// Configure logger.
+	if zapLogger, err = logger.NewTestLogger(); err != nil {
+		log.Printf("Test suite logger setup failed: %v\n", err)
+		os.Exit(1)
+	}
+
 	// Setup test space.
 	if err := setup(); err != nil {
-		log.Printf("Test suite setup failure: %v\n", err)
+		zapLogger.Error("Test suite setup failure", zap.Error(err))
 		os.Exit(1)
 	}
 
@@ -28,51 +50,21 @@ func TestMain(m *testing.M) {
 
 	// Cleanup test space.
 	if err := tearDown(); err != nil {
-		log.Printf("Test suite teardown failure: %v\n", err)
+		zapLogger.Error("Test suite teardown failure:", zap.Error(err))
 		os.Exit(1)
 	}
 	os.Exit(exitCode)
 }
 
-// testConnection is the connection pool to the Cassandra cluster. The mutex is used for sequential test execution.
-type testConnection struct {
-	db         Cassandra // Test database connection.
-	sync.Mutex           // Mutex to enforce sequential test execution.
-}
-
-// connection pool to Cassandra cluster.
-var connection testConnection
-
 // setup will configure the connection to the test clusters keyspace.
 func setup() (err error) {
-
-	// Configure logger.
-	var zapLogger *logger.Logger
-	if zapLogger, err = logger.NewTestLogger(); err != nil {
-		return
-	}
-
-	// If running on a GitHub Actions runner use the default credentials for Cassandra.
-	configFileKey := "valid"
-	if _, ok := os.LookupEnv(config.GetGithubCIKey()); ok == true {
-		configFileKey = "valid-ci"
-		zapLogger.Info("Integration Test running on Github CI runner.")
-	}
-
-	// Setup mock filesystem.
-	fs := afero.NewMemMapFs()
-	if err = fs.MkdirAll(config.GetEtcDir(), 0644); err != nil {
-		return
-	}
-	cassandraConf := config.CassandraConfigTestData()[configFileKey]
-	if err = afero.WriteFile(fs, config.GetEtcDir()+config.GetCassandraFileName(), []byte(cassandraConf), 0644); err != nil {
-		return
-	}
-
 	// Load Cassandra configurations.
-	if connection.db, err = NewCassandra(&fs, zapLogger); err != nil {
+	if connection.db, err = getTestConfiguration(); err != nil {
 		return
 	}
+
+	// Integration test keyspace name.
+	integrationKeyspace = connection.db.(*CassandraImpl).conf.Keyspace.Name + config.GetIntegrationTestKeyspaceSuffix()
 
 	// Create Keyspace for integration test.
 	if err = createTestingKeyspace(connection.db.(*CassandraImpl)); err != nil {
@@ -85,6 +77,32 @@ func setup() (err error) {
 // tearDown will delete the test clusters keyspace.
 func tearDown() error {
 	return connection.db.Close()
+}
+
+// getTestConfiguration creates a cluster configuration for testing.
+func getTestConfiguration() (cassandra *CassandraImpl, err error) {
+	// If running on a GitHub Actions runner use the default credentials for Cassandra.
+	configFileKey := "valid"
+	if _, ok := os.LookupEnv(config.GetGithubCIKey()); ok == true {
+		configFileKey = "valid-ci"
+		zapLogger.Info("Integration Test running on Github CI runner.")
+	}
+
+	// Setup mock filesystem.
+	fs := afero.NewMemMapFs()
+	if err = fs.MkdirAll(config.GetEtcDir(), 0644); err != nil {
+		return
+	}
+	if err = afero.WriteFile(fs, config.GetEtcDir()+config.GetCassandraFileName(), []byte(configTestData[configFileKey]), 0644); err != nil {
+		return
+	}
+
+	// Load Cassandra configurations.
+	if cassandra, err = newCassandraImpl(&fs, zapLogger); err != nil {
+		return
+	}
+
+	return
 }
 
 // createTestingKeyspace will configure and create a fresh Keyspace for integration testing and connect to it.
@@ -101,7 +119,6 @@ func createTestingKeyspace(c *CassandraImpl) (err error) {
 
 	// Connection scoped to cluster wide to create integration test keyspace.
 	cluster.Keyspace = ""
-	integrationKeyspace := c.conf.Keyspace.Name + config.GetIntegrationTestKeyspaceSuffix()
 
 	// Create keyspace connection pool.
 	if err = c.createSessionRetry(cluster); err != nil {
@@ -120,7 +137,7 @@ func createTestingKeyspace(c *CassandraImpl) (err error) {
 	}
 	c.logger.Info("fresh integration test keyspace created", zap.String("name", integrationKeyspace))
 
-	// Close connection to create keyspace and open keyspace scoped connection.
+	// Close connection used to create keyspace and open keyspace scoped connection.
 	c.session.Close()
 	cluster.Keyspace = integrationKeyspace
 	if err = c.createSessionRetry(cluster); err != nil {
