@@ -55,9 +55,9 @@ const (
 	// -----   Users Table Queries   -----
 
 	// CreateUser inserts a new user record into the Users table if it does not already exist.
-	// Query Params: username, account_id, password, first_name, last_name, email, is_deleted
+	// Query Params: username, account_id, password, first_name, last_name, email
 	CreateUser = `INSERT INTO users (username, account_id, password, first_name, last_name, email, is_deleted)
-VALUES (?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, false)
 IF NOT EXISTS;`
 
 	// ReadUser retrieves a user account record from the Users table.
