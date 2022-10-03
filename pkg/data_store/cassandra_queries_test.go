@@ -2,6 +2,7 @@ package data_store
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/gocql/gocql"
@@ -10,6 +11,7 @@ import (
 )
 
 var testUserRecords = GetTestUsers()
+var testQuizRecords = GetTestQuizzes()
 var testResponseRecords = GetTestResponses()
 
 func insertTestUsers(t *testing.T) {
@@ -19,6 +21,16 @@ func insertTestUsers(t *testing.T) {
 	for _, user := range testUserRecords {
 		_, err := CreateUserQuery(connection.db, user)
 		require.NoErrorf(t, err, "failed to create user %v with error %v", user, err)
+	}
+}
+
+func insertTestQuizzes(t *testing.T) {
+	_, err := truncateTableQuery(connection.db, "quizzes")
+	require.NoErrorf(t, err, "failed to truncate quizzes table before populating")
+
+	for _, quiz := range testQuizRecords {
+		_, err := CreateQuizQuery(connection.db, quiz)
+		require.NoErrorf(t, err, "failed to create quiz %v with error %v", quiz, err)
 	}
 }
 
@@ -116,14 +128,140 @@ func TestReadUserQuery(t *testing.T) {
 	_, err := connection.db.Execute(ReadUserQuery, userPass)
 	require.Error(t, err, "user account that does not exist")
 
-	// Username and account id collisions.
+	// Check created accounts exist.
 	for key, testCase := range testUserRecords {
 		t.Run(fmt.Sprintf("Test case %s", key), func(t *testing.T) {
 			resp, err := connection.db.Execute(ReadUserQuery, testCase)
 			require.NoError(t, err)
 			actual := resp.(*model_cassandra.User)
-			require.Equal(t, testCase.AccountID, actual.AccountID, "expected account id does not match returned")
-			require.Equal(t, testCase.Username, actual.Username, "expected username does not match returned")
+			require.Truef(t, reflect.DeepEqual(testCase, actual), "expected user, %v, does not match actual, %v", testCase, actual)
+		})
+	}
+}
+
+func TestCreateQuizQuery(t *testing.T) {
+	// Lock connection to Cassandra cluster.
+	connection.mu.Lock()
+	defer connection.mu.Unlock()
+	// Insert new quizzes.
+	insertTestQuizzes(t)
+
+	// Quiz id collisions.
+	for key, testCase := range testQuizRecords {
+		t.Run(fmt.Sprintf("Test case %s", key), func(t *testing.T) {
+			_, err := connection.db.Execute(CreateQuizQuery, testCase)
+			require.Error(t, err)
+		})
+	}
+}
+
+func TestReadQuizQuery(t *testing.T) {
+	// Lock connection to Cassandra cluster.
+	connection.mu.Lock()
+	defer connection.mu.Unlock()
+	// Insert new users.
+	insertTestQuizzes(t)
+
+	// Non-existent quiz.
+	_, err := connection.db.Execute(ReadQuizQuery, gocql.TimeUUID())
+	require.Error(t, err, "quiz that does not exist")
+
+	// Check created quizzes exist.
+	for key, testCase := range testQuizRecords {
+		t.Run(fmt.Sprintf("Test case %s", key), func(t *testing.T) {
+			resp, err := connection.db.Execute(ReadQuizQuery, testCase.QuizID)
+			require.NoError(t, err)
+			actual := resp.(*model_cassandra.Quiz)
+			require.Truef(t, reflect.DeepEqual(testCase, actual), "expected quiz, %v, does not match actual, %v", testCase, actual)
+		})
+	}
+}
+
+func TestUpdateQuizQuery(t *testing.T) {
+	// Lock connection to Cassandra cluster.
+	connection.mu.Lock()
+	defer connection.mu.Unlock()
+	// Insert new users.
+	insertTestQuizzes(t)
+
+	var err error
+
+	// Non-existent quiz.
+	nonexistentQuiz := &model_cassandra.Quiz{
+		Author:      "someone or another",
+		QuizCore:    &model_cassandra.QuizCore{},
+		QuizID:      gocql.TimeUUID(),
+		IsPublished: false,
+		IsDeleted:   false,
+	}
+	_, err = connection.db.Execute(UpdateQuizQuery, nonexistentQuiz)
+	require.Error(t, err, "quiz that does not exist")
+
+	expectedQuizzes := GetTestQuizzes()
+	for key, testCase := range expectedQuizzes {
+		t.Run(fmt.Sprintf("Test case %s", key), func(t *testing.T) {
+			testCase.Title = "updated title"
+			testCase.MarkingType = "updated marking type"
+			testCase.Questions[0].Description = "updated quiz description"
+
+			_, err = connection.db.Execute(UpdateQuizQuery, testCase)
+			require.NoError(t, err, "update record failed")
+
+			var resp any
+			resp, err = connection.db.Execute(ReadQuizQuery, testCase.QuizID)
+			require.NoError(t, err, "read record failed")
+			actual := resp.(*model_cassandra.Quiz)
+			require.Truef(t, reflect.DeepEqual(testCase, actual), "expected quiz, %v, does not match actual, %v", testCase, actual)
+		})
+	}
+}
+
+func TestDeleteQuizQuery(t *testing.T) {
+	// Lock connection to Cassandra cluster.
+	connection.mu.Lock()
+	defer connection.mu.Unlock()
+	// Insert new users.
+	insertTestQuizzes(t)
+
+	// Non-existent quiz.
+	_, errNonExistent := connection.db.Execute(DeleteQuizQuery, gocql.TimeUUID())
+	require.Error(t, errNonExistent, "quiz that does not exist")
+
+	for key, testCase := range testQuizRecords {
+		t.Run(fmt.Sprintf("Test case %s", key), func(t *testing.T) {
+			_, err := connection.db.Execute(DeleteQuizQuery, testCase.QuizID)
+			require.NoError(t, err, "delete record failed")
+
+			var resp any
+			resp, err = connection.db.Execute(ReadQuizQuery, testCase.QuizID)
+			require.NoError(t, err, "read quiz record failed")
+			actual := resp.(*model_cassandra.Quiz)
+			require.Truef(t, actual.IsDeleted, "expected quiz, %v, does not match actual, %v", testCase, actual)
+		})
+	}
+}
+
+func TestPublishQuizQuery(t *testing.T) {
+	// Lock connection to Cassandra cluster.
+	connection.mu.Lock()
+	defer connection.mu.Unlock()
+	// Insert new users.
+	insertTestQuizzes(t)
+
+	// Non-existent quiz.
+	_, errNonExistent := connection.db.Execute(PublishQuizQuery, gocql.TimeUUID())
+	require.Error(t, errNonExistent, "quiz that does not exist")
+
+	for key, testCase := range testQuizRecords {
+		t.Run(fmt.Sprintf("Test case %s", key), func(t *testing.T) {
+			_, err := connection.db.Execute(PublishQuizQuery, testCase.QuizID)
+			require.NoError(t, err, "publish record failed")
+
+			var resp any
+			resp, err = connection.db.Execute(ReadQuizQuery, testCase.QuizID)
+			require.NoError(t, err, "read quiz record failed")
+			actual := resp.(*model_cassandra.Quiz)
+			require.Truef(t, actual.IsPublished, "expected quiz, %v, does not match actual, %v", testCase, actual)
 		})
 	}
 }
@@ -167,8 +305,7 @@ func TestReadResponseQuery(t *testing.T) {
 			resp, err := connection.db.Execute(ReadResponseQuery, testCase)
 			require.NoError(t, err)
 			actual := resp.(*model_cassandra.Response)
-			require.Equalf(t, testCase.QuizID, actual.QuizID, "expected quiz id, %s, does not match returned %s", testCase.QuizID.String(), actual.QuizID.String())
-			require.Equalf(t, testCase.Username, actual.Username, "expected username, %s, does not match returned %s", testCase.Username, actual.Username)
+			require.Truef(t, reflect.DeepEqual(testCase, actual), "expected response, %v, does not match actual, %v", testCase, actual)
 		})
 	}
 }

@@ -63,8 +63,8 @@ func GetTestUsers() map[string]*model_cassandra.User {
 }
 
 // GetTestQuizzes is a map of test quiz data.
-func GetTestQuizzes() map[string]model_cassandra.Quiz {
-	data := make(map[string]model_cassandra.Quiz)
+func GetTestQuizzes() map[string]*model_cassandra.Quiz {
+	data := make(map[string]*model_cassandra.Quiz)
 	temperatureQuestion := model_cassandra.Question{Description: "Temperature can be measured in",
 		Options: []string{"Kelvin", "Fahrenheit", "Gram", "Celsius", "Liters"},
 		Answers: []int32{0, 1, 3}}
@@ -81,31 +81,31 @@ func GetTestQuizzes() map[string]model_cassandra.Quiz {
 		Options: []string{"Yes"},
 		Answers: []int32{0}}
 
-	data["providedPubQuiz"] = model_cassandra.Quiz{QuizID: quizzesUUIDMapping["providedPubQuiz"], Author: "user-1",
+	data["providedPubQuiz"] = &model_cassandra.Quiz{QuizID: quizzesUUIDMapping["providedPubQuiz"], Author: "user-1",
 		QuizCore: &model_cassandra.QuizCore{
 			Title:       "Sample quiz published",
 			MarkingType: "Negative",
 			Questions:   []*model_cassandra.Question{&temperatureQuestion, &moonQuestion},
 		}}
-	data["providedNoPubQuiz"] = model_cassandra.Quiz{QuizID: quizzesUUIDMapping["providedNoPubQuiz"], Author: "user-1",
+	data["providedNoPubQuiz"] = &model_cassandra.Quiz{QuizID: quizzesUUIDMapping["providedNoPubQuiz"], Author: "user-1",
 		QuizCore: &model_cassandra.QuizCore{
 			Title:       "Sample quiz not published",
 			MarkingType: "Negative",
 			Questions:   []*model_cassandra.Question{&temperatureQuestion, &moonQuestion},
 		}}
-	data["myPubQuiz"] = model_cassandra.Quiz{QuizID: quizzesUUIDMapping["myPubQuiz"], Author: "user-2",
+	data["myPubQuiz"] = &model_cassandra.Quiz{QuizID: quizzesUUIDMapping["myPubQuiz"], Author: "user-2",
 		QuizCore: &model_cassandra.QuizCore{
 			Title:       "My sample quiz published",
 			MarkingType: "Negative",
 			Questions:   []*model_cassandra.Question{&weightQuestion, &booleanQuestion},
 		}}
-	data["myNoPubQuiz"] = model_cassandra.Quiz{QuizID: quizzesUUIDMapping["myNoPubQuiz"], Author: "user-3",
+	data["myNoPubQuiz"] = &model_cassandra.Quiz{QuizID: quizzesUUIDMapping["myNoPubQuiz"], Author: "user-3",
 		QuizCore: &model_cassandra.QuizCore{
 			Title:       "My sample quiz not published",
 			MarkingType: "Negative",
 			Questions:   []*model_cassandra.Question{&weightQuestion, &booleanQuestion},
 		}}
-	data["invalidOptionsNoPubQuiz"] = model_cassandra.Quiz{QuizID: quizzesUUIDMapping["invalidOptionsNoPubQuiz"], Author: "user-4", QuizCore: &model_cassandra.QuizCore{
+	data["invalidOptionsNoPubQuiz"] = &model_cassandra.Quiz{QuizID: quizzesUUIDMapping["invalidOptionsNoPubQuiz"], Author: "user-4", QuizCore: &model_cassandra.QuizCore{
 		Title:       "Invalid Options (1 options) unpublished",
 		MarkingType: "Negative",
 		Questions:   []*model_cassandra.Question{&invalidQuestion},
