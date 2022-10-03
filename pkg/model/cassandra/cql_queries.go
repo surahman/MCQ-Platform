@@ -73,7 +73,7 @@ WHERE username = ? AND account_id = ? IF EXISTS;`
 	// -----   Quizzes Table Queries   -----
 
 	// CreateQuiz inserts a new Quiz record into the Quizzes table if it does not already exist.
-	// Query Params: quiz_id, author, title, questions, marking_type, is_published, is_deleted
+	// Query Params: quiz_id, author, title, questions, marking_type
 	CreateQuiz = `INSERT INTO quizzes (quiz_id, author, title, questions, marking_type, is_published, is_deleted)
 VALUES (?, ?, ?, ?, ?, false, false)
 IF NOT EXISTS ;`
@@ -82,7 +82,8 @@ IF NOT EXISTS ;`
 	// Query Params: quiz_id,
 	ReadQuiz = `SELECT * FROM quizzes WHERE quiz_id = ?;`
 
-	// UpdateQuiz updates a Quiz record in the Quizzes table if it is not published.
+	// UpdateQuiz updates a Quiz record in the Quizzes table if it is not published. This query does not require IF EXISTS
+	// as the IF condition will fail if the record does not exist.
 	// Query Params: title, questions, marking_type, quiz_id
 	UpdateQuiz = `UPDATE quizzes
 SET title = ?, questions = ?, marking_type = ?
