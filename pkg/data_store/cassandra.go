@@ -12,6 +12,9 @@ import (
 	"go.uber.org/zap"
 )
 
+// Mock Cassandra interface stub generation.
+//go:generate mockgen -destination=../mocks/mock_cassandra.go -package=mocks github.com/surahman/mcq-platform/pkg/data_store Cassandra
+
 // Cassandra is the interface through which the cluster can be accessed. Created to support mock testing.
 type Cassandra interface {
 	Open() error

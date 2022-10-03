@@ -24,6 +24,9 @@ clean:
 	go clean
 	rm -f ${BINARY_NAME}-darwin ${BINARY_NAME}-linux
 
+generate:
+	go generate ./...
+
 test:
 	go test ./...
 
