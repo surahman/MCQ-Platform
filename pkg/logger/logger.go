@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/spf13/afero"
-	"github.com/surahman/mcq-platform/pkg/constants"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/yaml.v3"
@@ -30,7 +29,7 @@ func (l *Logger) Init(fs *afero.Fs) (err error) {
 	var baseConfig zap.Config
 	var encConfig zapcore.EncoderConfig
 
-	userConfig := constants.NewLoggerConfig()
+	userConfig := newConfig()
 	if err = userConfig.Load(*fs); err != nil {
 		log.Printf("failed to load logger configuration file from disk: %v\n", err)
 		return
@@ -63,11 +62,11 @@ func (l *Logger) Init(fs *afero.Fs) (err error) {
 	}
 
 	// Merge configurations.
-	if err = mergeConfig[*zap.Config, *constants.ZapGeneralConfig](&baseConfig, userConfig.GeneralConfig); err != nil {
+	if err = mergeConfig[*zap.Config, *generalConfig](&baseConfig, userConfig.GeneralConfig); err != nil {
 		log.Printf("failed to merge base configurations and user provided configurations for logger: %v\n", err)
 		return
 	}
-	if err = mergeConfig[*zapcore.EncoderConfig, *constants.ZapEncoderConfig](&encConfig, userConfig.EncoderConfig); err != nil {
+	if err = mergeConfig[*zapcore.EncoderConfig, *encoderConfig](&encConfig, userConfig.EncoderConfig); err != nil {
 		log.Printf("failed to merge base encoder configurations and user provided encoder configurations for logger: %v\n", err)
 		return
 	}
@@ -107,7 +106,7 @@ func (l *Logger) Panic(message string, fields ...zap.Field) {
 }
 
 // mergeConfig will merge the configuration files by marshalling and unmarshalling.
-func mergeConfig[DST *zap.Config | *zapcore.EncoderConfig, SRC *constants.ZapGeneralConfig | *constants.ZapEncoderConfig](dst DST, src SRC) (err error) {
+func mergeConfig[DST *zap.Config | *zapcore.EncoderConfig, SRC *generalConfig | *encoderConfig](dst DST, src SRC) (err error) {
 	var yamlToConv []byte
 	if yamlToConv, err = yaml.Marshal(src); err != nil {
 		return

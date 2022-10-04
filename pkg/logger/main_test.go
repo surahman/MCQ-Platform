@@ -6,7 +6,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/surahman/mcq-platform/pkg/constants"
 )
+
+// loggerConfigTestData is a map of Zap logger configuration test data.
+var loggerConfigTestData = constants.LoggerConfigTestData()
 
 // testLogSpy is a testing.TB that captures logged messages.
 type testLogSpy struct {
