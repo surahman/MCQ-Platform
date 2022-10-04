@@ -27,7 +27,7 @@ var _ Cassandra = &CassandraImpl{}
 
 // CassandraImpl implements the Cassandra interface and contains the logic to interface with the cluster.
 type CassandraImpl struct {
-	conf    *config.CassandraConfig
+	conf    *Config
 	session *gocql.Session
 	logger  *logger.Logger
 }
@@ -42,7 +42,7 @@ func NewCassandra(fs *afero.Fs, logger *logger.Logger) (Cassandra, error) {
 
 // newCassandraImpl will create a new CassandraImpl configuration and load it from disk.
 func newCassandraImpl(fs *afero.Fs, logger *logger.Logger) (c *CassandraImpl, err error) {
-	c = &CassandraImpl{conf: config.NewCassandraConfig(), logger: logger}
+	c = &CassandraImpl{conf: NewCassandraConfig(), logger: logger}
 	if err = c.conf.Load(*fs); err != nil {
 		c.logger.Error("failed to load Cassandra config from disk", zap.Error(err))
 		return nil, err
