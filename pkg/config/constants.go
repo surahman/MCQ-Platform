@@ -39,6 +39,16 @@ func GetLoggerFileName() string {
 	return loggerConfigFileName
 }
 
+// GetCassandraPrefix returns the environment variable prefix for Cassandra.
+func GetCassandraPrefix() string {
+	return cassandraPrefix
+}
+
+// GetLoggerPrefix returns the environment variable prefix for the Zap logger.
+func GetLoggerPrefix() string {
+	return loggerPrefix
+}
+
 // GetIntegrationTestKeyspaceSuffix is the suffix attached to the clusters keyspace and is used for integration tests.
 func GetIntegrationTestKeyspaceSuffix() string {
 	return integrationTestKeyspaceSuffix

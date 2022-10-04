@@ -1,4 +1,4 @@
-package data_store
+package cassandra
 
 import (
 	"errors"
@@ -13,7 +13,7 @@ import (
 )
 
 // Mock Cassandra interface stub generation.
-//go:generate mockgen -destination=../mocks/mock_cassandra.go -package=mocks github.com/surahman/mcq-platform/pkg/data_store Cassandra
+//go:generate mockgen -destination=../mocks/mock_cassandra.go -package=mocks github.com/surahman/mcq-platform/pkg/cassandra Cassandra
 
 // Cassandra is the interface through which the cluster can be accessed. Created to support mock testing.
 type Cassandra interface {

@@ -26,6 +26,14 @@ func TestGetIntegrationTestKeyspaceSuffix(t *testing.T) {
 	require.Equal(t, integrationTestKeyspaceSuffix, GetIntegrationTestKeyspaceSuffix(), "Incorrect integration test keyspace suffix")
 }
 
+func TestGetCassandraPrefix(t *testing.T) {
+	require.Equal(t, cassandraPrefix, GetCassandraPrefix(), "Incorrect Cassandra environment prefix")
+}
+
+func TestGetLoggerPrefix(t *testing.T) {
+	require.Equal(t, loggerPrefix, GetLoggerPrefix(), "Incorrect Zap logger environment prefix")
+}
+
 func TestGetCassandraMaxConnectRetries(t *testing.T) {
 	require.Equal(t, cassandraMaxConnectRetries, GetCassandraMaxConnectRetries(), "Incorrect Cassandra connection retries")
 }

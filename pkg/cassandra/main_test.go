@@ -1,4 +1,4 @@
-package data_store
+package cassandra
 
 import (
 	"errors"
@@ -22,6 +22,9 @@ type testConnection struct {
 	db Cassandra    // Test database connection.
 	mu sync.RWMutex // Mutex to enforce sequential test execution.
 }
+
+// cassandraConfigTestData is a map of Cassandra configuration test data.
+var cassandraConfigTestData = configTestData()
 
 // connection pool to Cassandra cluster.
 var connection testConnection
@@ -104,7 +107,7 @@ func getTestConfiguration() (cassandra *CassandraImpl, err error) {
 	if err = fs.MkdirAll(config.GetEtcDir(), 0644); err != nil {
 		return
 	}
-	if err = afero.WriteFile(fs, config.GetEtcDir()+config.GetCassandraFileName(), []byte(configTestData[configFileKey]), 0644); err != nil {
+	if err = afero.WriteFile(fs, config.GetEtcDir()+config.GetCassandraFileName(), []byte(cassandraConfigTestData[configFileKey]), 0644); err != nil {
 		return
 	}
 
