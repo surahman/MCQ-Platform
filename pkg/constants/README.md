@@ -26,66 +26,6 @@ The configuration loader will search for the configurations in the following ord
 
 <br/>
 
-## Apache Cassandra
-
-The expected file name is `CassandraConfig.yaml`.
-
-### Configuration File
-
-All the configuration items below are _required_.
-
-| Name                 | Environment Variable Key   | Type         | Description                                                                                   |
-|----------------------|----------------------------|--------------|-----------------------------------------------------------------------------------------------|
-| **_authentication_** | `CASSANDRA_AUTHENTICATION` |              | **_Parent key for authentication information._**                                              |
-| ↳ username           | ↳ `.USERNAME`              | string       | Username for Cassandra session login.                                                         |
-| ↳ password           | ↳ `.PASSWORD`              | string       | Password for Cassandra session login.                                                         |
-| **_keyspace_**       | `CASSANDRA_KEYSPACE`       |              | **_Parent key for Keyspace configuration._**                                                  |
-| ↳ name               | ↳ `.NAME`                  | string       | Keyspace name.                                                                                |
-| ↳ replication_class  | ↳ `.REPLICATION_CLASS`     | string       | Data replication strategy.                                                                    |
-| ↳ replication_factor | ↳ `.REPLICATION_FACTOR`    | int          | Data replication factor.                                                                      |
-| **_Connection_**     | `CASSANDRA_CONNECTION`     |              | **_Parent key for connection configuration._**                                                |
-| ↳ consistency        | ↳ `.CONSISTENCY`           | string       | Keyspace name.                                                                                |
-| ↳ cluster_ip         | ↳ `.CLUSTER_IP`            | string array | An array of cluster IPs to bootstrap the connection. May optionally contain the port numbers. |
-| ↳ proto_version      | ↳ `.PROTO_VERSION`         | int          | Connection protocol version.                                                                  |
-| ↳ timeout            | ↳ `.TIMEOUT`               | int          | Connection timeout in seconds.                                                                |
-
-:warning: **_Consistency_** :warning:
-
-It is highly advised that the consistency level be set to `Quorum`. `Quorum` provides a good balance between read and
-write performance thereby providing an appropriate balance between consistency and availability. Setting the level to
-`All` can negatively impact read and write performance.
-
-A balance between consistency and availability is vital to mitigate data inconsistencies with user account credentials.
-
-#### Example Configuration File
-
-```yaml
-authentication:
-  username: admin
-  password: root
-keyspace:
-  name: mcq_platform
-  replication_class: SimpleStrategy
-  replication_factor: 3
-connection:
-  consistency: quorum
-  cluster_ip: [127.0.0.1]
-  proto_version: 4
-  timeout: 10
-```
-
-#### Example Environment Variables
-
-```bash
-export CASSANDRA_AUTHENTICATION.USERNAME=admin
-export CASSANDRA_AUTHENTICATION.PASSWORD=root
-```
-
-### Design Documentation
-The technology selection case study and table schema design documentation can be found [here](../model/cassandra).
-
-<br/>
-
 ## Redis
 Redis will be used as an in-memory, fault-tolerant, and replicated cache.
 

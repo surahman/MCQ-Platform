@@ -1,4 +1,4 @@
-package data_store
+package cassandra
 
 import (
 	"errors"
@@ -11,7 +11,7 @@ import (
 
 	"github.com/gocql/gocql"
 	"github.com/spf13/afero"
-	"github.com/surahman/mcq-platform/pkg/config"
+	"github.com/surahman/mcq-platform/pkg/constants"
 	"github.com/surahman/mcq-platform/pkg/logger"
 	"github.com/surahman/mcq-platform/pkg/model/cassandra"
 	"go.uber.org/zap"
@@ -22,6 +22,9 @@ type testConnection struct {
 	db Cassandra    // Test database connection.
 	mu sync.RWMutex // Mutex to enforce sequential test execution.
 }
+
+// cassandraConfigTestData is a map of Cassandra configuration test data.
+var cassandraConfigTestData = configTestData()
 
 // connection pool to Cassandra cluster.
 var connection testConnection
@@ -72,7 +75,7 @@ func setup() (err error) {
 	}
 
 	// Integration test keyspace name.
-	integrationKeyspace = connection.db.(*CassandraImpl).conf.Keyspace.Name + config.GetIntegrationTestKeyspaceSuffix()
+	integrationKeyspace = connection.db.(*CassandraImpl).conf.Keyspace.Name + constants.GetIntegrationTestKeyspaceSuffix()
 
 	// Create Keyspace for integration test.
 	if err = createTestingKeyspace(connection.db.(*CassandraImpl)); err != nil {
@@ -94,17 +97,17 @@ func tearDown() (err error) {
 func getTestConfiguration() (cassandra *CassandraImpl, err error) {
 	// If running on a GitHub Actions runner use the default credentials for Cassandra.
 	configFileKey := "valid"
-	if _, ok := os.LookupEnv(config.GetGithubCIKey()); ok == true {
+	if _, ok := os.LookupEnv(constants.GetGithubCIKey()); ok == true {
 		configFileKey = "valid-ci"
 		zapLogger.Info("Integration Test running on Github CI runner.")
 	}
 
 	// Setup mock filesystem.
 	fs := afero.NewMemMapFs()
-	if err = fs.MkdirAll(config.GetEtcDir(), 0644); err != nil {
+	if err = fs.MkdirAll(constants.GetEtcDir(), 0644); err != nil {
 		return
 	}
-	if err = afero.WriteFile(fs, config.GetEtcDir()+config.GetCassandraFileName(), []byte(configTestData[configFileKey]), 0644); err != nil {
+	if err = afero.WriteFile(fs, constants.GetEtcDir()+constants.GetCassandraFileName(), []byte(cassandraConfigTestData[configFileKey]), 0644); err != nil {
 		return
 	}
 

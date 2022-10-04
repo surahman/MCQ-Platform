@@ -1,4 +1,4 @@
-package config
+package constants
 
 import (
 	"fmt"
@@ -61,7 +61,7 @@ func TestZapConfig_Load(t *testing.T) {
 			require.NoError,
 			require.Nil,
 		}, {
-			"valid - full config",
+			"valid - full constants",
 			configEtcDir,
 			loggerConfigTestData["valid_config"],
 			"Production",
@@ -89,20 +89,20 @@ func TestZapConfig_Load(t *testing.T) {
 
 			// Load expected struct.
 			expected := &ZapConfig{}
-			require.NoError(t, yaml.Unmarshal([]byte(testCase.input), expected), "failed to unmarshal expected config")
+			require.NoError(t, yaml.Unmarshal([]byte(testCase.input), expected), "failed to unmarshal expected constants")
 			require.True(t, reflect.DeepEqual(expected, actual))
 
 			// Test configuring of environment variable.
-			require.NoErrorf(t, os.Setenv(envCfgKey, testCase.cfgKey), "Failed to set environment variable for config: %v", err)
+			require.NoErrorf(t, os.Setenv(envCfgKey, testCase.cfgKey), "Failed to set environment variable for constants: %v", err)
 			require.NoErrorf(t, os.Setenv(envEncKey, testCase.encKey), "Failed to set environment variable for encoder: %v", err)
-			require.NoErrorf(t, actual.Load(fs), "Failed to load config file: %v", err)
-			require.NoErrorf(t, os.Unsetenv(envCfgKey), "Failed to unset environment variable set for config")
+			require.NoErrorf(t, actual.Load(fs), "Failed to load constants file: %v", err)
+			require.NoErrorf(t, os.Unsetenv(envCfgKey), "Failed to unset environment variable set for constants")
 			require.NoErrorf(t, os.Unsetenv(envEncKey), "Failed to unset environment variable set for encoder")
 
-			require.Equalf(t, testCase.cfgKey, actual.BuiltinConfig, "Failed to load environment variable into config")
+			require.Equalf(t, testCase.cfgKey, actual.BuiltinConfig, "Failed to load environment variable into constants")
 			require.Equalf(t, testCase.encKey, actual.BuiltinEncoderConfig, "Failed to load environment variable into encoder")
 
-			testCase.expectNil(t, actual.GeneralConfig, "Check for nil general config failed")
+			testCase.expectNil(t, actual.GeneralConfig, "Check for nil general constants failed")
 		})
 	}
 }

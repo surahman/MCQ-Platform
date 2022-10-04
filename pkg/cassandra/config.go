@@ -1,16 +1,14 @@
-package config
+package cassandra
 
 import (
 	"github.com/spf13/afero"
 	"github.com/spf13/viper"
+	"github.com/surahman/mcq-platform/pkg/constants"
 	"github.com/surahman/mcq-platform/pkg/validator"
 )
 
-// Ensure full IConfig interface implementation
-var _ IConfig = &CassandraConfig{}
-
-// CassandraConfig is the configuration container for connecting to the Cassandra cluster
-type CassandraConfig struct {
+// config is the configuration container for connecting to the Cassandra cluster
+type config struct {
 	Authentication struct {
 		Username string `json:"username,omitempty" yaml:"username,omitempty" mapstructure:"username" validate:"required"`
 		Password string `json:"password,omitempty" yaml:"password,omitempty" mapstructure:"password" validate:"required"`
@@ -28,21 +26,21 @@ type CassandraConfig struct {
 	} `json:"connection,omitempty" yaml:"connection,omitempty" mapstructure:"connection"`
 }
 
-// NewCassandraConfig creates a blank configuration struct for Cassandra.
-func NewCassandraConfig() *CassandraConfig {
-	return &CassandraConfig{}
+// newConfig creates a blank configuration struct for Cassandra.
+func newConfig() *config {
+	return &config{}
 }
 
 // Load will attempt to load configurations from a file on a file system and then overwrite values using environment variables.
-func (cfg *CassandraConfig) Load(fs afero.Fs) (err error) {
+func (cfg *config) Load(fs afero.Fs) (err error) {
 	viper.SetFs(fs)
-	viper.SetConfigName(GetCassandraFileName())
+	viper.SetConfigName(constants.GetCassandraFileName())
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath(configEtcDir)
-	viper.AddConfigPath(configHomeDir)
+	viper.AddConfigPath(constants.GetEtcDir())
+	viper.AddConfigPath(constants.GetHomeDir())
 	viper.AddConfigPath(".")
 
-	viper.SetEnvPrefix(cassandraPrefix)
+	viper.SetEnvPrefix(constants.GetCassandraPrefix())
 	viper.AutomaticEnv()
 
 	if err = viper.ReadInConfig(); err != nil {

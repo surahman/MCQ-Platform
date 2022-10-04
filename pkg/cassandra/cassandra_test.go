@@ -1,4 +1,4 @@
-package data_store
+package cassandra
 
 import (
 	"reflect"
@@ -6,18 +6,16 @@ import (
 
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
-	"github.com/surahman/mcq-platform/pkg/config"
+	"github.com/surahman/mcq-platform/pkg/constants"
 	"github.com/surahman/mcq-platform/pkg/logger"
 )
-
-var configTestData = config.CassandraConfigTestData()
 
 func TestNewCassandra(t *testing.T) {
 	log, _ := logger.NewTestLogger()
 	fs := afero.NewMemMapFs()
-	require.NoError(t, fs.MkdirAll(config.GetEtcDir(), 0644), "Failed to create in memory directory")
-	require.NoError(t, afero.WriteFile(fs, config.GetEtcDir()+config.GetCassandraFileName(),
-		[]byte(configTestData["valid"]), 0644), "Failed to write in memory file")
+	require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
+	require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetCassandraFileName(),
+		[]byte(cassandraConfigTestData["valid"]), 0644), "Failed to write in memory file")
 
 	testCases := []struct {
 		name      string
@@ -75,14 +73,14 @@ func TestNewCassandraImpl(t *testing.T) {
 		// ----- test cases start ----- //
 		{
 			"File found",
-			config.GetCassandraFileName(),
-			configTestData["valid"],
+			constants.GetCassandraFileName(),
+			cassandraConfigTestData["valid"],
 			require.NoError,
 			require.NotNil,
 		}, {
 			"File not found",
 			"wrong_file_name.yaml",
-			configTestData["valid"],
+			cassandraConfigTestData["valid"],
 			require.Error,
 			require.Nil,
 		},
@@ -92,8 +90,8 @@ func TestNewCassandraImpl(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			// Configure mock filesystem.
 			fs := afero.NewMemMapFs()
-			require.NoError(t, fs.MkdirAll(config.GetEtcDir(), 0644), "Failed to create in memory directory")
-			require.NoError(t, afero.WriteFile(fs, config.GetEtcDir()+testCase.fileName, []byte(testCase.input), 0644), "Failed to write in memory file")
+			require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
+			require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+testCase.fileName, []byte(testCase.input), 0644), "Failed to write in memory file")
 
 			c, err := NewCassandra(&fs, zapLogger)
 			testCase.expectErr(t, err)
@@ -116,8 +114,8 @@ func TestCassandraImpl_Execute(t *testing.T) {
 
 	// Configure mock filesystem.
 	fs := afero.NewMemMapFs()
-	require.NoError(t, fs.MkdirAll(config.GetEtcDir(), 0644), "Failed to create in memory directory")
-	require.NoError(t, afero.WriteFile(fs, config.GetEtcDir()+config.GetCassandraFileName(), []byte(configTestData["valid"]), 0644), "Failed to write in memory file")
+	require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
+	require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetCassandraFileName(), []byte(cassandraConfigTestData["valid"]), 0644), "Failed to write in memory file")
 
 	db, err := NewCassandra(&fs, zapLogger)
 	require.NoError(t, err, "failed to create test db object")
