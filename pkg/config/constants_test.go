@@ -21,3 +21,15 @@ func TestGetCassandraFileName(t *testing.T) {
 func TestGetLoggerFileName(t *testing.T) {
 	require.Equal(t, loggerConfigFileName, GetLoggerFileName(), "Incorrect logger filename")
 }
+
+func TestGetIntegrationTestKeyspaceSuffix(t *testing.T) {
+	require.Equal(t, integrationTestKeyspaceSuffix, GetIntegrationTestKeyspaceSuffix(), "Incorrect integration test keyspace suffix")
+}
+
+func TestGetCassandraMaxConnectRetries(t *testing.T) {
+	require.Equal(t, cassandraMaxConnectRetries, GetCassandraMaxConnectRetries(), "Incorrect Cassandra connection retries")
+}
+
+func TestGetGithubCIKey(t *testing.T) {
+	require.Equal(t, githubCIKey, GetGithubCIKey(), "Incorrect Github CI environment key")
+}

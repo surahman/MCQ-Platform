@@ -23,7 +23,7 @@ func TestNewLogger(t *testing.T) {
 func TestNewTestLogger(t *testing.T) {
 	testLogger, err := NewTestLogger()
 	require.NoError(t, err, "failed to create new logger for use in test suites")
-	require.Equal(t, reflect.TypeOf(testLogger), reflect.TypeOf(&zap.Logger{}), "creates new logger successfully")
+	require.Equal(t, reflect.TypeOf(testLogger), reflect.TypeOf(&Logger{}), "creates new logger successfully")
 }
 
 func TestMergeConfig_General(t *testing.T) {
@@ -136,6 +136,17 @@ func TestTestLogger(t *testing.T) {
 		`ERROR	error message received	{"error": "ow no! woe is me!"}`,
 		"PANIC	panic message received",
 	)
+}
+
+func TestInit_MultiInitialization(t *testing.T) {
+	// Init mock filesystem.
+	fs := afero.NewMemMapFs()
+	require.NoError(t, fs.MkdirAll(config.GetEtcDir(), 0644), "Failed to create in memory directory")
+	require.NoError(t, afero.WriteFile(fs, config.GetEtcDir()+config.GetLoggerFileName(), []byte(loggerConfigTestData["valid_devel"]), 0644), "Failed to write in memory file")
+
+	logger := NewLogger()
+	require.NoError(t, logger.Init(&fs), "First initialization of logger should pass")
+	require.Error(t, logger.Init(&fs), "Subsequent initializations of the logger should fail")
 }
 
 func TestTestLoggerSupportsLevels(t *testing.T) {
