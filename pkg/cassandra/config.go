@@ -26,8 +26,8 @@ type Config struct {
 	} `json:"connection,omitempty" yaml:"connection,omitempty" mapstructure:"connection"`
 }
 
-// NewCassandraConfig creates a blank configuration struct for Cassandra.
-func NewCassandraConfig() *Config {
+// newConfig creates a blank configuration struct for Cassandra.
+func newConfig() *Config {
 	return &Config{}
 }
 

@@ -42,7 +42,7 @@ func NewCassandra(fs *afero.Fs, logger *logger.Logger) (Cassandra, error) {
 
 // newCassandraImpl will create a new CassandraImpl configuration and load it from disk.
 func newCassandraImpl(fs *afero.Fs, logger *logger.Logger) (c *CassandraImpl, err error) {
-	c = &CassandraImpl{conf: NewCassandraConfig(), logger: logger}
+	c = &CassandraImpl{conf: newConfig(), logger: logger}
 	if err = c.conf.Load(*fs); err != nil {
 		c.logger.Error("failed to load Cassandra config from disk", zap.Error(err))
 		return nil, err
