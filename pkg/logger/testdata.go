@@ -1,7 +1,7 @@
-package constants
+package logger
 
-// LoggerConfigTestData will return a map of test data containing valid and invalid logger configs.
-func LoggerConfigTestData() map[string]string {
+// configTestData will return a map of test data containing valid and invalid logger configs.
+func configTestData() map[string]string {
 	testData := make(map[string]string)
 
 	testData["empty"] = ``

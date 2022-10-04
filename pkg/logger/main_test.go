@@ -8,6 +8,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// loggerConfigTestData is a map of Zap logger configuration test data.
+var loggerConfigTestData = configTestData()
+
 // testLogSpy is a testing.TB that captures logged messages.
 type testLogSpy struct {
 	testing.TB

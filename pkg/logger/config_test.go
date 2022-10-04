@@ -1,4 +1,4 @@
-package constants
+package logger
 
 import (
 	"fmt"
@@ -9,18 +9,16 @@ import (
 	"github.com/rs/xid"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
+	"github.com/surahman/mcq-platform/pkg/constants"
 	"gopkg.in/yaml.v3"
 )
 
-var loggerConfigTestData = LoggerConfigTestData()
-
 func TestZapConfig_Load(t *testing.T) {
-	envCfgKey := fmt.Sprintf("%s_BUILTIN_CONFIG", loggerPrefix)
-	envEncKey := fmt.Sprintf("%s_BUILTIN_ENCODER_CONFIG", loggerPrefix)
+	envCfgKey := fmt.Sprintf("%s_BUILTIN_CONFIG", constants.GetLoggerPrefix())
+	envEncKey := fmt.Sprintf("%s_BUILTIN_ENCODER_CONFIG", constants.GetLoggerPrefix())
 
 	testCases := []struct {
 		name      string
-		fullPath  string
 		input     string
 		cfgKey    string
 		encKey    string
@@ -30,7 +28,6 @@ func TestZapConfig_Load(t *testing.T) {
 		// ----- test cases start ----- //
 		{
 			"invalid - empty",
-			configEtcDir,
 			loggerConfigTestData["empty"],
 			"Production",
 			"Production",
@@ -38,7 +35,6 @@ func TestZapConfig_Load(t *testing.T) {
 			require.Nil,
 		}, {
 			"invalid - builtin",
-			configEtcDir,
 			loggerConfigTestData["invalid_builtin"],
 			xid.New().String(),
 			xid.New().String(),
@@ -46,7 +42,6 @@ func TestZapConfig_Load(t *testing.T) {
 			require.Nil,
 		}, {
 			"valid - development",
-			configEtcDir,
 			loggerConfigTestData["valid_devel"],
 			"Production",
 			"Production",
@@ -54,7 +49,6 @@ func TestZapConfig_Load(t *testing.T) {
 			require.Nil,
 		}, {
 			"valid - production",
-			configEtcDir,
 			loggerConfigTestData["valid_prod"],
 			"Development",
 			"Development",
@@ -62,7 +56,6 @@ func TestZapConfig_Load(t *testing.T) {
 			require.Nil,
 		}, {
 			"valid - full constants",
-			configEtcDir,
 			loggerConfigTestData["valid_config"],
 			"Production",
 			"Production",
@@ -75,11 +68,11 @@ func TestZapConfig_Load(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			// Configure mock filesystem.
 			fs := afero.NewMemMapFs()
-			require.NoError(t, fs.MkdirAll(testCase.fullPath, 0644), "Failed to create in memory directory")
-			require.NoError(t, afero.WriteFile(fs, testCase.fullPath+loggerConfigFileName, []byte(testCase.input), 0644), "Failed to write in memory file")
+			require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
+			require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetLoggerFileName(), []byte(testCase.input), 0644), "Failed to write in memory file")
 
 			// Load from mock filesystem.
-			actual := &ZapConfig{}
+			actual := &config{}
 			err := actual.Load(fs)
 			testCase.expectErr(t, err)
 
@@ -88,7 +81,7 @@ func TestZapConfig_Load(t *testing.T) {
 			}
 
 			// Load expected struct.
-			expected := &ZapConfig{}
+			expected := &config{}
 			require.NoError(t, yaml.Unmarshal([]byte(testCase.input), expected), "failed to unmarshal expected constants")
 			require.True(t, reflect.DeepEqual(expected, actual))
 

@@ -14,8 +14,6 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-var loggerConfigTestData = constants.LoggerConfigTestData()
-
 func TestNewLogger(t *testing.T) {
 	require.Equal(t, reflect.TypeOf(NewLogger()), reflect.TypeOf(&Logger{}), "creates new logger successfully")
 }
@@ -27,7 +25,7 @@ func TestNewTestLogger(t *testing.T) {
 }
 
 func TestMergeConfig_General(t *testing.T) {
-	userGenCfg := constants.ZapGeneralConfig{
+	userGenCfg := generalConfig{
 		Development:       false,
 		DisableCaller:     true,
 		DisableStacktrace: true,
@@ -36,7 +34,7 @@ func TestMergeConfig_General(t *testing.T) {
 		ErrorOutputPaths:  []string{"stderr", "/etc/appname_err.log"},
 	}
 	zapCfg := zap.NewDevelopmentConfig()
-	require.NoError(t, mergeConfig[*zap.Config, *constants.ZapGeneralConfig](&zapCfg, &userGenCfg), "Failed to merge constants files.")
+	require.NoError(t, mergeConfig[*zap.Config, *generalConfig](&zapCfg, &userGenCfg), "Failed to merge constants files.")
 	require.Equalf(t, userGenCfg.Development, zapCfg.Development, "Development value expected %v, actual %v", userGenCfg.Development, zapCfg.Development)
 	require.Equalf(t, userGenCfg.DisableCaller, zapCfg.DisableCaller, "DisableCaller value expected %v, actual %v", userGenCfg.DisableCaller, zapCfg.DisableCaller)
 	require.Equalf(t, userGenCfg.DisableStacktrace, zapCfg.DisableStacktrace, "DisableStacktrace value expected %v, actual %v", userGenCfg.DisableStacktrace, zapCfg.DisableStacktrace)
@@ -46,7 +44,7 @@ func TestMergeConfig_General(t *testing.T) {
 }
 
 func TestMergeConfig_Encoder(t *testing.T) {
-	userEncCfg := constants.ZapEncoderConfig{
+	userEncCfg := encoderConfig{
 		MessageKey:       "message key",
 		LevelKey:         "level key",
 		TimeKey:          "time key",
@@ -59,7 +57,7 @@ func TestMergeConfig_Encoder(t *testing.T) {
 		ConsoleSeparator: "console separator",
 	}
 	zapCfg := zap.NewDevelopmentEncoderConfig()
-	require.NoError(t, mergeConfig[*zapcore.EncoderConfig, *constants.ZapEncoderConfig](&zapCfg, &userEncCfg), "Failed to merge constants files.")
+	require.NoError(t, mergeConfig[*zapcore.EncoderConfig, *encoderConfig](&zapCfg, &userEncCfg), "Failed to merge constants files.")
 	require.Equalf(t, userEncCfg.MessageKey, zapCfg.MessageKey, "MessageKey value expected %v, actual %v", userEncCfg.MessageKey, zapCfg.MessageKey)
 	require.Equalf(t, userEncCfg.LevelKey, zapCfg.LevelKey, "LevelKey value expected %v, actual %v", userEncCfg.LevelKey, zapCfg.LevelKey)
 	require.Equalf(t, userEncCfg.TimeKey, zapCfg.TimeKey, "TimeKey value expected %v, actual %v", userEncCfg.TimeKey, zapCfg.TimeKey)
