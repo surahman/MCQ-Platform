@@ -20,15 +20,18 @@ run:
 
 build_and_run: build run
 
+generate:
+	go generate ./...
+
 clean:
 	go clean
 	rm -f ${BINARY_NAME}-darwin ${BINARY_NAME}-linux
 
-generate:
-	go generate ./...
-
 test:
 	go test ./...
+
+test_short:
+	go test -short ./...
 
 test_no_cache:
 	go test -count=1 ./...
@@ -43,4 +46,4 @@ coverage_report: coverage
 dep:
 	go mod download
 
-.PHONY: build build_and_run clean test test_no_cache coverage coverage_report
+.PHONY: build build_and_run generate clean test test_short test_no_cache coverage coverage_report

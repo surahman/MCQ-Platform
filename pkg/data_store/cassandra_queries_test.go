@@ -45,6 +45,11 @@ func insertTestResponses(t *testing.T) {
 }
 
 func TestCreateUserQuery(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		t.Skip()
+	}
+
 	// Lock connection to Cassandra cluster.
 	connection.mu.Lock()
 	defer connection.mu.Unlock()
@@ -76,6 +81,11 @@ func TestCreateUserQuery(t *testing.T) {
 }
 
 func TestDeleteUserQuery(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		t.Skip()
+	}
+
 	// Lock connection to Cassandra cluster.
 	connection.mu.Lock()
 	defer connection.mu.Unlock()
@@ -107,6 +117,11 @@ func TestDeleteUserQuery(t *testing.T) {
 }
 
 func TestReadUserQuery(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		t.Skip()
+	}
+
 	// Lock connection to Cassandra cluster.
 	connection.mu.Lock()
 	defer connection.mu.Unlock()
@@ -140,6 +155,11 @@ func TestReadUserQuery(t *testing.T) {
 }
 
 func TestCreateQuizQuery(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		t.Skip()
+	}
+
 	// Lock connection to Cassandra cluster.
 	connection.mu.Lock()
 	defer connection.mu.Unlock()
@@ -156,6 +176,11 @@ func TestCreateQuizQuery(t *testing.T) {
 }
 
 func TestReadQuizQuery(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		t.Skip()
+	}
+
 	// Lock connection to Cassandra cluster.
 	connection.mu.Lock()
 	defer connection.mu.Unlock()
@@ -178,6 +203,11 @@ func TestReadQuizQuery(t *testing.T) {
 }
 
 func TestUpdateQuizQuery(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		t.Skip()
+	}
+
 	// Lock connection to Cassandra cluster.
 	connection.mu.Lock()
 	defer connection.mu.Unlock()
@@ -217,6 +247,11 @@ func TestUpdateQuizQuery(t *testing.T) {
 }
 
 func TestDeleteQuizQuery(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		t.Skip()
+	}
+
 	// Lock connection to Cassandra cluster.
 	connection.mu.Lock()
 	defer connection.mu.Unlock()
@@ -242,6 +277,11 @@ func TestDeleteQuizQuery(t *testing.T) {
 }
 
 func TestPublishQuizQuery(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		t.Skip()
+	}
+
 	// Lock connection to Cassandra cluster.
 	connection.mu.Lock()
 	defer connection.mu.Unlock()
@@ -267,6 +307,11 @@ func TestPublishQuizQuery(t *testing.T) {
 }
 
 func TestCreateResponseQuery(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		t.Skip()
+	}
+
 	// Lock connection to Cassandra cluster.
 	connection.mu.Lock()
 	defer connection.mu.Unlock()
@@ -283,6 +328,11 @@ func TestCreateResponseQuery(t *testing.T) {
 }
 
 func TestReadResponseQuery(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		t.Skip()
+	}
+
 	// Lock connection to Cassandra cluster.
 	connection.mu.Lock()
 	defer connection.mu.Unlock()
@@ -311,6 +361,11 @@ func TestReadResponseQuery(t *testing.T) {
 }
 
 func TestReadResponseStatisticsQuery(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		t.Skip()
+	}
+
 	// Lock connection to Cassandra cluster.
 	connection.mu.Lock()
 	defer connection.mu.Unlock()

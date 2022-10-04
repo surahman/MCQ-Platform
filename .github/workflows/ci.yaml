@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [ development ]
   pull_request:
-    branches: [ master ]
+    branches: [ development ]
   workflow_dispatch:
 
 jobs:
@@ -49,7 +49,7 @@ jobs:
             ${{ runner.os }}-go-
 
       - name: Unit Test
-        run: make test
+        run: make test_short
 
       - name: Shutdown Cassandra
         if: always()

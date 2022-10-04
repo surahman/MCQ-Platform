@@ -2,6 +2,7 @@ package data_store
 
 import (
 	"errors"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -32,6 +33,9 @@ var zapLogger *logger.Logger
 var integrationKeyspace string
 
 func TestMain(m *testing.M) {
+	// Parse commandline flags to check for short tests.
+	flag.Parse()
+
 	var err error
 	// Configure logger.
 	if zapLogger, err = logger.NewTestLogger(); err != nil {
@@ -58,6 +62,10 @@ func TestMain(m *testing.M) {
 
 // setup will configure the connection to the test clusters keyspace.
 func setup() (err error) {
+	if testing.Short() {
+		zapLogger.Warn("Short test: Skipping Cassandra integration tests")
+		return
+	}
 	// Load Cassandra configurations.
 	if connection.db, err = getTestConfiguration(); err != nil {
 		return
@@ -75,8 +83,11 @@ func setup() (err error) {
 }
 
 // tearDown will delete the test clusters keyspace.
-func tearDown() error {
-	return connection.db.Close()
+func tearDown() (err error) {
+	if !testing.Short() {
+		return connection.db.Close()
+	}
+	return
 }
 
 // getTestConfiguration creates a cluster configuration for testing.

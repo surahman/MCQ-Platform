@@ -67,7 +67,6 @@ func TestNewCassandra(t *testing.T) {
 func TestNewCassandraImpl(t *testing.T) {
 	testCases := []struct {
 		name      string
-		fullPath  string
 		fileName  string
 		input     string
 		expectErr require.ErrorAssertionFunc
@@ -76,14 +75,12 @@ func TestNewCassandraImpl(t *testing.T) {
 		// ----- test cases start ----- //
 		{
 			"File found",
-			config.GetEtcDir(),
 			config.GetCassandraFileName(),
 			configTestData["valid"],
 			require.NoError,
 			require.NotNil,
 		}, {
 			"File not found",
-			config.GetEtcDir(),
 			"wrong_file_name.yaml",
 			configTestData["valid"],
 			require.Error,
@@ -95,12 +92,10 @@ func TestNewCassandraImpl(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			// Configure mock filesystem.
 			fs := afero.NewMemMapFs()
-			require.NoError(t, fs.MkdirAll(testCase.fullPath, 0644), "Failed to create in memory directory")
-			require.NoError(t, afero.WriteFile(fs, testCase.fullPath+testCase.fileName, []byte(testCase.input), 0644), "Failed to write in memory file")
+			require.NoError(t, fs.MkdirAll(config.GetEtcDir(), 0644), "Failed to create in memory directory")
+			require.NoError(t, afero.WriteFile(fs, config.GetEtcDir()+testCase.fileName, []byte(testCase.input), 0644), "Failed to write in memory file")
 
-			testLogger, err := logger.NewTestLogger()
-			require.NoError(t, err, "Failed to create Zap logger for testing.")
-			c, err := NewCassandra(&fs, testLogger)
+			c, err := NewCassandra(&fs, zapLogger)
 			testCase.expectErr(t, err)
 			testCase.expectNil(t, c)
 		})
@@ -119,12 +114,26 @@ func TestCassandraImpl_Execute(t *testing.T) {
 		return casted, nil
 	}
 
-	result, err := connection.db.Execute(fn, input)
+	// Configure mock filesystem.
+	fs := afero.NewMemMapFs()
+	require.NoError(t, fs.MkdirAll(config.GetEtcDir(), 0644), "Failed to create in memory directory")
+	require.NoError(t, afero.WriteFile(fs, config.GetEtcDir()+config.GetCassandraFileName(), []byte(configTestData["valid"]), 0644), "Failed to write in memory file")
+
+	db, err := NewCassandra(&fs, zapLogger)
+	require.NoError(t, err, "failed to create test db object")
+	require.NotNil(t, db, "failed to create test db connection")
+
+	result, err := db.Execute(fn, input)
 	require.NoError(t, err)
 	require.Equal(t, reflect.TypeOf(input), reflect.TypeOf(result.(*testType)))
 }
 
 func TestCassandra_Open(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		t.Skip()
+	}
+
 	cassandra, err := getTestConfiguration()
 	require.NoError(t, err, "Failed to open a connection to the cluster")
 	cassandra.conf.Keyspace.Name = integrationKeyspace
@@ -136,6 +145,11 @@ func TestCassandra_Open(t *testing.T) {
 }
 
 func TestCassandra_Close(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		t.Skip()
+	}
+
 	var cassandra *CassandraImpl
 	var err error
 
