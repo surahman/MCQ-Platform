@@ -2,21 +2,20 @@
 
 ## Table of contents
 
-- [Apache Cassandra](#apache-cassandra)
-    - [Case Study and Justification](#case-study-and-justification)
-    - [Users Table Schema](#users-table-schema)
-        - [User](#user)
-        - [User Account](#user-account)
-        - [CQL Query](#cql-query)
-    - [Quizzes Table Schema](#quizzes-table-schema)
-        - [User Defined Type(s)](#user-defined-types)
-            - [Question](#question)
-        - [Quizzes](#quizzes)
-        - [Quiz Core](#quiz-core)
-        - [CQL Query](#cql-query)
-    - [Responses Table Schema](#responses-table-schema)
-        - [Quizzes](#quizzes)
-        - [CQL Query](#cql-query)
+- [Case Study and Justification](#case-study-and-justification)
+- [Users Table Schema](#users-table-schema)
+    - [User](#user)
+    - [User Account](#user-account)
+    - [CQL Query](#cql-query)
+- [Quizzes Table Schema](#quizzes-table-schema)
+    - [User Defined Type(s)](#user-defined-types)
+        - [Question](#question)
+    - [Quizzes](#quizzes)
+    - [Quiz Core](#quiz-core)
+    - [CQL Query](#cql-query)
+- [Responses Table Schema](#responses-table-schema)
+    - [Responses](#responses)
+    - [CQL Query](#cql-query)
  
 <br/>
 
@@ -86,6 +85,7 @@ Describes a single question with all it's answer options as well as the answer k
 | Name (Struct) | Data Type (Struct) | Column Name | Column Type | Description                                                          |
 |---------------|--------------------|-------------|-------------|----------------------------------------------------------------------|
 | Description   | string             | description | text        | The description that contains the text of the question.              |
+| Asset         | string             | asset       | text        | URI of an asset to be displayed with question.                       |
 | Options       | [ ] string         | options     | list<text>  | The available options for the question.                              |
 | Answers       | [ ] int            | answers     | list<int>   | The indices of the options that are correct answers in the question. |
 
@@ -98,6 +98,7 @@ This `struct` embeds the `QuizCore` `struct` to create a representation of the q
 | Quiz_ID       | gocql.UUID         | quiz_id      | uuid                           | Account id unique identifier. Partition Key.                              |
 | Author        | string             | author       | text                           | Username of the quiz creator.                                             |
 | Title         | string             | title        | text                           | Description of the quiz.                                                  |
+| Marking Type  | string             | marking_type | text                           | The marking scheme type: `[N\n]one` `[N\n]egative` `[B\b]inary`           |
 | Questions     | [ ] Question       | questions    | frozen<list<frozen<question>>> | A list of `question` UDTs in the quiz.                                    |
 | IsPublished   | bool               | is_published | boolean                        | Status indicating whether the quiz can be viewed or taken by other users. |
 | IsDeleted     | bool               | is_deleted   | boolean                        | Status indicating whether the quiz has been deleted.                      |
@@ -108,8 +109,8 @@ nodes. Quizzes are requested by their unique `quiz_id`'s.
 ### Quiz Core
 
 This struct is created to be exposed for use with the HTTP handlers. This ensures consistency with the `Quiz` `struct`.
-It contains the `Title` and `Question` fields and is the actual data used to create as well as what is presented when
-viewing a quiz.
+It contains the `Title`, `MarkingType`, and `Question` fields and is the actual data used to create a `Quiz` as well as
+what is presented when viewing a quiz.
 
 ### CQL Query
 The query to generate the user table can be found [here](quiz.cql).
