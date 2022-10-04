@@ -3,7 +3,7 @@
 <html>
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-		<title>config: Go Coverage Report</title>
+		<title>cassandra: Go Coverage Report</title>
 		<style>
 			body {
 				background: black;
@@ -55,21 +55,23 @@
 			<div id="nav">
 				<select id="files">
 				
-				<option value="file0">github.com/surahman/mcq-platform/pkg/config/cassandra.go (87.5%)</option>
+				<option value="file0">github.com/surahman/mcq-platform/pkg/cassandra/cassandra.go (86.7%)</option>
 				
-				<option value="file1">github.com/surahman/mcq-platform/pkg/config/config.go (100.0%)</option>
+				<option value="file1">github.com/surahman/mcq-platform/pkg/cassandra/cassandra_queries.go (85.2%)</option>
 				
-				<option value="file2">github.com/surahman/mcq-platform/pkg/config/constants.go (100.0%)</option>
+				<option value="file2">github.com/surahman/mcq-platform/pkg/cassandra/config.go (93.8%)</option>
 				
-				<option value="file3">github.com/surahman/mcq-platform/pkg/config/testdata.go (100.0%)</option>
+				<option value="file3">github.com/surahman/mcq-platform/pkg/cassandra/testdata.go (90.6%)</option>
 				
-				<option value="file4">github.com/surahman/mcq-platform/pkg/config/zap.go (78.9%)</option>
+				<option value="file4">github.com/surahman/mcq-platform/pkg/constants/constants.go (100.0%)</option>
 				
-				<option value="file5">github.com/surahman/mcq-platform/pkg/data_store/cassandra.go (47.2%)</option>
+				<option value="file5">github.com/surahman/mcq-platform/pkg/logger/config.go (78.9%)</option>
 				
 				<option value="file6">github.com/surahman/mcq-platform/pkg/logger/logger.go (73.6%)</option>
 				
-				<option value="file7">github.com/surahman/mcq-platform/pkg/validator/validator.go (100.0%)</option>
+				<option value="file7">github.com/surahman/mcq-platform/pkg/logger/testdata.go (100.0%)</option>
+				
+				<option value="file8">github.com/surahman/mcq-platform/pkg/validator/validator.go (100.0%)</option>
 				
 				</select>
 			</div>
@@ -92,19 +94,427 @@
 		</div>
 		<div id="content">
 		
-		<pre class="file" id="file0" style="display: none">package config
+		<pre class="file" id="file0" style="display: none">package cassandra
+
+import (
+        "errors"
+        "strconv"
+        "time"
+
+        "github.com/gocql/gocql"
+        "github.com/spf13/afero"
+        "github.com/surahman/mcq-platform/pkg/constants"
+        "github.com/surahman/mcq-platform/pkg/logger"
+        "go.uber.org/zap"
+)
+
+// Mock Cassandra interface stub generation.
+//go:generate mockgen -destination=../mocks/mock_cassandra.go -package=mocks github.com/surahman/mcq-platform/pkg/cassandra Cassandra
+
+// Cassandra is the interface through which the cluster can be accessed. Created to support mock testing.
+type Cassandra interface {
+        Open() error
+        Close() error
+        Execute(func(Cassandra, any) (any, error), any) (any, error)
+}
+
+// Check to ensure the Cassandra interface has been implemented.
+var _ Cassandra = &amp;CassandraImpl{}
+
+// CassandraImpl implements the Cassandra interface and contains the logic to interface with the cluster.
+type CassandraImpl struct {
+        conf    *config
+        session *gocql.Session
+        logger  *logger.Logger
+}
+
+// NewCassandra will create a new Cassandra configuration by loading it.
+func NewCassandra(fs *afero.Fs, logger *logger.Logger) (Cassandra, error) <span class="cov5" title="7">{
+        if fs == nil || logger == nil </span><span class="cov3" title="3">{
+                return nil, errors.New("nil file system of logger supplied")
+        }</span>
+        <span class="cov3" title="4">return newCassandraImpl(fs, logger)</span>
+}
+
+// newCassandraImpl will create a new CassandraImpl configuration and load it from disk.
+func newCassandraImpl(fs *afero.Fs, logger *logger.Logger) (c *CassandraImpl, err error) <span class="cov5" title="7">{
+        c = &amp;CassandraImpl{conf: newConfig(), logger: logger}
+        if err = c.conf.Load(*fs); err != nil </span><span class="cov1" title="1">{
+                c.logger.Error("failed to load Cassandra constants from disk", zap.Error(err))
+                return nil, err
+        }</span>
+        <span class="cov4" title="6">return</span>
+}
+
+// Open will start a database connection pool and establish a connection.
+func (c *CassandraImpl) Open() (err error) <span class="cov3" title="3">{
+        // Stop connection leaks.
+        if err = c.verifySession(); err == nil </span><span class="cov1" title="1">{
+                c.logger.Warn("session to cluster is already established")
+                return errors.New("session to cluster is already established")
+        }</span>
+
+        // Configure connection.
+        <span class="cov2" title="2">var cluster *gocql.ClusterConfig
+        cluster, err = c.configureCluster()
+        if err != nil </span><span class="cov0" title="0">{
+                c.logger.Error("failed to configure connection to Cassandra cluster", zap.Error(err))
+                return
+        }</span>
+
+        // Session connection pool.
+        <span class="cov2" title="2">if err = c.createSessionRetry(cluster); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov2" title="2">return</span>
+}
+
+// Close the CassandraImpl cluster connection.
+func (c *CassandraImpl) Close() error <span class="cov3" title="4">{
+        if err := c.verifySession(); err != nil </span><span class="cov2" title="2">{
+                return err
+        }</span>
+        <span class="cov2" title="2">c.session.Close()
+        return nil</span>
+}
+
+// Execute wraps the methods that create, read, update, and delete records from tables on the Cassandra cluster.
+func (c *CassandraImpl) Execute(request func(Cassandra, any) (any, error), params any) (any, error) <span class="cov10" title="74">{
+        return request(c, params)
+}</span>
+
+// configureCluster will configure the settings for the Cassandra cluster.
+func (c *CassandraImpl) configureCluster() (cluster *gocql.ClusterConfig, err error) <span class="cov3" title="3">{
+        cluster = gocql.NewCluster(c.conf.Connection.ClusterIP...)
+        cluster.ProtoVersion = c.conf.Connection.ProtoVersion
+        cluster.ConnectTimeout = time.Duration(c.conf.Connection.Timeout) * time.Second
+        cluster.Timeout = time.Duration(c.conf.Connection.Timeout) * time.Second
+        if cluster.Consistency, err = gocql.ParseConsistencyWrapper(c.conf.Connection.Consistency); err != nil </span><span class="cov0" title="0">{
+                c.logger.Error("failed to parse Cassandra consistency level provided in user configs", zap.Error(err))
+                return nil, err
+        }</span>
+        <span class="cov3" title="3">cluster.Keyspace = c.conf.Keyspace.Name
+
+        // Configure authentication.
+        cluster.Authenticator = gocql.PasswordAuthenticator{Username: c.conf.Authentication.Username, Password: c.conf.Authentication.Password}
+
+        return</span>
+}
+
+// verifySession will check to see if a session is established.
+func (c *CassandraImpl) verifySession() error <span class="cov5" title="8">{
+        if c.session == nil || c.session.Closed() </span><span class="cov4" title="5">{
+                return errors.New("no session established")
+        }</span>
+        <span class="cov3" title="3">return nil</span>
+}
+
+// createSessionRetry will attempt to open the connection a few times stop on the first success or fail after the last one.
+func (c *CassandraImpl) createSessionRetry(cluster *gocql.ClusterConfig) (err error) <span class="cov3" title="4">{
+        maxAttempts := constants.GetCassandraMaxConnectRetries()
+        for attempt := 0; attempt &lt;= maxAttempts; attempt++ </span><span class="cov3" title="4">{
+                c.logger.Info("Attempting to connect to Cassandra cluster...", zap.String("attempt", strconv.Itoa(attempt)))
+                if c.session, err = cluster.CreateSession(); err == nil </span><span class="cov3" title="4">{
+                        break</span>
+                }
+        }
+        <span class="cov3" title="4">if err != nil </span><span class="cov0" title="0">{
+                c.logger.Error("unable to establish connection to Cassandra cluster", zap.Error(err))
+        }</span>
+        <span class="cov3" title="4">return</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package cassandra
+
+import (
+        "errors"
+        "fmt"
+
+        "github.com/gocql/gocql"
+        "github.com/surahman/mcq-platform/pkg/model/cassandra"
+        "go.uber.org/zap"
+)
+
+// truncateTableQuery will empty a table.
+// param: name of the table
+func truncateTableQuery(c Cassandra, params any) (response any, err error) <span class="cov7" title="11">{
+        conn := c.(*CassandraImpl)
+        tableName := params.(string)
+        if err = conn.session.Query(fmt.Sprintf("TRUNCATE TABLE %s;", tableName)).Exec(); err != nil </span><span class="cov0" title="0">{
+                conn.logger.Error("failed to truncate table", zap.String("table name", tableName), zap.Error(err))
+        }</span>
+
+        <span class="cov7" title="11">return</span>
+}
+
+// -----   Users Table Queries   -----
+
+// CreateUserQuery will insert a user record into the users table.
+// Param: pointer to the user struct containing the query parameters
+func CreateUserQuery(c Cassandra, params any) (response any, err error) <span class="cov8" title="17">{
+        conn := c.(*CassandraImpl)
+        input := params.(*model_cassandra.User)
+
+        resp := model_cassandra.User{UserAccount: &amp;model_cassandra.UserAccount{}} // Discarded, only used as container for Cassandra response.
+        applied := false
+        if applied, err = conn.session.Query(model_cassandra.CreateUser,
+                input.Username, input.AccountID, input.Password, input.FirstName, input.LastName, input.Email).ScanCAS(
+                &amp;resp.Username, &amp;resp.AccountID, &amp;resp.Email, &amp;resp.FirstName, &amp;resp.IsDeleted, &amp;resp.LastName, &amp;resp.Password); err != nil </span><span class="cov0" title="0">{
+                conn.logger.Error("failed to create input record",
+                        zap.Strings("Account info:", []string{input.Username, input.AccountID}), zap.Error(err))
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="17">if !applied </span><span class="cov4" title="4">{
+                msg := "failed to create user record it already exists"
+                conn.logger.Error(msg, zap.Strings("Account info:", []string{input.Username, input.AccountID}), zap.Error(err))
+                return nil, errors.New(msg)
+        }</span>
+
+        <span class="cov7" title="13">return nil, nil</span>
+}
+
+// ReadUserQuery will read a user record from the users table.
+// Param: pointer to the user struct containing the query parameters
+// Return: address to a user record
+func ReadUserQuery(c Cassandra, params any) (response any, err error) <span class="cov5" title="5">{
+        conn := c.(*CassandraImpl)
+        input := params.(*model_cassandra.User)
+        resp := model_cassandra.User{UserAccount: &amp;model_cassandra.UserAccount{}}
+
+        if err = conn.session.Query(model_cassandra.ReadUser, input.Username, input.AccountID).Scan(
+                &amp;resp.Username, &amp;resp.AccountID, &amp;resp.Email, &amp;resp.FirstName, &amp;resp.IsDeleted, &amp;resp.LastName, &amp;resp.Password); err != nil </span><span class="cov1" title="1">{
+                conn.logger.Error("failed to read user record",
+                        zap.String("username", input.Username), zap.String("account_id", input.AccountID), zap.Error(err))
+        }</span>
+
+        <span class="cov5" title="5">return &amp;resp, err</span>
+}
+
+// DeleteUserQuery will mark a user record as deleted in the users table.
+// Param: pointer to the user struct containing the query parameters
+func DeleteUserQuery(c Cassandra, params any) (response any, err error) <span class="cov5" title="5">{
+        conn := c.(*CassandraImpl)
+        input := params.(*model_cassandra.User)
+
+        resp := model_cassandra.User{UserAccount: &amp;model_cassandra.UserAccount{}} // Discarded, only used as container for Cassandra response.
+        applied := false
+        if applied, err = conn.session.Query(model_cassandra.DeleteUser, input.Username, input.AccountID).ScanCAS(
+                &amp;resp.Username, &amp;resp.AccountID, &amp;resp.Email, &amp;resp.FirstName, &amp;resp.IsDeleted, &amp;resp.LastName, &amp;resp.Password); err != nil </span><span class="cov0" title="0">{
+                conn.logger.Error("failed to create user record",
+                        zap.Strings("Account info:", []string{input.Username, input.AccountID}), zap.Error(err))
+                return nil, err
+        }</span>
+
+        <span class="cov5" title="5">if !applied </span><span class="cov1" title="1">{
+                msg := "failed to mark user record as deleted"
+                conn.logger.Error(msg, zap.Strings("Account info:", []string{input.Username, input.AccountID}), zap.Error(err))
+                return nil, errors.New(msg)
+        }</span>
+
+        <span class="cov4" title="4">return nil, err</span>
+}
+
+// -----   Quizzes Table Queries   -----
+
+// CreateQuizQuery will create a quiz record in the quizzes table.
+// Param: pointer to the quiz struct containing the query parameters
+func CreateQuizQuery(c Cassandra, params any) (response any, err error) <span class="cov10" title="30">{
+        conn := c.(*CassandraImpl)
+        input := params.(*model_cassandra.Quiz)
+
+        resp := model_cassandra.Quiz{QuizCore: &amp;model_cassandra.QuizCore{}} // Discarded, only used as container for Cassandra response.
+        applied := false
+        if applied, err = conn.session.Query(model_cassandra.CreateQuiz,
+                input.QuizID, input.Author, input.Title, input.Questions, input.MarkingType).ScanCAS(
+                &amp;resp.QuizID, &amp;resp.Author, &amp;resp.IsDeleted, &amp;resp.IsPublished, &amp;resp.MarkingType, &amp;resp.Questions); err != nil </span><span class="cov5" title="5">{
+                conn.logger.Error("failed to create quiz record",
+                        zap.Strings("Quiz info:", []string{input.QuizID.String(), input.Author}), zap.Error(err))
+                return nil, err
+        }</span>
+
+        <span class="cov9" title="25">if !applied </span><span class="cov0" title="0">{
+                msg := "failed to create quiz with id, it already exists"
+                conn.logger.Error(msg, zap.Strings("Quiz info:", []string{input.QuizID.String(), input.Author}), zap.Error(err))
+                return nil, errors.New(msg)
+        }</span>
+
+        <span class="cov9" title="25">return nil, nil</span>
+}
+
+// ReadQuizQuery will read a quiz record from the quizzes table.
+// Param: quiz id
+// Return: address to a quiz record
+func ReadQuizQuery(c Cassandra, params any) (response any, err error) <span class="cov9" title="21">{
+        conn := c.(*CassandraImpl)
+        input := params.(gocql.UUID)
+        resp := model_cassandra.Quiz{QuizCore: &amp;model_cassandra.QuizCore{}}
+
+        if err = conn.session.Query(model_cassandra.ReadQuiz, input).Scan(
+                &amp;resp.QuizID, &amp;resp.Author, &amp;resp.IsDeleted, &amp;resp.IsPublished, &amp;resp.MarkingType, &amp;resp.Questions, &amp;resp.Title); err != nil </span><span class="cov1" title="1">{
+                conn.logger.Error("failed to read quiz record", zap.String("Quiz info:", input.String()), zap.Error(err))
+        }</span>
+
+        <span class="cov9" title="21">return &amp;resp, err</span>
+}
+
+// UpdateQuizQuery will update a quiz record in the quizzes table.
+// Param: pointer to the quiz struct containing the query parameters
+func UpdateQuizQuery(c Cassandra, params any) (response any, err error) <span class="cov5" title="6">{
+        conn := c.(*CassandraImpl)
+        input := params.(*model_cassandra.Quiz)
+        resp := model_cassandra.Quiz{QuizCore: &amp;model_cassandra.QuizCore{}}
+
+        applied := false
+        if applied, err = conn.session.Query(model_cassandra.UpdateQuiz, input.Title, input.Questions, input.MarkingType, input.QuizID).ScanCAS(
+                &amp;resp.QuizID, &amp;resp.Author, &amp;resp.IsDeleted, &amp;resp.IsPublished, &amp;resp.MarkingType, &amp;resp.Questions, &amp;resp.Title); err != nil </span><span class="cov0" title="0">{
+                conn.logger.Error("failed to update quiz record", zap.Strings("Quiz info:", []string{input.QuizID.String(), input.Author}), zap.Error(err))
+                return nil, err
+        }</span>
+
+        <span class="cov5" title="6">if !applied </span><span class="cov1" title="1">{
+                msg := "failed to update quiz, either it does not exist or is already published"
+                conn.logger.Error(msg, zap.Strings("Quiz info:", []string{input.Title, input.QuizID.String()}), zap.Error(err))
+                return nil, errors.New(msg)
+        }</span>
+
+        <span class="cov5" title="5">return nil, err</span>
+}
+
+// DeleteQuizQuery will mark a quiz record as deleted in the quizzes table.
+// Param: quiz id
+func DeleteQuizQuery(c Cassandra, params any) (response any, err error) <span class="cov5" title="6">{
+        conn := c.(*CassandraImpl)
+        input := params.(gocql.UUID)
+        resp := model_cassandra.Quiz{QuizCore: &amp;model_cassandra.QuizCore{}}
+
+        applied := false
+        if applied, err = conn.session.Query(model_cassandra.DeleteQuiz, input).ScanCAS(
+                &amp;resp.QuizID, &amp;resp.Author, &amp;resp.IsDeleted, &amp;resp.IsPublished, &amp;resp.MarkingType, &amp;resp.Questions, &amp;resp.Title); err != nil </span><span class="cov0" title="0">{
+                conn.logger.Error("failed to delete quiz record", zap.String("Quiz info:", input.String()), zap.Error(err))
+                return nil, err
+        }</span>
+
+        <span class="cov5" title="6">if !applied </span><span class="cov1" title="1">{
+                msg := "failed to find and delete quiz record"
+                conn.logger.Error(msg, zap.String("Quiz info:", input.String()), zap.Error(err))
+                return nil, errors.New(msg)
+        }</span>
+
+        <span class="cov5" title="5">return nil, err</span>
+}
+
+// PublishQuizQuery will mark a quiz record as published in the quizzes table.
+// Param: quiz id
+func PublishQuizQuery(c Cassandra, params any) (response any, err error) <span class="cov5" title="6">{
+        conn := c.(*CassandraImpl)
+        input := params.(gocql.UUID)
+        resp := model_cassandra.Quiz{QuizCore: &amp;model_cassandra.QuizCore{}}
+
+        applied := false
+        if applied, err = conn.session.Query(model_cassandra.PublishQuiz, input).ScanCAS(
+                &amp;resp.QuizID, &amp;resp.Author, &amp;resp.IsDeleted, &amp;resp.IsPublished, &amp;resp.MarkingType, &amp;resp.Questions, &amp;resp.Title); err != nil </span><span class="cov0" title="0">{
+                conn.logger.Error("failed to publish quiz record", zap.String("Quiz info:", input.String()), zap.Error(err))
+                return nil, err
+        }</span>
+
+        <span class="cov5" title="6">if !applied </span><span class="cov1" title="1">{
+                msg := "failed to find and publish quiz record"
+                conn.logger.Error(msg, zap.String("Quiz info:", input.String()), zap.Error(err))
+                return nil, errors.New(msg)
+        }</span>
+
+        <span class="cov5" title="5">return nil, err</span>
+}
+
+// -----   Responses Table Queries   -----
+
+// CreateResponseQuery will insert a response record into the responses table.
+// Param: pointer to the user struct containing the response parameters
+func CreateResponseQuery(c Cassandra, params any) (response any, err error) <span class="cov8" title="16">{
+        conn := c.(*CassandraImpl)
+        input := params.(*model_cassandra.Response)
+
+        resp := model_cassandra.Response{QuizResponse: &amp;model_cassandra.QuizResponse{}} // Discarded, only used as container for Cassandra response.
+        applied := false
+        if applied, err = conn.session.Query(model_cassandra.CreateResponse,
+                input.Username, input.QuizID, input.Score, input.Responses).ScanCAS(
+                &amp;resp.Username, &amp;resp.QuizID, &amp;resp.Responses, &amp;resp.Score); err != nil </span><span class="cov0" title="0">{
+                conn.logger.Error("failed to create response record",
+                        zap.Strings("Response info:", []string{input.Username, input.QuizID.String()}), zap.Error(err))
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="16">if !applied </span><span class="cov4" title="4">{
+                msg := "failed to record response, user has already taken this quiz"
+                conn.logger.Error(msg, zap.Strings("Response info:", []string{input.Username, input.QuizID.String()}), zap.Error(err))
+                return nil, errors.New(msg)
+        }</span>
+
+        <span class="cov7" title="12">return nil, nil</span>
+}
+
+// ReadResponseQuery will read a response record from the responses table.
+// Param: pointer to the response struct containing the query parameters
+// Return: address to a response record
+func ReadResponseQuery(c Cassandra, params any) (response any, err error) <span class="cov5" title="5">{
+        conn := c.(*CassandraImpl)
+        input := params.(*model_cassandra.Response)
+        resp := model_cassandra.Response{QuizResponse: &amp;model_cassandra.QuizResponse{}}
+
+        if err = conn.session.Query(model_cassandra.ReadResponse, input.Username, input.QuizID).Scan(
+                &amp;resp.Username, &amp;resp.QuizID, &amp;resp.Responses, &amp;resp.Score); err != nil </span><span class="cov1" title="1">{
+                conn.logger.Error("failed to read response record",
+                        zap.Strings("Response info:", []string{input.Username, input.QuizID.String()}), zap.Error(err))
+        }</span>
+
+        <span class="cov5" title="5">return &amp;resp, err</span>
+}
+
+// ReadResponseStatisticsQuery will read all response records from the responses table corresponding to a Quiz ID.
+// Param: QuizID gocql UUID
+// Return: address to slice of responses
+func ReadResponseStatisticsQuery(c Cassandra, params any) (response any, err error) <span class="cov5" title="5">{
+        conn := c.(*CassandraImpl)
+        input := params.(gocql.UUID)
+        var results []*model_cassandra.Response
+
+        scanner := conn.session.Query(model_cassandra.ReadResponseStatistics, input).Iter().Scanner()
+        defer func(scanner gocql.Scanner) </span><span class="cov5" title="5">{
+                err := scanner.Err()
+                if err != nil </span><span class="cov0" title="0">{
+                        conn.logger.Error("failed to close scanner whilst reading response statistics",
+                                zap.String("quiz_id", input.String()), zap.Error(err))
+                }</span>
+        }(scanner)
+
+        <span class="cov5" title="5">for scanner.Next() </span><span class="cov4" title="4">{
+                row := model_cassandra.Response{QuizResponse: &amp;model_cassandra.QuizResponse{}}
+                err = scanner.Scan(&amp;row.Username, &amp;row.QuizID, &amp;row.Responses, &amp;row.Score)
+                if err != nil </span><span class="cov0" title="0">{
+                        conn.logger.Error("failed to read row in response statistics",
+                                zap.String("quiz_id", input.String()), zap.Error(err))
+                }</span>
+                <span class="cov4" title="4">results = append(results, &amp;row)</span>
+        }
+
+        <span class="cov5" title="5">return results, err</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package cassandra
 
 import (
         "github.com/spf13/afero"
         "github.com/spf13/viper"
+        "github.com/surahman/mcq-platform/pkg/constants"
         "github.com/surahman/mcq-platform/pkg/validator"
 )
 
-// Ensure full IConfig interface implementation
-var _ IConfig = &amp;CassandraConfig{}
-
-// CassandraConfig is the configuration container for connecting to the Cassandra cluster
-type CassandraConfig struct {
+// config is the configuration container for connecting to the Cassandra cluster
+type config struct {
         Authentication struct {
                 Username string `json:"username,omitempty" yaml:"username,omitempty" mapstructure:"username" validate:"required"`
                 Password string `json:"password,omitempty" yaml:"password,omitempty" mapstructure:"password" validate:"required"`
@@ -122,124 +532,53 @@ type CassandraConfig struct {
         } `json:"connection,omitempty" yaml:"connection,omitempty" mapstructure:"connection"`
 }
 
-// NewCassandraConfig creates a blank configuration struct for Cassandra.
-func NewCassandraConfig() *CassandraConfig <span class="cov1" title="1">{
-        return &amp;CassandraConfig{}
+// newConfig creates a blank configuration struct for Cassandra.
+func newConfig() *config <span class="cov7" title="7">{
+        return &amp;config{}
 }</span>
 
 // Load will attempt to load configurations from a file on a file system and then overwrite values using environment variables.
-func (cfg *CassandraConfig) Load(fs afero.Fs) (err error) <span class="cov10" title="9">{
+func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="16">{
         viper.SetFs(fs)
-        viper.SetConfigName(GetCassandraFileName())
+        viper.SetConfigName(constants.GetCassandraFileName())
         viper.SetConfigType("yaml")
-        viper.AddConfigPath(configEtcDir)
-        viper.AddConfigPath(configHomeDir)
+        viper.AddConfigPath(constants.GetEtcDir())
+        viper.AddConfigPath(constants.GetHomeDir())
         viper.AddConfigPath(".")
 
-        viper.SetEnvPrefix(cassandraPrefix)
+        viper.SetEnvPrefix(constants.GetCassandraPrefix())
         viper.AutomaticEnv()
 
-        if err = viper.ReadInConfig(); err != nil </span><span class="cov0" title="0">{
+        if err = viper.ReadInConfig(); err != nil </span><span class="cov1" title="1">{
                 return
         }</span>
 
-        <span class="cov10" title="9">if err = viper.Unmarshal(cfg); err != nil </span><span class="cov0" title="0">{
+        <span class="cov9" title="15">if err = viper.Unmarshal(cfg); err != nil </span><span class="cov0" title="0">{
                 return
         }</span>
 
-        <span class="cov10" title="9">if err = validator.ValidateStruct(cfg); err != nil </span><span class="cov8" title="7">{
+        <span class="cov9" title="15">if err = validator.ValidateStruct(cfg); err != nil </span><span class="cov7" title="7">{
                 return
         }</span>
 
-        <span class="cov3" title="2">return</span>
+        <span class="cov7" title="8">return</span>
 }
 </pre>
 		
-		<pre class="file" id="file1" style="display: none">package config
+		<pre class="file" id="file3" style="display: none">package cassandra
 
 import (
-        "errors"
+        "fmt"
+        "log"
 
-        "github.com/spf13/afero"
+        "github.com/gocql/gocql"
+        "github.com/surahman/mcq-platform/pkg/model/cassandra"
 )
 
-// Type is an enum for the type of configuration file to be created.
-type Type uint16
+var quizzesUUIDMapping = GetQuizzedUUIDMapping()
 
-// Enum values indicating the configuration types.
-const (
-        Cassandra = iota
-        Redis
-        Authorization
-        Logger
-)
-
-// IConfig is the base configuration type interface.
-type IConfig interface {
-        Load(afero.Fs) error // Loads the configuration file from a supplied file system.
-}
-
-// Factory will return a blank config struct to be populated.
-func Factory(configType Type) (IConfig, error) <span class="cov10" title="3">{
-        switch configType </span>{
-        case Cassandra:<span class="cov1" title="1">
-                return NewCassandraConfig(), nil</span>
-        case Logger:<span class="cov1" title="1">
-                return NewLoggerConfig(), nil</span>
-        default:<span class="cov1" title="1">
-                return nil, errors.New("invalid config type provided")</span>
-        }
-}
-</pre>
-		
-		<pre class="file" id="file2" style="display: none">package config
-
-const (
-        // Configuration file directories
-        configEtcDir  = "/etc/MCQ_Platform.conf/"
-        configHomeDir = "$HOME/.MCQ_Platform/"
-
-        // Configuration file names
-        cassandraConfigFileName = "CassandraConfig.yaml"
-        loggerConfigFileName    = "LoggerConfig.yaml"
-
-        // Environment variables
-        cassandraPrefix = "CASSANDRA"
-        loggerPrefix    = "LOGGER"
-
-        // Misc.
-        integrationTestKeyspaceSuffix = "_integration_testing"
-)
-
-// GetEtcDir returns the configuration directory in Etc.
-func GetEtcDir() string <span class="cov1" title="1">{
-        return configEtcDir
-}</span>
-
-// GetHomeDir returns the configuration directory in users home.
-func GetHomeDir() string <span class="cov1" title="1">{
-        return configHomeDir
-}</span>
-
-// GetCassandraFileName returns the Cassandra configuration file name.
-func GetCassandraFileName() string <span class="cov10" title="10">{
-        return cassandraConfigFileName
-}</span>
-
-// GetLoggerFileName returns the Zap logger configuration file name.
-func GetLoggerFileName() string <span class="cov9" title="9">{
-        return loggerConfigFileName
-}</span>
-
-// GetIntegrationTestKeyspaceSuffix is the suffix attached to the clusters keyspace and is used for integration tests.
-func GetIntegrationTestKeyspaceSuffix() string <span class="cov1" title="1">{
-        return integrationTestKeyspaceSuffix
-}</pre>
-		
-		<pre class="file" id="file3" style="display: none">package config
-
-// CassandraConfigTestData will return a map of test data containing valid and invalid Cassandra configs.
-func CassandraConfigTestData() map[string]string <span class="cov8" title="1">{
+// configTestData will return a map of test data containing valid and invalid Cassandra configs.
+func configTestData() map[string]string <span class="cov1" title="1">{
         testData := make(map[string]string)
 
         testData["empty"] = ``
@@ -256,7 +595,21 @@ connection:
   consistency: quorum
   cluster_ip: [127.0.0.1]
   proto_version: 4
-  timeout: 30`
+  timeout: 10`
+
+        testData["valid-ci"] = `
+authentication:
+  username: cassandra
+  password: cassandra
+keyspace:
+  name: mcq_platform
+  replication_class: SimpleStrategy
+  replication_factor: 3
+connection:
+  consistency: quorum
+  cluster_ip: [localhost]
+  proto_version: 4
+  timeout: 10`
 
         testData["password_empty"] = `
 authentication:
@@ -270,7 +623,7 @@ connection:
   consistency: quorum
   cluster_ip: [127.0.0.1]
   proto_version: 4
-  timeout: 30`
+  timeout: 10`
 
         testData["username_empty"] = `
 authentication:
@@ -284,7 +637,7 @@ connection:
   consistency: quorum
   cluster_ip: [127.0.0.1]
   proto_version: 4
-  timeout: 30`
+  timeout: 10`
 
         testData["keyspace_empty"] = `
 authentication:
@@ -298,7 +651,7 @@ connection:
   consistency: quorum
   cluster_ip: [127.0.0.1]
   proto_version: 4
-  timeout: 30`
+  timeout: 10`
 
         testData["consistency_missing"] = `
 authentication:
@@ -311,7 +664,7 @@ keyspace:
 connection:
   cluster_ip: [127.0.0.1]
   proto_version: 4
-  timeout: 30`
+  timeout: 10`
 
         testData["ip_empty"] = `
 authentication:
@@ -325,7 +678,7 @@ connection:
   consistency: quorum
   cluster_ip: []
   proto_version: 4
-  timeout: 30`
+  timeout: 10`
 
         testData["timeout_zero"] = `
 authentication:
@@ -344,8 +697,432 @@ connection:
         return testData
 }</span>
 
-// LoggerConfigTestData will return a map of test data containing valid and invalid logger configs.
-func LoggerConfigTestData() map[string]string <span class="cov8" title="1">{
+// GetQuizzedUUIDMapping returns a map containing a Quiz title to UUID mapping.
+func GetQuizzedUUIDMapping() map[string]gocql.UUID <span class="cov1" title="1">{
+        data := make(map[string]gocql.UUID)
+        var err error
+
+        if data["providedPubQuiz"], err = gocql.ParseUUID("729c6e51-b8ae-4f23-9419-9401a51968c1"); err != nil </span><span class="cov0" title="0">{
+                log.Fatalln("Failed to parse UUID")
+        }</span>
+        <span class="cov1" title="1">if data["providedNoPubQuiz"], err = gocql.ParseUUID("f37a7ba3-1541-4d8a-95af-03689a91d39c"); err != nil </span><span class="cov0" title="0">{
+                log.Fatalln("Failed to parse UUID")
+        }</span>
+        <span class="cov1" title="1">if data["myPubQuiz"], err = gocql.ParseUUID("d1aec072-201e-4c91-89c8-d2cc402e2cd9"); err != nil </span><span class="cov0" title="0">{
+                log.Fatalln("Failed to parse UUID")
+        }</span>
+        <span class="cov1" title="1">if data["myNoPubQuiz"], err = gocql.ParseUUID("320b5b74-ebcd-40c1-91bd-da28b8b3293a"); err != nil </span><span class="cov0" title="0">{
+                log.Fatalln("Failed to parse UUID")
+        }</span>
+        <span class="cov1" title="1">if data["invalidOptionsNoPubQuiz"], err = gocql.ParseUUID("45ba24bf-8bd9-4b20-af7a-4dddbf2428b9"); err != nil </span><span class="cov0" title="0">{
+                log.Fatalln("Failed to parse UUID")
+        }</span>
+
+        <span class="cov1" title="1">return data</span>
+}
+
+// GetTestUsers will generate a number of dummy users for testing.
+func GetTestUsers() map[string]*model_cassandra.User <span class="cov1" title="1">{
+        users := make(map[string]*model_cassandra.User)
+        username := "user-%d"
+        accountID := "user-account-id-%d"
+        password := "user-pwd-%d"
+        firstname := "firstname-%d"
+        lastname := "lastname-%d"
+        email := "user%d@email-address.com"
+
+        for idx := 1; idx &lt; 5; idx++ </span><span class="cov10" title="4">{
+                uname := fmt.Sprintf(username, idx)
+                users[uname] = &amp;model_cassandra.User{
+                        UserAccount: &amp;model_cassandra.UserAccount{
+                                Username:  fmt.Sprintf(username, idx),
+                                Password:  fmt.Sprintf(password, idx),
+                                FirstName: fmt.Sprintf(firstname, idx),
+                                LastName:  fmt.Sprintf(lastname, idx),
+                                Email:     fmt.Sprintf(email, idx),
+                        },
+                        AccountID: fmt.Sprintf(accountID, idx),
+                        IsDeleted: false,
+                }
+        }</span>
+
+        <span class="cov1" title="1">return users</span>
+}
+
+// GetTestQuizzes is a map of test quiz data.
+func GetTestQuizzes() map[string]*model_cassandra.Quiz <span class="cov5" title="2">{
+        data := make(map[string]*model_cassandra.Quiz)
+        temperatureQuestion := model_cassandra.Question{Description: "Temperature can be measured in",
+                Options: []string{"Kelvin", "Fahrenheit", "Gram", "Celsius", "Liters"},
+                Answers: []int32{0, 1, 3}}
+        moonQuestion := model_cassandra.Question{Description: "Moon is a star",
+                Options: []string{"Yes", "No"},
+                Answers: []int32{1}}
+        weightQuestion := model_cassandra.Question{Description: "Weight can be measured in",
+                Options: []string{"Kelvin", "Fahrenheit", "Gram", "Celsius", "Liters"},
+                Answers: []int32{2}}
+        booleanQuestion := model_cassandra.Question{Description: "Boolean can be true or false",
+                Options: []string{"Yes", "No"},
+                Answers: []int32{0}}
+        invalidQuestion := model_cassandra.Question{Description: "This question only has one option and is invalid",
+                Options: []string{"Yes"},
+                Answers: []int32{0}}
+
+        data["providedPubQuiz"] = &amp;model_cassandra.Quiz{QuizID: quizzesUUIDMapping["providedPubQuiz"], Author: "user-1",
+                QuizCore: &amp;model_cassandra.QuizCore{
+                        Title:       "Sample quiz published",
+                        MarkingType: "Negative",
+                        Questions:   []*model_cassandra.Question{&amp;temperatureQuestion, &amp;moonQuestion},
+                }}
+        data["providedNoPubQuiz"] = &amp;model_cassandra.Quiz{QuizID: quizzesUUIDMapping["providedNoPubQuiz"], Author: "user-1",
+                QuizCore: &amp;model_cassandra.QuizCore{
+                        Title:       "Sample quiz not published",
+                        MarkingType: "Negative",
+                        Questions:   []*model_cassandra.Question{&amp;temperatureQuestion, &amp;moonQuestion},
+                }}
+        data["myPubQuiz"] = &amp;model_cassandra.Quiz{QuizID: quizzesUUIDMapping["myPubQuiz"], Author: "user-2",
+                QuizCore: &amp;model_cassandra.QuizCore{
+                        Title:       "My sample quiz published",
+                        MarkingType: "Negative",
+                        Questions:   []*model_cassandra.Question{&amp;weightQuestion, &amp;booleanQuestion},
+                }}
+        data["myNoPubQuiz"] = &amp;model_cassandra.Quiz{QuizID: quizzesUUIDMapping["myNoPubQuiz"], Author: "user-3",
+                QuizCore: &amp;model_cassandra.QuizCore{
+                        Title:       "My sample quiz not published",
+                        MarkingType: "Negative",
+                        Questions:   []*model_cassandra.Question{&amp;weightQuestion, &amp;booleanQuestion},
+                }}
+        data["invalidOptionsNoPubQuiz"] = &amp;model_cassandra.Quiz{QuizID: quizzesUUIDMapping["invalidOptionsNoPubQuiz"], Author: "user-4", QuizCore: &amp;model_cassandra.QuizCore{
+                Title:       "Invalid Options (1 options) unpublished",
+                MarkingType: "Negative",
+                Questions:   []*model_cassandra.Question{&amp;invalidQuestion},
+        }}
+
+        return data
+}</span>
+
+// GetTestResponses is a map of test response data.
+func GetTestResponses() map[string]*model_cassandra.Response <span class="cov1" title="1">{
+        data := make(map[string]*model_cassandra.Response)
+
+        data["user-1_myPubQuiz"] = &amp;model_cassandra.Response{
+                Username:     "user-1",
+                Score:        1.0,
+                QuizResponse: &amp;model_cassandra.QuizResponse{Responses: [][]int32{{3}, {0}}},
+                QuizID:       quizzesUUIDMapping["myPubQuiz"],
+        }
+        data["user-2_myPubQuiz"] = &amp;model_cassandra.Response{
+                Username:     "user-2",
+                Score:        0.5,
+                QuizResponse: &amp;model_cassandra.QuizResponse{Responses: [][]int32{{3}, {1}}},
+                QuizID:       quizzesUUIDMapping["myPubQuiz"],
+        }
+        data["user-3_providedPubQuiz"] = &amp;model_cassandra.Response{
+                Username:     "user-3",
+                Score:        0.5,
+                QuizResponse: &amp;model_cassandra.QuizResponse{Responses: [][]int32{{0, 1, 2}, {1}}},
+                QuizID:       quizzesUUIDMapping["providedPubQuiz"],
+        }
+        data["user-2_providedPubQuiz"] = &amp;model_cassandra.Response{
+                Username:     "user-2",
+                Score:        2,
+                QuizResponse: &amp;model_cassandra.QuizResponse{Responses: [][]int32{{0, 1, 2}, {0}}},
+                QuizID:       quizzesUUIDMapping["providedPubQuiz"],
+        }
+
+        return data
+}</span>
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package constants
+
+const (
+        // Configuration file directories
+        configEtcDir  = "/etc/MCQ_Platform.conf/"
+        configHomeDir = "$HOME/.MCQ_Platform/"
+
+        // Configuration file names
+        cassandraConfigFileName = "CassandraConfig.yaml"
+        loggerConfigFileName    = "LoggerConfig.yaml"
+
+        // Environment variables
+        cassandraPrefix = "CASSANDRA"
+        loggerPrefix    = "LOGGER"
+        githubCIKey     = "GITHUB_ACTIONS_CI"
+
+        // Misc.
+        integrationTestKeyspaceSuffix = "_integration_testing"
+        cassandraMaxConnectRetries    = 5
+)
+
+// GetEtcDir returns the configuration directory in Etc.
+func GetEtcDir() string <span class="cov8" title="1">{
+        return configEtcDir
+}</span>
+
+// GetHomeDir returns the configuration directory in users home.
+func GetHomeDir() string <span class="cov8" title="1">{
+        return configHomeDir
+}</span>
+
+// GetCassandraFileName returns the Cassandra configuration file name.
+func GetCassandraFileName() string <span class="cov8" title="1">{
+        return cassandraConfigFileName
+}</span>
+
+// GetLoggerFileName returns the Zap logger configuration file name.
+func GetLoggerFileName() string <span class="cov8" title="1">{
+        return loggerConfigFileName
+}</span>
+
+// GetCassandraPrefix returns the environment variable prefix for Cassandra.
+func GetCassandraPrefix() string <span class="cov8" title="1">{
+        return cassandraPrefix
+}</span>
+
+// GetLoggerPrefix returns the environment variable prefix for the Zap logger.
+func GetLoggerPrefix() string <span class="cov8" title="1">{
+        return loggerPrefix
+}</span>
+
+// GetIntegrationTestKeyspaceSuffix is the suffix attached to the clusters keyspace and is used for integration tests.
+func GetIntegrationTestKeyspaceSuffix() string <span class="cov8" title="1">{
+        return integrationTestKeyspaceSuffix
+}</span>
+
+// GetCassandraMaxConnectRetries is the maximum number of attempts to retry connecting to the Cassandra cluster.
+func GetCassandraMaxConnectRetries() int <span class="cov8" title="1">{
+        return cassandraMaxConnectRetries
+}</span>
+
+// GetGithubCIKey is the key for the environment variable expected to be present in the GH CI runner.
+func GetGithubCIKey() string <span class="cov8" title="1">{
+        return githubCIKey
+}</span>
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package logger
+
+import (
+        "github.com/spf13/afero"
+        "github.com/spf13/viper"
+        "github.com/surahman/mcq-platform/pkg/constants"
+        "github.com/surahman/mcq-platform/pkg/validator"
+)
+
+// config contains the configurations loaded from the configuration file.
+type config struct {
+        BuiltinConfig        string         `json:"builtin_config,omitempty" yaml:"builtin_config,omitempty" mapstructure:"builtin_config" validate:"oneof='Production' 'production' 'Development' 'development'"`
+        BuiltinEncoderConfig string         `json:"builtin_encoder_config,omitempty" yaml:"builtin_encoder_config,omitempty" mapstructure:"builtin_encoder_config" validate:"oneof='Production' 'production' 'Development' 'development'"`
+        GeneralConfig        *generalConfig `json:"general_config,omitempty" yaml:"general_config,omitempty" mapstructure:"general_config"`
+        EncoderConfig        *encoderConfig `json:"encoder_config,omitempty" yaml:"encoder_config,omitempty" mapstructure:"encoder_config"`
+}
+
+// generalConfig contains all the general logger configurations.
+type generalConfig struct {
+        Development       bool     `json:"development" yaml:"development" mapstructure:"development" validate:"required"`
+        DisableCaller     bool     `json:"disableCaller" yaml:"disableCaller" mapstructure:"disableCaller" validate:"required"`
+        DisableStacktrace bool     `json:"disableStacktrace" yaml:"disableStacktrace" mapstructure:"disableStacktrace" validate:"required"`
+        Encoding          string   `json:"encoding" yaml:"encoding" mapstructure:"encoding" validate:"required"`
+        OutputPaths       []string `json:"outputPaths" yaml:"outputPaths" mapstructure:"outputPaths" validate:"required"`
+        ErrorOutputPaths  []string `json:"errorOutputPaths" yaml:"errorOutputPaths" mapstructure:"errorOutputPaths" validate:"required"`
+}
+
+// encoderConfig contains all the log encoder configurations.
+type encoderConfig struct {
+        MessageKey       string `json:"messageKey" yaml:"messageKey" mapstructure:"messageKey" validate:"required"`
+        LevelKey         string `json:"levelKey" yaml:"levelKey" mapstructure:"levelKey" validate:"required"`
+        TimeKey          string `json:"timeKey" yaml:"timeKey" mapstructure:"timeKey" validate:"required"`
+        NameKey          string `json:"nameKey" yaml:"nameKey" mapstructure:"nameKey" validate:"required"`
+        CallerKey        string `json:"callerKey" yaml:"callerKey" mapstructure:"callerKey" validate:"required"`
+        FunctionKey      string `json:"functionKey" yaml:"functionKey" mapstructure:"functionKey" validate:"required"`
+        StacktraceKey    string `json:"stacktraceKey" yaml:"stacktraceKey" mapstructure:"stacktraceKey" validate:"required"`
+        SkipLineEnding   bool   `json:"skipLineEnding" yaml:"skipLineEnding" mapstructure:"skipLineEnding" validate:"required"`
+        LineEnding       string `json:"lineEnding" yaml:"lineEnding" mapstructure:"lineEnding" validate:"required"`
+        ConsoleSeparator string `json:"consoleSeparator" yaml:"consoleSeparator" mapstructure:"consoleSeparator" validate:"required"`
+}
+
+// newConfig creates a blank configuration struct for the Zap Logger.
+func newConfig() *config <span class="cov6" title="5">{
+        return &amp;config{}
+}</span>
+
+// Load will attempt to load configurations from a file on a file system.
+func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="13">{
+        viper.SetFs(fs)
+        viper.SetConfigName(constants.GetLoggerFileName())
+        viper.SetConfigType("yaml")
+        viper.AddConfigPath(constants.GetEtcDir())
+        viper.AddConfigPath(constants.GetHomeDir())
+        viper.AddConfigPath(".")
+
+        viper.SetEnvPrefix(constants.GetLoggerPrefix())
+        if err := viper.BindEnv("builtin_config"); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov10" title="13">if err := viper.BindEnv("builtin_encoder_config"); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov10" title="13">if err = viper.ReadInConfig(); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov10" title="13">if err = viper.Unmarshal(cfg); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov10" title="13">if err = validator.ValidateStruct(cfg); err != nil </span><span class="cov4" title="3">{
+                return
+        }</span>
+
+        <span class="cov9" title="10">return</span>
+}
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package logger
+
+import (
+        "errors"
+        "log"
+        "strings"
+
+        "github.com/spf13/afero"
+        "go.uber.org/zap"
+        "go.uber.org/zap/zapcore"
+        "gopkg.in/yaml.v3"
+)
+
+// Logger is the Zap logger object.
+type Logger struct {
+        zapLogger *zap.Logger
+}
+
+// NewLogger will create a new uninitialized logger.
+func NewLogger() *Logger <span class="cov9" title="8">{
+        return &amp;Logger{}
+}</span>
+
+// Init will initialize the logger with configurations and start it.
+func (l *Logger) Init(fs *afero.Fs) (err error) <span class="cov8" title="6">{
+        if l.zapLogger != nil </span><span class="cov1" title="1">{
+                return errors.New("logger is already initialized")
+        }</span>
+        <span class="cov7" title="5">var baseConfig zap.Config
+        var encConfig zapcore.EncoderConfig
+
+        userConfig := newConfig()
+        if err = userConfig.Load(*fs); err != nil </span><span class="cov1" title="1">{
+                log.Printf("failed to load logger configuration file from disk: %v\n", err)
+                return
+        }</span>
+
+        // Base logger configuration.
+        <span class="cov6" title="4">switch strings.ToLower(userConfig.BuiltinConfig) </span>{
+        case "development":<span class="cov5" title="3">
+                baseConfig = zap.NewDevelopmentConfig()
+                break</span>
+        case "production":<span class="cov1" title="1">
+                baseConfig = zap.NewProductionConfig()
+                break</span>
+        default:<span class="cov0" title="0">
+                log.Println("could not select the base constants type")
+                return</span>
+        }
+
+        // Encoder logger configuration.
+        <span class="cov6" title="4">switch strings.ToLower(userConfig.BuiltinEncoderConfig) </span>{
+        case "development":<span class="cov5" title="3">
+                encConfig = zap.NewDevelopmentEncoderConfig()
+                break</span>
+        case "production":<span class="cov1" title="1">
+                encConfig = zap.NewProductionEncoderConfig()
+                break</span>
+        default:<span class="cov0" title="0">
+                log.Println("could not select the base encoder constants type")
+                return</span>
+        }
+
+        // Merge configurations.
+        <span class="cov6" title="4">if err = mergeConfig[*zap.Config, *generalConfig](&amp;baseConfig, userConfig.GeneralConfig); err != nil </span><span class="cov0" title="0">{
+                log.Printf("failed to merge base configurations and user provided configurations for logger: %v\n", err)
+                return
+        }</span>
+        <span class="cov6" title="4">if err = mergeConfig[*zapcore.EncoderConfig, *encoderConfig](&amp;encConfig, userConfig.EncoderConfig); err != nil </span><span class="cov0" title="0">{
+                log.Printf("failed to merge base encoder configurations and user provided encoder configurations for logger: %v\n", err)
+                return
+        }</span>
+
+        // Init and create logger.
+        <span class="cov6" title="4">baseConfig.EncoderConfig = encConfig
+        if l.zapLogger, err = baseConfig.Build(zap.AddCallerSkip(1)); err != nil </span><span class="cov0" title="0">{
+                log.Printf("failure configuring logger: %v\n", err)
+                return
+        }</span>
+        <span class="cov6" title="4">return</span>
+}
+
+// Info logs messages at the info level.
+func (l *Logger) Info(message string, fields ...zap.Field) <span class="cov3" title="2">{
+        l.zapLogger.Info(message, fields...)
+}</span>
+
+// Debug logs messages at the debug level.
+func (l *Logger) Debug(message string, fields ...zap.Field) <span class="cov3" title="2">{
+        l.zapLogger.Debug(message, fields...)
+}</span>
+
+// Warn logs messages at the warn level.
+func (l *Logger) Warn(message string, fields ...zap.Field) <span class="cov3" title="2">{
+        l.zapLogger.Warn(message, fields...)
+}</span>
+
+// Error logs messages at the error level.
+func (l *Logger) Error(message string, fields ...zap.Field) <span class="cov3" title="2">{
+        l.zapLogger.Error(message, fields...)
+}</span>
+
+// Panic logs messages at the panic level and then panics at the call site.
+func (l *Logger) Panic(message string, fields ...zap.Field) <span class="cov3" title="2">{
+        l.zapLogger.Panic(message, fields...)
+}</span>
+
+// mergeConfig will merge the configuration files by marshalling and unmarshalling.
+func mergeConfig[DST *zap.Config | *zapcore.EncoderConfig, SRC *generalConfig | *encoderConfig](dst DST, src SRC) (err error) <span class="cov10" title="10">{
+        var yamlToConv []byte
+        if yamlToConv, err = yaml.Marshal(src); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+        <span class="cov10" title="10">if err = yaml.Unmarshal(yamlToConv, dst); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+        <span class="cov10" title="10">return</span>
+}
+
+/*** Unexported methods and members to support testing. ***/
+
+// setTestLogger is an unexported utility method that set a logger base for testing.
+func (l *Logger) setTestLogger(testLogger *zap.Logger) <span class="cov3" title="2">{
+        l.zapLogger = testLogger
+}</span>
+
+// NewTestLogger will create a new development logger to be used in test suites.
+func NewTestLogger() (logger *Logger, err error) <span class="cov1" title="1">{
+        baseConfig := zap.NewDevelopmentConfig()
+        baseConfig.EncoderConfig = zap.NewDevelopmentEncoderConfig()
+        var zapLogger *zap.Logger
+        if zapLogger, err = baseConfig.Build(zap.AddCallerSkip(1)); err != nil </span><span class="cov0" title="0">{
+                log.Printf("failure configuring logger: %v\n", err)
+                return nil, err
+        }</span>
+        <span class="cov1" title="1">return &amp;Logger{zapLogger: zapLogger}, err</span>
+}
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package logger
+
+// configTestData will return a map of test data containing valid and invalid logger configs.
+func configTestData() map[string]string <span class="cov8" title="1">{
         testData := make(map[string]string)
 
         testData["empty"] = ``
@@ -388,332 +1165,7 @@ encoder_config:
 }</span>
 </pre>
 		
-		<pre class="file" id="file4" style="display: none">package config
-
-import (
-        "github.com/spf13/afero"
-        "github.com/spf13/viper"
-        "github.com/surahman/mcq-platform/pkg/validator"
-)
-
-// ZapConfig contains the configurations loaded from the configuration file.
-type ZapConfig struct {
-        BuiltinConfig        string            `json:"builtin_config,omitempty" yaml:"builtin_config,omitempty" mapstructure:"builtin_config" validate:"oneof='Production' 'production' 'Development' 'development'"`
-        BuiltinEncoderConfig string            `json:"builtin_encoder_config,omitempty" yaml:"builtin_encoder_config,omitempty" mapstructure:"builtin_encoder_config" validate:"oneof='Production' 'production' 'Development' 'development'"`
-        GeneralConfig        *ZapGeneralConfig `json:"general_config,omitempty" yaml:"general_config,omitempty" mapstructure:"general_config"`
-        EncoderConfig        *ZapEncoderConfig `json:"encoder_config,omitempty" yaml:"encoder_config,omitempty" mapstructure:"encoder_config"`
-}
-
-// ZapGeneralConfig contains all the general logger configurations.
-type ZapGeneralConfig struct {
-        Development       bool     `json:"development" yaml:"development" mapstructure:"development" validate:"required"`
-        DisableCaller     bool     `json:"disableCaller" yaml:"disableCaller" mapstructure:"disableCaller" validate:"required"`
-        DisableStacktrace bool     `json:"disableStacktrace" yaml:"disableStacktrace" mapstructure:"disableStacktrace" validate:"required"`
-        Encoding          string   `json:"encoding" yaml:"encoding" mapstructure:"encoding" validate:"required"`
-        OutputPaths       []string `json:"outputPaths" yaml:"outputPaths" mapstructure:"outputPaths" validate:"required"`
-        ErrorOutputPaths  []string `json:"errorOutputPaths" yaml:"errorOutputPaths" mapstructure:"errorOutputPaths" validate:"required"`
-}
-
-// ZapEncoderConfig contains all the log encoder configurations.
-type ZapEncoderConfig struct {
-        MessageKey       string `json:"messageKey" yaml:"messageKey" mapstructure:"messageKey" validate:"required"`
-        LevelKey         string `json:"levelKey" yaml:"levelKey" mapstructure:"levelKey" validate:"required"`
-        TimeKey          string `json:"timeKey" yaml:"timeKey" mapstructure:"timeKey" validate:"required"`
-        NameKey          string `json:"nameKey" yaml:"nameKey" mapstructure:"nameKey" validate:"required"`
-        CallerKey        string `json:"callerKey" yaml:"callerKey" mapstructure:"callerKey" validate:"required"`
-        FunctionKey      string `json:"functionKey" yaml:"functionKey" mapstructure:"functionKey" validate:"required"`
-        StacktraceKey    string `json:"stacktraceKey" yaml:"stacktraceKey" mapstructure:"stacktraceKey" validate:"required"`
-        SkipLineEnding   bool   `json:"skipLineEnding" yaml:"skipLineEnding" mapstructure:"skipLineEnding" validate:"required"`
-        LineEnding       string `json:"lineEnding" yaml:"lineEnding" mapstructure:"lineEnding" validate:"required"`
-        ConsoleSeparator string `json:"consoleSeparator" yaml:"consoleSeparator" mapstructure:"consoleSeparator" validate:"required"`
-}
-
-// NewLoggerConfig creates a blank configuration struct for the Zap Logger.
-func NewLoggerConfig() *ZapConfig <span class="cov1" title="1">{
-        return &amp;ZapConfig{}
-}</span>
-
-// Load will attempt to load configurations from a file on a file system.
-func (cfg *ZapConfig) Load(fs afero.Fs) (err error) <span class="cov10" title="8">{
-        viper.SetFs(fs)
-        viper.SetConfigName(GetLoggerFileName())
-        viper.SetConfigType("yaml")
-        viper.AddConfigPath(configEtcDir)
-        viper.AddConfigPath(configHomeDir)
-        viper.AddConfigPath(".")
-
-        viper.SetEnvPrefix(loggerPrefix)
-        if err := viper.BindEnv("builtin_config"); err != nil </span><span class="cov0" title="0">{
-                return err
-        }</span>
-        <span class="cov10" title="8">if err := viper.BindEnv("builtin_encoder_config"); err != nil </span><span class="cov0" title="0">{
-                return err
-        }</span>
-
-        <span class="cov10" title="8">if err = viper.ReadInConfig(); err != nil </span><span class="cov0" title="0">{
-                return
-        }</span>
-
-        <span class="cov10" title="8">if err = viper.Unmarshal(cfg); err != nil </span><span class="cov0" title="0">{
-                return
-        }</span>
-
-        <span class="cov10" title="8">if err = validator.ValidateStruct(cfg); err != nil </span><span class="cov4" title="2">{
-                return
-        }</span>
-
-        <span class="cov8" title="6">return</span>
-}
-</pre>
-		
-		<pre class="file" id="file5" style="display: none">package data_store
-
-import (
-        "errors"
-        "time"
-
-        "github.com/gocql/gocql"
-        "github.com/spf13/afero"
-        "github.com/surahman/mcq-platform/pkg/config"
-        "github.com/surahman/mcq-platform/pkg/logger"
-        "go.uber.org/zap"
-)
-
-// Cassandra is the interface through which the cluster can be accessed. Created to support mock testing.
-type Cassandra interface {
-        Open() error
-        Close() error
-}
-
-// Check to ensure the Cassandra interface has been implemented.
-var _ Cassandra = &amp;CassandraImpl{}
-
-// CassandraImpl implements the Cassandra interface and contains the logic to interface with the cluster.
-type CassandraImpl struct {
-        conf    *config.CassandraConfig
-        session *gocql.Session
-        logger  *logger.Logger
-}
-
-// NewCassandra will create a new Cassandra configuration by loading it.
-func NewCassandra(fs *afero.Fs, logger *logger.Logger) (Cassandra, error) <span class="cov10" title="7">{
-        if fs == nil || logger == nil </span><span class="cov6" title="3">{
-                return nil, errors.New("nil file system of logger supplied")
-        }</span>
-        <span class="cov7" title="4">return newCassandraImpl(fs, logger)</span>
-}
-
-// newCassandraImpl will create a new CassandraImpl configuration and load it from disk.
-func newCassandraImpl(fs *afero.Fs, logger *logger.Logger) (c *CassandraImpl, err error) <span class="cov7" title="4">{
-        c = &amp;CassandraImpl{conf: config.NewCassandraConfig(), logger: logger}
-        if err = c.conf.Load(*fs); err != nil </span><span class="cov1" title="1">{
-                c.logger.Error("failed to load Cassandra config from disk", zap.Error(err))
-                return nil, err
-        }</span>
-        <span class="cov6" title="3">return</span>
-}
-
-// Open will start a database connection pool and establish a connection.
-func (c *CassandraImpl) Open() (err error) <span class="cov0" title="0">{
-        // Stop connection leaks.
-        if err = c.verifySession(); err == nil </span><span class="cov0" title="0">{
-                c.logger.Warn("session to cluster is already established")
-                return errors.New("session to cluster is already established")
-        }</span>
-
-        // Configure connection.
-        <span class="cov0" title="0">var cluster *gocql.ClusterConfig
-        cluster, err = c.configureCluster()
-        if err != nil </span><span class="cov0" title="0">{
-                c.logger.Error("failed to configure connection to Cassandra cluster", zap.Error(err))
-                return
-        }</span>
-
-        // Session connection pool.
-        <span class="cov0" title="0">if c.session, err = cluster.CreateSession(); err != nil </span><span class="cov0" title="0">{
-                c.logger.Error("unable to establish connection to Cassandra cluster", zap.Error(err))
-                return
-        }</span>
-
-        <span class="cov0" title="0">return</span>
-}
-
-// Close the CassandraImpl cluster connection.
-func (c *CassandraImpl) Close() error <span class="cov0" title="0">{
-        if err := c.verifySession(); err != nil </span><span class="cov0" title="0">{
-                return err
-        }</span>
-        <span class="cov0" title="0">c.session.Close()
-        return nil</span>
-}
-
-// configureCluster will configure the settings for the Cassandra cluster.
-func (c *CassandraImpl) configureCluster() (cluster *gocql.ClusterConfig, err error) <span class="cov1" title="1">{
-        cluster = gocql.NewCluster(c.conf.Connection.ClusterIP...)
-        cluster.ProtoVersion = c.conf.Connection.ProtoVersion
-        cluster.ConnectTimeout = time.Duration(c.conf.Connection.Timeout) * time.Second
-        if cluster.Consistency, err = gocql.ParseConsistencyWrapper(c.conf.Connection.Consistency); err != nil </span><span class="cov0" title="0">{
-                c.logger.Error("failed to parse Cassandra consistency level provided in user configs", zap.Error(err))
-                return nil, err
-        }</span>
-        <span class="cov1" title="1">cluster.Keyspace = c.conf.Keyspace.Name
-
-        // Configure authentication.
-        cluster.Authenticator = gocql.PasswordAuthenticator{Username: c.conf.Authentication.Username, Password: c.conf.Authentication.Password}
-
-        return</span>
-}
-
-// verifySession will check to see if a session is established.
-func (c *CassandraImpl) verifySession() error <span class="cov1" title="1">{
-        if c.session == nil || c.session.Closed() </span><span class="cov1" title="1">{
-                return errors.New("no session established")
-        }</span>
-        <span class="cov0" title="0">return nil</span>
-}
-</pre>
-		
-		<pre class="file" id="file6" style="display: none">package logger
-
-import (
-        "errors"
-        "log"
-        "strings"
-
-        "github.com/spf13/afero"
-        "github.com/surahman/mcq-platform/pkg/config"
-        "go.uber.org/zap"
-        "go.uber.org/zap/zapcore"
-        "gopkg.in/yaml.v3"
-)
-
-// Logger is the Zap logger object.
-type Logger struct {
-        zapLogger *zap.Logger
-}
-
-// NewLogger will create a new uninitialized logger.
-func NewLogger() *Logger <span class="cov9" title="8">{
-        return &amp;Logger{}
-}</span>
-
-// Init will initialize the logger with configurations and start it.
-func (l *Logger) Init(fs *afero.Fs) (err error) <span class="cov8" title="6">{
-        if l.zapLogger != nil </span><span class="cov1" title="1">{
-                return errors.New("logger is already initialized")
-        }</span>
-        <span class="cov7" title="5">var baseConfig zap.Config
-        var encConfig zapcore.EncoderConfig
-
-        userConfig := config.NewLoggerConfig()
-        if err = userConfig.Load(*fs); err != nil </span><span class="cov1" title="1">{
-                log.Printf("failed to load logger configuration file from disk: %v\n", err)
-                return
-        }</span>
-
-        // Base logger configuration.
-        <span class="cov6" title="4">switch strings.ToLower(userConfig.BuiltinConfig) </span>{
-        case "development":<span class="cov5" title="3">
-                baseConfig = zap.NewDevelopmentConfig()
-                break</span>
-        case "production":<span class="cov1" title="1">
-                baseConfig = zap.NewProductionConfig()
-                break</span>
-        default:<span class="cov0" title="0">
-                log.Println("could not select the base config type")
-                return</span>
-        }
-
-        // Encoder logger configuration.
-        <span class="cov6" title="4">switch strings.ToLower(userConfig.BuiltinEncoderConfig) </span>{
-        case "development":<span class="cov5" title="3">
-                encConfig = zap.NewDevelopmentEncoderConfig()
-                break</span>
-        case "production":<span class="cov1" title="1">
-                encConfig = zap.NewProductionEncoderConfig()
-                break</span>
-        default:<span class="cov0" title="0">
-                log.Println("could not select the base encoder config type")
-                return</span>
-        }
-
-        // Merge configurations.
-        <span class="cov6" title="4">if err = mergeConfig[*zap.Config, *config.ZapGeneralConfig](&amp;baseConfig, userConfig.GeneralConfig); err != nil </span><span class="cov0" title="0">{
-                log.Printf("failed to merge base configurations and user provided configurations for logger: %v\n", err)
-                return
-        }</span>
-        <span class="cov6" title="4">if err = mergeConfig[*zapcore.EncoderConfig, *config.ZapEncoderConfig](&amp;encConfig, userConfig.EncoderConfig); err != nil </span><span class="cov0" title="0">{
-                log.Printf("failed to merge base encoder configurations and user provided encoder configurations for logger: %v\n", err)
-                return
-        }</span>
-
-        // Init and create logger.
-        <span class="cov6" title="4">baseConfig.EncoderConfig = encConfig
-        if l.zapLogger, err = baseConfig.Build(zap.AddCallerSkip(1)); err != nil </span><span class="cov0" title="0">{
-                log.Printf("failure configuring logger: %v\n", err)
-                return
-        }</span>
-        <span class="cov6" title="4">return</span>
-}
-
-// Info logs messages at the info level.
-func (l *Logger) Info(message string, fields ...zap.Field) <span class="cov3" title="2">{
-        l.zapLogger.Info(message, fields...)
-}</span>
-
-// Debug logs messages at the debug level.
-func (l *Logger) Debug(message string, fields ...zap.Field) <span class="cov3" title="2">{
-        l.zapLogger.Debug(message, fields...)
-}</span>
-
-// Warn logs messages at the warn level.
-func (l *Logger) Warn(message string, fields ...zap.Field) <span class="cov3" title="2">{
-        l.zapLogger.Warn(message, fields...)
-}</span>
-
-// Error logs messages at the error level.
-func (l *Logger) Error(message string, fields ...zap.Field) <span class="cov3" title="2">{
-        l.zapLogger.Error(message, fields...)
-}</span>
-
-// Panic logs messages at the panic level and then panics at the call site.
-func (l *Logger) Panic(message string, fields ...zap.Field) <span class="cov3" title="2">{
-        l.zapLogger.Panic(message, fields...)
-}</span>
-
-// mergeConfig will merge the configuration files by marshalling and unmarshalling.
-func mergeConfig[DST *zap.Config | *zapcore.EncoderConfig, SRC *config.ZapGeneralConfig | *config.ZapEncoderConfig](dst DST, src SRC) (err error) <span class="cov10" title="10">{
-        var yamlToConv []byte
-        if yamlToConv, err = yaml.Marshal(src); err != nil </span><span class="cov0" title="0">{
-                return
-        }</span>
-        <span class="cov10" title="10">if err = yaml.Unmarshal(yamlToConv, dst); err != nil </span><span class="cov0" title="0">{
-                return
-        }</span>
-        <span class="cov10" title="10">return</span>
-}
-
-/*** Unexported methods and members to support testing. ***/
-
-// setTestLogger is an unexported utility method that set a logger base for testing.
-func (l *Logger) setTestLogger(testLogger *zap.Logger) <span class="cov3" title="2">{
-        l.zapLogger = testLogger
-}</span>
-
-// NewTestLogger will create a new development logger to be used in test suites.
-func NewTestLogger() (logger *Logger, err error) <span class="cov1" title="1">{
-        baseConfig := zap.NewDevelopmentConfig()
-        baseConfig.EncoderConfig = zap.NewDevelopmentEncoderConfig()
-        var zapLogger *zap.Logger
-        if zapLogger, err = baseConfig.Build(zap.AddCallerSkip(1)); err != nil </span><span class="cov0" title="0">{
-                log.Printf("failure configuring logger: %v\n", err)
-                return nil, err
-        }</span>
-        <span class="cov1" title="1">return &amp;Logger{zapLogger: zapLogger}, err</span>
-}
-</pre>
-		
-		<pre class="file" id="file7" style="display: none">package validator
+		<pre class="file" id="file8" style="display: none">package validator
 
 import (
         "bytes"
