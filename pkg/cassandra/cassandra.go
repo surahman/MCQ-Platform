@@ -27,7 +27,7 @@ var _ Cassandra = &CassandraImpl{}
 
 // CassandraImpl implements the Cassandra interface and contains the logic to interface with the cluster.
 type CassandraImpl struct {
-	conf    *Config
+	conf    *config
 	session *gocql.Session
 	logger  *logger.Logger
 }

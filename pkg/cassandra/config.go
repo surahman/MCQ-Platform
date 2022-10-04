@@ -7,8 +7,8 @@ import (
 	"github.com/surahman/mcq-platform/pkg/validator"
 )
 
-// Config is the configuration container for connecting to the Cassandra cluster
-type Config struct {
+// config is the configuration container for connecting to the Cassandra cluster
+type config struct {
 	Authentication struct {
 		Username string `json:"username,omitempty" yaml:"username,omitempty" mapstructure:"username" validate:"required"`
 		Password string `json:"password,omitempty" yaml:"password,omitempty" mapstructure:"password" validate:"required"`
@@ -27,12 +27,12 @@ type Config struct {
 }
 
 // newConfig creates a blank configuration struct for Cassandra.
-func newConfig() *Config {
-	return &Config{}
+func newConfig() *config {
+	return &config{}
 }
 
 // Load will attempt to load configurations from a file on a file system and then overwrite values using environment variables.
-func (cfg *Config) Load(fs afero.Fs) (err error) {
+func (cfg *config) Load(fs afero.Fs) (err error) {
 	viper.SetFs(fs)
 	viper.SetConfigName(constants.GetCassandraFileName())
 	viper.SetConfigType("yaml")

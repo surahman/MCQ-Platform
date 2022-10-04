@@ -81,7 +81,7 @@ func TestCassandraConfigs_Load(t *testing.T) {
 			require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetCassandraFileName(), []byte(testCase.input), 0644), "Failed to write in memory file")
 
 			// Load from mock filesystem.
-			actual := &Config{}
+			actual := &config{}
 			err := actual.Load(fs)
 			testCase.expectErr(t, err)
 
@@ -90,7 +90,7 @@ func TestCassandraConfigs_Load(t *testing.T) {
 			}
 
 			// Load expected struct.
-			expected := &Config{}
+			expected := &config{}
 			require.NoError(t, yaml.Unmarshal([]byte(testCase.input), expected), "failed to unmarshal expected constants")
 			require.True(t, reflect.DeepEqual(expected, actual))
 
