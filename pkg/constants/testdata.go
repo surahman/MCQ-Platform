@@ -1,4 +1,4 @@
-package config
+package constants
 
 // LoggerConfigTestData will return a map of test data containing valid and invalid logger configs.
 func LoggerConfigTestData() map[string]string {

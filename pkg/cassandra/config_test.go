@@ -9,12 +9,12 @@ import (
 	"github.com/rs/xid"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
-	"github.com/surahman/mcq-platform/pkg/config"
+	"github.com/surahman/mcq-platform/pkg/constants"
 	"gopkg.in/yaml.v3"
 )
 
 func TestCassandraConfigs_Load(t *testing.T) {
-	keyspaceKey := fmt.Sprintf("%s_KEYSPACE.REPLICATION_CLASS", config.GetCassandraPrefix())
+	keyspaceKey := fmt.Sprintf("%s_KEYSPACE.REPLICATION_CLASS", constants.GetCassandraPrefix())
 
 	testCases := []struct {
 		name      string
@@ -77,8 +77,8 @@ func TestCassandraConfigs_Load(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			// Configure mock filesystem.
 			fs := afero.NewMemMapFs()
-			require.NoError(t, fs.MkdirAll(config.GetEtcDir(), 0644), "Failed to create in memory directory")
-			require.NoError(t, afero.WriteFile(fs, config.GetEtcDir()+config.GetCassandraFileName(), []byte(testCase.input), 0644), "Failed to write in memory file")
+			require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
+			require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetCassandraFileName(), []byte(testCase.input), 0644), "Failed to write in memory file")
 
 			// Load from mock filesystem.
 			actual := &Config{}
@@ -91,12 +91,12 @@ func TestCassandraConfigs_Load(t *testing.T) {
 
 			// Load expected struct.
 			expected := &Config{}
-			require.NoError(t, yaml.Unmarshal([]byte(testCase.input), expected), "failed to unmarshal expected config")
+			require.NoError(t, yaml.Unmarshal([]byte(testCase.input), expected), "failed to unmarshal expected constants")
 			require.True(t, reflect.DeepEqual(expected, actual))
 
 			// Test configuring of environment variable.
 			require.NoErrorf(t, os.Setenv(keyspaceKey, testCase.envValue), "Failed to set environment variable: %v", err)
-			require.NoErrorf(t, actual.Load(fs), "Failed to load config file: %v", err)
+			require.NoErrorf(t, actual.Load(fs), "Failed to load constants file: %v", err)
 			require.Equalf(t, testCase.envValue, actual.Keyspace.ReplicationClass, "Failed to load environment variable into configs")
 			require.NoErrorf(t, os.Unsetenv(keyspaceKey), "Failed to unset environment variable set for test")
 		})

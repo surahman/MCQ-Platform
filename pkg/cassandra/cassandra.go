@@ -7,7 +7,7 @@ import (
 
 	"github.com/gocql/gocql"
 	"github.com/spf13/afero"
-	"github.com/surahman/mcq-platform/pkg/config"
+	"github.com/surahman/mcq-platform/pkg/constants"
 	"github.com/surahman/mcq-platform/pkg/logger"
 	"go.uber.org/zap"
 )
@@ -44,7 +44,7 @@ func NewCassandra(fs *afero.Fs, logger *logger.Logger) (Cassandra, error) {
 func newCassandraImpl(fs *afero.Fs, logger *logger.Logger) (c *CassandraImpl, err error) {
 	c = &CassandraImpl{conf: newConfig(), logger: logger}
 	if err = c.conf.Load(*fs); err != nil {
-		c.logger.Error("failed to load Cassandra config from disk", zap.Error(err))
+		c.logger.Error("failed to load Cassandra constants from disk", zap.Error(err))
 		return nil, err
 	}
 	return
@@ -116,7 +116,7 @@ func (c *CassandraImpl) verifySession() error {
 
 // createSessionRetry will attempt to open the connection a few times stop on the first success or fail after the last one.
 func (c *CassandraImpl) createSessionRetry(cluster *gocql.ClusterConfig) (err error) {
-	maxAttempts := config.GetCassandraMaxConnectRetries()
+	maxAttempts := constants.GetCassandraMaxConnectRetries()
 	for attempt := 0; attempt <= maxAttempts; attempt++ {
 		c.logger.Info("Attempting to connect to Cassandra cluster...", zap.String("attempt", strconv.Itoa(attempt)))
 		if c.session, err = cluster.CreateSession(); err == nil {

@@ -8,13 +8,13 @@ import (
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/surahman/mcq-platform/pkg/config"
+	"github.com/surahman/mcq-platform/pkg/constants"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"go.uber.org/zap/zaptest"
 )
 
-var loggerConfigTestData = config.LoggerConfigTestData()
+var loggerConfigTestData = constants.LoggerConfigTestData()
 
 func TestNewLogger(t *testing.T) {
 	require.Equal(t, reflect.TypeOf(NewLogger()), reflect.TypeOf(&Logger{}), "creates new logger successfully")
@@ -27,7 +27,7 @@ func TestNewTestLogger(t *testing.T) {
 }
 
 func TestMergeConfig_General(t *testing.T) {
-	userGenCfg := config.ZapGeneralConfig{
+	userGenCfg := constants.ZapGeneralConfig{
 		Development:       false,
 		DisableCaller:     true,
 		DisableStacktrace: true,
@@ -36,7 +36,7 @@ func TestMergeConfig_General(t *testing.T) {
 		ErrorOutputPaths:  []string{"stderr", "/etc/appname_err.log"},
 	}
 	zapCfg := zap.NewDevelopmentConfig()
-	require.NoError(t, mergeConfig[*zap.Config, *config.ZapGeneralConfig](&zapCfg, &userGenCfg), "Failed to merge config files.")
+	require.NoError(t, mergeConfig[*zap.Config, *constants.ZapGeneralConfig](&zapCfg, &userGenCfg), "Failed to merge constants files.")
 	require.Equalf(t, userGenCfg.Development, zapCfg.Development, "Development value expected %v, actual %v", userGenCfg.Development, zapCfg.Development)
 	require.Equalf(t, userGenCfg.DisableCaller, zapCfg.DisableCaller, "DisableCaller value expected %v, actual %v", userGenCfg.DisableCaller, zapCfg.DisableCaller)
 	require.Equalf(t, userGenCfg.DisableStacktrace, zapCfg.DisableStacktrace, "DisableStacktrace value expected %v, actual %v", userGenCfg.DisableStacktrace, zapCfg.DisableStacktrace)
@@ -46,7 +46,7 @@ func TestMergeConfig_General(t *testing.T) {
 }
 
 func TestMergeConfig_Encoder(t *testing.T) {
-	userEncCfg := config.ZapEncoderConfig{
+	userEncCfg := constants.ZapEncoderConfig{
 		MessageKey:       "message key",
 		LevelKey:         "level key",
 		TimeKey:          "time key",
@@ -59,7 +59,7 @@ func TestMergeConfig_Encoder(t *testing.T) {
 		ConsoleSeparator: "console separator",
 	}
 	zapCfg := zap.NewDevelopmentEncoderConfig()
-	require.NoError(t, mergeConfig[*zapcore.EncoderConfig, *config.ZapEncoderConfig](&zapCfg, &userEncCfg), "Failed to merge config files.")
+	require.NoError(t, mergeConfig[*zapcore.EncoderConfig, *constants.ZapEncoderConfig](&zapCfg, &userEncCfg), "Failed to merge constants files.")
 	require.Equalf(t, userEncCfg.MessageKey, zapCfg.MessageKey, "MessageKey value expected %v, actual %v", userEncCfg.MessageKey, zapCfg.MessageKey)
 	require.Equalf(t, userEncCfg.LevelKey, zapCfg.LevelKey, "LevelKey value expected %v, actual %v", userEncCfg.LevelKey, zapCfg.LevelKey)
 	require.Equalf(t, userEncCfg.TimeKey, zapCfg.TimeKey, "TimeKey value expected %v, actual %v", userEncCfg.TimeKey, zapCfg.TimeKey)
@@ -73,7 +73,7 @@ func TestMergeConfig_Encoder(t *testing.T) {
 }
 
 func TestInit(t *testing.T) {
-	fullFilePath := config.GetEtcDir() + config.GetLoggerFileName()
+	fullFilePath := constants.GetEtcDir() + constants.GetLoggerFileName()
 
 	testCases := []struct {
 		name      string
@@ -104,7 +104,7 @@ func TestInit(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			// Init mock filesystem.
 			fs := afero.NewMemMapFs()
-			require.NoError(t, fs.MkdirAll(config.GetEtcDir(), 0644), "Failed to create in memory directory")
+			require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
 			require.NoError(t, afero.WriteFile(fs, fullFilePath, []byte(testCase.input), 0644), "Failed to write in memory file")
 
 			logger := NewLogger()
@@ -141,8 +141,8 @@ func TestTestLogger(t *testing.T) {
 func TestInit_MultiInitialization(t *testing.T) {
 	// Init mock filesystem.
 	fs := afero.NewMemMapFs()
-	require.NoError(t, fs.MkdirAll(config.GetEtcDir(), 0644), "Failed to create in memory directory")
-	require.NoError(t, afero.WriteFile(fs, config.GetEtcDir()+config.GetLoggerFileName(), []byte(loggerConfigTestData["valid_devel"]), 0644), "Failed to write in memory file")
+	require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
+	require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetLoggerFileName(), []byte(loggerConfigTestData["valid_devel"]), 0644), "Failed to write in memory file")
 
 	logger := NewLogger()
 	require.NoError(t, logger.Init(&fs), "First initialization of logger should pass")
