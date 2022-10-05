@@ -54,6 +54,42 @@ var quizInvalidQuestions = QuizCore{Title: "Invalid questions", MarkingType: "Ne
 var quizTooManyAnswers = QuizCore{Title: "Too many answers", MarkingType: "Negative", Questions: []*Question{&questionTooManyAns}}
 var quizTooManyOpts = QuizCore{Title: "More answers than options", MarkingType: "Negative", Questions: []*Question{&questionAnsGTOpt}}
 
+func TestValidateQuestionNum(t *testing.T) {
+	testCases := []struct {
+		name      string
+		input     *Question
+		expectErr require.ErrorAssertionFunc
+	}{
+		// ----- test cases start ----- //
+		{
+			name: "Valid",
+			input: &Question{
+				Description: "Valid quiz",
+				Asset:       "some-asset",
+				Options:     []string{"one", "two", "three", "four", "five"},
+				Answers:     []int32{0, 1, 2, 3, 4},
+			},
+			expectErr: require.NoError,
+		}, {
+			name: "More answers than options",
+			input: &Question{
+				Description: "Valid quiz",
+				Asset:       "some-asset",
+				Options:     []string{"one", "two", "three", "four"},
+				Answers:     []int32{0, 1, 2, 3, 4},
+			},
+			expectErr: require.Error,
+		},
+		// ----- test cases end ----- //
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			err := validator.ValidateStruct(testCase.input)
+			testCase.expectErr(t, err)
+		})
+	}
+}
+
 func TestValidateQuestion(t *testing.T) {
 	testCases := []struct {
 		name          string

@@ -26,10 +26,10 @@ type Quiz struct {
 // [4] Number of answers is less than or equal to number of options.
 // [5] URI of any assets supplied are URL Encoded.
 type Question struct {
-	Description string   `json:"description,omitempty" cql:"description" validate:"required"`                      // The description that contains the text of the question.
-	Asset       string   `json:"asset,omitempty" cql:"asset" validate:"url_encoded"`                               // URI of an asset to be displayed with question.
-	Options     []string `json:"options,omitempty" cql:"options" validate:"required,min=2,max=5"`                  // The available options for the question.
-	Answers     []int32  `json:"answers,omitempty" cql:"answers" validate:"required,min=1,max=5,dive,min=0,max=4"` // The indices of the options that are correct answers in the question.
+	Description string   `json:"description,omitempty" cql:"description" validate:"required"`                                         // The description that contains the text of the question.
+	Asset       string   `json:"asset,omitempty" cql:"asset" validate:"url_encoded"`                                                  // URI of an asset to be displayed with question.
+	Options     []string `json:"options,omitempty" cql:"options" validate:"required,min=2,max=5"`                                     // The available options for the question.
+	Answers     []int32  `json:"answers,omitempty" cql:"answers" validate:"required,min=1,max=5,answers_LT_options,dive,min=0,max=4"` // The indices of the options that are correct answers in the question.
 }
 
 // QuizCore is the actual data used to create as well as what is presented when viewing a quiz.
