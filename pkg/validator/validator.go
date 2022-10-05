@@ -65,8 +65,8 @@ func ValidateStruct(body any) error {
 
 // validateNumAnswers is used by the validator to check if the number of answers is not greater than the number of questions.
 func validateNumAnswers(fieldValue validator.FieldLevel) bool {
-	parent := fieldValue.Top().Elem()
-	numOptions := parent.FieldByName("Options").Len()
+	options := fieldValue.Parent().FieldByName("Options").Interface().([]string)
+	numOptions := len(options)
 	numAnswers := fieldValue.Field().Len()
 
 	if numAnswers > numOptions {

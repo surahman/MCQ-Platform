@@ -1,6 +1,7 @@
 package model_cassandra
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -45,6 +46,8 @@ var questionAnsGTOpt = Question{Description: "Question with more answers than op
 	Answers: []int32{0, 1, 2, 3, 4}}
 
 var quizValid = QuizCore{Title: "Valid quiz", MarkingType: "Negative", Questions: []*Question{&question1, &question2, &question3}}
+var quizValidBinaryMarking = QuizCore{Title: "Valid quiz", MarkingType: "Binary", Questions: []*Question{&question1, &question2, &question3}}
+var quizValidNoMarking = QuizCore{Title: "Valid quiz", MarkingType: "None", Questions: []*Question{&question1, &question2, &question3}}
 var quizInvalidMarking = QuizCore{Title: "Valid quiz", MarkingType: "Invalid", Questions: []*Question{&question1, &question2, &question3}}
 var quizNoTitle = QuizCore{Title: "", MarkingType: "Negative", Questions: []*Question{&question1, &question2, &question3}}
 var quizEmptyQuestions = QuizCore{Title: "No Questions", MarkingType: "Negative", Questions: []*Question{}}
@@ -62,12 +65,21 @@ func TestValidateQuestionNum(t *testing.T) {
 	}{
 		// ----- test cases start ----- //
 		{
-			name: "Valid",
+			name: "Valid - equal",
 			input: &Question{
 				Description: "Valid quiz",
 				Asset:       "some-asset",
 				Options:     []string{"one", "two", "three", "four", "five"},
 				Answers:     []int32{0, 1, 2, 3, 4},
+			},
+			expectErr: require.NoError,
+		}, {
+			name: "Valid - fewer answers",
+			input: &Question{
+				Description: "Valid quiz",
+				Asset:       "some-asset",
+				Options:     []string{"one", "two", "three", "four", "five"},
+				Answers:     []int32{0, 1, 2, 3},
 			},
 			expectErr: require.NoError,
 		}, {
@@ -102,7 +114,7 @@ func TestValidateQuestion(t *testing.T) {
 		{"Valid question 3", &question3, require.NoError, 0},
 		{"Not URL encoded", &questionNotURLEnc, require.Error, 1},
 		{"No description", &questionNoDesc, require.Error, 1},
-		{"No options", &questionNoOpt, require.Error, 1},
+		{"No options", &questionNoOpt, require.Error, 2},
 		{"Too many options", &questionTooManyOpt, require.Error, 1},
 		{"No answers in key", &questionNoAns, require.Error, 1},
 		{"Too many answers in key", &questionTooManyAns, require.Error, 1},
@@ -116,6 +128,38 @@ func TestValidateQuestion(t *testing.T) {
 
 			if err != nil {
 				require.Equal(t, testCase.expectedLen, len(err.(*validator.ErrorValidation).Errors))
+			}
+		})
+	}
+}
+
+func TestValidateQuizCore(t *testing.T) {
+	testCases := []struct {
+		name          string
+		questionInput *QuizCore
+		expectErr     require.ErrorAssertionFunc
+		expectedLen   int
+	}{
+		{"Valid question - Negative marking", &quizValid, require.NoError, 0},
+		{"Valid question - Binary marking", &quizValidBinaryMarking, require.NoError, 0},
+		{"Valid question - No marking", &quizValidNoMarking, require.NoError, 0},
+		{"Invalid marking", &quizInvalidMarking, require.Error, 0},
+		{"No title", &quizNoTitle, require.Error, 1},
+		{"No questions", &quizEmptyQuestions, require.Error, 1},
+		{"Too many questions", &quizTooManyQuestions, require.Error, 1},
+		{"Invalid questions", &quizInvalidQuestions, require.Error, 1},
+		{"Too many answers", &quizTooManyAnswers, require.Error, 1},
+		{"Too many options", &quizTooManyOpts, require.Error, 1},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			err := validator.ValidateStruct(testCase.questionInput)
+			testCase.expectErr(t, err)
+
+			if err != nil {
+				fmt.Println(len(err.(*validator.ErrorValidation).Errors))
+				// require.Equal(t, testCase.expectedLen, len(err.(*validator.ErrorValidation).Errors))
 			}
 		})
 	}
