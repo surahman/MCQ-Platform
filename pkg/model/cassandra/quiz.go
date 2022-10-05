@@ -1,10 +1,7 @@
 package model_cassandra
 
 import (
-	"fmt"
-
 	"github.com/gocql/gocql"
-	"github.com/surahman/mcq-platform/pkg/validator"
 )
 
 // Quiz represents a quiz and is a row in the quizzes table.
@@ -37,26 +34,4 @@ type QuizCore struct {
 	Title       string      `json:"title,omitempty" cql:"title" validate:"required"`                                                          // The title description of the quiz.
 	MarkingType string      `json:"type,omitempty" cql:"marking_type" validate:"oneof='None' 'none' 'Negative' 'negative' 'Binary' 'binary'"` // Marking scheme type can be not marked, negative marking, or all or nothing.
 	Questions   []*Question `json:"questions,omitempty" cql:"questions" validate:"required,min=1,max=10,dive"`                                // A list of questions in the quiz.
-}
-
-// ValidateQuiz will run structure validation on the Quiz and manually check to ensure the number of answers is less or
-// equal to the number of options.
-func ValidateQuiz(quiz *Quiz) error {
-	valueFmt := "answers %d, options %d"
-	err := validator.ValidateStruct(quiz)
-	errList := err.(*validator.ErrorValidation)
-	for _, question := range quiz.Questions {
-		numAnswers := len(question.Answers)
-		numOptions := len(question.Options)
-		if numAnswers > numOptions {
-			if errList == nil {
-				errList = &validator.ErrorValidation{}
-			}
-			errList.Errors = append(errList.Errors, &validator.ErrorField{
-				Field: question.Description,
-				Tag:   "more answers than questions",
-				Value: fmt.Sprintf(valueFmt, numAnswers, numOptions)})
-		}
-	}
-	return errList
 }
