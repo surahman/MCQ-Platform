@@ -1,17 +1,22 @@
 package model_cassandra
 
-import "github.com/gocql/gocql"
+import (
+	"fmt"
+
+	"github.com/gocql/gocql"
+	"github.com/surahman/mcq-platform/pkg/validator"
+)
 
 // Quiz represents a quiz and is a row in the quizzes table.
 // [1] Quiz title is required
 // [2] Questions array is required and is valid (1-10 questions).
 // [3] Validate all Questions.
 type Quiz struct {
-	Author      string     `json:"author,omitempty" cql:"author"` // The username of the quiz creator.
-	*QuizCore              // The title and questions.
-	QuizID      gocql.UUID `json:"quiz_id,omitempty" cql:"quiz_id"`           // The unique identifier for the quiz.
-	IsPublished bool       `json:"is_published,omitempty" cql:"is_published"` // Status indicating whether the quiz can be viewed or taken by other users.
-	IsDeleted   bool       `json:"is_deleted,omitempty" cql:"is_deleted"`     // Status indicating whether the quiz has been deleted.
+	*QuizCore   `json:"quiz_core,omitempty" validate:"required"` // The title and questions.
+	Author      string                                           `json:"author,omitempty" cql:"author"`             // The username of the quiz creator.
+	QuizID      gocql.UUID                                       `json:"quiz_id,omitempty" cql:"quiz_id"`           // The unique identifier for the quiz.
+	IsPublished bool                                             `json:"is_published,omitempty" cql:"is_published"` // Status indicating whether the quiz can be viewed or taken by other users.
+	IsDeleted   bool                                             `json:"is_deleted,omitempty" cql:"is_deleted"`     // Status indicating whether the quiz has been deleted.
 }
 
 // Question
@@ -32,4 +37,26 @@ type QuizCore struct {
 	Title       string      `json:"title,omitempty" cql:"title" validate:"required"`                                                          // The title description of the quiz.
 	MarkingType string      `json:"type,omitempty" cql:"marking_type" validate:"oneof='None' 'none' 'Negative' 'negative' 'Binary' 'binary'"` // Marking scheme type can be not marked, negative marking, or all or nothing.
 	Questions   []*Question `json:"questions,omitempty" cql:"questions" validate:"required,min=1,max=10,dive"`                                // A list of questions in the quiz.
+}
+
+// ValidateQuiz will run structure validation on the Quiz and manually check to ensure the number of answers is less or
+// equal to the number of options.
+func ValidateQuiz(quiz *Quiz) error {
+	valueFmt := "answers %d, options %d"
+	err := validator.ValidateStruct(quiz)
+	errList := err.(*validator.ErrorValidation)
+	for _, question := range quiz.Questions {
+		numAnswers := len(question.Answers)
+		numOptions := len(question.Options)
+		if numAnswers > numOptions {
+			if errList == nil {
+				errList = &validator.ErrorValidation{}
+			}
+			errList.Errors = append(errList.Errors, &validator.ErrorField{
+				Field: question.Description,
+				Tag:   "more answers than questions",
+				Value: fmt.Sprintf(valueFmt, numAnswers, numOptions)})
+		}
+	}
+	return errList
 }
