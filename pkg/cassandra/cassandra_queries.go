@@ -29,6 +29,9 @@ func CreateUserQuery(c Cassandra, params any) (response any, err error) {
 	conn := c.(*CassandraImpl)
 	input := params.(*model_cassandra.User)
 
+	// Create hash of username using Blake2b 256 hashing algorithm.
+	input.AccountID = model_cassandra.Blake2b256(input.Username)
+
 	resp := model_cassandra.User{UserAccount: &model_cassandra.UserAccount{}} // Discarded, only used as container for Cassandra response.
 	applied := false
 	if applied, err = conn.session.Query(model_cassandra.CreateUser,
@@ -56,6 +59,9 @@ func ReadUserQuery(c Cassandra, params any) (response any, err error) {
 	input := params.(*model_cassandra.User)
 	resp := model_cassandra.User{UserAccount: &model_cassandra.UserAccount{}}
 
+	// Create hash of username using Blake2b 256 hashing algorithm.
+	input.AccountID = model_cassandra.Blake2b256(input.Username)
+
 	if err = conn.session.Query(model_cassandra.ReadUser, input.Username, input.AccountID).Scan(
 		&resp.Username, &resp.AccountID, &resp.Email, &resp.FirstName, &resp.IsDeleted, &resp.LastName, &resp.Password); err != nil {
 		conn.logger.Error("failed to read user record",
@@ -70,6 +76,9 @@ func ReadUserQuery(c Cassandra, params any) (response any, err error) {
 func DeleteUserQuery(c Cassandra, params any) (response any, err error) {
 	conn := c.(*CassandraImpl)
 	input := params.(*model_cassandra.User)
+
+	// Create hash of username using Blake2b 256 hashing algorithm.
+	input.AccountID = model_cassandra.Blake2b256(input.Username)
 
 	resp := model_cassandra.User{UserAccount: &model_cassandra.UserAccount{}} // Discarded, only used as container for Cassandra response.
 	applied := false
