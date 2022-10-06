@@ -71,7 +71,7 @@
 				
 				<option value="file7">github.com/surahman/mcq-platform/pkg/logger/testdata.go (100.0%)</option>
 				
-				<option value="file8">github.com/surahman/mcq-platform/pkg/validator/validator.go (100.0%)</option>
+				<option value="file8">github.com/surahman/mcq-platform/pkg/validator/validator.go (72.0%)</option>
 				
 				</select>
 			</div>
@@ -1170,9 +1170,21 @@ encoder_config:
 import (
         "bytes"
         "fmt"
+        "log"
 
         "github.com/go-playground/validator/v10"
 )
+
+// structValidator is the validator instance that is used for structure validation.
+var structValidator *validator.Validate
+
+// init the validator and add custom validation rules.
+func init() <span class="cov1" title="1">{
+        structValidator = validator.New()
+        if err := structValidator.RegisterValidation("answers_LT_options", validateNumAnswers); err != nil </span><span class="cov0" title="0">{
+                log.Fatalf("failed to initialize struct validator with custom validation rule: %v", err)
+        }</span>
+}
 
 // ErrorField contains information on JSON validation errors.
 type ErrorField struct {
@@ -1200,8 +1212,6 @@ func (err *ErrorValidation) Error() string <span class="cov6" title="3">{
         <span class="cov6" title="3">return buffer.String()</span>
 }
 
-var structValidator = validator.New()
-
 // ValidateStruct will validate a struct and list all deficiencies.
 func ValidateStruct(body any) error <span class="cov9" title="6">{
         var validationErr ErrorValidation
@@ -1218,6 +1228,19 @@ func ValidateStruct(body any) error <span class="cov9" title="6">{
                 return nil
         }</span>
         <span class="cov8" title="5">return &amp;validationErr</span>
+}
+
+// validateNumAnswers is used by the validator to check if the number of answers is not greater than the number of questions.
+func validateNumAnswers(fieldValue validator.FieldLevel) bool <span class="cov0" title="0">{
+        options := fieldValue.Parent().FieldByName("Options").Interface().([]string)
+        numOptions := len(options)
+        numAnswers := fieldValue.Field().Len()
+
+        if numAnswers &gt; numOptions </span><span class="cov0" title="0">{
+                return false
+        }</span>
+
+        <span class="cov0" title="0">return true</span>
 }
 </pre>
 		

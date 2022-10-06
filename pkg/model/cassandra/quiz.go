@@ -1,17 +1,19 @@
 package model_cassandra
 
-import "github.com/gocql/gocql"
+import (
+	"github.com/gocql/gocql"
+)
 
 // Quiz represents a quiz and is a row in the quizzes table.
 // [1] Quiz title is required
 // [2] Questions array is required and is valid (1-10 questions).
 // [3] Validate all Questions.
 type Quiz struct {
-	Author      string     `json:"author,omitempty" cql:"author"` // The username of the quiz creator.
-	*QuizCore              // The title and questions.
-	QuizID      gocql.UUID `json:"quiz_id,omitempty" cql:"quiz_id"`           // The unique identifier for the quiz.
-	IsPublished bool       `json:"is_published,omitempty" cql:"is_published"` // Status indicating whether the quiz can be viewed or taken by other users.
-	IsDeleted   bool       `json:"is_deleted,omitempty" cql:"is_deleted"`     // Status indicating whether the quiz has been deleted.
+	*QuizCore   `json:"quiz_core,omitempty" validate:"required"` // The title and questions.
+	Author      string                                           `json:"author,omitempty" cql:"author"`             // The username of the quiz creator.
+	QuizID      gocql.UUID                                       `json:"quiz_id,omitempty" cql:"quiz_id"`           // The unique identifier for the quiz.
+	IsPublished bool                                             `json:"is_published,omitempty" cql:"is_published"` // Status indicating whether the quiz can be viewed or taken by other users.
+	IsDeleted   bool                                             `json:"is_deleted,omitempty" cql:"is_deleted"`     // Status indicating whether the quiz has been deleted.
 }
 
 // Question
@@ -21,10 +23,10 @@ type Quiz struct {
 // [4] Number of answers is less than or equal to number of options.
 // [5] URI of any assets supplied are URL Encoded.
 type Question struct {
-	Description string   `json:"description,omitempty" cql:"description" validate:"required"`                      // The description that contains the text of the question.
-	Asset       string   `json:"asset,omitempty" cql:"asset" validate:"url_encoded"`                               // URI of an asset to be displayed with question.
-	Options     []string `json:"options,omitempty" cql:"options" validate:"required,min=2,max=5"`                  // The available options for the question.
-	Answers     []int32  `json:"answers,omitempty" cql:"answers" validate:"required,min=1,max=5,dive,min=0,max=4"` // The indices of the options that are correct answers in the question.
+	Description string   `json:"description,omitempty" cql:"description" validate:"required"`                                         // The description that contains the text of the question.
+	Asset       string   `json:"asset,omitempty" cql:"asset" validate:"url_encoded"`                                                  // URI of an asset to be displayed with question.
+	Options     []string `json:"options,omitempty" cql:"options" validate:"required,min=2,max=5"`                                     // The available options for the question.
+	Answers     []int32  `json:"answers,omitempty" cql:"answers" validate:"required,min=1,max=5,answers_LT_options,dive,min=0,max=4"` // The indices of the options that are correct answers in the question.
 }
 
 // QuizCore is the actual data used to create as well as what is presented when viewing a quiz.

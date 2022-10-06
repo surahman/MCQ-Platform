@@ -3,9 +3,21 @@ package validator
 import (
 	"bytes"
 	"fmt"
+	"log"
 
 	"github.com/go-playground/validator/v10"
 )
+
+// structValidator is the validator instance that is used for structure validation.
+var structValidator *validator.Validate
+
+// init the validator and add custom validation rules.
+func init() {
+	structValidator = validator.New()
+	if err := structValidator.RegisterValidation("answers_LT_options", validateNumAnswers); err != nil {
+		log.Fatalf("failed to initialize struct validator with custom validation rule: %v", err)
+	}
+}
 
 // ErrorField contains information on JSON validation errors.
 type ErrorField struct {
@@ -33,8 +45,6 @@ func (err *ErrorValidation) Error() string {
 	return buffer.String()
 }
 
-var structValidator = validator.New()
-
 // ValidateStruct will validate a struct and list all deficiencies.
 func ValidateStruct(body any) error {
 	var validationErr ErrorValidation
@@ -51,4 +61,17 @@ func ValidateStruct(body any) error {
 		return nil
 	}
 	return &validationErr
+}
+
+// validateNumAnswers is used by the validator to check if the number of answers is not greater than the number of questions.
+func validateNumAnswers(fieldValue validator.FieldLevel) bool {
+	options := fieldValue.Parent().FieldByName("Options").Interface().([]string)
+	numOptions := len(options)
+	numAnswers := fieldValue.Field().Len()
+
+	if numAnswers > numOptions {
+		return false
+	}
+
+	return true
 }
