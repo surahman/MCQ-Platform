@@ -109,16 +109,59 @@ func TestValidateQuestion(t *testing.T) {
 		expectErr     require.ErrorAssertionFunc
 		expectedLen   int
 	}{
-		{"Valid question 1", &question1, require.NoError, 0},
-		{"Valid question 2", &question2, require.NoError, 0},
-		{"Valid question 3", &question3, require.NoError, 0},
-		{"Not URL encoded", &questionNotURLEnc, require.Error, 1},
-		{"No description", &questionNoDesc, require.Error, 1},
-		{"No options", &questionNoOpt, require.Error, 2},
-		{"Too many options", &questionTooManyOpt, require.Error, 1},
-		{"No answers in key", &questionNoAns, require.Error, 1},
-		{"Too many answers in key", &questionTooManyAns, require.Error, 1},
-		{"Out of range answers in key", &questionBadAns, require.Error, 1},
+		// ----- test cases start ----- //
+		{
+			name:          "Valid question 1",
+			questionInput: &question1,
+			expectErr:     require.NoError,
+			expectedLen:   0,
+		}, {
+			name:          "Valid question 2",
+			questionInput: &question2,
+			expectErr:     require.NoError,
+			expectedLen:   0,
+		}, {
+			name:          "Valid question 3",
+			questionInput: &question3,
+			expectErr:     require.NoError,
+			expectedLen:   0,
+		}, {
+			name:          "Not URL encoded",
+			questionInput: &questionNotURLEnc,
+			expectErr:     require.Error,
+			expectedLen:   1,
+		}, {
+			name:          "No description",
+			questionInput: &questionNoDesc,
+			expectErr:     require.Error,
+			expectedLen:   1,
+		}, {
+			name:          "No options",
+			questionInput: &questionNoOpt,
+			expectErr:     require.Error,
+			expectedLen:   2,
+		}, {
+			name:          "Too many options",
+			questionInput: &questionTooManyOpt,
+			expectErr:     require.Error,
+			expectedLen:   1,
+		}, {
+			name:          "No answers in key",
+			questionInput: &questionNoAns,
+			expectErr:     require.Error,
+			expectedLen:   1,
+		}, {
+			name:          "Too many answers in key",
+			questionInput: &questionTooManyAns,
+			expectErr:     require.Error,
+			expectedLen:   1,
+		}, {
+			name:          "Out of range answers in key",
+			questionInput: &questionBadAns,
+			expectErr:     require.Error,
+			expectedLen:   1,
+		},
+		// ----- test cases end ----- //
 	}
 
 	for _, testCase := range testCases {
@@ -135,31 +178,73 @@ func TestValidateQuestion(t *testing.T) {
 
 func TestValidateQuizCore(t *testing.T) {
 	testCases := []struct {
-		name          string
-		questionInput *QuizCore
-		expectErr     require.ErrorAssertionFunc
-		expectedLen   int
+		name        string
+		input       *QuizCore
+		expectErr   require.ErrorAssertionFunc
+		expectedLen int
 	}{
-		{"Valid question - Negative marking", &quizValid, require.NoError, 0},
-		{"Valid question - Binary marking", &quizValidBinaryMarking, require.NoError, 0},
-		{"Valid question - No marking", &quizValidNoMarking, require.NoError, 0},
-		{"Invalid marking", &quizInvalidMarking, require.Error, 0},
-		{"No title", &quizNoTitle, require.Error, 1},
-		{"No questions", &quizEmptyQuestions, require.Error, 1},
-		{"Too many questions", &quizTooManyQuestions, require.Error, 1},
-		{"Invalid questions", &quizInvalidQuestions, require.Error, 1},
-		{"Too many answers", &quizTooManyAnswers, require.Error, 1},
-		{"Too many options", &quizTooManyOpts, require.Error, 1},
+		// ----- test cases start ----- //
+		{
+			name:        "Valid question - Negative marking",
+			input:       &quizValid,
+			expectErr:   require.NoError,
+			expectedLen: 0,
+		}, {
+			name:        "Valid question - Binary marking",
+			input:       &quizValidBinaryMarking,
+			expectErr:   require.NoError,
+			expectedLen: 0,
+		}, {
+			name:        "Valid question - No marking",
+			input:       &quizValidNoMarking,
+			expectErr:   require.NoError,
+			expectedLen: 0,
+		}, {
+			name:        "Invalid marking",
+			input:       &quizInvalidMarking,
+			expectErr:   require.Error,
+			expectedLen: 0,
+		}, {
+			name:        "No title",
+			input:       &quizNoTitle,
+			expectErr:   require.Error,
+			expectedLen: 1,
+		}, {
+			name:        "No questions",
+			input:       &quizEmptyQuestions,
+			expectErr:   require.Error,
+			expectedLen: 1,
+		}, {
+			name:        "Too many questions",
+			input:       &quizTooManyQuestions,
+			expectErr:   require.Error,
+			expectedLen: 1,
+		}, {
+			name:        "Invalid questions",
+			input:       &quizInvalidQuestions,
+			expectErr:   require.Error,
+			expectedLen: 1,
+		}, {
+			name:        "Too many answers",
+			input:       &quizTooManyAnswers,
+			expectErr:   require.Error,
+			expectedLen: 1,
+		}, {
+			name:        "Too many options",
+			input:       &quizTooManyOpts,
+			expectErr:   require.Error,
+			expectedLen: 1,
+		},
+		// ----- test cases end ----- //
 	}
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			err := validator.ValidateStruct(testCase.questionInput)
+			err := validator.ValidateStruct(testCase.input)
 			testCase.expectErr(t, err)
 
 			if err != nil {
 				fmt.Println(len(err.(*validator.ErrorValidation).Errors))
-				// require.Equal(t, testCase.expectedLen, len(err.(*validator.ErrorValidation).Errors))
 			}
 		})
 	}
