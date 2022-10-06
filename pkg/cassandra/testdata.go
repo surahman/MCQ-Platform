@@ -158,7 +158,6 @@ func GetQuizzedUUIDMapping() map[string]gocql.UUID {
 func GetTestUsers() map[string]*model_cassandra.User {
 	users := make(map[string]*model_cassandra.User)
 	username := "user-%d"
-	accountID := "user-account-id-%d"
 	password := "user-pwd-%d"
 	firstname := "firstname-%d"
 	lastname := "lastname-%d"
@@ -168,13 +167,13 @@ func GetTestUsers() map[string]*model_cassandra.User {
 		uname := fmt.Sprintf(username, idx)
 		users[uname] = &model_cassandra.User{
 			UserAccount: &model_cassandra.UserAccount{
-				Username:  fmt.Sprintf(username, idx),
+				Username:  uname,
 				Password:  fmt.Sprintf(password, idx),
 				FirstName: fmt.Sprintf(firstname, idx),
 				LastName:  fmt.Sprintf(lastname, idx),
 				Email:     fmt.Sprintf(email, idx),
 			},
-			AccountID: fmt.Sprintf(accountID, idx),
+			AccountID: model_cassandra.Blake2b256(uname),
 			IsDeleted: false,
 		}
 	}

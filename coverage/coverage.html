@@ -57,11 +57,11 @@
 				
 				<option value="file0">github.com/surahman/mcq-platform/pkg/cassandra/cassandra.go (86.7%)</option>
 				
-				<option value="file1">github.com/surahman/mcq-platform/pkg/cassandra/cassandra_queries.go (85.2%)</option>
+				<option value="file1">github.com/surahman/mcq-platform/pkg/cassandra/cassandra_queries.go (85.6%)</option>
 				
 				<option value="file2">github.com/surahman/mcq-platform/pkg/cassandra/config.go (93.8%)</option>
 				
-				<option value="file3">github.com/surahman/mcq-platform/pkg/cassandra/testdata.go (90.6%)</option>
+				<option value="file3">github.com/surahman/mcq-platform/pkg/cassandra/testdata.go (90.4%)</option>
 				
 				<option value="file4">github.com/surahman/mcq-platform/pkg/constants/constants.go (100.0%)</option>
 				
@@ -71,7 +71,9 @@
 				
 				<option value="file7">github.com/surahman/mcq-platform/pkg/logger/testdata.go (100.0%)</option>
 				
-				<option value="file8">github.com/surahman/mcq-platform/pkg/validator/validator.go (72.0%)</option>
+				<option value="file8">github.com/surahman/mcq-platform/pkg/model/cassandra/user.go (100.0%)</option>
+				
+				<option value="file9">github.com/surahman/mcq-platform/pkg/validator/validator.go (72.0%)</option>
 				
 				</select>
 			</div>
@@ -257,6 +259,9 @@ func CreateUserQuery(c Cassandra, params any) (response any, err error) <span cl
         conn := c.(*CassandraImpl)
         input := params.(*model_cassandra.User)
 
+        // Create hash of username using Blake2b 256 hashing algorithm.
+        input.AccountID = model_cassandra.Blake2b256(input.Username)
+
         resp := model_cassandra.User{UserAccount: &amp;model_cassandra.UserAccount{}} // Discarded, only used as container for Cassandra response.
         applied := false
         if applied, err = conn.session.Query(model_cassandra.CreateUser,
@@ -284,6 +289,9 @@ func ReadUserQuery(c Cassandra, params any) (response any, err error) <span clas
         input := params.(*model_cassandra.User)
         resp := model_cassandra.User{UserAccount: &amp;model_cassandra.UserAccount{}}
 
+        // Create hash of username using Blake2b 256 hashing algorithm.
+        input.AccountID = model_cassandra.Blake2b256(input.Username)
+
         if err = conn.session.Query(model_cassandra.ReadUser, input.Username, input.AccountID).Scan(
                 &amp;resp.Username, &amp;resp.AccountID, &amp;resp.Email, &amp;resp.FirstName, &amp;resp.IsDeleted, &amp;resp.LastName, &amp;resp.Password); err != nil </span><span class="cov1" title="1">{
                 conn.logger.Error("failed to read user record",
@@ -298,6 +306,9 @@ func ReadUserQuery(c Cassandra, params any) (response any, err error) <span clas
 func DeleteUserQuery(c Cassandra, params any) (response any, err error) <span class="cov5" title="5">{
         conn := c.(*CassandraImpl)
         input := params.(*model_cassandra.User)
+
+        // Create hash of username using Blake2b 256 hashing algorithm.
+        input.AccountID = model_cassandra.Blake2b256(input.Username)
 
         resp := model_cassandra.User{UserAccount: &amp;model_cassandra.UserAccount{}} // Discarded, only used as container for Cassandra response.
         applied := false
@@ -725,7 +736,6 @@ func GetQuizzedUUIDMapping() map[string]gocql.UUID <span class="cov1" title="1">
 func GetTestUsers() map[string]*model_cassandra.User <span class="cov1" title="1">{
         users := make(map[string]*model_cassandra.User)
         username := "user-%d"
-        accountID := "user-account-id-%d"
         password := "user-pwd-%d"
         firstname := "firstname-%d"
         lastname := "lastname-%d"
@@ -735,13 +745,13 @@ func GetTestUsers() map[string]*model_cassandra.User <span class="cov1" title="1
                 uname := fmt.Sprintf(username, idx)
                 users[uname] = &amp;model_cassandra.User{
                         UserAccount: &amp;model_cassandra.UserAccount{
-                                Username:  fmt.Sprintf(username, idx),
+                                Username:  uname,
                                 Password:  fmt.Sprintf(password, idx),
                                 FirstName: fmt.Sprintf(firstname, idx),
                                 LastName:  fmt.Sprintf(lastname, idx),
                                 Email:     fmt.Sprintf(email, idx),
                         },
-                        AccountID: fmt.Sprintf(accountID, idx),
+                        AccountID: model_cassandra.Blake2b256(uname),
                         IsDeleted: false,
                 }
         }</span>
@@ -1165,7 +1175,38 @@ encoder_config:
 }</span>
 </pre>
 		
-		<pre class="file" id="file8" style="display: none">package validator
+		<pre class="file" id="file8" style="display: none">package model_cassandra
+
+import (
+        "encoding/base64"
+
+        "golang.org/x/crypto/blake2b"
+)
+
+// User represents a users account and is a row in user table.
+type User struct {
+        *UserAccount
+        AccountID string `json:"account_id,omitempty" cql:"account_id"`
+        IsDeleted bool   `json:"is_deleted" cql:"is_deleted"`
+}
+
+// UserAccount is the core user account information.
+type UserAccount struct {
+        Username  string `json:"username,omitempty" cql:"username" validate:"required,min=8,alphanum"`
+        Password  string `json:"password,omitempty" cql:"password" validate:"required,min=8,max=32"`
+        FirstName string `json:"first_name,omitempty" cql:"first_name" validate:"required"`
+        LastName  string `json:"last_name,omitempty" cql:"last_name" validate:"required"`
+        Email     string `json:"email,omitempty" cql:"email" validate:"required,email"`
+}
+
+// Blake2b256 will create a hash from an input string. This hash is used to create the Account ID for a user.
+func Blake2b256(data string) string <span class="cov10" title="3">{
+        hash := blake2b.Sum256([]byte(data))
+        return base64.URLEncoding.EncodeToString(hash[:])
+}</span>
+</pre>
+		
+		<pre class="file" id="file9" style="display: none">package validator
 
 import (
         "bytes"
