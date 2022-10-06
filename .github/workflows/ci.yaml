@@ -19,16 +19,16 @@ jobs:
       - name: Code checkout
         uses: actions/checkout@v3
 
-      - name: Start Cassandra
-        run: docker-compose up -d
-
-      - name: Wait for healthy Cassandra
-        uses: stringbean/docker-healthcheck-action@v1
-        with:
-          container: cassandra
-          wait-time: 50
-          require-status: running
-          require-healthy: true
+#      - name: Start Cassandra
+#        run: docker-compose up -d
+#
+#      - name: Wait for healthy Cassandra
+#        uses: stringbean/docker-healthcheck-action@v1
+#        with:
+#          container: cassandra
+#          wait-time: 50
+#          require-status: running
+#          require-healthy: true
 
       - name: Set up Go 1.18
         uses: actions/setup-go@v3
@@ -51,6 +51,6 @@ jobs:
       - name: Unit Test
         run: make test_short
 
-      - name: Shutdown Cassandra
-        if: always()
-        run: docker-compose down
+#      - name: Shutdown Cassandra
+#        if: always()
+#        run: docker-compose down
