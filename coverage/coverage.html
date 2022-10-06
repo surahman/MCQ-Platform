@@ -55,7 +55,7 @@
 			<div id="nav">
 				<select id="files">
 				
-				<option value="file0">github.com/surahman/mcq-platform/pkg/cassandra/cassandra.go (86.7%)</option>
+				<option value="file0">github.com/surahman/mcq-platform/pkg/cassandra/cassandra.go (87.2%)</option>
 				
 				<option value="file1">github.com/surahman/mcq-platform/pkg/cassandra/cassandra_queries.go (85.6%)</option>
 				
@@ -100,6 +100,8 @@
 
 import (
         "errors"
+        "fmt"
+        "math"
         "strconv"
         "time"
 
@@ -212,11 +214,13 @@ func (c *CassandraImpl) verifySession() error <span class="cov5" title="8">{
         <span class="cov3" title="3">return nil</span>
 }
 
-// createSessionRetry will attempt to open the connection a few times stop on the first success or fail after the last one.
+// createSessionRetry will attempt to open the connection using binary exponential back-off and stop on the first success or fail after the last one.
 func (c *CassandraImpl) createSessionRetry(cluster *gocql.ClusterConfig) (err error) <span class="cov3" title="4">{
         maxAttempts := constants.GetCassandraMaxConnectRetries()
-        for attempt := 0; attempt &lt;= maxAttempts; attempt++ </span><span class="cov3" title="4">{
-                c.logger.Info("Attempting to connect to Cassandra cluster...", zap.String("attempt", strconv.Itoa(attempt)))
+        for attempt := 1; attempt &lt;= maxAttempts; attempt++ </span><span class="cov3" title="4">{
+                waitTime := time.Duration(math.Pow(2, float64(attempt))) * time.Second
+                c.logger.Info(fmt.Sprintf("Attempting connection to Cassandra cluster in %s...", waitTime), zap.String("attempt", strconv.Itoa(attempt)))
+                time.Sleep(waitTime)
                 if c.session, err = cluster.CreateSession(); err == nil </span><span class="cov3" title="4">{
                         break</span>
                 }
