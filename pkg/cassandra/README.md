@@ -35,10 +35,10 @@ The expected file name is `CassandraConfig.yaml`. All the configuration items be
 
 | Name                 | Environment Variable Key   | Type         | Description                                                                                   |
 |----------------------|----------------------------|--------------|-----------------------------------------------------------------------------------------------|
-| **_authentication_** | `CASSANDRA_AUTHENTICATION` |              | **_Parent key for authentication information._**                                              |
+| **_Authentication_** | `CASSANDRA_AUTHENTICATION` |              | **_Parent key for authentication information._**                                              |
 | ↳ username           | ↳ `.USERNAME`              | string       | Username for Cassandra session login.                                                         |
 | ↳ password           | ↳ `.PASSWORD`              | string       | Password for Cassandra session login.                                                         |
-| **_keyspace_**       | `CASSANDRA_KEYSPACE`       |              | **_Parent key for Keyspace configuration._**                                                  |
+| **_Keyspace_**       | `CASSANDRA_KEYSPACE`       |              | **_Parent key for Keyspace configuration._**                                                  |
 | ↳ name               | ↳ `.NAME`                  | string       | Keyspace name.                                                                                |
 | ↳ replication_class  | ↳ `.REPLICATION_CLASS`     | string       | Data replication strategy.                                                                    |
 | ↳ replication_factor | ↳ `.REPLICATION_FACTOR`    | int          | Data replication factor.                                                                      |
