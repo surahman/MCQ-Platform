@@ -1,0 +1,5 @@
+general:
+  bcryptCost: 8
+jwt:
+  key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
+  expirationDuration: 600
