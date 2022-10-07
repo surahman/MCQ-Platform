@@ -35,7 +35,7 @@ func NewAuth(fs *afero.Fs, logger *logger.Logger) (Auth, error) {
 	return newAuthImpl(fs, logger)
 }
 
-// newAuthImpl will create a new CassandraImpl configuration and load it from disk.
+// newAuthImpl will create a new authImpl configuration and load it from disk.
 func newAuthImpl(fs *afero.Fs, logger *logger.Logger) (a *authImpl, err error) {
 	a = &authImpl{conf: newConfig(), logger: logger}
 	if err = a.conf.Load(*fs); err != nil {
@@ -45,7 +45,7 @@ func newAuthImpl(fs *afero.Fs, logger *logger.Logger) (a *authImpl, err error) {
 	return
 }
 
-// HashPassword hashes a password to avoid plaintext storage.
+// HashPassword hashes a password using the Bcrypt algorithm to avoid plaintext storage.
 func (a *authImpl) HashPassword(plaintext string) (hashed string, err error) {
 	var bytes []byte
 	if bytes, err = bcrypt.GenerateFromPassword([]byte(plaintext), a.conf.General.BcryptCost); err != nil {
@@ -55,9 +55,9 @@ func (a *authImpl) HashPassword(plaintext string) (hashed string, err error) {
 	return
 }
 
-// CheckPassword checks a hashed password against a stored password.
-func (a *authImpl) CheckPassword(actual, expected string) (err error) {
-	if err = bcrypt.CompareHashAndPassword([]byte(expected), []byte(actual)); err != nil {
+// CheckPassword checks a hashed password against a plaintext password using the Bcrypt algorithm.
+func (a *authImpl) CheckPassword(hashed, plaintext string) (err error) {
+	if err = bcrypt.CompareHashAndPassword([]byte(hashed), []byte(plaintext)); err != nil {
 		return
 	}
 	return

@@ -5,8 +5,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/spf13/afero"
-	"github.com/surahman/mcq-platform/pkg/constants"
 	"github.com/surahman/mcq-platform/pkg/logger"
 	"go.uber.org/zap"
 )
@@ -45,7 +43,7 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-// setup will configure the connection to the test clusters keyspace.
+// setup will configure the auth test object.
 func setup() (err error) {
 	if testAuth, err = getTestConfiguration(); err != nil {
 		return
@@ -58,21 +56,15 @@ func tearDown() (err error) {
 	return
 }
 
-// getTestConfiguration creates a cluster configuration for testing.
+// getTestConfiguration creates an Auth configuration for testing.
 func getTestConfiguration() (auth *authImpl, err error) {
-	// Setup mock filesystem.
-	fs := afero.NewMemMapFs()
-	if err = fs.MkdirAll(constants.GetEtcDir(), 0644); err != nil {
-		return
+	auth = &authImpl{
+		conf:   &config{},
+		logger: zapLogger,
 	}
-	if err = afero.WriteFile(fs, constants.GetEtcDir()+constants.GetAuthFileName(), []byte(authConfigTestData["valid"]), 0644); err != nil {
-		return
-	}
-
-	// Load Cassandra configurations.
-	if auth, err = newAuthImpl(&fs, zapLogger); err != nil {
-		return
-	}
+	auth.conf.JWTConfig.Key = "encryption key for test suite"
+	auth.conf.JWTConfig.ExpirationDuration = 10
+	auth.conf.General.BcryptCost = 4
 
 	return
 }

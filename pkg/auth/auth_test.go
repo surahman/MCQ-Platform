@@ -97,3 +97,63 @@ func TestNewAuthImpl(t *testing.T) {
 		})
 	}
 }
+
+func TestAuthImpl_HashPassword(t *testing.T) {
+	testCases := []struct {
+		name      string
+		input     string
+		expectErr require.ErrorAssertionFunc
+	}{
+		// ----- test cases start ----- //
+		{
+			"Empty password",
+			"",
+			require.NoError,
+		}, {
+			"Valid",
+			"ELy@FRrn7DW8Cj1QQj^zG&X%$9cjVU4R",
+			require.NoError,
+		},
+		// ----- test cases end ----- //
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			_, err := testAuth.HashPassword(testCase.input)
+			testCase.expectErr(t, err)
+		})
+	}
+}
+
+func TestAuthImpl_CheckPassword(t *testing.T) {
+	testCases := []struct {
+		name      string
+		plaintext string
+		hashed    string
+		expectErr require.ErrorAssertionFunc
+	}{
+		// ----- test cases start ----- //
+		{
+			"Empty password's hash",
+			"",
+			"$2a$08$vZhD311uyi8FnkjyoT.1req7ixf0CXRARozPTaj4gnhr/F3m/q7NW",
+			require.NoError,
+		}, {
+			"Valid password's hash",
+			"ELy@FRrn7DW8Cj1QQj^zG&X%$9cjVU4R",
+			"$2a$08$YXYc8lyxnS7VPy6f28Gmd.udRTVrxKewXX9E3ULs0/ynkTL6PY/0K",
+			require.NoError,
+		}, {
+			"Invalid password's hash",
+			"$2a$08$YXYc8lyxnS7VPy6f28Gmd.udRTVrxKewXX9E3ULs0/ynkTL6PY/0K",
+			"$2a$08$YXYc8lyxnS7VPy6f28Gmd.udRTVrxKewXX9E3ULs0/ynkTL6PY/0K",
+			require.Error,
+		},
+		// ----- test cases end ----- //
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			err := testAuth.CheckPassword(testCase.hashed, testCase.plaintext)
+			testCase.expectErr(t, err)
+		})
+	}
+}
