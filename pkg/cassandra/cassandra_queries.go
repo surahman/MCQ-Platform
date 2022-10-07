@@ -12,7 +12,7 @@ import (
 // truncateTableQuery will empty a table.
 // param: name of the table
 func truncateTableQuery(c Cassandra, params any) (response any, err error) {
-	conn := c.(*CassandraImpl)
+	conn := c.(*cassandraImpl)
 	tableName := params.(string)
 	if err = conn.session.Query(fmt.Sprintf("TRUNCATE TABLE %s;", tableName)).Exec(); err != nil {
 		conn.logger.Error("failed to truncate table", zap.String("table name", tableName), zap.Error(err))
@@ -26,7 +26,7 @@ func truncateTableQuery(c Cassandra, params any) (response any, err error) {
 // CreateUserQuery will insert a user record into the users table.
 // Param: pointer to the user struct containing the query parameters
 func CreateUserQuery(c Cassandra, params any) (response any, err error) {
-	conn := c.(*CassandraImpl)
+	conn := c.(*cassandraImpl)
 	input := params.(*model_cassandra.User)
 
 	// Create hash of username using Blake2b 256 hashing algorithm.
@@ -55,7 +55,7 @@ func CreateUserQuery(c Cassandra, params any) (response any, err error) {
 // Param: pointer to the user struct containing the query parameters
 // Return: address to a user record
 func ReadUserQuery(c Cassandra, params any) (response any, err error) {
-	conn := c.(*CassandraImpl)
+	conn := c.(*cassandraImpl)
 	input := params.(*model_cassandra.User)
 	resp := model_cassandra.User{UserAccount: &model_cassandra.UserAccount{}}
 
@@ -74,7 +74,7 @@ func ReadUserQuery(c Cassandra, params any) (response any, err error) {
 // DeleteUserQuery will mark a user record as deleted in the users table.
 // Param: pointer to the user struct containing the query parameters
 func DeleteUserQuery(c Cassandra, params any) (response any, err error) {
-	conn := c.(*CassandraImpl)
+	conn := c.(*cassandraImpl)
 	input := params.(*model_cassandra.User)
 
 	// Create hash of username using Blake2b 256 hashing algorithm.
@@ -103,7 +103,7 @@ func DeleteUserQuery(c Cassandra, params any) (response any, err error) {
 // CreateQuizQuery will create a quiz record in the quizzes table.
 // Param: pointer to the quiz struct containing the query parameters
 func CreateQuizQuery(c Cassandra, params any) (response any, err error) {
-	conn := c.(*CassandraImpl)
+	conn := c.(*cassandraImpl)
 	input := params.(*model_cassandra.Quiz)
 
 	resp := model_cassandra.Quiz{QuizCore: &model_cassandra.QuizCore{}} // Discarded, only used as container for Cassandra response.
@@ -129,7 +129,7 @@ func CreateQuizQuery(c Cassandra, params any) (response any, err error) {
 // Param: quiz id
 // Return: address to a quiz record
 func ReadQuizQuery(c Cassandra, params any) (response any, err error) {
-	conn := c.(*CassandraImpl)
+	conn := c.(*cassandraImpl)
 	input := params.(gocql.UUID)
 	resp := model_cassandra.Quiz{QuizCore: &model_cassandra.QuizCore{}}
 
@@ -144,7 +144,7 @@ func ReadQuizQuery(c Cassandra, params any) (response any, err error) {
 // UpdateQuizQuery will update a quiz record in the quizzes table.
 // Param: pointer to the quiz struct containing the query parameters
 func UpdateQuizQuery(c Cassandra, params any) (response any, err error) {
-	conn := c.(*CassandraImpl)
+	conn := c.(*cassandraImpl)
 	input := params.(*model_cassandra.Quiz)
 	resp := model_cassandra.Quiz{QuizCore: &model_cassandra.QuizCore{}}
 
@@ -167,7 +167,7 @@ func UpdateQuizQuery(c Cassandra, params any) (response any, err error) {
 // DeleteQuizQuery will mark a quiz record as deleted in the quizzes table.
 // Param: quiz id
 func DeleteQuizQuery(c Cassandra, params any) (response any, err error) {
-	conn := c.(*CassandraImpl)
+	conn := c.(*cassandraImpl)
 	input := params.(gocql.UUID)
 	resp := model_cassandra.Quiz{QuizCore: &model_cassandra.QuizCore{}}
 
@@ -190,7 +190,7 @@ func DeleteQuizQuery(c Cassandra, params any) (response any, err error) {
 // PublishQuizQuery will mark a quiz record as published in the quizzes table.
 // Param: quiz id
 func PublishQuizQuery(c Cassandra, params any) (response any, err error) {
-	conn := c.(*CassandraImpl)
+	conn := c.(*cassandraImpl)
 	input := params.(gocql.UUID)
 	resp := model_cassandra.Quiz{QuizCore: &model_cassandra.QuizCore{}}
 
@@ -215,7 +215,7 @@ func PublishQuizQuery(c Cassandra, params any) (response any, err error) {
 // CreateResponseQuery will insert a response record into the responses table.
 // Param: pointer to the user struct containing the response parameters
 func CreateResponseQuery(c Cassandra, params any) (response any, err error) {
-	conn := c.(*CassandraImpl)
+	conn := c.(*cassandraImpl)
 	input := params.(*model_cassandra.Response)
 
 	resp := model_cassandra.Response{QuizResponse: &model_cassandra.QuizResponse{}} // Discarded, only used as container for Cassandra response.
@@ -241,7 +241,7 @@ func CreateResponseQuery(c Cassandra, params any) (response any, err error) {
 // Param: pointer to the response struct containing the query parameters
 // Return: address to a response record
 func ReadResponseQuery(c Cassandra, params any) (response any, err error) {
-	conn := c.(*CassandraImpl)
+	conn := c.(*cassandraImpl)
 	input := params.(*model_cassandra.Response)
 	resp := model_cassandra.Response{QuizResponse: &model_cassandra.QuizResponse{}}
 
@@ -258,7 +258,7 @@ func ReadResponseQuery(c Cassandra, params any) (response any, err error) {
 // Param: QuizID gocql UUID
 // Return: address to slice of responses
 func ReadResponseStatisticsQuery(c Cassandra, params any) (response any, err error) {
-	conn := c.(*CassandraImpl)
+	conn := c.(*cassandraImpl)
 	input := params.(gocql.UUID)
 	var results []*model_cassandra.Response
 

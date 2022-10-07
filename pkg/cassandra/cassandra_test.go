@@ -11,7 +11,6 @@ import (
 )
 
 func TestNewCassandra(t *testing.T) {
-	log, _ := logger.NewTestLogger()
 	fs := afero.NewMemMapFs()
 	require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
 	require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetCassandraFileName(),
@@ -34,7 +33,7 @@ func TestNewCassandra(t *testing.T) {
 		}, {
 			"Invalid file system",
 			nil,
-			log,
+			zapLogger,
 			require.Error,
 			require.Nil,
 		}, {
@@ -46,7 +45,7 @@ func TestNewCassandra(t *testing.T) {
 		}, {
 			"Valid",
 			&fs,
-			log,
+			zapLogger,
 			require.NoError,
 			require.NotNil,
 		},
@@ -148,7 +147,7 @@ func TestCassandra_Close(t *testing.T) {
 		t.Skip()
 	}
 
-	var cassandra *CassandraImpl
+	var cassandra *cassandraImpl
 	var err error
 
 	cassandra, err = getTestConfiguration()

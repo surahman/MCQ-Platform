@@ -25,10 +25,10 @@ type Cassandra interface {
 }
 
 // Check to ensure the Cassandra interface has been implemented.
-var _ Cassandra = &CassandraImpl{}
+var _ Cassandra = &cassandraImpl{}
 
 // CassandraImpl implements the Cassandra interface and contains the logic to interface with the cluster.
-type CassandraImpl struct {
+type cassandraImpl struct {
 	conf    *config
 	session *gocql.Session
 	logger  *logger.Logger
@@ -43,17 +43,17 @@ func NewCassandra(fs *afero.Fs, logger *logger.Logger) (Cassandra, error) {
 }
 
 // newCassandraImpl will create a new CassandraImpl configuration and load it from disk.
-func newCassandraImpl(fs *afero.Fs, logger *logger.Logger) (c *CassandraImpl, err error) {
-	c = &CassandraImpl{conf: newConfig(), logger: logger}
+func newCassandraImpl(fs *afero.Fs, logger *logger.Logger) (c *cassandraImpl, err error) {
+	c = &cassandraImpl{conf: newConfig(), logger: logger}
 	if err = c.conf.Load(*fs); err != nil {
-		c.logger.Error("failed to load Cassandra constants from disk", zap.Error(err))
+		c.logger.Error("failed to load Cassandra configurations from disk", zap.Error(err))
 		return nil, err
 	}
 	return
 }
 
 // Open will start a database connection pool and establish a connection.
-func (c *CassandraImpl) Open() (err error) {
+func (c *cassandraImpl) Open() (err error) {
 	// Stop connection leaks.
 	if err = c.verifySession(); err == nil {
 		c.logger.Warn("session to cluster is already established")
@@ -77,7 +77,7 @@ func (c *CassandraImpl) Open() (err error) {
 }
 
 // Close the CassandraImpl cluster connection.
-func (c *CassandraImpl) Close() error {
+func (c *cassandraImpl) Close() error {
 	if err := c.verifySession(); err != nil {
 		return err
 	}
@@ -86,12 +86,12 @@ func (c *CassandraImpl) Close() error {
 }
 
 // Execute wraps the methods that create, read, update, and delete records from tables on the Cassandra cluster.
-func (c *CassandraImpl) Execute(request func(Cassandra, any) (any, error), params any) (any, error) {
+func (c *cassandraImpl) Execute(request func(Cassandra, any) (any, error), params any) (any, error) {
 	return request(c, params)
 }
 
 // configureCluster will configure the settings for the Cassandra cluster.
-func (c *CassandraImpl) configureCluster() (cluster *gocql.ClusterConfig, err error) {
+func (c *cassandraImpl) configureCluster() (cluster *gocql.ClusterConfig, err error) {
 	cluster = gocql.NewCluster(c.conf.Connection.ClusterIP...)
 	cluster.ProtoVersion = c.conf.Connection.ProtoVersion
 	cluster.ConnectTimeout = time.Duration(c.conf.Connection.Timeout) * time.Second
@@ -109,7 +109,7 @@ func (c *CassandraImpl) configureCluster() (cluster *gocql.ClusterConfig, err er
 }
 
 // verifySession will check to see if a session is established.
-func (c *CassandraImpl) verifySession() error {
+func (c *cassandraImpl) verifySession() error {
 	if c.session == nil || c.session.Closed() {
 		return errors.New("no session established")
 	}
@@ -117,7 +117,7 @@ func (c *CassandraImpl) verifySession() error {
 }
 
 // createSessionRetry will attempt to open the connection using binary exponential back-off and stop on the first success or fail after the last one.
-func (c *CassandraImpl) createSessionRetry(cluster *gocql.ClusterConfig) (err error) {
+func (c *cassandraImpl) createSessionRetry(cluster *gocql.ClusterConfig) (err error) {
 	maxAttempts := constants.GetCassandraMaxConnectRetries()
 	for attempt := 1; attempt <= maxAttempts; attempt++ {
 		waitTime := time.Duration(math.Pow(2, float64(attempt))) * time.Second

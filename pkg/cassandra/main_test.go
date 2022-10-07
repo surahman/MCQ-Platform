@@ -47,7 +47,7 @@ func TestMain(m *testing.M) {
 	}
 
 	// Setup test space.
-	if err := setup(); err != nil {
+	if err = setup(); err != nil {
 		zapLogger.Error("Test suite setup failure", zap.Error(err))
 		os.Exit(1)
 	}
@@ -56,7 +56,7 @@ func TestMain(m *testing.M) {
 	exitCode := m.Run()
 
 	// Cleanup test space.
-	if err := tearDown(); err != nil {
+	if err = tearDown(); err != nil {
 		zapLogger.Error("Test suite teardown failure:", zap.Error(err))
 		os.Exit(1)
 	}
@@ -75,10 +75,10 @@ func setup() (err error) {
 	}
 
 	// Integration test keyspace name.
-	integrationKeyspace = connection.db.(*CassandraImpl).conf.Keyspace.Name + constants.GetIntegrationTestKeyspaceSuffix()
+	integrationKeyspace = connection.db.(*cassandraImpl).conf.Keyspace.Name + constants.GetIntegrationTestKeyspaceSuffix()
 
 	// Create Keyspace for integration test.
-	if err = createTestingKeyspace(connection.db.(*CassandraImpl)); err != nil {
+	if err = createTestingKeyspace(connection.db.(*cassandraImpl)); err != nil {
 		return
 	}
 
@@ -94,7 +94,7 @@ func tearDown() (err error) {
 }
 
 // getTestConfiguration creates a cluster configuration for testing.
-func getTestConfiguration() (cassandra *CassandraImpl, err error) {
+func getTestConfiguration() (cassandra *cassandraImpl, err error) {
 	// If running on a GitHub Actions runner use the default credentials for Cassandra.
 	configFileKey := "valid"
 	if _, ok := os.LookupEnv(constants.GetGithubCIKey()); ok == true {
@@ -120,7 +120,7 @@ func getTestConfiguration() (cassandra *CassandraImpl, err error) {
 }
 
 // createTestingKeyspace will configure and create a fresh Keyspace for integration testing and connect to it.
-func createTestingKeyspace(c *CassandraImpl) (err error) {
+func createTestingKeyspace(c *cassandraImpl) (err error) {
 	if err = c.verifySession(); err == nil {
 		return errors.New("session to Cassandra already established")
 	}
@@ -181,7 +181,7 @@ func createTestingKeyspace(c *CassandraImpl) (err error) {
 }
 
 // createUsersTable will create the users table in the integration test keyspace.
-func createUsersTable(c *CassandraImpl, errors chan<- error, wg *sync.WaitGroup) {
+func createUsersTable(c *cassandraImpl, errors chan<- error, wg *sync.WaitGroup) {
 	defer wg.Done()
 	if err := c.session.Query(model_cassandra.CreateUsersTable).Exec(); err != nil {
 		c.logger.Error("failed to create users table in integration test keyspace", zap.Error(err))
@@ -192,7 +192,7 @@ func createUsersTable(c *CassandraImpl, errors chan<- error, wg *sync.WaitGroup)
 }
 
 // createQuizzesTable will create the quizzes table in the integration test keyspace.
-func createQuizzesTable(c *CassandraImpl, errors chan<- error, wg *sync.WaitGroup) {
+func createQuizzesTable(c *cassandraImpl, errors chan<- error, wg *sync.WaitGroup) {
 	defer wg.Done()
 	if err := c.session.Query(model_cassandra.CreateQuestionUDT).Exec(); err != nil {
 		c.logger.Error("failed to create questions UDT in integration test keyspace", zap.Error(err))
@@ -209,7 +209,7 @@ func createQuizzesTable(c *CassandraImpl, errors chan<- error, wg *sync.WaitGrou
 }
 
 // createResponsesTable will create the responses table in the integration test keyspace.
-func createResponsesTable(c *CassandraImpl, errors chan<- error, wg *sync.WaitGroup) {
+func createResponsesTable(c *cassandraImpl, errors chan<- error, wg *sync.WaitGroup) {
 	defer wg.Done()
 	if err := c.session.Query(model_cassandra.CreateResponsesTable).Exec(); err != nil {
 		c.logger.Error("failed to create responses table in integration test keyspace", zap.Error(err))
