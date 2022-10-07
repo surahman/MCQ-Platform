@@ -9,19 +9,13 @@ import (
 
 // Config contains all the configurations for authentication.
 type config struct {
-	JWT     *jwtConfig     `json:"jwt,omitempty" yaml:"jwt,omitempty" validate:"required"`
-	General *generalConfig `json:"general,omitempty" yaml:"general,omitempty" validate:"required"`
-}
-
-// generalConfig is the general configurations for authentication and encryption.
-type generalConfig struct {
-	BcryptCost int `json:"bcrypt_cost,omitempty" yaml:"bcrypt_cost,omitempty" validate:"required,min=4,max=31"`
-}
-
-// jwtConfig are the configurations for the JSON Web Tokens.
-type jwtConfig struct {
-	Key                string `json:"key,omitempty" yaml:"key,omitempty" validate:"required,min=8,max=256"`
-	ExpirationDuration int    `json:"expiration_duration,omitempty" yaml:"expiration_duration,omitempty" validate:"required,min=10"`
+	JWTConfig struct {
+		Key                string `json:"key,omitempty" yaml:"key,omitempty" mapstructure:"key" validate:"required,min=8,max=256"`
+		ExpirationDuration int    `json:"expiration_duration,omitempty" yaml:"expiration_duration,omitempty" mapstructure:"expiration_duration" validate:"required,min=10"`
+	} `json:"jwt,omitempty" yaml:"jwt,omitempty" mapstructure:"jwt" validate:"required"`
+	General struct {
+		BcryptCost int `json:"bcrypt_cost,omitempty" yaml:"bcrypt_cost,omitempty" mapstructure:"bcrypt_cost" validate:"required,min=4,max=31"`
+	} `json:"general,omitempty" yaml:"general,omitempty" mapstructure:"general" validate:"required"`
 }
 
 // newConfig creates a blank configuration struct for authorization.

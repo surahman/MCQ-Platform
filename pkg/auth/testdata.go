@@ -20,7 +20,7 @@ jwt:
 general:
   bcrypt_cost: 2`
 
-	testData["bcrypt_cost_below_31"] = `
+	testData["bcrypt_cost_above_31"] = `
 jwt:
   key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
   expiration_duration: 600
