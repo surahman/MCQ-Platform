@@ -2,6 +2,8 @@ package cassandra
 
 import (
 	"errors"
+	"fmt"
+	"math"
 	"strconv"
 	"time"
 
@@ -114,11 +116,13 @@ func (c *CassandraImpl) verifySession() error {
 	return nil
 }
 
-// createSessionRetry will attempt to open the connection a few times stop on the first success or fail after the last one.
+// createSessionRetry will attempt to open the connection using binary exponential back-off and stop on the first success or fail after the last one.
 func (c *CassandraImpl) createSessionRetry(cluster *gocql.ClusterConfig) (err error) {
 	maxAttempts := constants.GetCassandraMaxConnectRetries()
-	for attempt := 0; attempt <= maxAttempts; attempt++ {
-		c.logger.Info("Attempting to connect to Cassandra cluster...", zap.String("attempt", strconv.Itoa(attempt)))
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		waitTime := time.Duration(math.Pow(2, float64(attempt))) * time.Second
+		c.logger.Info(fmt.Sprintf("Attempting connection to Cassandra cluster in %s...", waitTime), zap.String("attempt", strconv.Itoa(attempt)))
+		time.Sleep(waitTime)
 		if c.session, err = cluster.CreateSession(); err == nil {
 			break
 		}
