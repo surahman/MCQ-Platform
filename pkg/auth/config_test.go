@@ -36,6 +36,12 @@ func TestCassandraConfigs_Load(t *testing.T) {
 			0,
 		},
 		{
+			"no issuer - etc dir",
+			authConfigTestData["no_issuer"],
+			require.Error,
+			1,
+		},
+		{
 			"bcrypt cost below 4 - etc dir",
 			authConfigTestData["bcrypt_cost_below_4"],
 			require.Error,
@@ -90,14 +96,17 @@ func TestCassandraConfigs_Load(t *testing.T) {
 
 			// Test configuring of environment variable.
 			testKey := xid.New().String()
-			testExpDur := 999
+			testExpDur := int64(999)
 			testBcryptCost := 16
+			testIssuer := "test issuer"
 			t.Setenv(keyspaceJwt+"KEY", testKey)
-			t.Setenv(keyspaceJwt+"EXPIRATION_DURATION", strconv.Itoa(testExpDur))
+			t.Setenv(keyspaceJwt+"ISSUER", testIssuer)
+			t.Setenv(keyspaceJwt+"EXPIRATION_DURATION", strconv.FormatInt(testExpDur, 10))
 			t.Setenv(keyspaceGen+"BCRYPT_COST", strconv.Itoa(testBcryptCost))
 			err = actual.Load(fs)
 			require.NoErrorf(t, err, "Failed to load constants file: %v", err)
 			require.Equalf(t, testKey, actual.JWTConfig.Key, "Failed to load key environment variable into configs")
+			require.Equalf(t, testIssuer, actual.JWTConfig.Issuer, "Failed to load issuer environment variable into configs")
 			require.Equalf(t, testExpDur, actual.JWTConfig.ExpirationDuration, "Failed to load duration environment variable into configs")
 			require.Equalf(t, testBcryptCost, actual.General.BcryptCost, "Failed to load bcrypt cost environment variable into configs")
 		})

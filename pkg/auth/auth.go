@@ -2,7 +2,9 @@ package auth
 
 import (
 	"errors"
+	"time"
 
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/spf13/afero"
 	"github.com/surahman/mcq-platform/pkg/logger"
 	"go.uber.org/zap"
@@ -61,4 +63,49 @@ func (a *authImpl) CheckPassword(hashed, plaintext string) (err error) {
 		return
 	}
 	return
+}
+
+// jwtClaim is used internally by the JWT generation and validation routines.
+type jwtClaim struct {
+	Username string `json:"username" yaml:"username"`
+	jwt.RegisteredClaims
+}
+
+// GenerateJWT creates a JWT with a payload consisting of the username.
+func (a *authImpl) GenerateJWT(username string) (tokenString string, err error) {
+	claims := &jwtClaim{
+		Username: username,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    a.conf.JWTConfig.Issuer,
+			ExpiresAt: jwt.NewNumericDate(time.Unix(a.conf.JWTConfig.ExpirationDuration, 0)),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err = token.SignedString(a.conf.JWTConfig.Key)
+
+	return
+}
+
+// ValidateJWT will validate a signed JWT.
+func (a *authImpl) ValidateJWT(signedToken string) error {
+	token, err := jwt.ParseWithClaims(signedToken, &jwtClaim{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(a.conf.JWTConfig.Key), nil
+	})
+	if err != nil {
+		return err
+	}
+
+	claims, ok := token.Claims.(*jwtClaim)
+	if !ok {
+		return errors.New("could not parse claims")
+	}
+
+	if claims.VerifyExpiresAt(time.Now(), true) {
+		return errors.New("token has expired")
+	}
+	if claims.VerifyIssuer(a.conf.JWTConfig.Issuer, true) {
+		return errors.New("unauthorized issuer")
+	}
+
+	return err
 }
