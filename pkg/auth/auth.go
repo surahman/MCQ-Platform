@@ -7,6 +7,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/spf13/afero"
 	"github.com/surahman/mcq-platform/pkg/logger"
+	"github.com/surahman/mcq-platform/pkg/model/http"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -18,6 +19,9 @@ import (
 type Auth interface {
 	HashPassword(string) (string, error)
 	CheckPassword(string, string) error
+	GenerateJWT(string) (*model_http.JWTAuthResponse, error)
+	ValidateJWT(string) error
+	UsernameFromJWT(string) (string, error)
 }
 
 // Check to ensure the Cassandra interface has been implemented.
@@ -71,19 +75,27 @@ type jwtClaim struct {
 	jwt.RegisteredClaims
 }
 
-// GenerateJWT creates a JWT with a payload consisting of the username.
-func (a *authImpl) GenerateJWT(username string) (tokenString string, err error) {
+// GenerateJWT creates a payload consisting of the JWT with the username as well as expiration time.
+func (a *authImpl) GenerateJWT(username string) (*model_http.JWTAuthResponse, error) {
 	claims := &jwtClaim{
 		Username: username,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    a.conf.JWTConfig.Issuer,
-			ExpiresAt: jwt.NewNumericDate(time.Unix(a.conf.JWTConfig.ExpirationDuration, 0)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(a.conf.JWTConfig.ExpirationDuration) * time.Second)),
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err = token.SignedString(a.conf.JWTConfig.Key)
+	tokenString, err := token.SignedString([]byte(a.conf.JWTConfig.Key))
+	if err != nil {
+		return nil, err
+	}
 
-	return
+	authResponse := &model_http.JWTAuthResponse{
+		Token:   tokenString,
+		Expires: claims.ExpiresAt.Time,
+	}
+
+	return authResponse, err
 }
 
 // ValidateJWT will validate a signed JWT.
@@ -108,4 +120,22 @@ func (a *authImpl) ValidateJWT(signedToken string) error {
 	}
 
 	return err
+}
+
+// UsernameFromJWT extracts the username from a JWT,
+func (a *authImpl) UsernameFromJWT(signedToken string) (string, error) {
+	claims := jwt.MapClaims{}
+	_, err := jwt.ParseWithClaims(signedToken, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(a.conf.JWTConfig.Key), nil
+	})
+	if err != nil {
+		return "", err
+	}
+
+	username, ok := claims["username"]
+	if !ok {
+		return "", errors.New("username not found")
+	}
+
+	return username.(string), nil
 }

@@ -2,6 +2,7 @@ package auth
 
 import (
 	"testing"
+	"time"
 
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
@@ -156,4 +157,16 @@ func TestAuthImpl_CheckPassword(t *testing.T) {
 			testCase.expectErr(t, err)
 		})
 	}
+}
+
+func TestAuthImpl_GenerateJWT(t *testing.T) {
+	userName := "test username"
+	authResponse, err := testAuth.GenerateJWT(userName)
+	require.NoError(t, err, "JWT creation failed")
+	require.True(t, authResponse.Expires.After(time.Now()), "JWT expires before current time")
+	require.True(t, authResponse.Expires.Before(time.Now().Add(time.Duration(expirationDuration+1)*time.Second)), "JWT expires after deadline")
+
+	actualUname, err := testAuth.UsernameFromJWT(authResponse.Token)
+	require.NoError(t, err, "failed to extract username from JWT")
+	require.Equalf(t, userName, actualUname, "incorrect username retrieved from JWT")
 }

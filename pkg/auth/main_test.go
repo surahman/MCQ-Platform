@@ -15,6 +15,9 @@ var testAuth Auth
 // authConfigTestData is a map of Authentication configuration test data.
 var authConfigTestData = configTestData()
 
+// expirationDuration is the time in seconds that a JWT will be valid for.
+var expirationDuration int64 = 10
+
 // zapLogger is the Zap logger used strictly for the test suite in this package.
 var zapLogger *logger.Logger
 
@@ -63,7 +66,7 @@ func getTestConfiguration() (auth *authImpl, err error) {
 		logger: zapLogger,
 	}
 	auth.conf.JWTConfig.Key = "encryption key for test suite"
-	auth.conf.JWTConfig.ExpirationDuration = 10
+	auth.conf.JWTConfig.ExpirationDuration = expirationDuration
 	auth.conf.General.BcryptCost = 4
 
 	return
