@@ -66,6 +66,7 @@ func getTestConfiguration() (auth *authImpl, err error) {
 		logger: zapLogger,
 	}
 	auth.conf.JWTConfig.Key = "encryption key for test suite"
+	auth.conf.JWTConfig.Issuer = "issuer for test suite"
 	auth.conf.JWTConfig.ExpirationDuration = expirationDuration
 	auth.conf.General.BcryptCost = 4
 

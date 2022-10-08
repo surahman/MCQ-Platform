@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/surahman/mcq-platform/pkg/constants"
 	"github.com/surahman/mcq-platform/pkg/logger"
+	"github.com/surahman/mcq-platform/pkg/model/http"
 )
 
 func TestNewAuth(t *testing.T) {
@@ -166,7 +167,51 @@ func TestAuthImpl_GenerateJWT(t *testing.T) {
 	require.True(t, authResponse.Expires.After(time.Now()), "JWT expires before current time")
 	require.True(t, authResponse.Expires.Before(time.Now().Add(time.Duration(expirationDuration+1)*time.Second)), "JWT expires after deadline")
 
+	// Check for username in claim.
 	actualUname, err := testAuth.UsernameFromJWT(authResponse.Token)
 	require.NoError(t, err, "failed to extract username from JWT")
 	require.Equalf(t, userName, actualUname, "incorrect username retrieved from JWT")
+
+	// Validate token.
+	require.NoError(t, testAuth.ValidateJWT(authResponse.Token), "failed to validate a valid token")
+}
+
+func TestValidateJWT(t *testing.T) {
+	var err error
+	var testAuthImpl *authImpl
+	var testJWT *model_http.JWTAuthResponse
+
+	// Testing for an invalid issuer.
+	testAuthImpl, err = getTestConfiguration()
+	require.NoError(t, err, "failed to generate test authorization for issuer")
+	testAuthImpl.conf.JWTConfig.Issuer = "an invalid issuer"
+	testJWT, err = testAuthImpl.GenerateJWT("test username")
+	require.NoError(t, err, "failed to create invalid issuer JWT")
+
+	err = testAuth.ValidateJWT(testJWT.Token)
+	require.Error(t, err, "validation of invalid issuer token should fail")
+	require.Contains(t, err.Error(), "issuer", "error should be about an invalid issuer")
+
+	// Test for expiration.
+	testAuthImpl, err = getTestConfiguration()
+	require.NoError(t, err, "failed to generate test authorization for expiration")
+	testAuthImpl.conf.JWTConfig.ExpirationDuration = 1
+	testJWT, err = testAuthImpl.GenerateJWT("test username")
+	require.NoError(t, err, "failed to create expiration JWT")
+
+	time.Sleep(time.Duration(testAuthImpl.conf.JWTConfig.ExpirationDuration+1) * time.Second)
+	err = testAuthImpl.ValidateJWT(testJWT.Token)
+	require.Error(t, err, "validation of expired token should fail")
+	require.Contains(t, err.Error(), "expired", "error should be about expiration")
+
+	// Test for claim parsing.
+	testAuthImpl, err = getTestConfiguration()
+	require.NoError(t, err, "failed to generate test authorization for expiration")
+
+	err = testAuthImpl.ValidateJWT("")
+	require.Error(t, err, "parsing an empty token should fail")
+
+	err = testAuthImpl.ValidateJWT("bad#token#string")
+	require.Error(t, err, "parsing and invalid token should fail")
+
 }
