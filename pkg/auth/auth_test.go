@@ -213,5 +213,22 @@ func TestValidateJWT(t *testing.T) {
 
 	err = testAuthImpl.ValidateJWT("bad#token#string")
 	require.Error(t, err, "parsing and invalid token should fail")
+}
+
+func TestUsernameFromJWT(t *testing.T) {
+	var err error
+
+	// Empty token.
+	_, err = testAuth.UsernameFromJWT("")
+	require.Error(t, err, "empty token sting should fail")
+
+	// Valid token.
+	username := "test username"
+	token, err := testAuth.GenerateJWT(username)
+	require.NoError(t, err, "failed to generate test token")
+	var actualUsername string
+	actualUsername, err = testAuth.UsernameFromJWT(token.Token)
+	require.NoError(t, err, "failed to extract username from valid token")
+	require.Equal(t, username, actualUsername, "expected and actual username do not match")
 
 }
