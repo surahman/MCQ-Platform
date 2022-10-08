@@ -22,6 +22,7 @@ type Auth interface {
 	GenerateJWT(string) (*model_http.JWTAuthResponse, error)
 	ValidateJWT(string) error
 	UsernameFromJWT(string) (string, error)
+	RefreshJWT(string) (*model_http.JWTAuthResponse, error)
 }
 
 // Check to ensure the Cassandra interface has been implemented.
@@ -138,4 +139,21 @@ func (a *authImpl) UsernameFromJWT(signedToken string) (string, error) {
 	}
 
 	return username.(string), nil
+}
+
+// RefreshJWT will extend a valid JWT's lease by generating a fresh valid JWT.
+func (a *authImpl) RefreshJWT(token string) (authResponse *model_http.JWTAuthResponse, err error) {
+	if err = a.ValidateJWT(token); err != nil {
+		return
+	}
+
+	var username string
+	if username, err = a.UsernameFromJWT(token); err != nil {
+		return
+	}
+	if authResponse, err = a.GenerateJWT(username); err != nil {
+		return
+	}
+
+	return
 }

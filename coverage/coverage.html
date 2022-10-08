@@ -3,7 +3,7 @@
 <html>
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-		<title>cassandra: Go Coverage Report</title>
+		<title>auth: Go Coverage Report</title>
 		<style>
 			body {
 				background: black;
@@ -55,25 +55,31 @@
 			<div id="nav">
 				<select id="files">
 				
-				<option value="file0">github.com/surahman/mcq-platform/pkg/cassandra/cassandra.go (87.2%)</option>
+				<option value="file0">github.com/surahman/mcq-platform/pkg/auth/auth.go (86.5%)</option>
 				
-				<option value="file1">github.com/surahman/mcq-platform/pkg/cassandra/cassandra_queries.go (85.6%)</option>
+				<option value="file1">github.com/surahman/mcq-platform/pkg/auth/config.go (93.8%)</option>
 				
-				<option value="file2">github.com/surahman/mcq-platform/pkg/cassandra/config.go (93.8%)</option>
+				<option value="file2">github.com/surahman/mcq-platform/pkg/auth/testdata.go (100.0%)</option>
 				
-				<option value="file3">github.com/surahman/mcq-platform/pkg/cassandra/testdata.go (90.4%)</option>
+				<option value="file3">github.com/surahman/mcq-platform/pkg/cassandra/cassandra.go (87.2%)</option>
 				
-				<option value="file4">github.com/surahman/mcq-platform/pkg/constants/constants.go (100.0%)</option>
+				<option value="file4">github.com/surahman/mcq-platform/pkg/cassandra/cassandra_queries.go (85.6%)</option>
 				
-				<option value="file5">github.com/surahman/mcq-platform/pkg/logger/config.go (78.9%)</option>
+				<option value="file5">github.com/surahman/mcq-platform/pkg/cassandra/config.go (93.8%)</option>
 				
-				<option value="file6">github.com/surahman/mcq-platform/pkg/logger/logger.go (73.6%)</option>
+				<option value="file6">github.com/surahman/mcq-platform/pkg/cassandra/testdata.go (90.4%)</option>
 				
-				<option value="file7">github.com/surahman/mcq-platform/pkg/logger/testdata.go (100.0%)</option>
+				<option value="file7">github.com/surahman/mcq-platform/pkg/constants/constants.go (100.0%)</option>
 				
-				<option value="file8">github.com/surahman/mcq-platform/pkg/model/cassandra/user.go (100.0%)</option>
+				<option value="file8">github.com/surahman/mcq-platform/pkg/logger/config.go (78.9%)</option>
 				
-				<option value="file9">github.com/surahman/mcq-platform/pkg/validator/validator.go (72.0%)</option>
+				<option value="file9">github.com/surahman/mcq-platform/pkg/logger/logger.go (73.6%)</option>
+				
+				<option value="file10">github.com/surahman/mcq-platform/pkg/logger/testdata.go (100.0%)</option>
+				
+				<option value="file11">github.com/surahman/mcq-platform/pkg/model/cassandra/user.go (100.0%)</option>
+				
+				<option value="file12">github.com/surahman/mcq-platform/pkg/validator/validator.go (72.0%)</option>
 				
 				</select>
 			</div>
@@ -96,7 +102,289 @@
 		</div>
 		<div id="content">
 		
-		<pre class="file" id="file0" style="display: none">package cassandra
+		<pre class="file" id="file0" style="display: none">package auth
+
+import (
+        "errors"
+        "time"
+
+        "github.com/golang-jwt/jwt/v4"
+        "github.com/spf13/afero"
+        "github.com/surahman/mcq-platform/pkg/logger"
+        "github.com/surahman/mcq-platform/pkg/model/http"
+        "go.uber.org/zap"
+        "golang.org/x/crypto/bcrypt"
+)
+
+// Mock Auth interface stub generation.
+//go:generate mockgen -destination=../mocks/mock_auth.go -package=mocks github.com/surahman/mcq-platform/pkg/auth Auth
+
+// Auth is the interface through which the cluster can be accessed. Created to support mock testing.
+type Auth interface {
+        HashPassword(string) (string, error)
+        CheckPassword(string, string) error
+        GenerateJWT(string) (*model_http.JWTAuthResponse, error)
+        ValidateJWT(string) error
+        UsernameFromJWT(string) (string, error)
+        RefreshJWT(string) (*model_http.JWTAuthResponse, error)
+}
+
+// Check to ensure the Cassandra interface has been implemented.
+var _ Auth = &amp;authImpl{}
+
+// authImpl implements the Auth interface and contains the logic for authorization functionality.
+type authImpl struct {
+        conf   *config
+        logger *logger.Logger
+}
+
+// NewAuth will create a new Authorization configuration by loading it.
+func NewAuth(fs *afero.Fs, logger *logger.Logger) (Auth, error) <span class="cov8" title="6">{
+        if fs == nil || logger == nil </span><span class="cov5" title="3">{
+                return nil, errors.New("nil file system of logger supplied")
+        }</span>
+        <span class="cov5" title="3">return newAuthImpl(fs, logger)</span>
+}
+
+// newAuthImpl will create a new authImpl configuration and load it from disk.
+func newAuthImpl(fs *afero.Fs, logger *logger.Logger) (a *authImpl, err error) <span class="cov5" title="3">{
+        a = &amp;authImpl{conf: newConfig(), logger: logger}
+        if err = a.conf.Load(*fs); err != nil </span><span class="cov1" title="1">{
+                a.logger.Error("failed to load Authorization configurations from disk", zap.Error(err))
+                return nil, err
+        }</span>
+        <span class="cov3" title="2">return</span>
+}
+
+// HashPassword hashes a password using the Bcrypt algorithm to avoid plaintext storage.
+func (a *authImpl) HashPassword(plaintext string) (hashed string, err error) <span class="cov3" title="2">{
+        var bytes []byte
+        if bytes, err = bcrypt.GenerateFromPassword([]byte(plaintext), a.conf.General.BcryptCost); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+        <span class="cov3" title="2">hashed = string(bytes)
+        return</span>
+}
+
+// CheckPassword checks a hashed password against a plaintext password using the Bcrypt algorithm.
+func (a *authImpl) CheckPassword(hashed, plaintext string) (err error) <span class="cov5" title="3">{
+        if err = bcrypt.CompareHashAndPassword([]byte(hashed), []byte(plaintext)); err != nil </span><span class="cov1" title="1">{
+                return
+        }</span>
+        <span class="cov3" title="2">return</span>
+}
+
+// jwtClaim is used internally by the JWT generation and validation routines.
+type jwtClaim struct {
+        Username string `json:"username" yaml:"username"`
+        jwt.RegisteredClaims
+}
+
+// GenerateJWT creates a payload consisting of the JWT with the username as well as expiration time.
+func (a *authImpl) GenerateJWT(username string) (*model_http.JWTAuthResponse, error) <span class="cov8" title="7">{
+        claims := &amp;jwtClaim{
+                Username: username,
+                RegisteredClaims: jwt.RegisteredClaims{
+                        Issuer:    a.conf.JWTConfig.Issuer,
+                        ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(a.conf.JWTConfig.ExpirationDuration) * time.Second)),
+                },
+        }
+        token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+        tokenString, err := token.SignedString([]byte(a.conf.JWTConfig.Key))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="7">authResponse := &amp;model_http.JWTAuthResponse{
+                Token:   tokenString,
+                Expires: claims.ExpiresAt.Time,
+        }
+
+        return authResponse, err</span>
+}
+
+// ValidateJWT will validate a signed JWT.
+func (a *authImpl) ValidateJWT(signedToken string) error <span class="cov10" title="9">{
+        token, err := jwt.ParseWithClaims(signedToken, &amp;jwtClaim{}, func(token *jwt.Token) (interface{}, error) </span><span class="cov8" title="7">{
+                return []byte(a.conf.JWTConfig.Key), nil
+        }</span>)
+        <span class="cov10" title="9">if err != nil </span><span class="cov6" title="4">{
+                return err
+        }</span>
+
+        <span class="cov7" title="5">claims, ok := token.Claims.(*jwtClaim)
+        if !ok </span><span class="cov0" title="0">{
+                return errors.New("could not parse claims")
+        }</span>
+
+        <span class="cov7" title="5">if !claims.VerifyExpiresAt(time.Now(), true) </span><span class="cov0" title="0">{
+                return errors.New("token has expired")
+        }</span>
+        <span class="cov7" title="5">if !claims.VerifyIssuer(a.conf.JWTConfig.Issuer, true) </span><span class="cov1" title="1">{
+                return errors.New("unauthorized issuer")
+        }</span>
+
+        <span class="cov6" title="4">return err</span>
+}
+
+// UsernameFromJWT extracts the username from a JWT,
+func (a *authImpl) UsernameFromJWT(signedToken string) (string, error) <span class="cov7" title="5">{
+        claims := jwt.MapClaims{}
+        _, err := jwt.ParseWithClaims(signedToken, claims, func(token *jwt.Token) (interface{}, error) </span><span class="cov6" title="4">{
+                return []byte(a.conf.JWTConfig.Key), nil
+        }</span>)
+        <span class="cov7" title="5">if err != nil </span><span class="cov1" title="1">{
+                return "", err
+        }</span>
+
+        <span class="cov6" title="4">username, ok := claims["username"]
+        if !ok </span><span class="cov0" title="0">{
+                return "", errors.New("username not found")
+        }</span>
+
+        <span class="cov6" title="4">return username.(string), nil</span>
+}
+
+// RefreshJWT will extend a valid JWT's lease by generating a fresh valid JWT.
+func (a *authImpl) RefreshJWT(token string) (authResponse *model_http.JWTAuthResponse, err error) <span class="cov3" title="2">{
+        if err = a.ValidateJWT(token); err != nil </span><span class="cov1" title="1">{
+                return
+        }</span>
+
+        <span class="cov1" title="1">var username string
+        if username, err = a.UsernameFromJWT(token); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+        <span class="cov1" title="1">if authResponse, err = a.GenerateJWT(username); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov1" title="1">return</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package auth
+
+import (
+        "github.com/spf13/afero"
+        "github.com/spf13/viper"
+        "github.com/surahman/mcq-platform/pkg/constants"
+        "github.com/surahman/mcq-platform/pkg/validator"
+)
+
+// Config contains all the configurations for authentication.
+type config struct {
+        JWTConfig struct {
+                Key                string `json:"key,omitempty" yaml:"key,omitempty" mapstructure:"key" validate:"required,min=8,max=256"`
+                Issuer             string `json:"issuer,omitempty" yaml:"issuer,omitempty" mapstructure:"issuer" validate:"required"`
+                ExpirationDuration int64  `json:"expiration_duration,omitempty" yaml:"expiration_duration,omitempty" mapstructure:"expiration_duration" validate:"required,min=10"`
+        } `json:"jwt,omitempty" yaml:"jwt,omitempty" mapstructure:"jwt" validate:"required"`
+        General struct {
+                BcryptCost int `json:"bcrypt_cost,omitempty" yaml:"bcrypt_cost,omitempty" mapstructure:"bcrypt_cost" validate:"required,min=4,max=31"`
+        } `json:"general,omitempty" yaml:"general,omitempty" mapstructure:"general" validate:"required"`
+}
+
+// newConfig creates a blank configuration struct for authorization.
+func newConfig() *config <span class="cov4" title="3">{
+        return &amp;config{}
+}</span>
+
+// Load will attempt to load configurations from a file on a file system and then overwrite values using environment variables.
+func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="12">{
+        viper.SetFs(fs)
+        viper.SetConfigName(constants.GetAuthFileName())
+        viper.SetConfigType("yaml")
+        viper.AddConfigPath(constants.GetEtcDir())
+        viper.AddConfigPath(constants.GetHomeDir())
+        viper.AddConfigPath(".")
+
+        viper.SetEnvPrefix(constants.GetAuthPrefix())
+        viper.AutomaticEnv()
+
+        if err = viper.ReadInConfig(); err != nil </span><span class="cov1" title="1">{
+                return
+        }</span>
+
+        <span class="cov9" title="11">if err = viper.Unmarshal(cfg); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov9" title="11">if err = validator.ValidateStruct(cfg); err != nil </span><span class="cov8" title="7">{
+                return
+        }</span>
+
+        <span class="cov6" title="4">return</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package auth
+
+// configTestData will return a map of test data containing valid and invalid Authorization configs.
+func configTestData() map[string]string <span class="cov8" title="1">{
+        testData := make(map[string]string)
+
+        testData["empty"] = ``
+
+        testData["valid"] = `
+jwt:
+  key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
+  issuer: MCQ Platform
+  expiration_duration: 600
+general:
+  bcrypt_cost: 8`
+
+        testData["no_issuer"] = `
+jwt:
+  key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
+  expiration_duration: 600
+general:
+  bcrypt_cost: 8`
+
+        testData["bcrypt_cost_below_4"] = `
+jwt:
+  key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
+  issuer: MCQ Platform
+  expiration_duration: 600
+general:
+  bcrypt_cost: 2`
+
+        testData["bcrypt_cost_above_31"] = `
+jwt:
+  key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
+  issuer: MCQ Platform
+  expiration_duration: 600
+general:
+  bcrypt_cost: 32`
+
+        testData["jwt_expiration_below_10s"] = `
+jwt:
+  key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
+  issuer: MCQ Platform
+  expiration_duration: 5
+general:
+  bcrypt_cost: 8`
+
+        testData["jwt_key_below_8"] = `
+jwt:
+  key: kYzJdnp
+  issuer: MCQ Platform
+  expiration_duration: 600
+general:
+  bcrypt_cost: 8`
+
+        testData["jwt_key_above_256"] = `
+jwt:
+  key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9UkYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9UkYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9UkYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9UkYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5
+  issuer: MCQ Platform
+  expiration_duration: 600
+general:
+  bcrypt_cost: 8`
+
+        return testData
+}</span>
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package cassandra
 
 import (
         "errors"
@@ -123,10 +411,10 @@ type Cassandra interface {
 }
 
 // Check to ensure the Cassandra interface has been implemented.
-var _ Cassandra = &amp;CassandraImpl{}
+var _ Cassandra = &amp;cassandraImpl{}
 
 // CassandraImpl implements the Cassandra interface and contains the logic to interface with the cluster.
-type CassandraImpl struct {
+type cassandraImpl struct {
         conf    *config
         session *gocql.Session
         logger  *logger.Logger
@@ -141,17 +429,17 @@ func NewCassandra(fs *afero.Fs, logger *logger.Logger) (Cassandra, error) <span 
 }
 
 // newCassandraImpl will create a new CassandraImpl configuration and load it from disk.
-func newCassandraImpl(fs *afero.Fs, logger *logger.Logger) (c *CassandraImpl, err error) <span class="cov5" title="7">{
-        c = &amp;CassandraImpl{conf: newConfig(), logger: logger}
+func newCassandraImpl(fs *afero.Fs, logger *logger.Logger) (c *cassandraImpl, err error) <span class="cov5" title="7">{
+        c = &amp;cassandraImpl{conf: newConfig(), logger: logger}
         if err = c.conf.Load(*fs); err != nil </span><span class="cov1" title="1">{
-                c.logger.Error("failed to load Cassandra constants from disk", zap.Error(err))
+                c.logger.Error("failed to load Cassandra configurations from disk", zap.Error(err))
                 return nil, err
         }</span>
         <span class="cov4" title="6">return</span>
 }
 
 // Open will start a database connection pool and establish a connection.
-func (c *CassandraImpl) Open() (err error) <span class="cov3" title="3">{
+func (c *cassandraImpl) Open() (err error) <span class="cov3" title="3">{
         // Stop connection leaks.
         if err = c.verifySession(); err == nil </span><span class="cov1" title="1">{
                 c.logger.Warn("session to cluster is already established")
@@ -175,7 +463,7 @@ func (c *CassandraImpl) Open() (err error) <span class="cov3" title="3">{
 }
 
 // Close the CassandraImpl cluster connection.
-func (c *CassandraImpl) Close() error <span class="cov3" title="4">{
+func (c *cassandraImpl) Close() error <span class="cov3" title="4">{
         if err := c.verifySession(); err != nil </span><span class="cov2" title="2">{
                 return err
         }</span>
@@ -184,12 +472,12 @@ func (c *CassandraImpl) Close() error <span class="cov3" title="4">{
 }
 
 // Execute wraps the methods that create, read, update, and delete records from tables on the Cassandra cluster.
-func (c *CassandraImpl) Execute(request func(Cassandra, any) (any, error), params any) (any, error) <span class="cov10" title="74">{
+func (c *cassandraImpl) Execute(request func(Cassandra, any) (any, error), params any) (any, error) <span class="cov10" title="74">{
         return request(c, params)
 }</span>
 
 // configureCluster will configure the settings for the Cassandra cluster.
-func (c *CassandraImpl) configureCluster() (cluster *gocql.ClusterConfig, err error) <span class="cov3" title="3">{
+func (c *cassandraImpl) configureCluster() (cluster *gocql.ClusterConfig, err error) <span class="cov3" title="3">{
         cluster = gocql.NewCluster(c.conf.Connection.ClusterIP...)
         cluster.ProtoVersion = c.conf.Connection.ProtoVersion
         cluster.ConnectTimeout = time.Duration(c.conf.Connection.Timeout) * time.Second
@@ -207,7 +495,7 @@ func (c *CassandraImpl) configureCluster() (cluster *gocql.ClusterConfig, err er
 }
 
 // verifySession will check to see if a session is established.
-func (c *CassandraImpl) verifySession() error <span class="cov5" title="8">{
+func (c *cassandraImpl) verifySession() error <span class="cov5" title="8">{
         if c.session == nil || c.session.Closed() </span><span class="cov4" title="5">{
                 return errors.New("no session established")
         }</span>
@@ -215,9 +503,9 @@ func (c *CassandraImpl) verifySession() error <span class="cov5" title="8">{
 }
 
 // createSessionRetry will attempt to open the connection using binary exponential back-off and stop on the first success or fail after the last one.
-func (c *CassandraImpl) createSessionRetry(cluster *gocql.ClusterConfig) (err error) <span class="cov3" title="4">{
+func (c *cassandraImpl) createSessionRetry(cluster *gocql.ClusterConfig) (err error) <span class="cov3" title="4">{
         maxAttempts := constants.GetCassandraMaxConnectRetries()
-        for attempt := 1; attempt &lt;= maxAttempts; attempt++ </span><span class="cov3" title="4">{
+        for attempt := 1; attempt &lt;= maxAttempts; attempt++ </span><span class="cov4" title="6">{
                 waitTime := time.Duration(math.Pow(2, float64(attempt))) * time.Second
                 c.logger.Info(fmt.Sprintf("Attempting connection to Cassandra cluster in %s...", waitTime), zap.String("attempt", strconv.Itoa(attempt)))
                 time.Sleep(waitTime)
@@ -232,7 +520,7 @@ func (c *CassandraImpl) createSessionRetry(cluster *gocql.ClusterConfig) (err er
 }
 </pre>
 		
-		<pre class="file" id="file1" style="display: none">package cassandra
+		<pre class="file" id="file4" style="display: none">package cassandra
 
 import (
         "errors"
@@ -246,7 +534,7 @@ import (
 // truncateTableQuery will empty a table.
 // param: name of the table
 func truncateTableQuery(c Cassandra, params any) (response any, err error) <span class="cov7" title="11">{
-        conn := c.(*CassandraImpl)
+        conn := c.(*cassandraImpl)
         tableName := params.(string)
         if err = conn.session.Query(fmt.Sprintf("TRUNCATE TABLE %s;", tableName)).Exec(); err != nil </span><span class="cov0" title="0">{
                 conn.logger.Error("failed to truncate table", zap.String("table name", tableName), zap.Error(err))
@@ -260,7 +548,7 @@ func truncateTableQuery(c Cassandra, params any) (response any, err error) <span
 // CreateUserQuery will insert a user record into the users table.
 // Param: pointer to the user struct containing the query parameters
 func CreateUserQuery(c Cassandra, params any) (response any, err error) <span class="cov8" title="17">{
-        conn := c.(*CassandraImpl)
+        conn := c.(*cassandraImpl)
         input := params.(*model_cassandra.User)
 
         // Create hash of username using Blake2b 256 hashing algorithm.
@@ -289,7 +577,7 @@ func CreateUserQuery(c Cassandra, params any) (response any, err error) <span cl
 // Param: pointer to the user struct containing the query parameters
 // Return: address to a user record
 func ReadUserQuery(c Cassandra, params any) (response any, err error) <span class="cov5" title="5">{
-        conn := c.(*CassandraImpl)
+        conn := c.(*cassandraImpl)
         input := params.(*model_cassandra.User)
         resp := model_cassandra.User{UserAccount: &amp;model_cassandra.UserAccount{}}
 
@@ -308,7 +596,7 @@ func ReadUserQuery(c Cassandra, params any) (response any, err error) <span clas
 // DeleteUserQuery will mark a user record as deleted in the users table.
 // Param: pointer to the user struct containing the query parameters
 func DeleteUserQuery(c Cassandra, params any) (response any, err error) <span class="cov5" title="5">{
-        conn := c.(*CassandraImpl)
+        conn := c.(*cassandraImpl)
         input := params.(*model_cassandra.User)
 
         // Create hash of username using Blake2b 256 hashing algorithm.
@@ -337,7 +625,7 @@ func DeleteUserQuery(c Cassandra, params any) (response any, err error) <span cl
 // CreateQuizQuery will create a quiz record in the quizzes table.
 // Param: pointer to the quiz struct containing the query parameters
 func CreateQuizQuery(c Cassandra, params any) (response any, err error) <span class="cov10" title="30">{
-        conn := c.(*CassandraImpl)
+        conn := c.(*cassandraImpl)
         input := params.(*model_cassandra.Quiz)
 
         resp := model_cassandra.Quiz{QuizCore: &amp;model_cassandra.QuizCore{}} // Discarded, only used as container for Cassandra response.
@@ -363,7 +651,7 @@ func CreateQuizQuery(c Cassandra, params any) (response any, err error) <span cl
 // Param: quiz id
 // Return: address to a quiz record
 func ReadQuizQuery(c Cassandra, params any) (response any, err error) <span class="cov9" title="21">{
-        conn := c.(*CassandraImpl)
+        conn := c.(*cassandraImpl)
         input := params.(gocql.UUID)
         resp := model_cassandra.Quiz{QuizCore: &amp;model_cassandra.QuizCore{}}
 
@@ -378,7 +666,7 @@ func ReadQuizQuery(c Cassandra, params any) (response any, err error) <span clas
 // UpdateQuizQuery will update a quiz record in the quizzes table.
 // Param: pointer to the quiz struct containing the query parameters
 func UpdateQuizQuery(c Cassandra, params any) (response any, err error) <span class="cov5" title="6">{
-        conn := c.(*CassandraImpl)
+        conn := c.(*cassandraImpl)
         input := params.(*model_cassandra.Quiz)
         resp := model_cassandra.Quiz{QuizCore: &amp;model_cassandra.QuizCore{}}
 
@@ -401,7 +689,7 @@ func UpdateQuizQuery(c Cassandra, params any) (response any, err error) <span cl
 // DeleteQuizQuery will mark a quiz record as deleted in the quizzes table.
 // Param: quiz id
 func DeleteQuizQuery(c Cassandra, params any) (response any, err error) <span class="cov5" title="6">{
-        conn := c.(*CassandraImpl)
+        conn := c.(*cassandraImpl)
         input := params.(gocql.UUID)
         resp := model_cassandra.Quiz{QuizCore: &amp;model_cassandra.QuizCore{}}
 
@@ -424,7 +712,7 @@ func DeleteQuizQuery(c Cassandra, params any) (response any, err error) <span cl
 // PublishQuizQuery will mark a quiz record as published in the quizzes table.
 // Param: quiz id
 func PublishQuizQuery(c Cassandra, params any) (response any, err error) <span class="cov5" title="6">{
-        conn := c.(*CassandraImpl)
+        conn := c.(*cassandraImpl)
         input := params.(gocql.UUID)
         resp := model_cassandra.Quiz{QuizCore: &amp;model_cassandra.QuizCore{}}
 
@@ -449,7 +737,7 @@ func PublishQuizQuery(c Cassandra, params any) (response any, err error) <span c
 // CreateResponseQuery will insert a response record into the responses table.
 // Param: pointer to the user struct containing the response parameters
 func CreateResponseQuery(c Cassandra, params any) (response any, err error) <span class="cov8" title="16">{
-        conn := c.(*CassandraImpl)
+        conn := c.(*cassandraImpl)
         input := params.(*model_cassandra.Response)
 
         resp := model_cassandra.Response{QuizResponse: &amp;model_cassandra.QuizResponse{}} // Discarded, only used as container for Cassandra response.
@@ -475,7 +763,7 @@ func CreateResponseQuery(c Cassandra, params any) (response any, err error) <spa
 // Param: pointer to the response struct containing the query parameters
 // Return: address to a response record
 func ReadResponseQuery(c Cassandra, params any) (response any, err error) <span class="cov5" title="5">{
-        conn := c.(*CassandraImpl)
+        conn := c.(*cassandraImpl)
         input := params.(*model_cassandra.Response)
         resp := model_cassandra.Response{QuizResponse: &amp;model_cassandra.QuizResponse{}}
 
@@ -492,7 +780,7 @@ func ReadResponseQuery(c Cassandra, params any) (response any, err error) <span 
 // Param: QuizID gocql UUID
 // Return: address to slice of responses
 func ReadResponseStatisticsQuery(c Cassandra, params any) (response any, err error) <span class="cov5" title="5">{
-        conn := c.(*CassandraImpl)
+        conn := c.(*cassandraImpl)
         input := params.(gocql.UUID)
         var results []*model_cassandra.Response
 
@@ -519,7 +807,7 @@ func ReadResponseStatisticsQuery(c Cassandra, params any) (response any, err err
 }
 </pre>
 		
-		<pre class="file" id="file2" style="display: none">package cassandra
+		<pre class="file" id="file5" style="display: none">package cassandra
 
 import (
         "github.com/spf13/afero"
@@ -580,7 +868,7 @@ func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="16">
 }
 </pre>
 		
-		<pre class="file" id="file3" style="display: none">package cassandra
+		<pre class="file" id="file6" style="display: none">package cassandra
 
 import (
         "fmt"
@@ -848,7 +1136,7 @@ func GetTestResponses() map[string]*model_cassandra.Response <span class="cov1" 
 }</span>
 </pre>
 		
-		<pre class="file" id="file4" style="display: none">package constants
+		<pre class="file" id="file7" style="display: none">package constants
 
 const (
         // Configuration file directories
@@ -858,11 +1146,13 @@ const (
         // Configuration file names
         cassandraConfigFileName = "CassandraConfig.yaml"
         loggerConfigFileName    = "LoggerConfig.yaml"
+        authConfigFileName      = "AuthConfig.yaml"
 
         // Environment variables
         cassandraPrefix = "CASSANDRA"
         loggerPrefix    = "LOGGER"
         githubCIKey     = "GITHUB_ACTIONS_CI"
+        authPrefix      = "AUTH"
 
         // Misc.
         integrationTestKeyspaceSuffix = "_integration_testing"
@@ -889,6 +1179,11 @@ func GetLoggerFileName() string <span class="cov8" title="1">{
         return loggerConfigFileName
 }</span>
 
+// GetAuthFileName returns the authentication configuration file name.
+func GetAuthFileName() string <span class="cov8" title="1">{
+        return authConfigFileName
+}</span>
+
 // GetCassandraPrefix returns the environment variable prefix for Cassandra.
 func GetCassandraPrefix() string <span class="cov8" title="1">{
         return cassandraPrefix
@@ -897,6 +1192,11 @@ func GetCassandraPrefix() string <span class="cov8" title="1">{
 // GetLoggerPrefix returns the environment variable prefix for the Zap logger.
 func GetLoggerPrefix() string <span class="cov8" title="1">{
         return loggerPrefix
+}</span>
+
+// GetAuthPrefix returns the environment variable prefix for authentication.
+func GetAuthPrefix() string <span class="cov8" title="1">{
+        return authPrefix
 }</span>
 
 // GetIntegrationTestKeyspaceSuffix is the suffix attached to the clusters keyspace and is used for integration tests.
@@ -915,7 +1215,7 @@ func GetGithubCIKey() string <span class="cov8" title="1">{
 }</span>
 </pre>
 		
-		<pre class="file" id="file5" style="display: none">package logger
+		<pre class="file" id="file8" style="display: none">package logger
 
 import (
         "github.com/spf13/afero"
@@ -994,7 +1294,7 @@ func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="13">
 }
 </pre>
 		
-		<pre class="file" id="file6" style="display: none">package logger
+		<pre class="file" id="file9" style="display: none">package logger
 
 import (
         "errors"
@@ -1133,7 +1433,7 @@ func NewTestLogger() (logger *Logger, err error) <span class="cov1" title="1">{
 }
 </pre>
 		
-		<pre class="file" id="file7" style="display: none">package logger
+		<pre class="file" id="file10" style="display: none">package logger
 
 // configTestData will return a map of test data containing valid and invalid logger configs.
 func configTestData() map[string]string <span class="cov8" title="1">{
@@ -1179,7 +1479,7 @@ encoder_config:
 }</span>
 </pre>
 		
-		<pre class="file" id="file8" style="display: none">package model_cassandra
+		<pre class="file" id="file11" style="display: none">package model_cassandra
 
 import (
         "encoding/base64"
@@ -1210,7 +1510,7 @@ func Blake2b256(data string) string <span class="cov10" title="3">{
 }</span>
 </pre>
 		
-		<pre class="file" id="file9" style="display: none">package validator
+		<pre class="file" id="file12" style="display: none">package validator
 
 import (
         "bytes"
