@@ -112,7 +112,7 @@ func (a *authImpl) ValidateJWT(signedToken string) error {
 		return errors.New("could not parse claims")
 	}
 
-	if claims.VerifyExpiresAt(time.Now().Add(time.Duration(a.conf.JWTConfig.ExpirationDuration)*time.Second), true) {
+	if !claims.VerifyExpiresAt(time.Now(), true) {
 		return errors.New("token has expired")
 	}
 	if !claims.VerifyIssuer(a.conf.JWTConfig.Issuer, true) {
