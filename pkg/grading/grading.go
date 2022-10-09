@@ -36,93 +36,98 @@ func newGradingImpl() *gradingImpl {
 
 // Grade will mark a quiz response based on the marking type and answer key in the question.
 func (g *gradingImpl) Grade(response *model_cassandra.QuizResponse, quiz *model_cassandra.QuizCore) (float64, error) {
+	total := 0.0
+
+	// Configure the grading function.
+	var gradingFunc func([]int32, map[int32]any, int) float64
 	switch strings.ToLower(quiz.MarkingType) {
 	case "negative":
-		return negative(response, quiz)
+		gradingFunc = negativeMarking
+	case "non-negative":
+		gradingFunc = nonNegativeMarking
 	case "binary":
-		return binary(response, quiz)
+		gradingFunc = binaryMarking
 	case "none":
 		return math.NaN(), nil
 	default:
 		return math.NaN(), errors.New("invalid marking type")
 	}
+
+	for idx, responses := range response.Responses {
+		answerKey := make(map[int32]any)
+		for _, val := range quiz.Questions[idx].Answers {
+			answerKey[val] = nil
+		}
+
+		// Only one answer permitted but multiple provided.
+		if len(answerKey) == 1 && len(responses) > 1 {
+			errMsg := fmt.Sprintf("only one answer is permitted for: %v", quiz.Questions[idx].Description)
+			return math.NaN(), errors.New(errMsg)
+		}
+
+		// Grade question.
+		total += gradingFunc(responses, answerKey, len(quiz.Questions[idx].Options))
+	}
+
+	return total, nil
 }
 
-// negative will validate a result and employ negative marking.
+// negativeMarking will grade a question by employing negative marking.
 // Marks per question:
-// [Correct] 1 / correct options
+// [Correct] +1 / correct options
 // [Wrong] -1 / incorrect options
 // Questions with 1 correct option should disallow multiple selection.
-func negative(response *model_cassandra.QuizResponse, quiz *model_cassandra.QuizCore) (float64, error) {
-	total := 0.0
+func negativeMarking(responses []int32, answerKey map[int32]any, numOptions int) float64 {
+	totalOptions := numOptions
+	correctWeight := float64(len(answerKey))
+	incorrectWeight := math.Max(float64(totalOptions)-correctWeight, 1.0) // Division by zero: 1 option for a question results in 0 incorrectResponses.
+	correctResponses := 0.0
+	incorrectResponses := 0.0
 
-	for idx, responses := range response.Responses {
-		answerKey := make(map[int32]any)
-		for _, val := range quiz.Questions[idx].Answers {
-			answerKey[val] = nil
+	// Loop over answers and check if they exist.
+	for _, val := range responses {
+		if _, ok := answerKey[val]; ok {
+			correctResponses++
+		} else {
+			incorrectResponses++
 		}
-
-		// Only one answer permitted but multiple provided.
-		if len(answerKey) == 1 && len(responses) > 1 {
-			errMsg := fmt.Sprintf("only one answer is permitted for: %v", quiz.Questions[idx].Description)
-			return math.NaN(), errors.New(errMsg)
-		}
-
-		// Calculate the total score.
-		totalOptions := len(quiz.Questions[idx].Options)
-		correctWeight := float64(len(answerKey))
-		incorrectWeight := math.Max(float64(totalOptions)-correctWeight, 1.0) // Division by zero: 1 option for a question results in 0 incorrectResponses.
-		correctResponses := 0.0
-		incorrectResponses := 0.0
-
-		// Loop over answers and check if they exist.
-		for _, val := range responses {
-			if _, ok := answerKey[val]; ok {
-				correctResponses++
-			} else {
-				incorrectResponses++
-			}
-		}
-
-		correctScore := (1.0 / correctWeight) * correctResponses
-		incorrectScore := (1.0 / incorrectWeight) * incorrectResponses
-		total += correctScore - incorrectScore
 	}
 
-	return total, nil
+	correctScore := (1.0 / correctWeight) * correctResponses
+	incorrectScore := (1.0 / incorrectWeight) * incorrectResponses
+	return correctScore - incorrectScore
 }
 
-// binary will validate a result and employ all-or-nothing marking.
-// Questions with 1 correct option should disallow multiple selection.
-func binary(response *model_cassandra.QuizResponse, quiz *model_cassandra.QuizCore) (float64, error) {
-	total := 0.0
+// nonNegativeMarking will grade a question by employing non-negative marking and award partial grades.
+// Marks per question:
+// [Correct] +1 / correct options
+func nonNegativeMarking(responses []int32, answerKey map[int32]any, _ int) float64 {
+	correctWeight := float64(len(answerKey))
+	correctResponses := 0.0
 
-	for idx, responses := range response.Responses {
-		answerKey := make(map[int32]any)
-		for _, val := range quiz.Questions[idx].Answers {
-			answerKey[val] = nil
-		}
-
-		// Only one answer permitted but multiple provided.
-		if len(answerKey) == 1 && len(responses) > 1 {
-			errMsg := fmt.Sprintf("only one answer is permitted for: %v", quiz.Questions[idx].Description)
-			return math.NaN(), errors.New(errMsg)
-		}
-
-		// Calculate the total score.
-		correctResponses := 0
-
-		// Loop over answers and check if they exist.
-		for _, val := range responses {
-			if _, ok := answerKey[val]; ok {
-				correctResponses++
-			}
-		}
-
-		if correctResponses == len(answerKey) {
-			total++
+	// Loop over answers and check if they exist.
+	for _, val := range responses {
+		if _, ok := answerKey[val]; ok {
+			correctResponses++
 		}
 	}
 
-	return total, nil
+	return (1.0 / correctWeight) * correctResponses
+}
+
+// binaryMarking will validate a result and employ all-or-nothing marking.
+func binaryMarking(responses []int32, answerKey map[int32]any, _ int) float64 {
+	correctResponses := 0
+
+	// Loop over answers and check if they exist.
+	for _, val := range responses {
+		if _, ok := answerKey[val]; ok {
+			correctResponses++
+		}
+	}
+
+	if correctResponses == len(answerKey) {
+		return 1
+	}
+	return 0
 }
