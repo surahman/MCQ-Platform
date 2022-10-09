@@ -10,6 +10,11 @@ override the settings in the configuration files. The configuration files are al
 
 ## Table of contents
 
+- [JSON Web Token API Key](#json-web-token-api-key)
+- [File Location(s)](#file-locations)
+- [Configuration File](#configuration-file)
+    - [Example Configuration File](#example-configuration-file)
+    - [Example Environment Variables](#example-environment-variables)
 
 <br/>
 
