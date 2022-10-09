@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/surahman/mcq-platform/pkg/constants"
 	"github.com/surahman/mcq-platform/pkg/logger"
-	"github.com/surahman/mcq-platform/pkg/model/http"
 )
 
 func TestNewAuth(t *testing.T) {
@@ -167,70 +166,85 @@ func TestAuthImpl_GenerateJWT(t *testing.T) {
 	require.True(t, authResponse.Expires.After(time.Now()), "JWT expires before current time")
 	require.True(t, authResponse.Expires.Before(time.Now().Add(time.Duration(expirationDuration+1)*time.Second)), "JWT expires after deadline")
 
-	// Check for username in claim.
-	actualUname, err := testAuth.UsernameFromJWT(authResponse.Token)
+	// Check validate token and check for username in claim.
+	actualUname, err := testAuth.ValidateJWT(authResponse.Token)
 	require.NoError(t, err, "failed to extract username from JWT")
 	require.Equalf(t, userName, actualUname, "incorrect username retrieved from JWT")
-
-	// Validate token.
-	require.NoError(t, testAuth.ValidateJWT(authResponse.Token), "failed to validate a valid token")
 }
 
 func TestAuthImpl_ValidateJWT(t *testing.T) {
-	var err error
-	var testAuthImpl *authImpl
-	var testJWT *model_http.JWTAuthResponse
+	t.Run("JWT claim parsing tests", func(t *testing.T) {
+		testAuthImpl, err := getTestConfiguration()
+		require.NoError(t, err, "failed to generate test authorization for claim parsing")
 
-	// Testing for an invalid issuer.
-	testAuthImpl, err = getTestConfiguration()
-	require.NoError(t, err, "failed to generate test authorization for issuer")
-	testAuthImpl.conf.JWTConfig.Issuer = "an invalid issuer"
-	testJWT, err = testAuthImpl.GenerateJWT("test username")
-	require.NoError(t, err, "failed to create invalid issuer JWT")
+		_, err = testAuthImpl.ValidateJWT("")
+		require.Error(t, err, "parsing an empty token should fail")
 
-	err = testAuth.ValidateJWT(testJWT.Token)
-	require.Error(t, err, "validation of invalid issuer token should fail")
-	require.Contains(t, err.Error(), "issuer", "error should be about an invalid issuer")
+		_, err = testAuthImpl.ValidateJWT("bad#token#string")
+		require.Error(t, err, "parsing and invalid token should fail")
+	})
 
-	// Test for expiration.
-	testAuthImpl, err = getTestConfiguration()
-	require.NoError(t, err, "failed to generate test authorization for expiration")
-	testAuthImpl.conf.JWTConfig.ExpirationDuration = 1
-	testJWT, err = testAuthImpl.GenerateJWT("test username")
-	require.NoError(t, err, "failed to create expiration JWT")
+	const testUsername = "test username"
+	testCases := []struct {
+		name               string
+		issuerName         string
+		expectErrMsg       string
+		expirationDuration int64
+		expectErr          require.ErrorAssertionFunc
+	}{
+		// ----- test cases start ----- //
+		{
+			"Valid token",
+			"",
+			"",
+			0,
+			require.NoError,
+		}, {
+			"Invalid issuer token",
+			"some random name",
+			"issuer",
+			0,
+			require.Error,
+		}, {
+			"Invalid expired token",
+			"some random name",
+			"expired",
+			1,
+			require.Error,
+		},
+		// ----- test cases end ----- //
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			// Test authorization config and token generation.
+			testAuthImpl, err := getTestConfiguration()
+			require.NoError(t, err, "failed to generate test authorization for issuer")
+			if testCase.issuerName != "" {
+				testAuthImpl.conf.JWTConfig.Issuer = testCase.issuerName
+			}
+			if testCase.expirationDuration != 0 {
+				testAuthImpl.conf.JWTConfig.ExpirationDuration = testCase.expirationDuration
+			}
 
-	time.Sleep(time.Duration(testAuthImpl.conf.JWTConfig.ExpirationDuration+1) * time.Second)
-	err = testAuthImpl.ValidateJWT(testJWT.Token)
-	require.Error(t, err, "validation of expired token should fail")
-	require.Contains(t, err.Error(), "expired", "error should be about expiration")
+			// Generate test token.
+			testJWT, err := testAuthImpl.GenerateJWT(testUsername)
+			require.NoError(t, err, "failed to create test JWT")
 
-	// Test for claim parsing.
-	testAuthImpl, err = getTestConfiguration()
-	require.NoError(t, err, "failed to generate test authorization for claim parsing")
+			// Conditional sleep to expire token.
+			if testCase.expirationDuration > 0 {
+				time.Sleep(time.Duration(testCase.expirationDuration+1) * time.Second)
+			}
 
-	err = testAuthImpl.ValidateJWT("")
-	require.Error(t, err, "parsing an empty token should fail")
+			username, err := testAuth.ValidateJWT(testJWT.Token)
+			testCase.expectErr(t, err, "validation of issued token error condition failed")
 
-	err = testAuthImpl.ValidateJWT("bad#token#string")
-	require.Error(t, err, "parsing and invalid token should fail")
-}
-
-func TestAuthImpl_UsernameFromJWT(t *testing.T) {
-	var err error
-
-	// Empty token.
-	_, err = testAuth.UsernameFromJWT("")
-	require.Error(t, err, "empty token sting should fail")
-
-	// Valid token.
-	username := "test username"
-	token, err := testAuth.GenerateJWT(username)
-	require.NoError(t, err, "failed to generate test token")
-	var actualUsername string
-	actualUsername, err = testAuth.UsernameFromJWT(token.Token)
-	require.NoError(t, err, "failed to extract username from valid token")
-	require.Equal(t, username, actualUsername, "expected and actual username do not match")
-
+			if err != nil {
+				require.Contains(t, err.Error(), testCase.expectErrMsg, "error message did not contain expected err")
+				return
+			}
+			require.Equal(t, testUsername, username, "username failed to match the expected")
+		})
+	}
 }
 
 func TestAuthImpl_RefreshJWT(t *testing.T) {
@@ -260,22 +274,18 @@ func TestAuthImpl_RefreshJWT(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			var err error
-			var testAuthImpl *authImpl
-			var testJWT *model_http.JWTAuthResponse
-			var refreshedToken *model_http.JWTAuthResponse
-			var actualUsername string
-
-			// Test for valid token refresh.
-			testAuthImpl, err = getTestConfiguration()
+			// Test authorization config and token generation.
+			testAuthImpl, err := getTestConfiguration()
 			testAuthImpl.conf.JWTConfig.ExpirationDuration = testCase.expirationDuration
 			require.NoError(t, err, "failed to generate test authorization")
-			testJWT, err = testAuthImpl.GenerateJWT(testCase.testUsername)
+			testJWT, err := testAuthImpl.GenerateJWT(testCase.testUsername)
 			require.NoError(t, err, "failed to create initial JWT")
-			require.NoError(t, testAuthImpl.ValidateJWT(testJWT.Token))
+			actualUsername, err := testAuthImpl.ValidateJWT(testJWT.Token)
+			require.NoError(t, err, "failed to validate original test token")
+			require.Equal(t, testCase.testUsername, actualUsername, "failed to extract correct username from original JWT")
 
 			time.Sleep(time.Duration(testCase.sleepTime) * time.Second)
-			refreshedToken, err = testAuthImpl.RefreshJWT(testJWT.Token)
+			refreshedToken, err := testAuthImpl.RefreshJWT(testJWT.Token)
 			testCase.expectErr(t, err, "error case when refreshing JWT failed")
 
 			if err != nil {
@@ -286,9 +296,9 @@ func TestAuthImpl_RefreshJWT(t *testing.T) {
 				refreshedToken.Expires.After(time.Now().Add(time.Duration(testAuthImpl.conf.JWTConfig.ExpirationDuration-1)*time.Second)),
 				"token expires before the required deadline")
 
-			actualUsername, err = testAuthImpl.UsernameFromJWT(testJWT.Token)
-			require.NoErrorf(t, err, "failed to extract username from JWT")
-			require.Equal(t, testCase.testUsername, actualUsername, "failed to extract correct username from JWT")
+			actualUsername, err = testAuthImpl.ValidateJWT(testJWT.Token)
+			require.NoErrorf(t, err, "failed to validate refreshed JWT")
+			require.Equal(t, testCase.testUsername, actualUsername, "failed to extract correct username from refreshed JWT")
 		})
 	}
 }

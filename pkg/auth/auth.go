@@ -20,8 +20,7 @@ type Auth interface {
 	HashPassword(string) (string, error)
 	CheckPassword(string, string) error
 	GenerateJWT(string) (*model_http.JWTAuthResponse, error)
-	ValidateJWT(string) error
-	UsernameFromJWT(string) (string, error)
+	ValidateJWT(string) (string, error)
 	RefreshJWT(string) (*model_http.JWTAuthResponse, error)
 }
 
@@ -99,38 +98,20 @@ func (a *authImpl) GenerateJWT(username string) (*model_http.JWTAuthResponse, er
 	return authResponse, err
 }
 
-// ValidateJWT will validate a signed JWT.
-func (a *authImpl) ValidateJWT(signedToken string) error {
-	token, err := jwt.ParseWithClaims(signedToken, &jwtClaim{}, func(token *jwt.Token) (interface{}, error) {
+// ValidateJWT will validate a signed JWT and extracts the username from it.
+func (a *authImpl) ValidateJWT(signedToken string) (string, error) {
+	claims := jwt.MapClaims{}
+	if _, err := jwt.ParseWithClaims(signedToken, &claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(a.conf.JWTConfig.Key), nil
-	})
-	if err != nil {
-		return err
+	}); err != nil {
+		return "", err
 	}
 
-	claims, ok := token.Claims.(*jwtClaim)
-	if !ok {
-		return errors.New("could not parse claims")
-	}
-
-	if !claims.VerifyExpiresAt(time.Now(), true) {
-		return errors.New("token has expired")
+	if !claims.VerifyExpiresAt(time.Now().Unix(), true) {
+		return "", errors.New("token has expired")
 	}
 	if !claims.VerifyIssuer(a.conf.JWTConfig.Issuer, true) {
-		return errors.New("unauthorized issuer")
-	}
-
-	return err
-}
-
-// UsernameFromJWT extracts the username from a JWT,
-func (a *authImpl) UsernameFromJWT(signedToken string) (string, error) {
-	claims := jwt.MapClaims{}
-	_, err := jwt.ParseWithClaims(signedToken, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte(a.conf.JWTConfig.Key), nil
-	})
-	if err != nil {
-		return "", err
+		return "", errors.New("unauthorized issuer")
 	}
 
 	username, ok := claims["username"]
@@ -143,12 +124,8 @@ func (a *authImpl) UsernameFromJWT(signedToken string) (string, error) {
 
 // RefreshJWT will extend a valid JWT's lease by generating a fresh valid JWT.
 func (a *authImpl) RefreshJWT(token string) (authResponse *model_http.JWTAuthResponse, err error) {
-	if err = a.ValidateJWT(token); err != nil {
-		return
-	}
-
 	var username string
-	if username, err = a.UsernameFromJWT(token); err != nil {
+	if username, err = a.ValidateJWT(token); err != nil {
 		return
 	}
 	if authResponse, err = a.GenerateJWT(username); err != nil {

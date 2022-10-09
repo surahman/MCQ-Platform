@@ -55,7 +55,7 @@
 			<div id="nav">
 				<select id="files">
 				
-				<option value="file0">github.com/surahman/mcq-platform/pkg/auth/auth.go (86.5%)</option>
+				<option value="file0">github.com/surahman/mcq-platform/pkg/auth/auth.go (87.8%)</option>
 				
 				<option value="file1">github.com/surahman/mcq-platform/pkg/auth/config.go (93.8%)</option>
 				
@@ -122,8 +122,7 @@ type Auth interface {
         HashPassword(string) (string, error)
         CheckPassword(string, string) error
         GenerateJWT(string) (*model_http.JWTAuthResponse, error)
-        ValidateJWT(string) error
-        UsernameFromJWT(string) (string, error)
+        ValidateJWT(string) (string, error)
         RefreshJWT(string) (*model_http.JWTAuthResponse, error)
 }
 
@@ -137,7 +136,7 @@ type authImpl struct {
 }
 
 // NewAuth will create a new Authorization configuration by loading it.
-func NewAuth(fs *afero.Fs, logger *logger.Logger) (Auth, error) <span class="cov8" title="6">{
+func NewAuth(fs *afero.Fs, logger *logger.Logger) (Auth, error) <span class="cov7" title="6">{
         if fs == nil || logger == nil </span><span class="cov5" title="3">{
                 return nil, errors.New("nil file system of logger supplied")
         }</span>
@@ -201,56 +200,34 @@ func (a *authImpl) GenerateJWT(username string) (*model_http.JWTAuthResponse, er
         return authResponse, err</span>
 }
 
-// ValidateJWT will validate a signed JWT.
-func (a *authImpl) ValidateJWT(signedToken string) error <span class="cov10" title="9">{
-        token, err := jwt.ParseWithClaims(signedToken, &amp;jwtClaim{}, func(token *jwt.Token) (interface{}, error) </span><span class="cov8" title="7">{
-                return []byte(a.conf.JWTConfig.Key), nil
-        }</span>)
-        <span class="cov10" title="9">if err != nil </span><span class="cov6" title="4">{
-                return err
-        }</span>
-
-        <span class="cov7" title="5">claims, ok := token.Claims.(*jwtClaim)
-        if !ok </span><span class="cov0" title="0">{
-                return errors.New("could not parse claims")
-        }</span>
-
-        <span class="cov7" title="5">if !claims.VerifyExpiresAt(time.Now(), true) </span><span class="cov0" title="0">{
-                return errors.New("token has expired")
-        }</span>
-        <span class="cov7" title="5">if !claims.VerifyIssuer(a.conf.JWTConfig.Issuer, true) </span><span class="cov1" title="1">{
-                return errors.New("unauthorized issuer")
-        }</span>
-
-        <span class="cov6" title="4">return err</span>
-}
-
-// UsernameFromJWT extracts the username from a JWT,
-func (a *authImpl) UsernameFromJWT(signedToken string) (string, error) <span class="cov7" title="5">{
+// ValidateJWT will validate a signed JWT and extracts the username from it.
+func (a *authImpl) ValidateJWT(signedToken string) (string, error) <span class="cov10" title="11">{
         claims := jwt.MapClaims{}
-        _, err := jwt.ParseWithClaims(signedToken, claims, func(token *jwt.Token) (interface{}, error) </span><span class="cov6" title="4">{
+        if _, err := jwt.ParseWithClaims(signedToken, &amp;claims, func(token *jwt.Token) (interface{}, error) </span><span class="cov9" title="9">{
                 return []byte(a.conf.JWTConfig.Key), nil
-        }</span>)
-        <span class="cov7" title="5">if err != nil </span><span class="cov1" title="1">{
+        }</span>); err != nil <span class="cov6" title="4">{
                 return "", err
         }</span>
 
-        <span class="cov6" title="4">username, ok := claims["username"]
+        <span class="cov8" title="7">if !claims.VerifyExpiresAt(time.Now().Unix(), true) </span><span class="cov0" title="0">{
+                return "", errors.New("token has expired")
+        }</span>
+        <span class="cov8" title="7">if !claims.VerifyIssuer(a.conf.JWTConfig.Issuer, true) </span><span class="cov1" title="1">{
+                return "", errors.New("unauthorized issuer")
+        }</span>
+
+        <span class="cov7" title="6">username, ok := claims["username"]
         if !ok </span><span class="cov0" title="0">{
                 return "", errors.New("username not found")
         }</span>
 
-        <span class="cov6" title="4">return username.(string), nil</span>
+        <span class="cov7" title="6">return username.(string), nil</span>
 }
 
 // RefreshJWT will extend a valid JWT's lease by generating a fresh valid JWT.
 func (a *authImpl) RefreshJWT(token string) (authResponse *model_http.JWTAuthResponse, err error) <span class="cov3" title="2">{
-        if err = a.ValidateJWT(token); err != nil </span><span class="cov1" title="1">{
-                return
-        }</span>
-
-        <span class="cov1" title="1">var username string
-        if username, err = a.UsernameFromJWT(token); err != nil </span><span class="cov0" title="0">{
+        var username string
+        if username, err = a.ValidateJWT(token); err != nil </span><span class="cov1" title="1">{
                 return
         }</span>
         <span class="cov1" title="1">if authResponse, err = a.GenerateJWT(username); err != nil </span><span class="cov0" title="0">{
