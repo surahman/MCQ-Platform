@@ -8,11 +8,13 @@ const (
 	// Configuration file names
 	cassandraConfigFileName = "CassandraConfig.yaml"
 	loggerConfigFileName    = "LoggerConfig.yaml"
+	authConfigFileName      = "AuthConfig.yaml"
 
 	// Environment variables
 	cassandraPrefix = "CASSANDRA"
 	loggerPrefix    = "LOGGER"
 	githubCIKey     = "GITHUB_ACTIONS_CI"
+	authPrefix      = "AUTH"
 
 	// Misc.
 	integrationTestKeyspaceSuffix = "_integration_testing"
@@ -39,6 +41,11 @@ func GetLoggerFileName() string {
 	return loggerConfigFileName
 }
 
+// GetAuthFileName returns the authentication configuration file name.
+func GetAuthFileName() string {
+	return authConfigFileName
+}
+
 // GetCassandraPrefix returns the environment variable prefix for Cassandra.
 func GetCassandraPrefix() string {
 	return cassandraPrefix
@@ -47,6 +54,11 @@ func GetCassandraPrefix() string {
 // GetLoggerPrefix returns the environment variable prefix for the Zap logger.
 func GetLoggerPrefix() string {
 	return loggerPrefix
+}
+
+// GetAuthPrefix returns the environment variable prefix for authentication.
+func GetAuthPrefix() string {
+	return authPrefix
 }
 
 // GetIntegrationTestKeyspaceSuffix is the suffix attached to the clusters keyspace and is used for integration tests.

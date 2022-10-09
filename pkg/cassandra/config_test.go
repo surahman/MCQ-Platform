@@ -2,7 +2,6 @@ package cassandra
 
 import (
 	"fmt"
-	"os"
 	"reflect"
 	"testing"
 
@@ -95,10 +94,9 @@ func TestCassandraConfigs_Load(t *testing.T) {
 			require.True(t, reflect.DeepEqual(expected, actual))
 
 			// Test configuring of environment variable.
-			require.NoErrorf(t, os.Setenv(keyspaceKey, testCase.envValue), "Failed to set environment variable: %v", err)
+			t.Setenv(keyspaceKey, testCase.envValue)
 			require.NoErrorf(t, actual.Load(fs), "Failed to load constants file: %v", err)
 			require.Equalf(t, testCase.envValue, actual.Keyspace.ReplicationClass, "Failed to load environment variable into configs")
-			require.NoErrorf(t, os.Unsetenv(keyspaceKey), "Failed to unset environment variable set for test")
 		})
 	}
 }

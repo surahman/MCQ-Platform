@@ -41,3 +41,11 @@ func TestGetCassandraMaxConnectRetries(t *testing.T) {
 func TestGetGithubCIKey(t *testing.T) {
 	require.Equal(t, githubCIKey, GetGithubCIKey(), "Incorrect Github CI environment key")
 }
+
+func TestGetAuthFileName(t *testing.T) {
+	require.Equal(t, authConfigFileName, GetAuthFileName(), "Incorrect authentication filename")
+}
+
+func TestGetAuthPrefix(t *testing.T) {
+	require.Equal(t, authPrefix, GetAuthPrefix(), "Incorrect authorization environment prefix")
+}

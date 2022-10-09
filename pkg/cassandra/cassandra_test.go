@@ -11,7 +11,6 @@ import (
 )
 
 func TestNewCassandra(t *testing.T) {
-	log, _ := logger.NewTestLogger()
 	fs := afero.NewMemMapFs()
 	require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
 	require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetCassandraFileName(),
@@ -34,7 +33,7 @@ func TestNewCassandra(t *testing.T) {
 		}, {
 			"Invalid file system",
 			nil,
-			log,
+			zapLogger,
 			require.Error,
 			require.Nil,
 		}, {
@@ -46,7 +45,7 @@ func TestNewCassandra(t *testing.T) {
 		}, {
 			"Valid",
 			&fs,
-			log,
+			zapLogger,
 			require.NoError,
 			require.NotNil,
 		},
@@ -148,7 +147,7 @@ func TestCassandra_Close(t *testing.T) {
 		t.Skip()
 	}
 
-	var cassandra *CassandraImpl
+	var cassandra *cassandraImpl
 	var err error
 
 	cassandra, err = getTestConfiguration()
@@ -161,4 +160,35 @@ func TestCassandra_Close(t *testing.T) {
 	require.NoError(t, cassandra.Close(), "Should close an established connection")
 
 	require.Error(t, cassandra.Close(), "Should return an error when a connection was closed")
+}
+
+func TestBlake2b256(t *testing.T) {
+	testCases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		// ----- test cases start ----- //
+		{
+			name:     "Generic",
+			input:    "account-id-1",
+			expected: "mAHpa8iePo3zmyxx_kMWulKeiRtP-KIm-Kq2qr4vKdM=",
+		}, {
+			name:     "Random 8 character",
+			input:    "K40c&9*H",
+			expected: "yKaKVtbY28qtEnBil1lsglC3Rw3HKd_K9Ex2hasqlAc=",
+		}, {
+			name:     "Random 32 character",
+			input:    "yyx86kaBXF9bUn2w1I6m5efNMs&rOjZd",
+			expected: "MN_76A0UaucyVNqw9M8IKs6yQg4UFl_EfKPDCflTigg=",
+		},
+		// ----- test cases end ----- //
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			actual := blake2b256(testCase.input)
+			require.Equal(t, testCase.expected, actual)
+		})
+	}
 }

@@ -2,7 +2,6 @@ package logger
 
 import (
 	"fmt"
-	"os"
 	"reflect"
 	"testing"
 
@@ -86,11 +85,9 @@ func TestZapConfig_Load(t *testing.T) {
 			require.True(t, reflect.DeepEqual(expected, actual))
 
 			// Test configuring of environment variable.
-			require.NoErrorf(t, os.Setenv(envCfgKey, testCase.cfgKey), "Failed to set environment variable for constants: %v", err)
-			require.NoErrorf(t, os.Setenv(envEncKey, testCase.encKey), "Failed to set environment variable for encoder: %v", err)
+			t.Setenv(envCfgKey, testCase.cfgKey)
+			t.Setenv(envEncKey, testCase.encKey)
 			require.NoErrorf(t, actual.Load(fs), "Failed to load constants file: %v", err)
-			require.NoErrorf(t, os.Unsetenv(envCfgKey), "Failed to unset environment variable set for constants")
-			require.NoErrorf(t, os.Unsetenv(envEncKey), "Failed to unset environment variable set for encoder")
 
 			require.Equalf(t, testCase.cfgKey, actual.BuiltinConfig, "Failed to load environment variable into constants")
 			require.Equalf(t, testCase.encKey, actual.BuiltinEncoderConfig, "Failed to load environment variable into encoder")
