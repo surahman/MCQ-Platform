@@ -15,7 +15,7 @@ import (
 // Mock Auth interface stub generation.
 //go:generate mockgen -destination=../mocks/mock_auth.go -package=mocks github.com/surahman/mcq-platform/pkg/auth Auth
 
-// Auth is the interface through which the cluster can be accessed. Created to support mock testing.
+// Auth is the interface through which the authorization operations can be accessed. Created to support mock testing.
 type Auth interface {
 	HashPassword(string) (string, error)
 	CheckPassword(string, string) error
@@ -24,7 +24,7 @@ type Auth interface {
 	RefreshJWT(string) (*model_http.JWTAuthResponse, error)
 }
 
-// Check to ensure the Cassandra interface has been implemented.
+// Check to ensure the Auth interface has been implemented.
 var _ Auth = &authImpl{}
 
 // authImpl implements the Auth interface and contains the logic for authorization functionality.
