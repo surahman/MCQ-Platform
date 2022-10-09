@@ -93,15 +93,15 @@ Describes a single question with all it's answer options as well as the answer k
 
 This `struct` embeds the `QuizCore` `struct` to create a representation of the quizzes table.
 
-| Name (Struct) | Data Type (Struct) | Column Name  | Column Type                    | Description                                                               |
-|---------------|--------------------|--------------|--------------------------------|---------------------------------------------------------------------------|
-| Quiz_ID       | gocql.UUID         | quiz_id      | uuid                           | Account id unique identifier. Partition Key.                              |
-| Author        | string             | author       | text                           | Username of the quiz creator.                                             |
-| Title         | string             | title        | text                           | Description of the quiz.                                                  |
-| Marking Type  | string             | marking_type | text                           | The marking scheme type: `[N\n]one` `[N\n]egative` `[B\b]inary`           |
-| Questions     | [ ] Question       | questions    | frozen<list<frozen<question>>> | A list of `question` UDTs in the quiz.                                    |
-| IsPublished   | bool               | is_published | boolean                        | Status indicating whether the quiz can be viewed or taken by other users. |
-| IsDeleted     | bool               | is_deleted   | boolean                        | Status indicating whether the quiz has been deleted.                      |
+| Name (Struct) | Data Type (Struct) | Column Name  | Column Type                    | Description                                                                        |
+|---------------|--------------------|--------------|--------------------------------|------------------------------------------------------------------------------------|
+| Quiz_ID       | gocql.UUID         | quiz_id      | uuid                           | Account id unique identifier. Partition Key.                                       |
+| Author        | string             | author       | text                           | Username of the quiz creator.                                                      |
+| Title         | string             | title        | text                           | Description of the quiz.                                                           |
+| Marking Type  | string             | marking_type | text                           | The marking scheme type: `[N\n]one` `[N\n]egative` `[N\n]on-negative` `[B\b]inary` |
+| Questions     | [ ] Question       | questions    | frozen<list<frozen<question>>> | A list of `question` UDTs in the quiz.                                             |
+| IsPublished   | bool               | is_published | boolean                        | Status indicating whether the quiz can be viewed or taken by other users.          |
+| IsDeleted     | bool               | is_deleted   | boolean                        | Status indicating whether the quiz has been deleted.                               |
 
 Since the Primary/Partition Key (`quiz_id`) is a `UUID`, it should help distribute the records evenly across the cluster
 nodes. Quizzes are requested by their unique `quiz_id`'s.
