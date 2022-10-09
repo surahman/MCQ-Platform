@@ -1,6 +1,7 @@
 package cassandra
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"math"
@@ -12,6 +13,7 @@ import (
 	"github.com/surahman/mcq-platform/pkg/constants"
 	"github.com/surahman/mcq-platform/pkg/logger"
 	"go.uber.org/zap"
+	"golang.org/x/crypto/blake2b"
 )
 
 // Mock Cassandra interface stub generation.
@@ -131,4 +133,10 @@ func (c *cassandraImpl) createSessionRetry(cluster *gocql.ClusterConfig) (err er
 		c.logger.Error("unable to establish connection to Cassandra cluster", zap.Error(err))
 	}
 	return
+}
+
+// blake2b256 will create a hash from an input string. This hash is used to create the Account ID for a user.
+func blake2b256(data string) string {
+	hash := blake2b.Sum256([]byte(data))
+	return base64.URLEncoding.EncodeToString(hash[:])
 }

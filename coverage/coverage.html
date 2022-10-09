@@ -61,7 +61,7 @@
 				
 				<option value="file2">github.com/surahman/mcq-platform/pkg/auth/testdata.go (100.0%)</option>
 				
-				<option value="file3">github.com/surahman/mcq-platform/pkg/cassandra/cassandra.go (87.2%)</option>
+				<option value="file3">github.com/surahman/mcq-platform/pkg/cassandra/cassandra.go (87.8%)</option>
 				
 				<option value="file4">github.com/surahman/mcq-platform/pkg/cassandra/cassandra_queries.go (85.6%)</option>
 				
@@ -77,9 +77,7 @@
 				
 				<option value="file10">github.com/surahman/mcq-platform/pkg/logger/testdata.go (100.0%)</option>
 				
-				<option value="file11">github.com/surahman/mcq-platform/pkg/model/cassandra/user.go (100.0%)</option>
-				
-				<option value="file12">github.com/surahman/mcq-platform/pkg/validator/validator.go (72.0%)</option>
+				<option value="file11">github.com/surahman/mcq-platform/pkg/validator/validator.go (72.0%)</option>
 				
 				</select>
 			</div>
@@ -387,6 +385,7 @@ general:
 		<pre class="file" id="file3" style="display: none">package cassandra
 
 import (
+        "encoding/base64"
         "errors"
         "fmt"
         "math"
@@ -398,6 +397,7 @@ import (
         "github.com/surahman/mcq-platform/pkg/constants"
         "github.com/surahman/mcq-platform/pkg/logger"
         "go.uber.org/zap"
+        "golang.org/x/crypto/blake2b"
 )
 
 // Mock Cassandra interface stub generation.
@@ -505,7 +505,7 @@ func (c *cassandraImpl) verifySession() error <span class="cov5" title="8">{
 // createSessionRetry will attempt to open the connection using binary exponential back-off and stop on the first success or fail after the last one.
 func (c *cassandraImpl) createSessionRetry(cluster *gocql.ClusterConfig) (err error) <span class="cov3" title="4">{
         maxAttempts := constants.GetCassandraMaxConnectRetries()
-        for attempt := 1; attempt &lt;= maxAttempts; attempt++ </span><span class="cov4" title="6">{
+        for attempt := 1; attempt &lt;= maxAttempts; attempt++ </span><span class="cov3" title="4">{
                 waitTime := time.Duration(math.Pow(2, float64(attempt))) * time.Second
                 c.logger.Info(fmt.Sprintf("Attempting connection to Cassandra cluster in %s...", waitTime), zap.String("attempt", strconv.Itoa(attempt)))
                 time.Sleep(waitTime)
@@ -518,6 +518,12 @@ func (c *cassandraImpl) createSessionRetry(cluster *gocql.ClusterConfig) (err er
         }</span>
         <span class="cov3" title="4">return</span>
 }
+
+// blake2b256 will create a hash from an input string. This hash is used to create the Account ID for a user.
+func blake2b256(data string) string <span class="cov8" title="37">{
+        hash := blake2b.Sum256([]byte(data))
+        return base64.URLEncoding.EncodeToString(hash[:])
+}</span>
 </pre>
 		
 		<pre class="file" id="file4" style="display: none">package cassandra
@@ -552,7 +558,7 @@ func CreateUserQuery(c Cassandra, params any) (response any, err error) <span cl
         input := params.(*model_cassandra.User)
 
         // Create hash of username using Blake2b 256 hashing algorithm.
-        input.AccountID = model_cassandra.Blake2b256(input.Username)
+        input.AccountID = blake2b256(input.Username)
 
         resp := model_cassandra.User{UserAccount: &amp;model_cassandra.UserAccount{}} // Discarded, only used as container for Cassandra response.
         applied := false
@@ -582,7 +588,7 @@ func ReadUserQuery(c Cassandra, params any) (response any, err error) <span clas
         resp := model_cassandra.User{UserAccount: &amp;model_cassandra.UserAccount{}}
 
         // Create hash of username using Blake2b 256 hashing algorithm.
-        input.AccountID = model_cassandra.Blake2b256(input.Username)
+        input.AccountID = blake2b256(input.Username)
 
         if err = conn.session.Query(model_cassandra.ReadUser, input.Username, input.AccountID).Scan(
                 &amp;resp.Username, &amp;resp.AccountID, &amp;resp.Email, &amp;resp.FirstName, &amp;resp.IsDeleted, &amp;resp.LastName, &amp;resp.Password); err != nil </span><span class="cov1" title="1">{
@@ -600,7 +606,7 @@ func DeleteUserQuery(c Cassandra, params any) (response any, err error) <span cl
         input := params.(*model_cassandra.User)
 
         // Create hash of username using Blake2b 256 hashing algorithm.
-        input.AccountID = model_cassandra.Blake2b256(input.Username)
+        input.AccountID = blake2b256(input.Username)
 
         resp := model_cassandra.User{UserAccount: &amp;model_cassandra.UserAccount{}} // Discarded, only used as container for Cassandra response.
         applied := false
@@ -1043,7 +1049,7 @@ func GetTestUsers() map[string]*model_cassandra.User <span class="cov1" title="1
                                 LastName:  fmt.Sprintf(lastname, idx),
                                 Email:     fmt.Sprintf(email, idx),
                         },
-                        AccountID: model_cassandra.Blake2b256(uname),
+                        AccountID: blake2b256(uname),
                         IsDeleted: false,
                 }
         }</span>
@@ -1479,38 +1485,7 @@ encoder_config:
 }</span>
 </pre>
 		
-		<pre class="file" id="file11" style="display: none">package model_cassandra
-
-import (
-        "encoding/base64"
-
-        "golang.org/x/crypto/blake2b"
-)
-
-// User represents a users account and is a row in user table.
-type User struct {
-        *UserAccount
-        AccountID string `json:"account_id,omitempty" cql:"account_id"`
-        IsDeleted bool   `json:"is_deleted" cql:"is_deleted"`
-}
-
-// UserAccount is the core user account information.
-type UserAccount struct {
-        Username  string `json:"username,omitempty" cql:"username" validate:"required,min=8,alphanum"`
-        Password  string `json:"password,omitempty" cql:"password" validate:"required,min=8,max=32"`
-        FirstName string `json:"first_name,omitempty" cql:"first_name" validate:"required"`
-        LastName  string `json:"last_name,omitempty" cql:"last_name" validate:"required"`
-        Email     string `json:"email,omitempty" cql:"email" validate:"required,email"`
-}
-
-// Blake2b256 will create a hash from an input string. This hash is used to create the Account ID for a user.
-func Blake2b256(data string) string <span class="cov10" title="3">{
-        hash := blake2b.Sum256([]byte(data))
-        return base64.URLEncoding.EncodeToString(hash[:])
-}</span>
-</pre>
-		
-		<pre class="file" id="file12" style="display: none">package validator
+		<pre class="file" id="file11" style="display: none">package validator
 
 import (
         "bytes"

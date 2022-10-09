@@ -73,7 +73,7 @@ func TestCreateUserQuery(t *testing.T) {
 			LastName:  "lastname-1",
 			Email:     "user1@email-address.com",
 		},
-		AccountID: model_cassandra.Blake2b256("user-5"),
+		AccountID: blake2b256("user-5"),
 		IsDeleted: false,
 	}
 	_, err := connection.db.Execute(CreateUserQuery, userPass)
@@ -101,7 +101,7 @@ func TestDeleteUserQuery(t *testing.T) {
 			LastName:  "lastname-1",
 			Email:     "user1@email-address.com",
 		},
-		AccountID: model_cassandra.Blake2b256("user-5"),
+		AccountID: blake2b256("user-5"),
 		IsDeleted: false,
 	}
 	_, err := connection.db.Execute(DeleteUserQuery, userPass)
@@ -137,7 +137,7 @@ func TestReadUserQuery(t *testing.T) {
 			LastName:  "lastname-1",
 			Email:     "user1@email-address.com",
 		},
-		AccountID: model_cassandra.Blake2b256("user-5"),
+		AccountID: blake2b256("user-5"),
 		IsDeleted: false,
 	}
 	_, err := connection.db.Execute(ReadUserQuery, userPass)

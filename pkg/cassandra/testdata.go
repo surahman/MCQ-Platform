@@ -173,7 +173,7 @@ func GetTestUsers() map[string]*model_cassandra.User {
 				LastName:  fmt.Sprintf(lastname, idx),
 				Email:     fmt.Sprintf(email, idx),
 			},
-			AccountID: model_cassandra.Blake2b256(uname),
+			AccountID: blake2b256(uname),
 			IsDeleted: false,
 		}
 	}
