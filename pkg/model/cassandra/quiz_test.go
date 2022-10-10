@@ -46,6 +46,7 @@ var questionAnsGTOpt = Question{Description: "Question with more answers than op
 	Answers: []int32{0, 1, 2, 3, 4}}
 
 var quizValid = QuizCore{Title: "Valid quiz", MarkingType: "Negative", Questions: []*Question{&question1, &question2, &question3}}
+var quizValidNonNegative = QuizCore{Title: "Valid quiz", MarkingType: "Non-negative", Questions: []*Question{&question1, &question2, &question3}}
 var quizValidBinaryMarking = QuizCore{Title: "Valid quiz", MarkingType: "Binary", Questions: []*Question{&question1, &question2, &question3}}
 var quizValidNoMarking = QuizCore{Title: "Valid quiz", MarkingType: "None", Questions: []*Question{&question1, &question2, &question3}}
 var quizInvalidMarking = QuizCore{Title: "Valid quiz", MarkingType: "Invalid", Questions: []*Question{&question1, &question2, &question3}}
@@ -187,6 +188,11 @@ func TestValidateQuizCore(t *testing.T) {
 		{
 			name:        "Valid question - Negative marking",
 			input:       &quizValid,
+			expectErr:   require.NoError,
+			expectedLen: 0,
+		}, {
+			name:        "Valid question - Non-negative marking",
+			input:       &quizValidNonNegative,
 			expectErr:   require.NoError,
 			expectedLen: 0,
 		}, {

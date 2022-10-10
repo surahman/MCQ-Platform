@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS mcq_platform.quizzes (
     quiz_id         uuid,                           // Unique identifier for the quiz.
     author          text,                           // Username of the quiz creator.
     title           text,                           // Description of the quiz.
-    marking_type    text,                           // Marking type: none, negative, or binary.
+    marking_type    text,                           // Marking type: none, negative, non-negative, or binary.
     questions       frozen<list<frozen<question>>>, // A list of questions in the quiz.
     is_published    boolean,                        // Status indicating whether the quiz can be viewed or taken by other users.
     is_deleted      boolean,                        // Status indicating whether the quiz has been deleted.
