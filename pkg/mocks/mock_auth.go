@@ -93,27 +93,13 @@ func (mr *MockAuthMockRecorder) RefreshJWT(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RefreshJWT", reflect.TypeOf((*MockAuth)(nil).RefreshJWT), arg0)
 }
 
-// UsernameFromJWT mocks base method.
-func (m *MockAuth) UsernameFromJWT(arg0 string) (string, error) {
+// ValidateJWT mocks base method.
+func (m *MockAuth) ValidateJWT(arg0 string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UsernameFromJWT", arg0)
+	ret := m.ctrl.Call(m, "ValidateJWT", arg0)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
-}
-
-// UsernameFromJWT indicates an expected call of UsernameFromJWT.
-func (mr *MockAuthMockRecorder) UsernameFromJWT(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UsernameFromJWT", reflect.TypeOf((*MockAuth)(nil).UsernameFromJWT), arg0)
-}
-
-// ValidateJWT mocks base method.
-func (m *MockAuth) ValidateJWT(arg0 string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ValidateJWT", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
 }
 
 // ValidateJWT indicates an expected call of ValidateJWT.
