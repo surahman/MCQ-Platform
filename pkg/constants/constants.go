@@ -9,12 +9,14 @@ const (
 	cassandraConfigFileName = "CassandraConfig.yaml"
 	loggerConfigFileName    = "LoggerConfig.yaml"
 	authConfigFileName      = "AuthConfig.yaml"
+	restConfigFileName      = "HTTPRESTConfig.yaml"
 
 	// Environment variables
 	cassandraPrefix = "CASSANDRA"
 	loggerPrefix    = "LOGGER"
 	githubCIKey     = "GITHUB_ACTIONS_CI"
 	authPrefix      = "AUTH"
+	restPrefix      = "REST"
 
 	// Misc.
 	integrationTestKeyspaceSuffix = "_integration_testing"
@@ -46,6 +48,11 @@ func GetAuthFileName() string {
 	return authConfigFileName
 }
 
+// GetHTTPRESTFileName returns the HTTP REST endpoint configuration file name.
+func GetHTTPRESTFileName() string {
+	return restConfigFileName
+}
+
 // GetCassandraPrefix returns the environment variable prefix for Cassandra.
 func GetCassandraPrefix() string {
 	return cassandraPrefix
@@ -59,6 +66,11 @@ func GetLoggerPrefix() string {
 // GetAuthPrefix returns the environment variable prefix for authentication.
 func GetAuthPrefix() string {
 	return authPrefix
+}
+
+// GetHTTPRESTPrefix returns the environment variable prefix for the HTTP REST endpoint.
+func GetHTTPRESTPrefix() string {
+	return restPrefix
 }
 
 // GetIntegrationTestKeyspaceSuffix is the suffix attached to the clusters keyspace and is used for integration tests.

@@ -12,7 +12,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func TestCassandraConfigs_Load(t *testing.T) {
+func TestAuthConfigs_Load(t *testing.T) {
 	keyspaceJwt := constants.GetAuthPrefix() + "_JWT."
 	keyspaceGen := constants.GetAuthPrefix() + "_GENERAL."
 

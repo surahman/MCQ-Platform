@@ -1,0 +1,5 @@
+general:
+  port_number: 44243
+  shutdown_delay: 5
+  base_path: api/rest/v1
+  swagger_path: /swagger/*any
