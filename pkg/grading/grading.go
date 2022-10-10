@@ -73,10 +73,9 @@ func (g *gradingImpl) Grade(response *model_cassandra.QuizResponse, quiz *model_
 }
 
 // negativeMarking will grade a question by employing negative marking.
-// Marks per question:
+// Marking scheme:
 // [Correct] +1 / correct options
 // [Wrong] -1 / incorrect options
-// Questions with 1 correct option should disallow multiple selection.
 func negativeMarking(responses []int32, answerKey map[int32]any, numOptions int) float64 {
 	totalOptions := numOptions
 	correctWeight := float64(len(answerKey))
@@ -99,34 +98,46 @@ func negativeMarking(responses []int32, answerKey map[int32]any, numOptions int)
 }
 
 // nonNegativeMarking will grade a question by employing non-negative marking and award partial grades.
-// Marks per question:
+// Marking scheme:
 // [Correct] +1 / correct options
+// [Incorrect] 0 on whole question
 func nonNegativeMarking(responses []int32, answerKey map[int32]any, _ int) float64 {
 	correctWeight := float64(len(answerKey))
 	correctResponses := 0.0
+	incorrectResponses := 0.0
 
 	// Loop over answers and check if they exist.
 	for _, val := range responses {
 		if _, ok := answerKey[val]; ok {
 			correctResponses++
+		} else {
+			incorrectResponses++
 		}
 	}
-
-	return (1.0 / correctWeight) * correctResponses
+	if incorrectResponses == 0 {
+		return (1.0 / correctWeight) * correctResponses
+	}
+	return 0
 }
 
 // binaryMarking will validate a result and employ all-or-nothing marking.
+// Marking scheme:
+// [Correct] +1 if all required answers selected
+// [Incorrect] 0 on whole question
 func binaryMarking(responses []int32, answerKey map[int32]any, _ int) float64 {
 	correctResponses := 0
+	incorrectResponses := 0
 
 	// Loop over answers and check if they exist.
 	for _, val := range responses {
 		if _, ok := answerKey[val]; ok {
 			correctResponses++
+		} else {
+			incorrectResponses++
 		}
 	}
 
-	if correctResponses == len(answerKey) {
+	if correctResponses == len(answerKey) && incorrectResponses == 0 {
 		return 1
 	}
 	return 0
