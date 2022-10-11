@@ -28,19 +28,21 @@ The configuration loader will search for the configurations in the following ord
 
 The expected file name is `HTTPRESTConfig.yaml`. All the configuration items below are _required_.
 
-| Name             | Environment Variable Key | Type   | Description                                                                                |
-|------------------|--------------------------|--------|--------------------------------------------------------------------------------------------|
-| **_General_**    | `REST_GENERAL`           |        | **_Parent key for general information._**                                                  |
-| ↳ port_number    | ↳ `.PORT_NUMBER`         | int    | Service port for inbound and outbound connections.                                         |
-| ↳ shutdown_delay | ↳ `.SHUTDOWN_DELAY`      | int    | The number of seconds to wait after a shutdown signal is received to terminate the server. |
-| ↳ base_path      | ↳ `.BASE_PATH`           | string | The service endpoints base path.                                                           |
-| ↳ swagger_path   | ↳ `.SWAGGER_PATH`        | string | The path through which the Swagger UI will be accessible.                                  |
+| Name                | Environment Variable Key | Type   | Description                                                                                |
+|---------------------|--------------------------|--------|--------------------------------------------------------------------------------------------|
+| **_Server_**        | `REST_SERVER`            |        | **_Parent key for server configurations._**                                                |
+| ↳ port_number       | ↳ `.PORT_NUMBER`         | int    | Service port for inbound and outbound connections.                                         |
+| ↳ shutdown_delay    | ↳ `.SHUTDOWN_DELAY`      | int    | The number of seconds to wait after a shutdown signal is received to terminate the server. |
+| ↳ base_path         | ↳ `.BASE_PATH`           | string | The service endpoints base path.                                                           |
+| ↳ swagger_path      | ↳ `.SWAGGER_PATH`        | string | The path through which the Swagger UI will be accessible.                                  |
+| **_Authorization_** | `REST_AUTHORIZATION`     |        | **_Parent key for authentication configurations._**                                        |
+| ↳ header_key        | ↳ `.HEADER_KEY`          | string | The HTTP header key where the authorization token is stored.                               |
 
 
 #### Example Configuration File
 
 ```yaml
-general:
+server:
   port_number: 44243
   shutdown_delay: 5
   base_path: api/rest/v1
@@ -50,8 +52,8 @@ general:
 #### Example Environment Variables
 
 ```bash
-export REST_GENERAL.PORT_NUMBER=44243
-export REST_GENERAL.BASE_PATH=api/rest/v1
+export REST_SERVER.PORT_NUMBER=44243
+export REST_SERVER.BASE_PATH=api/rest/v1
 ```
 
 ### Swagger UI

@@ -57,14 +57,14 @@ func (s *HttpRest) Run() {
 
 	// Create server.
 	srv := &http.Server{
-		Addr:    fmt.Sprintf(":%d", s.conf.General.PortNumber),
+		Addr:    fmt.Sprintf(":%d", s.conf.Server.PortNumber),
 		Handler: s.router,
 	}
 
 	// Start HTTP listener.
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			s.logger.Panic(fmt.Sprintf("listening port: %d", s.conf.General.PortNumber), zap.Error(err))
+			s.logger.Panic(fmt.Sprintf("listening port: %d", s.conf.Server.PortNumber), zap.Error(err))
 		}
 	}()
 
@@ -74,8 +74,8 @@ func (s *HttpRest) Run() {
 
 	// Wait for interrupt.
 	<-quit
-	s.logger.Info("Shutting down server...", zap.Duration("waiting", time.Duration(s.conf.General.ShutdownDelay)*time.Second))
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(s.conf.General.ShutdownDelay)*time.Second)
+	s.logger.Info("Shutting down server...", zap.Duration("waiting", time.Duration(s.conf.Server.ShutdownDelay)*time.Second))
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(s.conf.Server.ShutdownDelay)*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
 		s.logger.Panic("Failed to shutdown server", zap.Error(err))
@@ -114,10 +114,10 @@ func (s *HttpRest) initialize() {
 	// @in                         header
 	// @name                       Authorization
 
-	s.router.GET(s.conf.General.SwaggerPath, ginSwagger.WrapHandler(swaggerfiles.Handler))
+	s.router.GET(s.conf.Server.SwaggerPath, ginSwagger.WrapHandler(swaggerfiles.Handler))
 
 	// Endpoint configurations
-	api := s.router.Group(s.conf.General.BasePath)
+	api := s.router.Group(s.conf.Server.BasePath)
 
 	userGroup := api.Group("/user")
 	userGroup.POST("/register", http_handlers.RegisterUser)

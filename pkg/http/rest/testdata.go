@@ -4,37 +4,55 @@ package rest
 func configTestData() map[string]string {
 	return map[string]string{
 		"empty": ``,
+
 		"valid": `
-general:
+server:
   port_number: 44243
   shutdown_delay: 5
   base_path: api/rest/v1
-  swagger_path: /swagger/*any`,
+  swagger_path: /swagger/*any
+authorization:
+  header_key: Authorization`,
 
 		"out of range port": `
-general:
+server:
   port_number: 99
   shutdown_delay: 5
   base_path: api/rest/v1
-  swagger_path: /swagger/*any`,
+  swagger_path: /swagger/*any
+authorization:
+  header_key: Authorization`,
 
 		"out of range shutdown delay": `
-general:
+server:
   port_number: 44243
   shutdown_delay: -1
   base_path: api/rest/v1
-  swagger_path: /swagger/*any`,
+  swagger_path: /swagger/*any
+authorization:
+  header_key: Authorization`,
 
 		"no base path": `
-general:
+server:
   port_number: 44243
   shutdown_delay: 5
-  swagger_path: /swagger/*any`,
+  swagger_path: /swagger/*any
+authorization:
+  header_key: Authorization`,
 
 		"no swagger path": `
-general:
+server:
   port_number: 44243
   shutdown_delay: 5
-  base_path: api/rest/v1`,
+  base_path: api/rest/v1
+authorization:
+  header_key: Authorization`,
+
+		"no auth header": `
+server:
+  port_number: 44243
+  shutdown_delay: 5
+  base_path: api/rest/v1
+  swagger_path: /swagger/*any`,
 	}
 }
