@@ -120,7 +120,7 @@ func (s *HttpRest) initialize() {
 	api := s.router.Group(s.conf.Server.BasePath)
 
 	userGroup := api.Group("/user")
-	userGroup.POST("/register", http_handlers.RegisterUser)
+	userGroup.POST("/register", http_handlers.RegisterUser(s.logger, s.auth))
 	userGroup.POST("/login", http_handlers.LoginUser)
 	userGroup.POST("/refresh", http_handlers.LoginRefresh).Use(http_handlers.AuthMiddleware(s.auth))
 	userGroup.DELETE("/delete", http_handlers.DeleteUser).Use(http_handlers.AuthMiddleware(s.auth))

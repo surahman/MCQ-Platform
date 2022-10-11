@@ -4,6 +4,12 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/surahman/mcq-platform/pkg/auth"
+	"github.com/surahman/mcq-platform/pkg/logger"
+	"github.com/surahman/mcq-platform/pkg/model/cassandra"
+	"github.com/surahman/mcq-platform/pkg/model/http"
+	"github.com/surahman/mcq-platform/pkg/validator"
+	"go.uber.org/zap"
 )
 
 // RegisterUser will handle an HTTP request to create a user.
@@ -13,14 +19,35 @@ import (
 // @Id          registerUser
 // @Accept      json
 // @Produce     json
-// @Param       user body     models.User     true "Username and password to register user"
-// @Success     201  {object} models.Response "message with the registered username."
-// @Failure     400  {object} models.Response "error message with any available details in payload"
-// @Failure     409  {object} models.Response "error message with any available details in payload"
-// @Failure     500  {object} models.Response "error message with any available details in payload"
+// @Param       user body     model_cassandra.UserAccount     true "Username, password, first and last name, email address of user"
+// @Success     201  {object} model_rest.JWTAuthResponse "a valid JWT token for the new account"
+// @Failure     400  {object} model_rest.Error "error message with any available details in payload"
+// @Failure     409  {object} model_rest.Error "error message with any available details in payload"
+// @Failure     500  {object} model_rest.Error "error message with any available details in payload"
 // @Router      /user/register [post]
-func RegisterUser(context *gin.Context) {
-	context.JSON(http.StatusNotImplemented, nil)
+func RegisterUser(logger *logger.Logger, auth auth.Auth) gin.HandlerFunc {
+	return func(context *gin.Context) {
+		var err error
+		var user model_cassandra.UserAccount
+		if err = context.ShouldBindJSON(&user); err != nil {
+			context.JSON(http.StatusBadRequest, &model_rest.Error{Message: err.Error()})
+			context.Abort()
+			return
+		}
+
+		if err = validator.ValidateStruct(&user); err != nil {
+			context.JSON(http.StatusBadRequest, &model_rest.Error{Message: "validation", Payload: err.Error()})
+			return
+		}
+
+		if user.Password, err = auth.HashPassword(user.Password); err != nil {
+			logger.Error("failure hashing password", zap.Error(err))
+			context.JSON(http.StatusInternalServerError, &model_rest.Error{Message: err.Error()})
+			context.Abort()
+			return
+		}
+		context.JSON(http.StatusNotImplemented, nil)
+	}
 }
 
 // LoginUser validates login credentials and generates a JWT.

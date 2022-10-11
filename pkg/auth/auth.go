@@ -19,9 +19,9 @@ import (
 type Auth interface {
 	HashPassword(string) (string, error)
 	CheckPassword(string, string) error
-	GenerateJWT(string) (*model_http.JWTAuthResponse, error)
+	GenerateJWT(string) (*model_rest.JWTAuthResponse, error)
 	ValidateJWT(string) (string, error)
-	RefreshJWT(string) (*model_http.JWTAuthResponse, error)
+	RefreshJWT(string) (*model_rest.JWTAuthResponse, error)
 }
 
 // Check to ensure the Auth interface has been implemented.
@@ -76,7 +76,7 @@ type jwtClaim struct {
 }
 
 // GenerateJWT creates a payload consisting of the JWT with the username as well as expiration time.
-func (a *authImpl) GenerateJWT(username string) (*model_http.JWTAuthResponse, error) {
+func (a *authImpl) GenerateJWT(username string) (*model_rest.JWTAuthResponse, error) {
 	claims := &jwtClaim{
 		Username: username,
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -90,7 +90,7 @@ func (a *authImpl) GenerateJWT(username string) (*model_http.JWTAuthResponse, er
 		return nil, err
 	}
 
-	authResponse := &model_http.JWTAuthResponse{
+	authResponse := &model_rest.JWTAuthResponse{
 		Token:   tokenString,
 		Expires: claims.ExpiresAt.Time,
 	}
@@ -123,7 +123,7 @@ func (a *authImpl) ValidateJWT(signedToken string) (string, error) {
 }
 
 // RefreshJWT will extend a valid JWT's lease by generating a fresh valid JWT.
-func (a *authImpl) RefreshJWT(token string) (authResponse *model_http.JWTAuthResponse, err error) {
+func (a *authImpl) RefreshJWT(token string) (authResponse *model_rest.JWTAuthResponse, err error) {
 	var username string
 	if username, err = a.ValidateJWT(token); err != nil {
 		return
