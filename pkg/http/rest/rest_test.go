@@ -26,8 +26,7 @@ func TestNewRESTServer(t *testing.T) {
 	require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetHTTPRESTFileName(),
 		[]byte(restConfigTestData["valid"]), 0644), "Failed to write in memory file")
 
-	server, err := NewRESTServer(&fs, &mockAuth, &mockCassandra, zapLogger, &mockGrading)
+	server, err := NewRESTServer(&fs, mockAuth, mockCassandra, mockGrading, zapLogger)
 	require.NoError(t, err, "error whilst creating mock server")
 	require.NotNil(t, server, "failed to create mock server")
-
 }
