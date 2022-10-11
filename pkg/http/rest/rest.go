@@ -23,12 +23,12 @@ import (
 
 // HttpRest is the HTTP REST server.
 type HttpRest struct {
-	auth      auth.Auth
-	cassandra cassandra.Cassandra
-	grading   grading.Grading
-	conf      *config
-	logger    *logger.Logger
-	router    *gin.Engine
+	auth    auth.Auth
+	db      cassandra.Cassandra
+	grading grading.Grading
+	conf    *config
+	logger  *logger.Logger
+	router  *gin.Engine
 }
 
 // NewRESTServer will create a new REST server instance in a non-running state.
@@ -41,11 +41,11 @@ func NewRESTServer(fs *afero.Fs, auth auth.Auth, cassandra cassandra.Cassandra, 
 	}
 
 	return &HttpRest{
-			conf:      conf,
-			auth:      auth,
-			cassandra: cassandra,
-			grading:   grading,
-			logger:    logger,
+			conf:    conf,
+			auth:    auth,
+			db:      cassandra,
+			grading: grading,
+			logger:  logger,
 		},
 		err
 }
@@ -120,7 +120,7 @@ func (s *HttpRest) initialize() {
 	api := s.router.Group(s.conf.Server.BasePath)
 
 	userGroup := api.Group("/user")
-	userGroup.POST("/register", http_handlers.RegisterUser(s.logger, s.auth))
+	userGroup.POST("/register", http_handlers.RegisterUser(s.logger, s.auth, s.db))
 	userGroup.POST("/login", http_handlers.LoginUser)
 	userGroup.POST("/refresh", http_handlers.LoginRefresh).Use(http_handlers.AuthMiddleware(s.auth))
 	userGroup.DELETE("/delete", http_handlers.DeleteUser).Use(http_handlers.AuthMiddleware(s.auth))

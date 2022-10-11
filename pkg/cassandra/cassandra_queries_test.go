@@ -414,7 +414,6 @@ func TestReadResponseStatisticsQuery(t *testing.T) {
 			actual := responseSlice.([]*model_cassandra.Response)
 			testCase.expectNil(t, actual, "returned array does not meet nil expectation")
 			require.Equal(t, testCase.expectedSize, len(actual), "length of the response slices do not match")
-
 		})
 	}
 }

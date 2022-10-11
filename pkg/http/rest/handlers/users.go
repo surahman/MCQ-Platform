@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/surahman/mcq-platform/pkg/auth"
+	"github.com/surahman/mcq-platform/pkg/cassandra"
 	"github.com/surahman/mcq-platform/pkg/logger"
 	"github.com/surahman/mcq-platform/pkg/model/cassandra"
 	"github.com/surahman/mcq-platform/pkg/model/http"
@@ -25,7 +26,7 @@ import (
 // @Failure     409  {object} model_rest.Error "error message with any available details in payload"
 // @Failure     500  {object} model_rest.Error "error message with any available details in payload"
 // @Router      /user/register [post]
-func RegisterUser(logger *logger.Logger, auth auth.Auth) gin.HandlerFunc {
+func RegisterUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		var err error
 		var user model_cassandra.UserAccount
@@ -46,7 +47,14 @@ func RegisterUser(logger *logger.Logger, auth auth.Auth) gin.HandlerFunc {
 			context.Abort()
 			return
 		}
-		context.JSON(http.StatusNotImplemented, nil)
+
+		if _, err = db.Execute(cassandra.CreateUserQuery, &model_cassandra.User{UserAccount: &user}); err != nil {
+			context.JSON(http.StatusInternalServerError, &model_rest.Error{Message: err.Error()})
+			context.Abort()
+			return
+		}
+
+		context.JSON(http.StatusOK, nil)
 	}
 }
 
