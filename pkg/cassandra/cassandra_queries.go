@@ -39,13 +39,13 @@ func CreateUserQuery(c Cassandra, params any) (response any, err error) {
 		&resp.Username, &resp.AccountID, &resp.Email, &resp.FirstName, &resp.IsDeleted, &resp.LastName, &resp.Password); err != nil {
 		conn.logger.Error("failed to create input record",
 			zap.Strings("Account info:", []string{input.Username, input.AccountID}), zap.Error(err))
-		return nil, err
+		return nil, NewError(err.Error()).internalError()
 	}
 
 	if !applied {
 		msg := "failed to create user record it already exists"
 		conn.logger.Error(msg, zap.Strings("Account info:", []string{input.Username, input.AccountID}), zap.Error(err))
-		return nil, errors.New(msg)
+		return nil, NewError(msg).conflictError()
 	}
 
 	return nil, nil
@@ -66,6 +66,7 @@ func ReadUserQuery(c Cassandra, params any) (response any, err error) {
 		&resp.Username, &resp.AccountID, &resp.Email, &resp.FirstName, &resp.IsDeleted, &resp.LastName, &resp.Password); err != nil {
 		conn.logger.Error("failed to read user record",
 			zap.String("username", input.Username), zap.String("account_id", input.AccountID), zap.Error(err))
+		return nil, NewError("user not found").notFoundError()
 	}
 
 	return &resp, err
@@ -86,13 +87,13 @@ func DeleteUserQuery(c Cassandra, params any) (response any, err error) {
 		&resp.Username, &resp.AccountID, &resp.Email, &resp.FirstName, &resp.IsDeleted, &resp.LastName, &resp.Password); err != nil {
 		conn.logger.Error("failed to create user record",
 			zap.Strings("Account info:", []string{input.Username, input.AccountID}), zap.Error(err))
-		return nil, err
+		return nil, NewError(err.Error()).internalError()
 	}
 
 	if !applied {
 		msg := "failed to mark user record as deleted"
 		conn.logger.Error(msg, zap.Strings("Account info:", []string{input.Username, input.AccountID}), zap.Error(err))
-		return nil, errors.New(msg)
+		return nil, NewError("user not found").notFoundError()
 	}
 
 	return nil, err

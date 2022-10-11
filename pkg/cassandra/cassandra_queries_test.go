@@ -2,6 +2,7 @@ package cassandra
 
 import (
 	"fmt"
+	"net/http"
 	"reflect"
 	"testing"
 
@@ -61,6 +62,7 @@ func TestCreateUserQuery(t *testing.T) {
 		t.Run(fmt.Sprintf("Test case %s", key), func(t *testing.T) {
 			_, err := connection.db.Execute(CreateUserQuery, testCase)
 			require.Error(t, err)
+			require.Equal(t, http.StatusConflict, err.(*Error).Status)
 		})
 	}
 
@@ -106,8 +108,9 @@ func TestDeleteUserQuery(t *testing.T) {
 	}
 	_, err := connection.db.Execute(DeleteUserQuery, userPass)
 	require.Error(t, err, "user account that does not exist")
+	require.Equal(t, http.StatusNotFound, err.(*Error).Status)
 
-	// Username and account id collisions.
+	// User accounts deleted.
 	for key, testCase := range testUserRecords {
 		t.Run(fmt.Sprintf("Test case %s", key), func(t *testing.T) {
 			_, err := connection.db.Execute(DeleteUserQuery, testCase)
@@ -142,6 +145,7 @@ func TestReadUserQuery(t *testing.T) {
 	}
 	_, err := connection.db.Execute(ReadUserQuery, userPass)
 	require.Error(t, err, "user account that does not exist")
+	require.Equal(t, http.StatusNotFound, err.(*Error).Status)
 
 	// Check created accounts exist.
 	for key, testCase := range testUserRecords {
