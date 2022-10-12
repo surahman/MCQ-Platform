@@ -21,7 +21,7 @@ import (
 // @Accept      json
 // @Produce     json
 // @Param       user body     model_cassandra.UserAccount     true "Username, password, first and last name, email address of user"
-// @Success     201  {object} model_rest.JWTAuthResponse "a valid JWT token for the new account"
+// @Success     200  {object} model_rest.JWTAuthResponse "a valid JWT token for the new account"
 // @Failure     400  {object} model_rest.Error "error message with any available details in payload"
 // @Failure     409  {object} model_rest.Error "error message with any available details in payload"
 // @Failure     500  {object} model_rest.Error "error message with any available details in payload"
@@ -29,7 +29,9 @@ import (
 func RegisterUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		var err error
+		var authToken *model_rest.JWTAuthResponse
 		var user model_cassandra.UserAccount
+
 		if err = context.ShouldBindJSON(&user); err != nil {
 			context.JSON(http.StatusBadRequest, &model_rest.Error{Message: err.Error()})
 			context.Abort()
@@ -49,12 +51,19 @@ func RegisterUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra)
 		}
 
 		if _, err = db.Execute(cassandra.CreateUserQuery, &model_cassandra.User{UserAccount: &user}); err != nil {
+			context.JSON(err.(*cassandra.Error).Status, &model_rest.Error{Message: err.Error()})
+			context.Abort()
+			return
+		}
+
+		if authToken, err = auth.GenerateJWT(user.Username); err != nil {
+			logger.Error("failure generating JWT after account creation", zap.Error(err))
 			context.JSON(http.StatusInternalServerError, &model_rest.Error{Message: err.Error()})
 			context.Abort()
 			return
 		}
 
-		context.JSON(http.StatusOK, nil)
+		context.JSON(http.StatusOK, authToken)
 	}
 }
 

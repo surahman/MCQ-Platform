@@ -157,8 +157,8 @@ func GetQuizzedUUIDMapping() map[string]gocql.UUID {
 // GetTestUsers will generate a number of dummy users for testing.
 func GetTestUsers() map[string]*model_cassandra.User {
 	users := make(map[string]*model_cassandra.User)
-	username := "user-%d"
-	password := "user-pwd-%d"
+	username := "username%d"
+	password := "user-password-%d"
 	firstname := "firstname-%d"
 	lastname := "lastname-%d"
 	email := "user%d@email-address.com"
