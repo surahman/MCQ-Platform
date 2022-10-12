@@ -69,8 +69,10 @@ func TestCreateUserQuery(t *testing.T) {
 	// New user with different username and account but duplicated fields.
 	userPass := &model_cassandra.User{
 		UserAccount: &model_cassandra.UserAccount{
-			Username:  "user-5",
-			Password:  "user-pwd-1",
+			UserLoginCredentials: model_cassandra.UserLoginCredentials{
+				Username: "user-5",
+				Password: "user-pwd-1",
+			},
 			FirstName: "firstname-1",
 			LastName:  "lastname-1",
 			Email:     "user1@email-address.com",
@@ -97,8 +99,10 @@ func TestDeleteUserQuery(t *testing.T) {
 	// Non-existent user.
 	userPass := &model_cassandra.User{
 		UserAccount: &model_cassandra.UserAccount{
-			Username:  "user-5",
-			Password:  "user-pwd-1",
+			UserLoginCredentials: model_cassandra.UserLoginCredentials{
+				Username: "user-5",
+				Password: "user-pwd-1",
+			},
 			FirstName: "firstname-1",
 			LastName:  "lastname-1",
 			Email:     "user1@email-address.com",
@@ -132,17 +136,7 @@ func TestReadUserQuery(t *testing.T) {
 	insertTestUsers(t)
 
 	// Non-existent user.
-	userPass := &model_cassandra.User{
-		UserAccount: &model_cassandra.UserAccount{
-			Username:  "user-5",
-			Password:  "user-pwd-1",
-			FirstName: "firstname-1",
-			LastName:  "lastname-1",
-			Email:     "user1@email-address.com",
-		},
-		AccountID: blake2b256("user-5"),
-		IsDeleted: false,
-	}
+	userPass := "user-5"
 	_, err := connection.db.Execute(ReadUserQuery, userPass)
 	require.Error(t, err, "user account that does not exist")
 	require.Equal(t, http.StatusNotFound, err.(*Error).Status)
@@ -150,7 +144,7 @@ func TestReadUserQuery(t *testing.T) {
 	// Check created accounts exist.
 	for key, testCase := range testUserRecords {
 		t.Run(fmt.Sprintf("Test case %s", key), func(t *testing.T) {
-			resp, err := connection.db.Execute(ReadUserQuery, testCase)
+			resp, err := connection.db.Execute(ReadUserQuery, testCase.UserAccount.UserLoginCredentials.Username)
 			require.NoError(t, err)
 			actual := resp.(*model_cassandra.User)
 			require.Truef(t, reflect.DeepEqual(testCase, actual), "expected user, %v, does not match actual, %v", testCase, actual)

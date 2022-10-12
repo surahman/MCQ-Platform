@@ -20,11 +20,11 @@ import (
 // @Id          registerUser
 // @Accept      json
 // @Produce     json
-// @Param       user body     model_cassandra.UserAccount     true "Username, password, first and last name, email address of user"
-// @Success     200  {object} model_rest.JWTAuthResponse "a valid JWT token for the new account"
-// @Failure     400  {object} model_rest.Error "error message with any available details in payload"
-// @Failure     409  {object} model_rest.Error "error message with any available details in payload"
-// @Failure     500  {object} model_rest.Error "error message with any available details in payload"
+// @Param       user body     model_cassandra.UserAccount true "Username, password, first and last name, email address of user"
+// @Success     200  {object} model_rest.JWTAuthResponse  "a valid JWT token for the new account"
+// @Failure     400  {object} model_rest.Error            "error message with any available details in payload"
+// @Failure     409  {object} model_rest.Error            "error message with any available details in payload"
+// @Failure     500  {object} model_rest.Error            "error message with any available details in payload"
 // @Router      /user/register [post]
 func RegisterUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc {
 	return func(context *gin.Context) {
@@ -74,15 +74,53 @@ func RegisterUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra)
 // @Id          loginUser
 // @Accept      json
 // @Produce     json
-// @Param       user body     models.User     true "Username and password to register user with"
-// @Success     200  {object} models.Response "JWT in the api-key"
-// @Failure     400  {object} models.Response "error message with any available details in payload"
-// @Failure     401  {object} models.Response "error message with any available details in payload"
-// @Failure     404  {object} models.Response "error message with any available details in payload"
-// @Failure     500  {object} models.Response "error message with any available details in payload"
+// @Param       user body     model_cassandra.UserLoginCredentials true "Username and password to login with"
+// @Success     200  {object} model_rest.JWTAuthResponse           "JWT in the api-key"
+// @Failure     400  {object} model_rest.Error                     "error message with any available details in payload"
+// @Failure     401  {object} model_rest.Error                     "error message with any available details in payload"
+// @Failure     404  {object} model_rest.Error                     "error message with any available details in payload"
+// @Failure     500  {object} model_rest.Error                     "error message with any available details in payload"
 // @Router      /user/login [post]
-func LoginUser(context *gin.Context) {
-	context.JSON(http.StatusNotImplemented, nil)
+func LoginUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc {
+	return func(context *gin.Context) {
+		var err error
+		var authToken *model_rest.JWTAuthResponse
+		var loginRequest model_cassandra.UserLoginCredentials
+		var dbResponse any
+
+		if err = context.ShouldBindJSON(&loginRequest); err != nil {
+			context.JSON(http.StatusBadRequest, &model_rest.Error{Message: err.Error()})
+			context.Abort()
+			return
+		}
+
+		if err = validator.ValidateStruct(&loginRequest); err != nil {
+			context.JSON(http.StatusBadRequest, &model_rest.Error{Message: "validation", Payload: err.Error()})
+			return
+		}
+
+		if dbResponse, err = db.Execute(cassandra.ReadUserQuery, loginRequest.Username); err != nil {
+			context.JSON(http.StatusForbidden, &model_rest.Error{Message: "invalid username or password"})
+			context.Abort()
+			return
+		}
+
+		truth := dbResponse.(*model_cassandra.User)
+		if err = auth.CheckPassword(truth.Password, loginRequest.Password); err != nil {
+			context.JSON(http.StatusForbidden, &model_rest.Error{Message: "invalid username or password"})
+			context.Abort()
+			return
+		}
+
+		if authToken, err = auth.GenerateJWT(loginRequest.Username); err != nil {
+			logger.Error("failure generating JWT after account creation", zap.Error(err))
+			context.JSON(http.StatusInternalServerError, &model_rest.Error{Message: err.Error()})
+			context.Abort()
+			return
+		}
+
+		context.JSON(http.StatusOK, authToken)
+	}
 }
 
 // LoginRefresh validates a JWT token and issues a fresh token.

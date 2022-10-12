@@ -52,20 +52,20 @@ func CreateUserQuery(c Cassandra, params any) (response any, err error) {
 }
 
 // ReadUserQuery will read a user record from the users table.
-// Param: pointer to the user struct containing the query parameters
+// Param: username string to lookup
 // Return: address to a user record
 func ReadUserQuery(c Cassandra, params any) (response any, err error) {
 	conn := c.(*cassandraImpl)
-	input := params.(*model_cassandra.User)
 	resp := model_cassandra.User{UserAccount: &model_cassandra.UserAccount{}}
+	username := params.(string)
 
 	// Create hash of username using Blake2b 256 hashing algorithm.
-	input.AccountID = blake2b256(input.Username)
+	accountID := blake2b256(username)
 
-	if err = conn.session.Query(model_cassandra.ReadUser, input.Username, input.AccountID).Scan(
+	if err = conn.session.Query(model_cassandra.ReadUser, username, accountID).Scan(
 		&resp.Username, &resp.AccountID, &resp.Email, &resp.FirstName, &resp.IsDeleted, &resp.LastName, &resp.Password); err != nil {
 		conn.logger.Error("failed to read user record",
-			zap.String("username", input.Username), zap.String("account_id", input.AccountID), zap.Error(err))
+			zap.String("username", username), zap.String("account_id", accountID), zap.Error(err))
 		return nil, NewError("user not found").notFoundError()
 	}
 

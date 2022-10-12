@@ -167,8 +167,10 @@ func GetTestUsers() map[string]*model_cassandra.User {
 		uname := fmt.Sprintf(username, idx)
 		users[uname] = &model_cassandra.User{
 			UserAccount: &model_cassandra.UserAccount{
-				Username:  uname,
-				Password:  fmt.Sprintf(password, idx),
+				UserLoginCredentials: model_cassandra.UserLoginCredentials{
+					Username: uname,
+					Password: fmt.Sprintf(password, idx),
+				},
 				FirstName: fmt.Sprintf(firstname, idx),
 				LastName:  fmt.Sprintf(lastname, idx),
 				Email:     fmt.Sprintf(email, idx),
