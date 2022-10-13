@@ -122,7 +122,7 @@ func (s *HttpRest) initialize() {
 	userGroup := api.Group("/user")
 	userGroup.POST("/register", http_handlers.RegisterUser(s.logger, s.auth, s.db))
 	userGroup.POST("/login", http_handlers.LoginUser(s.logger, s.auth, s.db))
-	userGroup.POST("/refresh", http_handlers.LoginRefresh).Use(http_handlers.AuthMiddleware(s.auth))
+	userGroup.POST("/refresh", http_handlers.LoginRefresh(s.logger, s.auth, s.db)).Use(http_handlers.AuthMiddleware(s.auth))
 	userGroup.DELETE("/delete", http_handlers.DeleteUser).Use(http_handlers.AuthMiddleware(s.auth))
 
 	scoreGroup := api.Group("/score").Use(http_handlers.AuthMiddleware(s.auth))

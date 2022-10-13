@@ -2,6 +2,7 @@ package http_handlers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/surahman/mcq-platform/pkg/auth"
@@ -57,7 +58,7 @@ func RegisterUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra)
 		}
 
 		if authToken, err = auth.GenerateJWT(user.Username); err != nil {
-			logger.Error("failure generating JWT after account creation", zap.Error(err))
+			logger.Error("failure generating JWT during account creation", zap.Error(err))
 			context.JSON(http.StatusInternalServerError, &model_rest.Error{Message: err.Error()})
 			context.Abort()
 			return
@@ -77,8 +78,7 @@ func RegisterUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra)
 // @Param       user body     model_cassandra.UserLoginCredentials true "Username and password to login with"
 // @Success     200  {object} model_rest.JWTAuthResponse           "JWT in the api-key"
 // @Failure     400  {object} model_rest.Error                     "error message with any available details in payload"
-// @Failure     401  {object} model_rest.Error                     "error message with any available details in payload"
-// @Failure     404  {object} model_rest.Error                     "error message with any available details in payload"
+// @Failure     403  {object} model_rest.Error                     "error message with any available details in payload"
 // @Failure     500  {object} model_rest.Error                     "error message with any available details in payload"
 // @Router      /user/login [post]
 func LoginUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc {
@@ -106,14 +106,14 @@ func LoginUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gi
 		}
 
 		truth := dbResponse.(*model_cassandra.User)
-		if err = auth.CheckPassword(truth.Password, loginRequest.Password); err != nil {
+		if err = auth.CheckPassword(truth.Password, loginRequest.Password); err != nil || truth.IsDeleted {
 			context.JSON(http.StatusForbidden, &model_rest.Error{Message: "invalid username or password"})
 			context.Abort()
 			return
 		}
 
 		if authToken, err = auth.GenerateJWT(loginRequest.Username); err != nil {
-			logger.Error("failure generating JWT after account creation", zap.Error(err))
+			logger.Error("failure generating JWT during login", zap.Error(err))
 			context.JSON(http.StatusInternalServerError, &model_rest.Error{Message: err.Error()})
 			context.Abort()
 			return
@@ -125,21 +125,73 @@ func LoginUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gi
 
 // LoginRefresh validates a JWT token and issues a fresh token.
 // @Summary     Refresh a user's JWT by extending its expiration time.
-// @Description Refreshes a user's JWT by validating it and then issuing a fresh JWT with an extended validity time.
+// @Description Refreshes a user's JWT by validating it and then issuing a fresh JWT with an extended validity time. JWT must be expiring in under 60 seconds.
 // @Tags        user users login refresh security
 // @Id          loginRefresh
 // @Accept      json
 // @Produce     json
 // @Security    ApiKeyAuth
-// @Param       user body     models.User     true "Username and password to register user with"
-// @Success     200  {object} models.Response "JWT in the api-key"
-// @Failure     400  {object} models.Response "error message with any available details in payload"
-// @Failure     401  {object} models.Response "error message with any available details in payload"
-// @Failure     404  {object} models.Response "error message with any available details in payload"
-// @Failure     500  {object} models.Response "error message with any available details in payload"
+// @Param       user body     model_rest.JWTAuthResponse true "A valid JWT expiring in less than 60 seconds to be extended"
+// @Success     200  {object} model_rest.JWTAuthResponse "A new valid JWT"
+// @Failure     400  {object} model_rest.Error           "error message with any available details in payload"
+// @Failure     403  {object} model_rest.Error           "error message with any available details in payload"
+// @Failure     500  {object} model_rest.Error           "error message with any available details in payload"
+// @Failure     510  {object} model_rest.Error           "error message with any available details in payload"
 // @Router      /user/refresh [post]
-func LoginRefresh(context *gin.Context) {
-	context.JSON(http.StatusNotImplemented, nil)
+func LoginRefresh(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc {
+	return func(context *gin.Context) {
+		var err error
+		var originalToken model_rest.JWTAuthResponse
+		var freshToken *model_rest.JWTAuthResponse
+		var username string
+		var dbResponse any
+
+		if err = context.ShouldBindJSON(&originalToken); err != nil {
+			context.JSON(http.StatusBadRequest, &model_rest.Error{Message: err.Error()})
+			context.Abort()
+			return
+		}
+
+		if err = validator.ValidateStruct(&originalToken); err != nil {
+			context.JSON(http.StatusBadRequest, &model_rest.Error{Message: "validation", Payload: err.Error()})
+			return
+		}
+
+		if username, err = auth.ValidateJWT(originalToken.Token); err != nil {
+			context.JSON(http.StatusForbidden, &model_rest.Error{Message: err.Error()})
+			context.Abort()
+			return
+		}
+
+		if dbResponse, err = db.Execute(cassandra.ReadUserQuery, username); err != nil {
+			logger.Warn("failed to read user record for a valid JWT", zap.String("username", username), zap.Error(err))
+			context.JSON(http.StatusForbidden, &model_rest.Error{Message: "invalid token"})
+			context.Abort()
+			return
+		}
+
+		if dbResponse.(*model_cassandra.User).IsDeleted {
+			logger.Warn("attempt to refresh a JWT for a deleted user", zap.String("username", username))
+			context.JSON(http.StatusForbidden, &model_rest.Error{Message: "invalid token"})
+			context.Abort()
+			return
+		}
+
+		// Do not refresh tokens that have more than a minute left to expire.
+		if originalToken.Expires.Add(time.Minute).Before(time.Now()) {
+			context.JSON(http.StatusNotExtended, &model_rest.Error{Message: "JWT is still valid for more than a minute"})
+			return
+		}
+
+		if freshToken, err = auth.GenerateJWT(username); err != nil {
+			logger.Error("failure generating JWT during token refresh", zap.Error(err))
+			context.JSON(http.StatusInternalServerError, &model_rest.Error{Message: err.Error()})
+			context.Abort()
+			return
+		}
+
+		context.JSON(http.StatusOK, freshToken)
+	}
 }
 
 // DeleteUser will mark a user as deleted in the database.
