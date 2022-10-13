@@ -163,8 +163,8 @@ func TestAuthImpl_GenerateJWT(t *testing.T) {
 	userName := "test username"
 	authResponse, err := testAuth.GenerateJWT(userName)
 	require.NoError(t, err, "JWT creation failed")
-	require.True(t, authResponse.Expires.After(time.Now()), "JWT expires before current time")
-	require.True(t, authResponse.Expires.Before(time.Now().Add(time.Duration(expirationDuration+1)*time.Second)), "JWT expires after deadline")
+	require.True(t, authResponse.Expires > time.Now().Unix(), "JWT expires before current time")
+	require.True(t, authResponse.Expires < time.Now().Add(time.Duration(expirationDuration+1)*time.Second).Unix(), "JWT expires after deadline")
 
 	// Check validate token and check for username in claim.
 	actualUname, err := testAuth.ValidateJWT(authResponse.Token)
@@ -293,7 +293,7 @@ func TestAuthImpl_RefreshJWT(t *testing.T) {
 			}
 
 			require.True(t,
-				refreshedToken.Expires.After(time.Now().Add(time.Duration(testAuthImpl.conf.JWTConfig.ExpirationDuration-1)*time.Second)),
+				refreshedToken.Expires > time.Now().Add(time.Duration(testAuthImpl.conf.JWTConfig.ExpirationDuration-1)*time.Second).Unix(),
 				"token expires before the required deadline")
 
 			actualUsername, err = testAuthImpl.ValidateJWT(testJWT.Token)

@@ -2,6 +2,7 @@ package http_handlers
 
 import (
 	"fmt"
+	"math"
 	"net/http"
 	"time"
 
@@ -42,7 +43,7 @@ func RegisterUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra)
 		}
 
 		if err = validator.ValidateStruct(&user); err != nil {
-			context.JSON(http.StatusBadRequest, &model_rest.Error{Message: "validation", Payload: err.Error()})
+			context.JSON(http.StatusBadRequest, &model_rest.Error{Message: "validation", Payload: err})
 			return
 		}
 
@@ -97,7 +98,7 @@ func LoginUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gi
 		}
 
 		if err = validator.ValidateStruct(&loginRequest); err != nil {
-			context.JSON(http.StatusBadRequest, &model_rest.Error{Message: "validation", Payload: err.Error()})
+			context.JSON(http.StatusBadRequest, &model_rest.Error{Message: "validation", Payload: err})
 			return
 		}
 
@@ -155,7 +156,7 @@ func LoginRefresh(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra)
 		}
 
 		if err = validator.ValidateStruct(&originalToken); err != nil {
-			context.JSON(http.StatusBadRequest, &model_rest.Error{Message: "validation", Payload: err.Error()})
+			context.JSON(http.StatusBadRequest, &model_rest.Error{Message: "validation", Payload: err})
 			return
 		}
 
@@ -180,7 +181,7 @@ func LoginRefresh(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra)
 		}
 
 		// Do not refresh tokens that have more than a minute left to expire.
-		if originalToken.Expires.Add(time.Minute).Before(time.Now()) {
+		if math.Abs(float64(time.Now().Unix()-originalToken.Expires)) > 60 {
 			context.JSON(http.StatusNotExtended, &model_rest.Error{Message: "JWT is still valid for more than a minute"})
 			return
 		}
@@ -226,7 +227,7 @@ func DeleteUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, a
 		}
 
 		if err = validator.ValidateStruct(&deleteRequest); err != nil {
-			context.JSON(http.StatusBadRequest, &model_rest.Error{Message: "validation", Payload: err.Error()})
+			context.JSON(http.StatusBadRequest, &model_rest.Error{Message: "validation", Payload: err})
 			return
 		}
 

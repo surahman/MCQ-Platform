@@ -339,7 +339,7 @@ func TestLoginRefresh(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			token: &model_rest.JWTAuthResponse{
 				Token:   "test token",
-				Expires: time.Now().Add(-time.Duration(30) * time.Second)},
+				Expires: time.Now().Add(-time.Duration(30) * time.Second).Unix()},
 			cassandraReadData: &mockCassandraData{
 				outputParam: testUserData["username1"],
 				times:       1,
@@ -357,7 +357,7 @@ func TestLoginRefresh(t *testing.T) {
 			expectedStatus: http.StatusNotExtended,
 			token: &model_rest.JWTAuthResponse{
 				Token:   "test token",
-				Expires: time.Now().Add(-time.Duration(3) * time.Minute)},
+				Expires: time.Now().Add(-time.Duration(3) * time.Minute).Unix()},
 			cassandraReadData: &mockCassandraData{
 				outputParam: testUserData["username1"],
 				times:       1,
@@ -375,7 +375,7 @@ func TestLoginRefresh(t *testing.T) {
 			expectedStatus: http.StatusForbidden,
 			token: &model_rest.JWTAuthResponse{
 				Token:   "test token",
-				Expires: time.Now().Add(-time.Duration(30) * time.Second)},
+				Expires: time.Now().Add(-time.Duration(30) * time.Second).Unix()},
 			cassandraReadData: &mockCassandraData{
 				outputParam: testUserData["username1"],
 				times:       0,
@@ -394,7 +394,7 @@ func TestLoginRefresh(t *testing.T) {
 			expectedStatus: http.StatusInternalServerError,
 			token: &model_rest.JWTAuthResponse{
 				Token:   "test token",
-				Expires: time.Now().Add(-time.Duration(30) * time.Second)},
+				Expires: time.Now().Add(-time.Duration(30) * time.Second).Unix()},
 			cassandraReadData: &mockCassandraData{
 				outputErr: errors.New("db failure"),
 				times:     1,
@@ -412,7 +412,7 @@ func TestLoginRefresh(t *testing.T) {
 			expectedStatus: http.StatusForbidden,
 			token: &model_rest.JWTAuthResponse{
 				Token:   "test token",
-				Expires: time.Now().Add(-time.Duration(30) * time.Second)},
+				Expires: time.Now().Add(-time.Duration(30) * time.Second).Unix()},
 			cassandraReadData: &mockCassandraData{
 				outputParam: &model_cassandra.User{
 					IsDeleted: true,
@@ -432,7 +432,7 @@ func TestLoginRefresh(t *testing.T) {
 			expectedStatus: http.StatusInternalServerError,
 			token: &model_rest.JWTAuthResponse{
 				Token:   "test token",
-				Expires: time.Now().Add(-time.Duration(30) * time.Second)},
+				Expires: time.Now().Add(-time.Duration(30) * time.Second).Unix()},
 			cassandraReadData: &mockCassandraData{
 				outputParam: testUserData["username1"],
 				times:       1,

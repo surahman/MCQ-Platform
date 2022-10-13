@@ -81,7 +81,7 @@ func (a *authImpl) GenerateJWT(username string) (*model_rest.JWTAuthResponse, er
 		Username: username,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    a.conf.JWTConfig.Issuer,
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(a.conf.JWTConfig.ExpirationDuration) * time.Second)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(a.conf.JWTConfig.ExpirationDuration) * time.Second).UTC()),
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -92,7 +92,7 @@ func (a *authImpl) GenerateJWT(username string) (*model_rest.JWTAuthResponse, er
 
 	authResponse := &model_rest.JWTAuthResponse{
 		Token:   tokenString,
-		Expires: claims.ExpiresAt.Time,
+		Expires: claims.ExpiresAt.Time.Unix(),
 	}
 
 	return authResponse, err

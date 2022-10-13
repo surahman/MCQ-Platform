@@ -18,7 +18,7 @@ The returned token schema is below.
 
 ```json
 {
-  "expires": "expiration time string",
+  "expires": "expiration time as Unix time stamp",
   "token": "token string"
 }
 ```

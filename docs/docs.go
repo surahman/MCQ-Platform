@@ -931,8 +931,8 @@ const docTemplate = `{
             ],
             "properties": {
                 "expires": {
-                    "description": "Expiration time, only used by end-user.",
-                    "type": "string"
+                    "description": "Expiration time as unix time stamp.",
+                    "type": "integer"
                 },
                 "token": {
                     "description": "JWT string sent too and validated by server.",
