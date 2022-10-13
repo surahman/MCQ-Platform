@@ -1,12 +1,14 @@
 package http_handlers
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/surahman/mcq-platform/pkg/auth"
 	"github.com/surahman/mcq-platform/pkg/cassandra"
+	"github.com/surahman/mcq-platform/pkg/constants"
 	"github.com/surahman/mcq-platform/pkg/logger"
 	"github.com/surahman/mcq-platform/pkg/model/cassandra"
 	"github.com/surahman/mcq-platform/pkg/model/http"
@@ -165,7 +167,7 @@ func LoginRefresh(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra)
 
 		if dbResponse, err = db.Execute(cassandra.ReadUserQuery, username); err != nil {
 			logger.Warn("failed to read user record for a valid JWT", zap.String("username", username), zap.Error(err))
-			context.JSON(http.StatusForbidden, &model_rest.Error{Message: "invalid token"})
+			context.JSON(http.StatusInternalServerError, &model_rest.Error{Message: "please retry your request later"})
 			context.Abort()
 			return
 		}
@@ -195,19 +197,82 @@ func LoginRefresh(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra)
 }
 
 // DeleteUser will mark a user as deleted in the database.
-// @Summary     Delete a user.
-// @Description Deletes a user stored in the database by marking it as deleted.
+// @Summary     Deletes a user. The user must supply their credentials as well as a confirmation message.
+// @Description Deletes a user stored in the database by marking it as deleted. The user must supply their login credentials as well as complete the following confirmation message: "I understand the consequences, delete my user account <username here>"
 // @Tags        user users delete security
 // @Id          deleteUser
 // @Accept      json
 // @Produce     json
 // @Security    ApiKeyAuth
-// @Param       user body     models.User     true "Username and password to register user"
-// @Success     201  {object} models.Response "message with the registered username."
-// @Failure     400  {object} models.Response "error message with any available details in payload"
-// @Failure     409  {object} models.Response "error message with any available details in payload"
-// @Failure     500  {object} models.Response "error message with any available details in payload"
+// @Param       user body     model_rest.DeleteUserRequest true "The request payload for deleting an account"
+// @Success     200  {object} model_rest.Success           "message with a confirmation of a deleted user account"
+// @Failure     400  {object} model_rest.Error             "error message with any available details in payload"
+// @Failure     409  {object} model_rest.Error             "error message with any available details in payload"
+// @Failure     500  {object} model_rest.Error             "error message with any available details in payload"
 // @Router      /user/delete [delete]
-func DeleteUser(context *gin.Context) {
-	context.JSON(http.StatusNotImplemented, nil)
+func DeleteUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, authHeaderKey string) gin.HandlerFunc {
+	return func(context *gin.Context) {
+		var err error
+		var deleteRequest model_rest.DeleteUserRequest
+		var username string
+		var dbResponse any
+		jwt := context.GetHeader(authHeaderKey)
+
+		// Get the delete request from the message body and validate it.
+		if err = context.ShouldBindJSON(&deleteRequest); err != nil {
+			context.JSON(http.StatusBadRequest, &model_rest.Error{Message: err.Error()})
+			context.Abort()
+			return
+		}
+
+		if err = validator.ValidateStruct(&deleteRequest); err != nil {
+			context.JSON(http.StatusBadRequest, &model_rest.Error{Message: "validation", Payload: err.Error()})
+			return
+		}
+
+		// Validate the JWT and extract the username, compare the username against the deletion request login credentials.
+		if username, err = auth.ValidateJWT(jwt); err != nil {
+			context.JSON(http.StatusForbidden, &model_rest.Error{Message: err.Error()})
+			context.Abort()
+			return
+		}
+
+		if username != deleteRequest.Username {
+			context.JSON(http.StatusForbidden, &model_rest.Error{Message: "invalid deletion request"})
+			context.Abort()
+			return
+		}
+
+		// Check confirmation message.
+		if fmt.Sprintf(constants.GetDeleteUserAccountConfirmation(), username) != deleteRequest.Confirmation {
+			context.JSON(http.StatusBadRequest, &model_rest.Error{Message: "incorrect or incomplete deletion request confirmation"})
+			context.Abort()
+			return
+		}
+
+		// Check to make sure the account is not already deleted.
+		if dbResponse, err = db.Execute(cassandra.ReadUserQuery, username); err != nil {
+			logger.Warn("failed to read user record during an account deletion request", zap.String("username", username), zap.Error(err))
+			context.JSON(http.StatusInternalServerError, &model_rest.Error{Message: "please retry your request later"})
+			context.Abort()
+			return
+		}
+
+		if dbResponse.(*model_cassandra.User).IsDeleted {
+			logger.Warn("attempt to delete an already deleted user account", zap.String("username", username))
+			context.JSON(http.StatusForbidden, &model_rest.Error{Message: "user account is already deleted"})
+			context.Abort()
+			return
+		}
+
+		// Mark account as deleted.
+		if _, err = db.Execute(cassandra.DeleteUserQuery, username); err != nil {
+			logger.Warn("failed to mark a user record as deleted", zap.String("username", username), zap.Error(err))
+			context.JSON(http.StatusInternalServerError, &model_rest.Error{Message: "please retry your request later"})
+			context.Abort()
+			return
+		}
+
+		context.JSON(http.StatusOK, model_rest.Success{Message: "account successfully deleted"})
+	}
 }

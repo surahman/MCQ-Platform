@@ -97,19 +97,7 @@ func TestDeleteUserQuery(t *testing.T) {
 	insertTestUsers(t)
 
 	// Non-existent user.
-	userPass := &model_cassandra.User{
-		UserAccount: &model_cassandra.UserAccount{
-			UserLoginCredentials: model_cassandra.UserLoginCredentials{
-				Username: "user-5",
-				Password: "user-pwd-1",
-			},
-			FirstName: "firstname-1",
-			LastName:  "lastname-1",
-			Email:     "user1@email-address.com",
-		},
-		AccountID: blake2b256("user-5"),
-		IsDeleted: false,
-	}
+	userPass := "user-5"
 	_, err := connection.db.Execute(DeleteUserQuery, userPass)
 	require.Error(t, err, "user account that does not exist")
 	require.Equal(t, http.StatusNotFound, err.(*Error).Status)
@@ -117,7 +105,7 @@ func TestDeleteUserQuery(t *testing.T) {
 	// User accounts deleted.
 	for key, testCase := range testUserRecords {
 		t.Run(fmt.Sprintf("Test case %s", key), func(t *testing.T) {
-			_, err := connection.db.Execute(DeleteUserQuery, testCase)
+			_, err := connection.db.Execute(DeleteUserQuery, testCase.Username)
 			require.NoError(t, err)
 		})
 	}

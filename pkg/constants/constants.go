@@ -21,6 +21,7 @@ const (
 	// Misc.
 	integrationTestKeyspaceSuffix = "_integration_testing"
 	cassandraMaxConnectRetries    = 5
+	deleteUserAccountConfirmation = "I understand the consequences, delete my user account %s"
 )
 
 // GetEtcDir returns the configuration directory in Etc.
@@ -86,4 +87,9 @@ func GetCassandraMaxConnectRetries() int {
 // GetGithubCIKey is the key for the environment variable expected to be present in the GH CI runner.
 func GetGithubCIKey() string {
 	return githubCIKey
+}
+
+// GetDeleteUserAccountConfirmation is the format string template confirmation message used to delete a user account.
+func GetDeleteUserAccountConfirmation() string {
+	return deleteUserAccountConfirmation
 }

@@ -76,23 +76,23 @@ func ReadUserQuery(c Cassandra, params any) (response any, err error) {
 // Param: pointer to the user struct containing the query parameters
 func DeleteUserQuery(c Cassandra, params any) (response any, err error) {
 	conn := c.(*cassandraImpl)
-	input := params.(*model_cassandra.User)
+	username := params.(string)
 
 	// Create hash of username using Blake2b 256 hashing algorithm.
-	input.AccountID = blake2b256(input.Username)
+	accountID := blake2b256(username)
 
 	resp := model_cassandra.User{UserAccount: &model_cassandra.UserAccount{}} // Discarded, only used as container for Cassandra response.
 	applied := false
-	if applied, err = conn.session.Query(model_cassandra.DeleteUser, input.Username, input.AccountID).ScanCAS(
+	if applied, err = conn.session.Query(model_cassandra.DeleteUser, username, accountID).ScanCAS(
 		&resp.Username, &resp.AccountID, &resp.Email, &resp.FirstName, &resp.IsDeleted, &resp.LastName, &resp.Password); err != nil {
 		conn.logger.Error("failed to create user record",
-			zap.Strings("Account info:", []string{input.Username, input.AccountID}), zap.Error(err))
+			zap.Strings("Account info:", []string{username, accountID}), zap.Error(err))
 		return nil, NewError(err.Error()).internalError()
 	}
 
 	if !applied {
 		msg := "failed to mark user record as deleted"
-		conn.logger.Error(msg, zap.Strings("Account info:", []string{input.Username, input.AccountID}), zap.Error(err))
+		conn.logger.Error(msg, zap.Strings("Account info:", []string{username, accountID}), zap.Error(err))
 		return nil, NewError("user not found").notFoundError()
 	}
 
