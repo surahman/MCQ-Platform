@@ -23,7 +23,7 @@ func init() {
 type ErrorField struct {
 	Field string `json:"field" yaml:"field"` // Field name where the validation error occurred.
 	Tag   string `json:"tag" yaml:"tag"`     // The reason for the validation failure.
-	Value string `json:"value" yaml:"value"` // The value(s) associated with the failure.
+	Value any    `json:"value" yaml:"value"` // The value(s) associated with the failure.
 }
 
 // Error will output the validation error for a single structs data member.
@@ -53,7 +53,7 @@ func ValidateStruct(body any) error {
 			var ev ErrorField
 			ev.Field = issue.Field()
 			ev.Tag = issue.Tag()
-			ev.Value = issue.Param()
+			ev.Value = issue.Value()
 			validationErr.Errors = append(validationErr.Errors, &ev)
 		}
 	}
