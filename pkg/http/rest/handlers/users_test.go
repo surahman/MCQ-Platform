@@ -496,6 +496,7 @@ func TestDeleteUser(t *testing.T) {
 		expectedStatus      int
 		deleteRequest       *model_rest.DeleteUserRequest
 		authValidateJWTData *mockAuthData
+		authCheckPwdData    *mockAuthData
 		cassandraReadData   *mockCassandraData
 		cassandraDeleteData *mockCassandraData
 	}{
@@ -510,6 +511,9 @@ func TestDeleteUser(t *testing.T) {
 				times:       0,
 			},
 			cassandraReadData: &mockCassandraData{
+				times: 0,
+			},
+			authCheckPwdData: &mockAuthData{
 				times: 0,
 			},
 			cassandraDeleteData: &mockCassandraData{
@@ -534,6 +538,9 @@ func TestDeleteUser(t *testing.T) {
 				outputParam: testUserData["username1"],
 				times:       1,
 			},
+			authCheckPwdData: &mockAuthData{
+				times: 1,
+			},
 			cassandraDeleteData: &mockCassandraData{
 				times: 1,
 			},
@@ -553,6 +560,9 @@ func TestDeleteUser(t *testing.T) {
 				times:       1,
 			},
 			cassandraReadData: &mockCassandraData{
+				times: 0,
+			},
+			authCheckPwdData: &mockAuthData{
 				times: 0,
 			},
 			cassandraDeleteData: &mockCassandraData{
@@ -578,6 +588,9 @@ func TestDeleteUser(t *testing.T) {
 				outputErr:   errors.New("db read failure"),
 				times:       1,
 			},
+			authCheckPwdData: &mockAuthData{
+				times: 0,
+			},
 			cassandraDeleteData: &mockCassandraData{
 				times: 0,
 			},
@@ -602,6 +615,9 @@ func TestDeleteUser(t *testing.T) {
 				},
 				times: 1,
 			},
+			authCheckPwdData: &mockAuthData{
+				times: 0,
+			},
 			cassandraDeleteData: &mockCassandraData{
 				times: 0,
 			},
@@ -624,6 +640,9 @@ func TestDeleteUser(t *testing.T) {
 				outputParam: testUserData["username1"],
 				times:       1,
 			},
+			authCheckPwdData: &mockAuthData{
+				times: 1,
+			},
 			cassandraDeleteData: &mockCassandraData{
 				outputErr: errors.New("db delete failure"),
 				times:     1,
@@ -645,6 +664,35 @@ func TestDeleteUser(t *testing.T) {
 			},
 			cassandraReadData: &mockCassandraData{
 				times: 0,
+			},
+			authCheckPwdData: &mockAuthData{
+				times: 0,
+			},
+			cassandraDeleteData: &mockCassandraData{
+				times: 0,
+			},
+		}, {
+			name:           "invalid password",
+			path:           "/delete/valid-password",
+			expectedStatus: http.StatusForbidden,
+			deleteRequest: &model_rest.DeleteUserRequest{
+				UserLoginCredentials: model_cassandra.UserLoginCredentials{
+					Username: "username1",
+					Password: "password",
+				},
+				Confirmation: fmt.Sprintf(constants.GetDeleteUserAccountConfirmation(), "username1"),
+			},
+			authValidateJWTData: &mockAuthData{
+				outputParam: "username1",
+				times:       1,
+			},
+			cassandraReadData: &mockCassandraData{
+				outputParam: testUserData["username1"],
+				times:       1,
+			},
+			authCheckPwdData: &mockAuthData{
+				outputErr: errors.New("password check failed"),
+				times:     1,
 			},
 			cassandraDeleteData: &mockCassandraData{
 				times: 0,
@@ -682,6 +730,10 @@ func TestDeleteUser(t *testing.T) {
 				testCase.authValidateJWTData.outputParam,
 				testCase.authValidateJWTData.outputErr,
 			).Times(testCase.authValidateJWTData.times)
+
+			mockAuth.EXPECT().CheckPassword(gomock.Any(), gomock.Any()).Return(
+				testCase.authCheckPwdData.outputErr,
+			).Times(testCase.authCheckPwdData.times)
 
 			// Endpoint setup for test.
 			router.DELETE(testCase.path, DeleteUser(zapLogger, mockAuth, mockCassandra, "Authorization"))

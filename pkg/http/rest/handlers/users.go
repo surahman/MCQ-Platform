@@ -250,17 +250,25 @@ func DeleteUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, a
 			return
 		}
 
-		// Check to make sure the account is not already deleted.
+		// Get user record.
 		if dbResponse, err = db.Execute(cassandra.ReadUserQuery, username); err != nil {
 			logger.Warn("failed to read user record during an account deletion request", zap.String("username", username), zap.Error(err))
 			context.JSON(http.StatusInternalServerError, &model_rest.Error{Message: "please retry your request later"})
 			context.Abort()
 			return
 		}
+		truth := dbResponse.(*model_cassandra.User)
 
-		if dbResponse.(*model_cassandra.User).IsDeleted {
+		// Check to make sure the account is not already deleted.
+		if truth.IsDeleted {
 			logger.Warn("attempt to delete an already deleted user account", zap.String("username", username))
 			context.JSON(http.StatusForbidden, &model_rest.Error{Message: "user account is already deleted"})
+			context.Abort()
+			return
+		}
+
+		if err = auth.CheckPassword(truth.Password, deleteRequest.Password); err != nil {
+			context.JSON(http.StatusForbidden, &model_rest.Error{Message: "invalid username or password"})
 			context.Abort()
 			return
 		}
