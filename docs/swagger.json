@@ -1,8 +1,30 @@
 {
+    "consumes": [
+        "application/json"
+    ],
+    "produces": [
+        "application/json"
+    ],
+    "schemes": [
+        "http"
+    ],
     "swagger": "2.0",
     "info": {
-        "contact": {}
+        "description": "Multiple Choice Question Platform API.\nThis application supports the creation, managing, marking, viewing, retrieving stats, and scores of quizzes.",
+        "title": "Multiple Choice Question Platform.",
+        "contact": {
+            "name": "Saad Ur Rahman",
+            "url": "https://www.linkedin.com/in/saad-ur-rahman/",
+            "email": "saad.ur.rahman@gmail.com"
+        },
+        "license": {
+            "name": "GPL-3.0",
+            "url": "https://opensource.org/licenses/GPL-3.0"
+        },
+        "version": "1.0.1"
     },
+    "host": "localhost:44243",
+    "basePath": "/api/rest/v1",
     "paths": {
         "/quiz/create/": {
             "post": {
@@ -922,6 +944,13 @@
                 },
                 "payload": {}
             }
+        }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }

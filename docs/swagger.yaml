@@ -1,3 +1,6 @@
+basePath: /api/rest/v1
+consumes:
+- application/json
 definitions:
   model_cassandra.Question:
     properties:
@@ -145,8 +148,20 @@ definitions:
         type: string
       payload: {}
     type: object
+host: localhost:44243
 info:
-  contact: {}
+  contact:
+    email: saad.ur.rahman@gmail.com
+    name: Saad Ur Rahman
+    url: https://www.linkedin.com/in/saad-ur-rahman/
+  description: |-
+    Multiple Choice Question Platform API.
+    This application supports the creation, managing, marking, viewing, retrieving stats, and scores of quizzes.
+  license:
+    name: GPL-3.0
+    url: https://opensource.org/licenses/GPL-3.0
+  title: Multiple Choice Question Platform.
+  version: 1.0.1
 paths:
   /quiz/create/:
     post:
@@ -632,4 +647,13 @@ paths:
       summary: Register a user.
       tags:
       - user users register security
+produces:
+- application/json
+schemes:
+- http
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

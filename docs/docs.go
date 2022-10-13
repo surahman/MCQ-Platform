@@ -6,11 +6,25 @@ import "github.com/swaggo/swag"
 
 const docTemplate = `{
     "schemes": {{ marshal .Schemes }},
+    "consumes": [
+        "application/json"
+    ],
+    "produces": [
+        "application/json"
+    ],
     "swagger": "2.0",
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "contact": {},
+        "contact": {
+            "name": "Saad Ur Rahman",
+            "url": "https://www.linkedin.com/in/saad-ur-rahman/",
+            "email": "saad.ur.rahman@gmail.com"
+        },
+        "license": {
+            "name": "GPL-3.0",
+            "url": "https://opensource.org/licenses/GPL-3.0"
+        },
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
@@ -935,17 +949,24 @@ const docTemplate = `{
                 "payload": {}
             }
         }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
-	Host:             "",
-	BasePath:         "",
-	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Version:          "1.0.1",
+	Host:             "localhost:44243",
+	BasePath:         "/api/rest/v1",
+	Schemes:          []string{"http"},
+	Title:            "Multiple Choice Question Platform.",
+	Description:      "Multiple Choice Question Platform API.\nThis application supports the creation, managing, marking, viewing, retrieving stats, and scores of quizzes.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 }

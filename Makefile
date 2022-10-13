@@ -25,7 +25,7 @@ generate:
 
 swagger:
 	swag fmt
-	swag init -d cmd/,pkg/model/cassandra,pkg/model/http,pkg/http/rest
+	swag init -d cmd/,pkg/model/cassandra,pkg/model/http,pkg/http/rest -g ../pkg/http/rest/rest.go
 
 clean:
 	go clean
