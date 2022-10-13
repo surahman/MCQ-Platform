@@ -77,11 +77,11 @@ func RegisterUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra)
 // @Id          loginUser
 // @Accept      json
 // @Produce     json
-// @Param       user body     model_cassandra.UserLoginCredentials true "Username and password to login with"
-// @Success     200  {object} model_rest.JWTAuthResponse           "JWT in the api-key"
-// @Failure     400  {object} model_rest.Error                     "error message with any available details in payload"
-// @Failure     403  {object} model_rest.Error                     "error message with any available details in payload"
-// @Failure     500  {object} model_rest.Error                     "error message with any available details in payload"
+// @Param       credentials body     model_cassandra.UserLoginCredentials true "Username and password to login with"
+// @Success     200         {object} model_rest.JWTAuthResponse           "JWT in the api-key"
+// @Failure     400         {object} model_rest.Error                     "error message with any available details in payload"
+// @Failure     403         {object} model_rest.Error                     "error message with any available details in payload"
+// @Failure     500         {object} model_rest.Error                     "error message with any available details in payload"
 // @Router      /user/login [post]
 func LoginUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc {
 	return func(context *gin.Context) {
@@ -133,12 +133,12 @@ func LoginUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gi
 // @Accept      json
 // @Produce     json
 // @Security    ApiKeyAuth
-// @Param       user body     model_rest.JWTAuthResponse true "A valid JWT expiring in less than 60 seconds to be extended"
-// @Success     200  {object} model_rest.JWTAuthResponse "A new valid JWT"
-// @Failure     400  {object} model_rest.Error           "error message with any available details in payload"
-// @Failure     403  {object} model_rest.Error           "error message with any available details in payload"
-// @Failure     500  {object} model_rest.Error           "error message with any available details in payload"
-// @Failure     510  {object} model_rest.Error           "error message with any available details in payload"
+// @Param       token body     model_rest.JWTAuthResponse true "A valid JWT expiring in less than 60 seconds to be extended"
+// @Success     200   {object} model_rest.JWTAuthResponse "A new valid JWT"
+// @Failure     400   {object} model_rest.Error           "error message with any available details in payload"
+// @Failure     403   {object} model_rest.Error           "error message with any available details in payload"
+// @Failure     500   {object} model_rest.Error           "error message with any available details in payload"
+// @Failure     510   {object} model_rest.Error           "error message with any available details in payload"
 // @Router      /user/refresh [post]
 func LoginRefresh(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc {
 	return func(context *gin.Context) {
@@ -204,11 +204,11 @@ func LoginRefresh(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra)
 // @Accept      json
 // @Produce     json
 // @Security    ApiKeyAuth
-// @Param       user body     model_rest.DeleteUserRequest true "The request payload for deleting an account"
-// @Success     200  {object} model_rest.Success           "message with a confirmation of a deleted user account"
-// @Failure     400  {object} model_rest.Error             "error message with any available details in payload"
-// @Failure     409  {object} model_rest.Error             "error message with any available details in payload"
-// @Failure     500  {object} model_rest.Error             "error message with any available details in payload"
+// @Param       request body     model_rest.DeleteUserRequest true "The request payload for deleting an account"
+// @Success     200     {object} model_rest.Success           "message with a confirmation of a deleted user account"
+// @Failure     400     {object} model_rest.Error             "error message with any available details in payload"
+// @Failure     409     {object} model_rest.Error             "error message with any available details in payload"
+// @Failure     500     {object} model_rest.Error             "error message with any available details in payload"
 // @Router      /user/delete [delete]
 func DeleteUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, authHeaderKey string) gin.HandlerFunc {
 	return func(context *gin.Context) {

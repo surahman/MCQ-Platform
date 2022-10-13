@@ -23,6 +23,10 @@ build_and_run: build run
 generate:
 	go generate ./...
 
+swagger:
+	swag fmt
+	swag init -d cmd/,pkg/model/cassandra,pkg/model/http,pkg/http/rest
+
 clean:
 	go clean
 	rm -f ${BINARY_NAME}-darwin ${BINARY_NAME}-linux
@@ -46,4 +50,4 @@ coverage_report: coverage
 dep:
 	go mod download
 
-.PHONY: build build_and_run generate clean test test_short test_no_cache coverage coverage_report
+.PHONY: build build_and_run generate swagger clean test test_short test_no_cache coverage coverage_report

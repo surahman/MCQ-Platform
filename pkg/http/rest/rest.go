@@ -11,6 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/afero"
+	_ "github.com/surahman/mcq-platform/docs" // Swaggo generated Swagger documentation
 	"github.com/surahman/mcq-platform/pkg/auth"
 	"github.com/surahman/mcq-platform/pkg/cassandra"
 	"github.com/surahman/mcq-platform/pkg/grading"

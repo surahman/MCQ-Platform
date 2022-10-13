@@ -14,12 +14,12 @@ import (
 // @Accept      json
 // @Produce     json
 // @Security    ApiKeyAuth
-// @Param       test_id path     string          true "The Test ID for the quiz being requested."
-// @Success     200     {object} models.Response "The message will contain the Test ID and the payload will contain the quiz"
-// @Failure     400     {object} models.Response "Error message with any available details in payload"
-// @Failure     401     {object} models.Response "Error message with any available details in payload"
-// @Failure     404     {object} models.Response "Error message with any available details in payload"
-// @Failure     500     {object} models.Response "Error message with any available details in payload"
+// @Param       test_id path     string             true "The Test ID for the quiz being requested."
+// @Success     200     {object} model_rest.Success "The message will contain the Test ID and the payload will contain the quiz"
+// @Failure     400     {object} model_rest.Error   "Error message with any available details in payload"
+// @Failure     401     {object} model_rest.Error   "Error message with any available details in payload"
+// @Failure     404     {object} model_rest.Error   "Error message with any available details in payload"
+// @Failure     500     {object} model_rest.Error   "Error message with any available details in payload"
 // @Router      /quiz/view/{test_id} [get]
 func ViewQuiz(context *gin.Context) {
 	context.JSON(http.StatusNotImplemented, nil)
@@ -34,10 +34,10 @@ func ViewQuiz(context *gin.Context) {
 // @Accept      json
 // @Produce     json
 // @Security    ApiKeyAuth
-// @Param       answers body     models.Quiz     true "The Quiz to be created as unpublished"
-// @Success     201     {object} models.Response "The message will contain the Test ID of the newly generated quiz"
-// @Failure     400     {object} models.Response "Error message with any available details in payload"
-// @Failure     500     {object} models.Response "Error message with any available details in payload"
+// @Param       answers body     model_cassandra.QuizCore true "The Quiz to be created as unpublished"
+// @Success     200     {object} model_rest.Success       "The message will contain the Test ID of the newly generated quiz"
+// @Failure     400     {object} model_rest.Error         "Error message with any available details in payload"
+// @Failure     500     {object} model_rest.Error         "Error message with any available details in payload"
 // @Router      /quiz/create/ [post]
 func CreateQuiz(context *gin.Context) {
 	context.JSON(http.StatusNotImplemented, nil)
@@ -51,14 +51,14 @@ func CreateQuiz(context *gin.Context) {
 // @Accept      json
 // @Produce     json
 // @Security    ApiKeyAuth
-// @Param       test_id path     string          true "The Test ID for the quiz being updated."
-// @Param       answers body     models.Quiz     true "The Quiz to replace the one already submitted"
-// @Success     200     {object} models.Response "The message will contain a confirmation of the update"
-// @Failure     400     {object} models.Response "Error message with any available details in payload"
-// @Failure     401     {object} models.Response "Error message with any available details in payload"
-// @Failure     403     {object} models.Response "Error message with any available details in payload"
-// @Failure     404     {object} models.Response "Error message with any available details in payload"
-// @Failure     500     {object} models.Response "Error message with any available details in payload"
+// @Param       test_id path     string                   true "The Test ID for the quiz being updated."
+// @Param       answers body     model_cassandra.QuizCore true "The Quiz to replace the one already submitted"
+// @Success     200     {object} model_rest.Success       "The message will contain a confirmation of the update"
+// @Failure     400     {object} model_rest.Error         "Error message with any available details in payload"
+// @Failure     401     {object} model_rest.Error         "Error message with any available details in payload"
+// @Failure     403     {object} model_rest.Error         "Error message with any available details in payload"
+// @Failure     404     {object} model_rest.Error         "Error message with any available details in payload"
+// @Failure     500     {object} model_rest.Error         "Error message with any available details in payload"
 // @Router      /quiz/update/{test_id} [put]
 func UpdateQuiz(context *gin.Context) {
 	context.JSON(http.StatusNotImplemented, nil)
@@ -72,11 +72,11 @@ func UpdateQuiz(context *gin.Context) {
 // @Accept      json
 // @Produce     json
 // @Security    ApiKeyAuth
-// @Param       test_id path     string          true "The Test ID for the quiz being deleted."
-// @Success     200     {object} models.Response "The message will contain a confirmation of deletion"
-// @Failure     401     {object} models.Response "Error message with any available details in payload"
-// @Failure     404     {object} models.Response "Error message with any available details in payload"
-// @Failure     500     {object} models.Response "Error message with any available details in payload"
+// @Param       test_id path     string             true "The Test ID for the quiz being deleted."
+// @Success     200     {object} model_rest.Success "The message will contain a confirmation of deletion"
+// @Failure     401     {object} model_rest.Error   "Error message with any available details in payload"
+// @Failure     404     {object} model_rest.Error   "Error message with any available details in payload"
+// @Failure     500     {object} model_rest.Error   "Error message with any available details in payload"
 // @Router      /quiz/delete/{test_id} [delete]
 func DeleteQuiz(context *gin.Context) {
 	context.JSON(http.StatusNotImplemented, nil)
@@ -91,11 +91,11 @@ func DeleteQuiz(context *gin.Context) {
 // @Accept      json
 // @Produce     json
 // @Security    ApiKeyAuth
-// @Param       test_id path     string          true "The Test ID for the quiz being published."
-// @Success     200     {object} models.Response "The message will contain a confirmation of publishing"
-// @Failure     401     {object} models.Response "Error message with any available details in payload"
-// @Failure     404     {object} models.Response "Error message with any available details in payload"
-// @Failure     500     {object} models.Response "Error message with any available details in payload"
+// @Param       test_id path     string             true "The Test ID for the quiz being published."
+// @Success     200     {object} model_rest.Success "The message will contain a confirmation of publishing"
+// @Failure     401     {object} model_rest.Error   "Error message with any available details in payload"
+// @Failure     404     {object} model_rest.Error   "Error message with any available details in payload"
+// @Failure     500     {object} model_rest.Error   "Error message with any available details in payload"
 // @Router      /quiz/publish/{test_id} [put]
 func PublishQuiz(context *gin.Context) {
 	context.JSON(http.StatusNotImplemented, nil)
@@ -109,13 +109,13 @@ func PublishQuiz(context *gin.Context) {
 // @Accept      json
 // @Produce     json
 // @Security    ApiKeyAuth
-// @Param       test_id path     string              true "The Test ID for the answers being submitted."
-// @Param       answers body     models.QuizResponse true "The answer card to be submitted."
-// @Success     200     {object} models.Response     "Score will be in the payload"
-// @Failure     400     {object} models.Response     "Error message with any available details in payload"
-// @Failure     401     {object} models.Response     "Error message with any available details in payload"
-// @Failure     404     {object} models.Response     "Error message with any available details in payload"
-// @Failure     500     {object} models.Response     "Error message with any available details in payload"
+// @Param       test_id path     string                       true "The Test ID for the answers being submitted."
+// @Param       answers body     model_cassandra.QuizResponse true "The answer card to be submitted."
+// @Success     200     {object} model_rest.Success           "Score will be in the payload"
+// @Failure     400     {object} model_rest.Error             "Error message with any available details in payload"
+// @Failure     401     {object} model_rest.Error             "Error message with any available details in payload"
+// @Failure     404     {object} model_rest.Error             "Error message with any available details in payload"
+// @Failure     500     {object} model_rest.Error             "Error message with any available details in payload"
 // @Router      /quiz/take/{test_id} [post]
 func TakeQuiz(context *gin.Context) {
 	context.JSON(http.StatusNotImplemented, nil)
