@@ -32,7 +32,7 @@ func (cfg *config) Load(fs afero.Fs) (err error) {
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath(constants.GetEtcDir())
 	viper.AddConfigPath(constants.GetHomeDir())
-	viper.AddConfigPath(".")
+	viper.AddConfigPath(constants.GetBaseDir())
 
 	viper.SetEnvPrefix(constants.GetHTTPRESTPrefix())
 	viper.AutomaticEnv()

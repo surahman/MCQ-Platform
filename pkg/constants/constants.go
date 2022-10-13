@@ -4,6 +4,7 @@ const (
 	// Configuration file directories
 	configEtcDir  = "/etc/MCQ_Platform.conf/"
 	configHomeDir = "$HOME/.MCQ_Platform/"
+	configBaseDir = "./configs/"
 
 	// Configuration file names
 	cassandraConfigFileName = "CassandraConfig.yaml"
@@ -32,6 +33,11 @@ func GetEtcDir() string {
 // GetHomeDir returns the configuration directory in users home.
 func GetHomeDir() string {
 	return configHomeDir
+}
+
+// GetBaseDir returns the configuration base directory in the root of the application.
+func GetBaseDir() string {
+	return configBaseDir
 }
 
 // GetCassandraFileName returns the Cassandra configuration file name.
