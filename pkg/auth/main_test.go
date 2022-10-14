@@ -18,6 +18,9 @@ var authConfigTestData = configTestData()
 // expirationDuration is the time in seconds that a JWT will be valid for.
 var expirationDuration int64 = 10
 
+// refreshThreshold is the time in seconds before expiration that a JWT can be refreshed in.
+var refreshThreshold int64 = 99
+
 // zapLogger is the Zap logger used strictly for the test suite in this package.
 var zapLogger *logger.Logger
 
@@ -68,6 +71,7 @@ func getTestConfiguration() (auth *authImpl, err error) {
 	auth.conf.JWTConfig.Key = "encryption key for test suite"
 	auth.conf.JWTConfig.Issuer = "issuer for test suite"
 	auth.conf.JWTConfig.ExpirationDuration = expirationDuration
+	auth.conf.JWTConfig.RefreshThreshold = refreshThreshold
 	auth.conf.General.BcryptCost = 4
 
 	return

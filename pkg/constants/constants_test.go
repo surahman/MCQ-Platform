@@ -14,6 +14,10 @@ func TestGetHomeDir(t *testing.T) {
 	require.Equal(t, configHomeDir, GetHomeDir(), "Incorrect home directory")
 }
 
+func TestGetBaseDir(t *testing.T) {
+	require.Equal(t, configBaseDir, GetBaseDir(), "Incorrect base directory")
+}
+
 func TestGetCassandraFileName(t *testing.T) {
 	require.Equal(t, cassandraConfigFileName, GetCassandraFileName(), "Incorrect Cassandra filename")
 }
@@ -48,4 +52,16 @@ func TestGetAuthFileName(t *testing.T) {
 
 func TestGetAuthPrefix(t *testing.T) {
 	require.Equal(t, authPrefix, GetAuthPrefix(), "Incorrect authorization environment prefix")
+}
+
+func TestGetHTTPRESTFileName(t *testing.T) {
+	require.Equal(t, restConfigFileName, GetHTTPRESTFileName(), "Incorrect HTTP REST filename")
+}
+
+func TestGetHTTPRESTPrefix(t *testing.T) {
+	require.Equal(t, restPrefix, GetHTTPRESTPrefix(), "Incorrect HTTP REST environment prefix")
+}
+
+func TestGetDeleteUserAccountConfirmation(t *testing.T) {
+	require.Equal(t, deleteUserAccountConfirmation, GetDeleteUserAccountConfirmation(), "Incorrect user account deletion confirmation message.")
 }

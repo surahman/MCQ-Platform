@@ -1,0 +1,658 @@
+basePath: /api/rest/v1
+consumes:
+- application/json
+definitions:
+  model_cassandra.Question:
+    properties:
+      answers:
+        description: The indices of the options that are correct answers in the question.
+        items:
+          type: integer
+        maxItems: 5
+        minItems: 1
+        type: array
+      asset:
+        description: URI of an asset to be displayed with question.
+        type: string
+      description:
+        description: The description that contains the text of the question.
+        type: string
+      options:
+        description: The available options for the question.
+        items:
+          type: string
+        maxItems: 5
+        minItems: 2
+        type: array
+    required:
+    - answers
+    - description
+    - options
+    type: object
+  model_cassandra.QuizCore:
+    properties:
+      questions:
+        description: A list of questions in the quiz.
+        items:
+          $ref: '#/definitions/model_cassandra.Question'
+        maxItems: 10
+        minItems: 1
+        type: array
+      title:
+        description: The title description of the quiz.
+        type: string
+      type:
+        description: Marking scheme type can be not marked, negative marking, or all
+          or nothing.
+        enum:
+        - None
+        - none
+        - Negative
+        - negative
+        - Non-negative
+        - non-negative
+        - Binary
+        - binary
+        type: string
+    required:
+    - questions
+    - title
+    type: object
+  model_cassandra.QuizResponse:
+    properties:
+      responses:
+        description: The answer card to a quiz. The rows indices are the question
+          numbers and the columns indices are the selected option numbers.
+        items:
+          items:
+            type: integer
+          type: array
+        maxItems: 10
+        minItems: 0
+        type: array
+    required:
+    - responses
+    type: object
+  model_cassandra.UserAccount:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      password:
+        maxLength: 32
+        minLength: 8
+        type: string
+      username:
+        minLength: 8
+        type: string
+    required:
+    - email
+    - first_name
+    - last_name
+    - password
+    - username
+    type: object
+  model_cassandra.UserLoginCredentials:
+    properties:
+      password:
+        maxLength: 32
+        minLength: 8
+        type: string
+      username:
+        minLength: 8
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  model_rest.DeleteUserRequest:
+    properties:
+      confirmation:
+        type: string
+      password:
+        maxLength: 32
+        minLength: 8
+        type: string
+      username:
+        minLength: 8
+        type: string
+    required:
+    - confirmation
+    - password
+    - username
+    type: object
+  model_rest.Error:
+    properties:
+      message:
+        type: string
+      payload: {}
+    type: object
+  model_rest.JWTAuthResponse:
+    properties:
+      expires:
+        description: Expiration time as unix time stamp. Strictly used by client to
+          gauge when to refresh the token.
+        type: integer
+      threshold:
+        description: The window in seconds before expiration during which the token
+          can be refreshed.
+        type: integer
+      token:
+        description: JWT string sent to and validated by the server.
+        type: string
+    required:
+    - expires
+    - threshold
+    - token
+    type: object
+  model_rest.Success:
+    properties:
+      message:
+        type: string
+      payload: {}
+    type: object
+host: localhost:44243
+info:
+  contact:
+    email: saad.ur.rahman@gmail.com
+    name: Saad Ur Rahman
+    url: https://www.linkedin.com/in/saad-ur-rahman/
+  description: |-
+    Multiple Choice Question Platform API.
+    This application supports the creation, managing, marking, viewing, retrieving stats, and scores of quizzes.
+  license:
+    name: GPL-3.0
+    url: https://opensource.org/licenses/GPL-3.0
+  title: Multiple Choice Question Platform.
+  version: 1.0.1
+paths:
+  /quiz/create/:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        This endpoint will create a quiz with randomly generated Test ID and associate it with the requester.
+        The username will be extracted from the JWT and associated with the Test ID.
+      operationId: createQuiz
+      parameters:
+      - description: The Quiz to be created as unpublished
+        in: body
+        name: answers
+        required: true
+        schema:
+          $ref: '#/definitions/model_cassandra.QuizCore'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The message will contain the Test ID of the newly generated
+            quiz
+          schema:
+            $ref: '#/definitions/model_rest.Success'
+        "400":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "500":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+      security:
+      - ApiKeyAuth: []
+      summary: Create a quiz.
+      tags:
+      - create test quiz
+  /quiz/delete/{test_id}:
+    delete:
+      consumes:
+      - application/json
+      description: This endpoint will delete a quiz with the provided Test ID if it
+        was created by the requester.
+      operationId: deleteQuiz
+      parameters:
+      - description: The Test ID for the quiz being deleted.
+        in: path
+        name: test_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The message will contain a confirmation of deletion
+          schema:
+            $ref: '#/definitions/model_rest.Success'
+        "401":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "404":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "500":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a quiz.
+      tags:
+      - delete remove test quiz
+  /quiz/publish/{test_id}:
+    put:
+      consumes:
+      - application/json
+      description: |-
+        When a quiz is submitted it is not published by default and is thus unavailable to be taken.
+        This endpoint will publish a quiz with the provided Test ID if it was created by the requester.
+      operationId: publishQuiz
+      parameters:
+      - description: The Test ID for the quiz being published.
+        in: path
+        name: test_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The message will contain a confirmation of publishing
+          schema:
+            $ref: '#/definitions/model_rest.Success'
+        "401":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "404":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "500":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+      security:
+      - ApiKeyAuth: []
+      summary: Publish a quiz.
+      tags:
+      - publish test quiz create
+  /quiz/take/{test_id}:
+    post:
+      consumes:
+      - application/json
+      description: Take a quiz by submitting an answer sheet. The username will be
+        extracted from the JWT and associated with the scorecard.
+      operationId: takeQuiz
+      parameters:
+      - description: The Test ID for the answers being submitted.
+        in: path
+        name: test_id
+        required: true
+        type: string
+      - description: The answer card to be submitted.
+        in: body
+        name: answers
+        required: true
+        schema:
+          $ref: '#/definitions/model_cassandra.QuizResponse'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Score will be in the payload
+          schema:
+            $ref: '#/definitions/model_rest.Success'
+        "400":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "401":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "404":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "500":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+      security:
+      - ApiKeyAuth: []
+      summary: Take a quiz.
+      tags:
+      - take test quiz submit answer
+  /quiz/update/{test_id}:
+    put:
+      consumes:
+      - application/json
+      description: This endpoint will update a quiz with the provided Test ID if it
+        was created by the requester and is not published.
+      operationId: updateQuiz
+      parameters:
+      - description: The Test ID for the quiz being updated.
+        in: path
+        name: test_id
+        required: true
+        type: string
+      - description: The Quiz to replace the one already submitted
+        in: body
+        name: answers
+        required: true
+        schema:
+          $ref: '#/definitions/model_cassandra.QuizCore'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The message will contain a confirmation of the update
+          schema:
+            $ref: '#/definitions/model_rest.Success'
+        "400":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "401":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "403":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "404":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "500":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+      security:
+      - ApiKeyAuth: []
+      summary: Update a quiz.
+      tags:
+      - update modify test quiz
+  /quiz/view/{test_id}:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint will retrieve a quiz with a provided Test ID if it
+        is published.
+      operationId: viewQuiz
+      parameters:
+      - description: The Test ID for the quiz being requested.
+        in: path
+        name: test_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The message will contain the Test ID and the payload will contain
+            the quiz
+          schema:
+            $ref: '#/definitions/model_rest.Success'
+        "400":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "401":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "404":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "500":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+      security:
+      - ApiKeyAuth: []
+      summary: View a quiz.
+      tags:
+      - view test quiz
+  /score/stats/{test_id}:
+    get:
+      consumes:
+      - application/json
+      description: |-
+        Gets the statistics associated with a specific test if the user created the test.
+        Extracts username from the JWT and the Test ID is provided as a path parameter.
+      operationId: getStats
+      parameters:
+      - description: The Test ID for the requested statistics.
+        in: path
+        name: test_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Statistics will be in the payload
+          schema:
+            $ref: '#/definitions/model_rest.Success'
+        "400":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "401":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "404":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "500":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+      security:
+      - ApiKeyAuth: []
+      summary: Get all statistics associated with a specific test.
+      tags:
+      - score scores stats statistics
+  /score/test/{test_id}:
+    get:
+      consumes:
+      - application/json
+      description: Gets a scorecard for a user. Extracts username from the JWT and
+        Test ID is provided as a path parameter.
+      operationId: getScore
+      parameters:
+      - description: The Test ID for the requested scorecard.
+        in: path
+        name: test_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Score will be in the payload
+          schema:
+            $ref: '#/definitions/model_rest.Success'
+        "400":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "404":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "500":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+      security:
+      - ApiKeyAuth: []
+      summary: Get a user's score.
+      tags:
+      - score scores
+  /user/delete:
+    delete:
+      consumes:
+      - application/json
+      description: 'Deletes a user stored in the database by marking it as deleted.
+        The user must supply their login credentials as well as complete the following
+        confirmation message: "I understand the consequences, delete my user account
+        USERNAME HERE"'
+      operationId: deleteUser
+      parameters:
+      - description: The request payload for deleting an account
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model_rest.DeleteUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: message with a confirmation of a deleted user account
+          schema:
+            $ref: '#/definitions/model_rest.Success'
+        "400":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "409":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "500":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+      security:
+      - ApiKeyAuth: []
+      summary: Deletes a user. The user must supply their credentials as well as a
+        confirmation message.
+      tags:
+      - user users delete security
+  /user/login:
+    post:
+      consumes:
+      - application/json
+      description: Logs in a user by validating credentials and returning a JWT.
+      operationId: loginUser
+      parameters:
+      - description: Username and password to login with
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/model_cassandra.UserLoginCredentials'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: JWT in the api-key
+          schema:
+            $ref: '#/definitions/model_rest.JWTAuthResponse'
+        "400":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "403":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "500":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+      summary: Login a user.
+      tags:
+      - user users login security
+  /user/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Refreshes a user's JWT by validating it and then issuing a fresh
+        JWT with an extended validity time. JWT must be expiring in under 60 seconds.
+      operationId: loginRefresh
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A new valid JWT
+          schema:
+            $ref: '#/definitions/model_rest.JWTAuthResponse'
+        "400":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "403":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "500":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "510":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+      security:
+      - ApiKeyAuth: []
+      summary: Refresh a user's JWT by extending its expiration time.
+      tags:
+      - user users login refresh security
+  /user/register:
+    post:
+      consumes:
+      - application/json
+      description: Creates a user account by inserting credentials into the database.
+        A hashed password is stored.
+      operationId: registerUser
+      parameters:
+      - description: Username, password, first and last name, email address of user
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/model_cassandra.UserAccount'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: a valid JWT token for the new account
+          schema:
+            $ref: '#/definitions/model_rest.JWTAuthResponse'
+        "400":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "409":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "500":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+      summary: Register a user.
+      tags:
+      - user users register security
+produces:
+- application/json
+schemes:
+- http
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

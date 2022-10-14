@@ -9,9 +9,13 @@ type User struct {
 
 // UserAccount is the core user account information.
 type UserAccount struct {
-	Username  string `json:"username,omitempty" cql:"username" validate:"required,min=8,alphanum"`
-	Password  string `json:"password,omitempty" cql:"password" validate:"required,min=8,max=32"`
+	UserLoginCredentials
 	FirstName string `json:"first_name,omitempty" cql:"first_name" validate:"required"`
 	LastName  string `json:"last_name,omitempty" cql:"last_name" validate:"required"`
 	Email     string `json:"email,omitempty" cql:"email" validate:"required,email"`
+}
+
+type UserLoginCredentials struct {
+	Username string `json:"username,omitempty" cql:"username" validate:"required,min=8,alphanum"`
+	Password string `json:"password,omitempty" cql:"password" validate:"required,min=8,max=32"`
 }

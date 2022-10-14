@@ -19,17 +19,17 @@ func TestErrorField_Error(t *testing.T) {
 		{
 			"Empty error",
 			&ErrorField{},
-			fmt.Sprintf(errorStr, "", "", ""),
+			fmt.Sprintf(errorStr, "", "", "%!s(<nil>)"),
 		},
 		{
 			"Field only error",
 			&ErrorField{Field: "field"},
-			fmt.Sprintf(errorStr, "field", "", ""),
+			fmt.Sprintf(errorStr, "field", "", "%!s(<nil>)"),
 		},
 		{
 			"Field and Tag only error",
 			&ErrorField{Field: "field", Tag: "tag"},
-			fmt.Sprintf(errorStr, "field", "tag", ""),
+			fmt.Sprintf(errorStr, "field", "tag", "%!s(<nil>)"),
 		},
 		{
 			"Field, Tag, and Value error",

@@ -2,6 +2,7 @@ package cassandra
 
 import (
 	"fmt"
+	"net/http"
 	"reflect"
 	"testing"
 
@@ -61,14 +62,17 @@ func TestCreateUserQuery(t *testing.T) {
 		t.Run(fmt.Sprintf("Test case %s", key), func(t *testing.T) {
 			_, err := connection.db.Execute(CreateUserQuery, testCase)
 			require.Error(t, err)
+			require.Equal(t, http.StatusConflict, err.(*Error).Status)
 		})
 	}
 
 	// New user with different username and account but duplicated fields.
 	userPass := &model_cassandra.User{
 		UserAccount: &model_cassandra.UserAccount{
-			Username:  "user-5",
-			Password:  "user-pwd-1",
+			UserLoginCredentials: model_cassandra.UserLoginCredentials{
+				Username: "user-5",
+				Password: "user-pwd-1",
+			},
 			FirstName: "firstname-1",
 			LastName:  "lastname-1",
 			Email:     "user1@email-address.com",
@@ -93,24 +97,15 @@ func TestDeleteUserQuery(t *testing.T) {
 	insertTestUsers(t)
 
 	// Non-existent user.
-	userPass := &model_cassandra.User{
-		UserAccount: &model_cassandra.UserAccount{
-			Username:  "user-5",
-			Password:  "user-pwd-1",
-			FirstName: "firstname-1",
-			LastName:  "lastname-1",
-			Email:     "user1@email-address.com",
-		},
-		AccountID: blake2b256("user-5"),
-		IsDeleted: false,
-	}
+	userPass := "user-5"
 	_, err := connection.db.Execute(DeleteUserQuery, userPass)
 	require.Error(t, err, "user account that does not exist")
+	require.Equal(t, http.StatusNotFound, err.(*Error).Status)
 
-	// Username and account id collisions.
+	// User accounts deleted.
 	for key, testCase := range testUserRecords {
 		t.Run(fmt.Sprintf("Test case %s", key), func(t *testing.T) {
-			_, err := connection.db.Execute(DeleteUserQuery, testCase)
+			_, err := connection.db.Execute(DeleteUserQuery, testCase.Username)
 			require.NoError(t, err)
 		})
 	}
@@ -129,24 +124,15 @@ func TestReadUserQuery(t *testing.T) {
 	insertTestUsers(t)
 
 	// Non-existent user.
-	userPass := &model_cassandra.User{
-		UserAccount: &model_cassandra.UserAccount{
-			Username:  "user-5",
-			Password:  "user-pwd-1",
-			FirstName: "firstname-1",
-			LastName:  "lastname-1",
-			Email:     "user1@email-address.com",
-		},
-		AccountID: blake2b256("user-5"),
-		IsDeleted: false,
-	}
+	userPass := "user-5"
 	_, err := connection.db.Execute(ReadUserQuery, userPass)
 	require.Error(t, err, "user account that does not exist")
+	require.Equal(t, http.StatusNotFound, err.(*Error).Status)
 
 	// Check created accounts exist.
 	for key, testCase := range testUserRecords {
 		t.Run(fmt.Sprintf("Test case %s", key), func(t *testing.T) {
-			resp, err := connection.db.Execute(ReadUserQuery, testCase)
+			resp, err := connection.db.Execute(ReadUserQuery, testCase.UserAccount.UserLoginCredentials.Username)
 			require.NoError(t, err)
 			actual := resp.(*model_cassandra.User)
 			require.Truef(t, reflect.DeepEqual(testCase, actual), "expected user, %v, does not match actual, %v", testCase, actual)
@@ -414,7 +400,6 @@ func TestReadResponseStatisticsQuery(t *testing.T) {
 			actual := responseSlice.([]*model_cassandra.Response)
 			testCase.expectNil(t, actual, "returned array does not meet nil expectation")
 			require.Equal(t, testCase.expectedSize, len(actual), "length of the response slices do not match")
-
 		})
 	}
 }

@@ -35,7 +35,7 @@ The configuration loader will search for the configurations in the following ord
 |--------------------------|--------------------------------------------------------------------------------------------------------|
 | `/etc/MCQPlatform.conf/` | The `etc` directory is the canonical location for configurations.                                      |
 | `$HOME/.MCQPlatform/`    | Configurations can be located in the user's home directory.                                            |
-| `.`                      | The root directory where the application is located.                                                   |
+| `./configs/`             | The config folder in the root directory where the application is located.                              |
 | Environment variables    | Finally, the configurations will be loaded from environment variables and override configuration files |
 
 ### Configuration File
@@ -48,6 +48,7 @@ The expected file name is `AuthConfig.yaml`. All the configuration items below a
 | ↳ key                 | ↳ `.KEY`                 | string                        | The encryption key used for the JSON Web Token.                                                                      |
 | ↳ issuer              | ↳ `.ISSUER`              | string                        | The issuer of the JSON Web Token.                                                                                    |
 | ↳ expiration_duration | ↳ `.EXPIRATION_DURATION` | int64                         | The validity duration in seconds for the JSON Web Token.                                                             |
+| ↳ refresh_threshold   | ↳ `.REFRESH_THRESHOLD`   | int64                         | The seconds before expiration that a JSON Web Token can be refreshed before.                                         |
 | **_General_**         | `AUTH_CONFIG `           | **_General Configurations._** | **_Parent key for general authentication configurations._**                                                          |
 | ↳ bcrypt_cost         | ↳ `.BCRYPT_COST`         | int                           | The [cost](https://pkg.go.dev/golang.org/x/crypto/bcrypt#pkg-constants) value that is used for the BCrypt algorithm. |
 
@@ -58,6 +59,7 @@ jwt:
   key: some-long-random-key
   issuer: issuer of the token
   expiration_duration: 600
+  refresh_threshold: 60
 general:
   bcrypt_cost: 8
 ```

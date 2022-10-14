@@ -23,8 +23,10 @@ func TestValidateUser(t *testing.T) {
 		}, {
 			name: "Valid",
 			input: &UserAccount{
-				Username:  "username1",
-				Password:  "password-1",
+				UserLoginCredentials: UserLoginCredentials{
+					Username: "username1",
+					Password: "password-1",
+				},
 				FirstName: "first name",
 				LastName:  "last name",
 				Email:     "username@email.com",
@@ -34,8 +36,10 @@ func TestValidateUser(t *testing.T) {
 		}, {
 			name: "Invalid username",
 			input: &UserAccount{
-				Username:  "username-1",
-				Password:  "password-1",
+				UserLoginCredentials: UserLoginCredentials{
+					Username: "username 1",
+					Password: "password-1",
+				},
 				FirstName: "first name",
 				LastName:  "last name",
 				Email:     "username@email.com",
@@ -45,8 +49,10 @@ func TestValidateUser(t *testing.T) {
 		}, {
 			name: "Invalid password",
 			input: &UserAccount{
-				Username:  "username1",
-				Password:  "password-1password-1password-1password-1",
+				UserLoginCredentials: UserLoginCredentials{
+					Username: "username1",
+					Password: "password-1password-1password-1password-1",
+				},
 				FirstName: "first name",
 				LastName:  "last name",
 				Email:     "username@email.com",
@@ -56,8 +62,10 @@ func TestValidateUser(t *testing.T) {
 		}, {
 			name: "Invalid email",
 			input: &UserAccount{
-				Username:  "username1",
-				Password:  "password-1",
+				UserLoginCredentials: UserLoginCredentials{
+					Username: "username1",
+					Password: "password-1",
+				},
 				FirstName: "first name",
 				LastName:  "last name",
 				Email:     "username@email",

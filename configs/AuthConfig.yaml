@@ -2,5 +2,6 @@ jwt:
   key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
   issuer: MCQ Platform
   expiration_duration: 600
+  refresh_threshold: 60
 general:
   bcrypt_cost: 8

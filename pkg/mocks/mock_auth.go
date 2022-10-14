@@ -8,7 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	model_http "github.com/surahman/mcq-platform/pkg/model/http"
+	model_rest "github.com/surahman/mcq-platform/pkg/model/http"
 )
 
 // MockAuth is a mock of Auth interface.
@@ -49,10 +49,10 @@ func (mr *MockAuthMockRecorder) CheckPassword(arg0, arg1 interface{}) *gomock.Ca
 }
 
 // GenerateJWT mocks base method.
-func (m *MockAuth) GenerateJWT(arg0 string) (*model_http.JWTAuthResponse, error) {
+func (m *MockAuth) GenerateJWT(arg0 string) (*model_rest.JWTAuthResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GenerateJWT", arg0)
-	ret0, _ := ret[0].(*model_http.JWTAuthResponse)
+	ret0, _ := ret[0].(*model_rest.JWTAuthResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -79,10 +79,10 @@ func (mr *MockAuthMockRecorder) HashPassword(arg0 interface{}) *gomock.Call {
 }
 
 // RefreshJWT mocks base method.
-func (m *MockAuth) RefreshJWT(arg0 string) (*model_http.JWTAuthResponse, error) {
+func (m *MockAuth) RefreshJWT(arg0 string) (*model_rest.JWTAuthResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RefreshJWT", arg0)
-	ret0, _ := ret[0].(*model_http.JWTAuthResponse)
+	ret0, _ := ret[0].(*model_rest.JWTAuthResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -93,27 +93,28 @@ func (mr *MockAuthMockRecorder) RefreshJWT(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RefreshJWT", reflect.TypeOf((*MockAuth)(nil).RefreshJWT), arg0)
 }
 
-// UsernameFromJWT mocks base method.
-func (m *MockAuth) UsernameFromJWT(arg0 string) (string, error) {
+// RefreshThreshold mocks base method.
+func (m *MockAuth) RefreshThreshold() int64 {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UsernameFromJWT", arg0)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret := m.ctrl.Call(m, "RefreshThreshold")
+	ret0, _ := ret[0].(int64)
+	return ret0
 }
 
-// UsernameFromJWT indicates an expected call of UsernameFromJWT.
-func (mr *MockAuthMockRecorder) UsernameFromJWT(arg0 interface{}) *gomock.Call {
+// RefreshThreshold indicates an expected call of RefreshThreshold.
+func (mr *MockAuthMockRecorder) RefreshThreshold() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UsernameFromJWT", reflect.TypeOf((*MockAuth)(nil).UsernameFromJWT), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RefreshThreshold", reflect.TypeOf((*MockAuth)(nil).RefreshThreshold))
 }
 
 // ValidateJWT mocks base method.
-func (m *MockAuth) ValidateJWT(arg0 string) error {
+func (m *MockAuth) ValidateJWT(arg0 string) (string, int64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidateJWT", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(int64)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // ValidateJWT indicates an expected call of ValidateJWT.

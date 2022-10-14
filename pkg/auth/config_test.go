@@ -12,7 +12,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func TestCassandraConfigs_Load(t *testing.T) {
+func TestAuthConfigs_Load(t *testing.T) {
 	keyspaceJwt := constants.GetAuthPrefix() + "_JWT."
 	keyspaceGen := constants.GetAuthPrefix() + "_GENERAL."
 
@@ -55,7 +55,7 @@ func TestCassandraConfigs_Load(t *testing.T) {
 		},
 		{
 			"jwt expiration below 10s - etc dir",
-			authConfigTestData["jwt_expiration_below_10s"],
+			authConfigTestData["jwt_expiration_below_60s"],
 			require.Error,
 			1,
 		},
@@ -68,6 +68,12 @@ func TestCassandraConfigs_Load(t *testing.T) {
 		{
 			"jwt key above 256 - etc dir",
 			authConfigTestData["jwt_key_above_256"],
+			require.Error,
+			1,
+		},
+		{
+			"low refresh threshold - etc dir",
+			authConfigTestData["low_refresh_threshold"],
 			require.Error,
 			1,
 		},
@@ -97,17 +103,20 @@ func TestCassandraConfigs_Load(t *testing.T) {
 			// Test configuring of environment variable.
 			testKey := xid.New().String()
 			testExpDur := int64(999)
+			testRefThreshold := int64(555)
 			testBcryptCost := 16
 			testIssuer := "test issuer"
 			t.Setenv(keyspaceJwt+"KEY", testKey)
 			t.Setenv(keyspaceJwt+"ISSUER", testIssuer)
 			t.Setenv(keyspaceJwt+"EXPIRATION_DURATION", strconv.FormatInt(testExpDur, 10))
+			t.Setenv(keyspaceJwt+"REFRESH_THRESHOLD", strconv.FormatInt(testRefThreshold, 10))
 			t.Setenv(keyspaceGen+"BCRYPT_COST", strconv.Itoa(testBcryptCost))
 			err = actual.Load(fs)
 			require.NoErrorf(t, err, "Failed to load constants file: %v", err)
 			require.Equalf(t, testKey, actual.JWTConfig.Key, "Failed to load key environment variable into configs")
 			require.Equalf(t, testIssuer, actual.JWTConfig.Issuer, "Failed to load issuer environment variable into configs")
 			require.Equalf(t, testExpDur, actual.JWTConfig.ExpirationDuration, "Failed to load duration environment variable into configs")
+			require.Equalf(t, testRefThreshold, actual.JWTConfig.RefreshThreshold, "Failed to load refresh threshold environment variable into configs")
 			require.Equalf(t, testBcryptCost, actual.General.BcryptCost, "Failed to load bcrypt cost environment variable into configs")
 		})
 	}

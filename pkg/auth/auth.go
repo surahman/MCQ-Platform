@@ -19,9 +19,10 @@ import (
 type Auth interface {
 	HashPassword(string) (string, error)
 	CheckPassword(string, string) error
-	GenerateJWT(string) (*model_http.JWTAuthResponse, error)
-	ValidateJWT(string) (string, error)
-	RefreshJWT(string) (*model_http.JWTAuthResponse, error)
+	GenerateJWT(string) (*model_rest.JWTAuthResponse, error)
+	ValidateJWT(string) (string, int64, error)
+	RefreshJWT(string) (*model_rest.JWTAuthResponse, error)
+	RefreshThreshold() int64
 }
 
 // Check to ensure the Auth interface has been implemented.
@@ -76,12 +77,12 @@ type jwtClaim struct {
 }
 
 // GenerateJWT creates a payload consisting of the JWT with the username as well as expiration time.
-func (a *authImpl) GenerateJWT(username string) (*model_http.JWTAuthResponse, error) {
+func (a *authImpl) GenerateJWT(username string) (*model_rest.JWTAuthResponse, error) {
 	claims := &jwtClaim{
 		Username: username,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    a.conf.JWTConfig.Issuer,
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(a.conf.JWTConfig.ExpirationDuration) * time.Second)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(a.conf.JWTConfig.ExpirationDuration) * time.Second).UTC()),
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -90,42 +91,48 @@ func (a *authImpl) GenerateJWT(username string) (*model_http.JWTAuthResponse, er
 		return nil, err
 	}
 
-	authResponse := &model_http.JWTAuthResponse{
-		Token:   tokenString,
-		Expires: claims.ExpiresAt.Time,
+	authResponse := &model_rest.JWTAuthResponse{
+		Token:     tokenString,
+		Expires:   claims.ExpiresAt.Time.Unix(),
+		Threshold: a.conf.JWTConfig.RefreshThreshold,
 	}
 
 	return authResponse, err
 }
 
 // ValidateJWT will validate a signed JWT and extracts the username from it.
-func (a *authImpl) ValidateJWT(signedToken string) (string, error) {
+func (a *authImpl) ValidateJWT(signedToken string) (string, int64, error) {
 	claims := jwt.MapClaims{}
 	if _, err := jwt.ParseWithClaims(signedToken, &claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(a.conf.JWTConfig.Key), nil
 	}); err != nil {
-		return "", err
+		return "", -1, err
 	}
 
 	if !claims.VerifyExpiresAt(time.Now().Unix(), true) {
-		return "", errors.New("token has expired")
+		return "", -1, errors.New("token has expired")
 	}
 	if !claims.VerifyIssuer(a.conf.JWTConfig.Issuer, true) {
-		return "", errors.New("unauthorized issuer")
+		return "", -1, errors.New("unauthorized issuer")
 	}
 
 	username, ok := claims["username"]
 	if !ok {
-		return "", errors.New("username not found")
+		return "", -1, errors.New("username not found")
 	}
 
-	return username.(string), nil
+	expiresAt, ok := claims["exp"]
+	if !ok {
+		return "", -1, errors.New("expiration time not found")
+	}
+
+	return username.(string), int64(expiresAt.(float64)), nil
 }
 
 // RefreshJWT will extend a valid JWT's lease by generating a fresh valid JWT.
-func (a *authImpl) RefreshJWT(token string) (authResponse *model_http.JWTAuthResponse, err error) {
+func (a *authImpl) RefreshJWT(token string) (authResponse *model_rest.JWTAuthResponse, err error) {
 	var username string
-	if username, err = a.ValidateJWT(token); err != nil {
+	if username, _, err = a.ValidateJWT(token); err != nil {
 		return
 	}
 	if authResponse, err = a.GenerateJWT(username); err != nil {
@@ -133,4 +140,9 @@ func (a *authImpl) RefreshJWT(token string) (authResponse *model_http.JWTAuthRes
 	}
 
 	return
+}
+
+// RefreshThreshold is the seconds before expiration that a JWT can be refreshed in.
+func (a *authImpl) RefreshThreshold() int64 {
+	return a.conf.JWTConfig.RefreshThreshold
 }

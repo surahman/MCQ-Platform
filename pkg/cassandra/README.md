@@ -26,7 +26,7 @@ The configuration loader will search for the configurations in the following ord
 |--------------------------|--------------------------------------------------------------------------------------------------------|
 | `/etc/MCQPlatform.conf/` | The `etc` directory is the canonical location for configurations.                                      |
 | `$HOME/.MCQPlatform/`    | Configurations can be located in the user's home directory.                                            |
-| `.`                      | The root directory where the application is located.                                                   |
+| `./configs/`             | The config folder in the root directory where the application is located.                              |
 | Environment variables    | Finally, the configurations will be loaded from environment variables and override configuration files |
 
 ### Configuration File
