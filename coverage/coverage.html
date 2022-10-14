@@ -77,7 +77,7 @@
 				
 				<option value="file10">github.com/surahman/mcq-platform/pkg/http/rest/config.go (87.5%)</option>
 				
-				<option value="file11">github.com/surahman/mcq-platform/pkg/http/rest/handlers/authorization.go (16.7%)</option>
+				<option value="file11">github.com/surahman/mcq-platform/pkg/http/rest/handlers/authorization.go (100.0%)</option>
 				
 				<option value="file12">github.com/surahman/mcq-platform/pkg/http/rest/handlers/quiz.go (0.0%)</option>
 				
@@ -142,7 +142,7 @@ type Auth interface {
         GenerateJWT(string) (*model_rest.JWTAuthResponse, error)
         ValidateJWT(string) (string, int64, error)
         RefreshJWT(string) (*model_rest.JWTAuthResponse, error)
-        RefreshThreshold() float64
+        RefreshThreshold() int64
 }
 
 // Check to ensure the Auth interface has been implemented.
@@ -212,8 +212,9 @@ func (a *authImpl) GenerateJWT(username string) (*model_rest.JWTAuthResponse, er
         }</span>
 
         <span class="cov8" title="7">authResponse := &amp;model_rest.JWTAuthResponse{
-                Token:   tokenString,
-                Expires: claims.ExpiresAt.Time.Unix(),
+                Token:     tokenString,
+                Expires:   claims.ExpiresAt.Time.Unix(),
+                Threshold: a.conf.JWTConfig.RefreshThreshold,
         }
 
         return authResponse, err</span>
@@ -262,7 +263,7 @@ func (a *authImpl) RefreshJWT(token string) (authResponse *model_rest.JWTAuthRes
 }
 
 // RefreshThreshold is the seconds before expiration that a JWT can be refreshed in.
-func (a *authImpl) RefreshThreshold() float64 <span class="cov1" title="1">{
+func (a *authImpl) RefreshThreshold() int64 <span class="cov1" title="1">{
         return a.conf.JWTConfig.RefreshThreshold
 }</span>
 </pre>
@@ -279,10 +280,10 @@ import (
 // Config contains all the configurations for authentication.
 type config struct {
         JWTConfig struct {
-                Key                string  `json:"key,omitempty" yaml:"key,omitempty" mapstructure:"key" validate:"required,min=8,max=256"`
-                Issuer             string  `json:"issuer,omitempty" yaml:"issuer,omitempty" mapstructure:"issuer" validate:"required"`
-                ExpirationDuration int64   `json:"expiration_duration,omitempty" yaml:"expiration_duration,omitempty" mapstructure:"expiration_duration" validate:"required,min=60"`
-                RefreshThreshold   float64 `json:"refresh_threshold,omitempty" yaml:"refresh_threshold,omitempty" mapstructure:"refresh_threshold" validate:"required,min=1"`
+                Key                string `json:"key,omitempty" yaml:"key,omitempty" mapstructure:"key" validate:"required,min=8,max=256"`
+                Issuer             string `json:"issuer,omitempty" yaml:"issuer,omitempty" mapstructure:"issuer" validate:"required"`
+                ExpirationDuration int64  `json:"expiration_duration,omitempty" yaml:"expiration_duration,omitempty" mapstructure:"expiration_duration" validate:"required,min=60"`
+                RefreshThreshold   int64  `json:"refresh_threshold,omitempty" yaml:"refresh_threshold,omitempty" mapstructure:"refresh_threshold" validate:"required,min=1"`
         } `json:"jwt,omitempty" yaml:"jwt,omitempty" mapstructure:"jwt" validate:"required"`
         General struct {
                 BcryptCost int `json:"bcrypt_cost,omitempty" yaml:"bcrypt_cost,omitempty" mapstructure:"bcrypt_cost" validate:"required,min=4,max=31"`
@@ -1528,22 +1529,22 @@ import (
 )
 
 // AuthMiddleware is the middleware that checks whether a JWT is valid and can access an endpoint.
-func AuthMiddleware(auth auth.Auth) gin.HandlerFunc <span class="cov8" title="1">{
-        handler := func(context *gin.Context) </span><span class="cov0" title="0">{
+func AuthMiddleware(auth auth.Auth) gin.HandlerFunc <span class="cov10" title="4">{
+        handler := func(context *gin.Context) </span><span class="cov8" title="3">{
                 tokenString := context.GetHeader("Authorization")
-                if tokenString == "" </span><span class="cov0" title="0">{
+                if tokenString == "" </span><span class="cov1" title="1">{
                         context.JSON(http.StatusUnauthorized, "request does not contain an access token")
                         context.Abort()
                         return
                 }</span>
-                <span class="cov0" title="0">if _, _, err := auth.ValidateJWT(tokenString); err != nil </span><span class="cov0" title="0">{
-                        context.JSON(http.StatusUnauthorized, err.Error())
+                <span class="cov5" title="2">if _, _, err := auth.ValidateJWT(tokenString); err != nil </span><span class="cov1" title="1">{
+                        context.JSON(http.StatusForbidden, err.Error())
                         context.Abort()
                         return
                 }</span>
-                <span class="cov0" title="0">context.Next()</span>
+                <span class="cov1" title="1">context.Next()</span>
         }
-        <span class="cov8" title="1">return handler</span>
+        <span class="cov10" title="4">return handler</span>
 }
 </pre>
 		
@@ -1890,7 +1891,7 @@ func LoginRefresh(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra,
                 }</span>
 
                 // Do not refresh tokens that have more than a minute left to expire.
-                <span class="cov5" title="3">if math.Abs(float64(time.Now().Unix()-expiresAt)) &gt; auth.RefreshThreshold() </span><span class="cov1" title="1">{
+                <span class="cov5" title="3">if math.Abs(float64(time.Now().Unix()-expiresAt)) &gt; float64(auth.RefreshThreshold()) </span><span class="cov1" title="1">{
                         context.JSON(http.StatusNotExtended, &amp;model_rest.Error{Message: "JWT is still valid for more than 60 seconds"})
                         return
                 }</span>
