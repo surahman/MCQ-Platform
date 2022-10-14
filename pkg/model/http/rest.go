@@ -7,7 +7,7 @@ import (
 // JWTAuthResponse is the response to a successful login and token refresh. The expires field is used on by the client to
 // know when to refresh the token.
 type JWTAuthResponse struct {
-	Token   string `json:"token" yaml:"token" validate:"required"`     // JWT string sent too and validated by server.
+	Token   string `json:"token" yaml:"token" validate:"required"`     // JWT string sent to and validated by the server.
 	Expires int64  `json:"expires" yaml:"expires" validate:"required"` // Expiration time as unix time stamp. Strictly used by client to gauge when to refresh the token.
 }
 

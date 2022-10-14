@@ -529,7 +529,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Deletes a user stored in the database by marking it as deleted. The user must supply their login credentials as well as complete the following confirmation message: \"I understand the consequences, delete my user account \u003cusername here\u003e\"",
+                "description": "Deletes a user stored in the database by marking it as deleted. The user must supply their login credentials as well as complete the following confirmation message: \"I understand the consequences, delete my user account USERNAME HERE\"",
                 "consumes": [
                     "application/json"
                 ],
@@ -931,11 +931,11 @@ const docTemplate = `{
             ],
             "properties": {
                 "expires": {
-                    "description": "Expiration time as unix time stamp.",
+                    "description": "Expiration time as unix time stamp. Strictly used by client to gauge when to refresh the token.",
                     "type": "integer"
                 },
                 "token": {
-                    "description": "JWT string sent too and validated by server.",
+                    "description": "JWT string sent to and validated by the server.",
                     "type": "string"
                 }
             }

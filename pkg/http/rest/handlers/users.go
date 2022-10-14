@@ -200,7 +200,7 @@ func LoginRefresh(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra)
 
 // DeleteUser will mark a user as deleted in the database.
 // @Summary     Deletes a user. The user must supply their credentials as well as a confirmation message.
-// @Description Deletes a user stored in the database by marking it as deleted. The user must supply their login credentials as well as complete the following confirmation message: "I understand the consequences, delete my user account <username here>"
+// @Description Deletes a user stored in the database by marking it as deleted. The user must supply their login credentials as well as complete the following confirmation message: "I understand the consequences, delete my user account USERNAME HERE"
 // @Tags        user users delete security
 // @Id          deleteUser
 // @Accept      json
