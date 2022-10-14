@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 	"github.com/surahman/mcq-platform/pkg/constants"
+	"github.com/surahman/mcq-platform/pkg/validator"
 	"gopkg.in/yaml.v3"
 )
 
@@ -27,7 +28,7 @@ func TestAuthConfigs_Load(t *testing.T) {
 			"empty - etc dir",
 			authConfigTestData["empty"],
 			require.Error,
-			3,
+			5,
 		},
 		{
 			"valid - etc dir",
@@ -77,6 +78,12 @@ func TestAuthConfigs_Load(t *testing.T) {
 			require.Error,
 			1,
 		},
+		{
+			"refresh_threshold_gt_expiration - etc dir",
+			authConfigTestData["refresh_threshold_gt_expiration"],
+			require.Error,
+			2,
+		},
 		// ----- test cases end ----- //
 	}
 	for _, testCase := range testCases {
@@ -92,6 +99,8 @@ func TestAuthConfigs_Load(t *testing.T) {
 			testCase.expectErr(t, err)
 
 			if err != nil {
+				validatorErrors := err.(*validator.ErrorValidation).Errors
+				require.Equalf(t, testCase.expectLen, len(validatorErrors), "validation error count not as expected: %v", validatorErrors)
 				return
 			}
 
