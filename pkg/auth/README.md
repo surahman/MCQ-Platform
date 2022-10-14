@@ -59,6 +59,7 @@ jwt:
   key: some-long-random-key
   issuer: issuer of the token
   expiration_duration: 600
+  refresh_threshold: 60
 general:
   bcrypt_cost: 8
 ```
