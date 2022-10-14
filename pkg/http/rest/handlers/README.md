@@ -18,8 +18,9 @@ The returned token schema is below.
 
 ```json
 {
-  "expires": "expiration time as Unix time stamp",
-  "token": "token string"
+  "expires": "expiration time integer in seconds, Unix time stamp",
+  "token": "token string",
+  "threshold": "threshold in integer seconds before expiration when the token can be refreshed"
 }
 ```
 

@@ -916,11 +916,16 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "expires",
+                "threshold",
                 "token"
             ],
             "properties": {
                 "expires": {
                     "description": "Expiration time as unix time stamp. Strictly used by client to gauge when to refresh the token.",
+                    "type": "integer"
+                },
+                "threshold": {
+                    "description": "The window in seconds before expiration during which the token can be refreshed.",
                     "type": "integer"
                 },
                 "token": {

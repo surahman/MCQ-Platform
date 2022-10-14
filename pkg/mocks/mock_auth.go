@@ -94,10 +94,10 @@ func (mr *MockAuthMockRecorder) RefreshJWT(arg0 interface{}) *gomock.Call {
 }
 
 // RefreshThreshold mocks base method.
-func (m *MockAuth) RefreshThreshold() float64 {
+func (m *MockAuth) RefreshThreshold() int64 {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RefreshThreshold")
-	ret0, _ := ret[0].(float64)
+	ret0, _ := ret[0].(int64)
 	return ret0
 }
 

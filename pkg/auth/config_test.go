@@ -103,13 +103,13 @@ func TestAuthConfigs_Load(t *testing.T) {
 			// Test configuring of environment variable.
 			testKey := xid.New().String()
 			testExpDur := int64(999)
-			testRefThreshold := float64(555)
+			testRefThreshold := int64(555)
 			testBcryptCost := 16
 			testIssuer := "test issuer"
 			t.Setenv(keyspaceJwt+"KEY", testKey)
 			t.Setenv(keyspaceJwt+"ISSUER", testIssuer)
 			t.Setenv(keyspaceJwt+"EXPIRATION_DURATION", strconv.FormatInt(testExpDur, 10))
-			t.Setenv(keyspaceJwt+"REFRESH_THRESHOLD", strconv.FormatFloat(testRefThreshold, 'f', 0, 64))
+			t.Setenv(keyspaceJwt+"REFRESH_THRESHOLD", strconv.FormatInt(testRefThreshold, 10))
 			t.Setenv(keyspaceGen+"BCRYPT_COST", strconv.Itoa(testBcryptCost))
 			err = actual.Load(fs)
 			require.NoErrorf(t, err, "Failed to load constants file: %v", err)

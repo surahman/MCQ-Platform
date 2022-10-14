@@ -136,11 +136,16 @@ definitions:
         description: Expiration time as unix time stamp. Strictly used by client to
           gauge when to refresh the token.
         type: integer
+      threshold:
+        description: The window in seconds before expiration during which the token
+          can be refreshed.
+        type: integer
       token:
         description: JWT string sent to and validated by the server.
         type: string
     required:
     - expires
+    - threshold
     - token
     type: object
   model_rest.Success:

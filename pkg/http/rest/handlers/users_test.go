@@ -331,7 +331,7 @@ func TestLoginRefresh(t *testing.T) {
 				times: 0,
 			},
 			authRefThresholdData: &mockAuthData{
-				outputParam1: 60.0,
+				outputParam1: int64(60),
 				times:        0,
 			},
 			authGenJWTData: &mockAuthData{
@@ -351,7 +351,7 @@ func TestLoginRefresh(t *testing.T) {
 				times:       1,
 			},
 			authRefThresholdData: &mockAuthData{
-				outputParam1: 60.0,
+				outputParam1: int64(60),
 				times:        1,
 			},
 			authGenJWTData: &mockAuthData{
@@ -371,7 +371,7 @@ func TestLoginRefresh(t *testing.T) {
 				times:       1,
 			},
 			authRefThresholdData: &mockAuthData{
-				outputParam1: 60.0,
+				outputParam1: int64(60),
 				times:        1,
 			},
 			authGenJWTData: &mockAuthData{
@@ -392,7 +392,7 @@ func TestLoginRefresh(t *testing.T) {
 				times:       0,
 			},
 			authRefThresholdData: &mockAuthData{
-				outputParam1: 60.0,
+				outputParam1: int64(60),
 				times:        0,
 			},
 			authGenJWTData: &mockAuthData{
@@ -412,7 +412,7 @@ func TestLoginRefresh(t *testing.T) {
 				times:     1,
 			},
 			authRefThresholdData: &mockAuthData{
-				outputParam1: 60.0,
+				outputParam1: int64(60),
 				times:        0,
 			},
 			authGenJWTData: &mockAuthData{
@@ -433,7 +433,7 @@ func TestLoginRefresh(t *testing.T) {
 				times: 1,
 			},
 			authRefThresholdData: &mockAuthData{
-				outputParam1: 60.0,
+				outputParam1: int64(60),
 				times:        0,
 			},
 			authGenJWTData: &mockAuthData{
@@ -453,7 +453,7 @@ func TestLoginRefresh(t *testing.T) {
 				times:       1,
 			},
 			authRefThresholdData: &mockAuthData{
-				outputParam1: 60.0,
+				outputParam1: int64(60),
 				times:        1,
 			},
 			authGenJWTData: &mockAuthData{

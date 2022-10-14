@@ -19,7 +19,7 @@ var authConfigTestData = configTestData()
 var expirationDuration int64 = 10
 
 // refreshThreshold is the time in seconds before expiration that a JWT can be refreshed in.
-var refreshThreshold float64 = 99
+var refreshThreshold int64 = 99
 
 // zapLogger is the Zap logger used strictly for the test suite in this package.
 var zapLogger *logger.Logger
