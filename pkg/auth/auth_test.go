@@ -167,9 +167,10 @@ func TestAuthImpl_GenerateJWT(t *testing.T) {
 	require.True(t, authResponse.Expires < time.Now().Add(time.Duration(expirationDuration+1)*time.Second).Unix(), "JWT expires after deadline")
 
 	// Check validate token and check for username in claim.
-	actualUname, err := testAuth.ValidateJWT(authResponse.Token)
+	actualUname, expiresAt, err := testAuth.ValidateJWT(authResponse.Token)
 	require.NoError(t, err, "failed to extract username from JWT")
 	require.Equalf(t, userName, actualUname, "incorrect username retrieved from JWT")
+	require.True(t, expiresAt > 0, "invalid expiration time")
 }
 
 func TestAuthImpl_ValidateJWT(t *testing.T) {
@@ -177,10 +178,10 @@ func TestAuthImpl_ValidateJWT(t *testing.T) {
 		testAuthImpl, err := getTestConfiguration()
 		require.NoError(t, err, "failed to generate test authorization for claim parsing")
 
-		_, err = testAuthImpl.ValidateJWT("")
+		_, _, err = testAuthImpl.ValidateJWT("")
 		require.Error(t, err, "parsing an empty token should fail")
 
-		_, err = testAuthImpl.ValidateJWT("bad#token#string")
+		_, _, err = testAuthImpl.ValidateJWT("bad#token#string")
 		require.Error(t, err, "parsing and invalid token should fail")
 	})
 
@@ -235,7 +236,7 @@ func TestAuthImpl_ValidateJWT(t *testing.T) {
 				time.Sleep(time.Duration(testCase.expirationDuration+1) * time.Second)
 			}
 
-			username, err := testAuth.ValidateJWT(testJWT.Token)
+			username, expiresAt, err := testAuth.ValidateJWT(testJWT.Token)
 			testCase.expectErr(t, err, "validation of issued token error condition failed")
 
 			if err != nil {
@@ -243,6 +244,7 @@ func TestAuthImpl_ValidateJWT(t *testing.T) {
 				return
 			}
 			require.Equal(t, testUsername, username, "username failed to match the expected")
+			require.True(t, expiresAt > 0, "invalid expiration time")
 		})
 	}
 }
@@ -280,9 +282,10 @@ func TestAuthImpl_RefreshJWT(t *testing.T) {
 			require.NoError(t, err, "failed to generate test authorization")
 			testJWT, err := testAuthImpl.GenerateJWT(testCase.testUsername)
 			require.NoError(t, err, "failed to create initial JWT")
-			actualUsername, err := testAuthImpl.ValidateJWT(testJWT.Token)
+			actualUsername, expiresAt, err := testAuthImpl.ValidateJWT(testJWT.Token)
 			require.NoError(t, err, "failed to validate original test token")
 			require.Equal(t, testCase.testUsername, actualUsername, "failed to extract correct username from original JWT")
+			require.True(t, expiresAt > 0, "invalid expiration time of original token")
 
 			time.Sleep(time.Duration(testCase.sleepTime) * time.Second)
 			refreshedToken, err := testAuthImpl.RefreshJWT(testJWT.Token)
@@ -296,9 +299,10 @@ func TestAuthImpl_RefreshJWT(t *testing.T) {
 				refreshedToken.Expires > time.Now().Add(time.Duration(testAuthImpl.conf.JWTConfig.ExpirationDuration-1)*time.Second).Unix(),
 				"token expires before the required deadline")
 
-			actualUsername, err = testAuthImpl.ValidateJWT(testJWT.Token)
+			actualUsername, expiresAt, err = testAuthImpl.ValidateJWT(testJWT.Token)
 			require.NoErrorf(t, err, "failed to validate refreshed JWT")
 			require.Equal(t, testCase.testUsername, actualUsername, "failed to extract correct username from refreshed JWT")
+			require.True(t, expiresAt > 0, "invalid expiration time of refreshed token")
 		})
 	}
 }

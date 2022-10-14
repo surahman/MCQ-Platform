@@ -148,6 +148,7 @@ func LoginRefresh(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra)
 		var freshToken *model_rest.JWTAuthResponse
 		var username string
 		var dbResponse any
+		var expiresAt int64
 
 		if err = context.ShouldBindJSON(&originalToken); err != nil {
 			context.JSON(http.StatusBadRequest, &model_rest.Error{Message: err.Error()})
@@ -160,7 +161,7 @@ func LoginRefresh(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra)
 			return
 		}
 
-		if username, err = auth.ValidateJWT(originalToken.Token); err != nil {
+		if username, expiresAt, err = auth.ValidateJWT(originalToken.Token); err != nil {
 			context.JSON(http.StatusForbidden, &model_rest.Error{Message: err.Error()})
 			context.Abort()
 			return
@@ -181,7 +182,7 @@ func LoginRefresh(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra)
 		}
 
 		// Do not refresh tokens that have more than a minute left to expire.
-		if math.Abs(float64(time.Now().Unix()-originalToken.Expires)) > 60 {
+		if math.Abs(float64(time.Now().Unix()-expiresAt)) > 60 {
 			context.JSON(http.StatusNotExtended, &model_rest.Error{Message: "JWT is still valid for more than a minute"})
 			return
 		}
@@ -232,7 +233,7 @@ func DeleteUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, a
 		}
 
 		// Validate the JWT and extract the username, compare the username against the deletion request login credentials.
-		if username, err = auth.ValidateJWT(jwt); err != nil {
+		if username, _, err = auth.ValidateJWT(jwt); err != nil {
 			context.JSON(http.StatusForbidden, &model_rest.Error{Message: err.Error()})
 			context.Abort()
 			return

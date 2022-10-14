@@ -39,8 +39,8 @@ func TestRegisterUser(t *testing.T) {
 			expectedStatus: http.StatusBadRequest,
 			user:           &model_cassandra.UserAccount{},
 			authHashData: &mockAuthData{
-				outputParam: "",
-				times:       0,
+				outputParam1: "",
+				times:        0,
 			},
 			cassandraCreateData: &mockCassandraData{
 				times: 0,
@@ -54,8 +54,8 @@ func TestRegisterUser(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			user:           testUserData["username1"].UserAccount,
 			authHashData: &mockAuthData{
-				outputParam: "hashed password",
-				times:       1,
+				outputParam1: "hashed password",
+				times:        1,
 			},
 			cassandraCreateData: &mockCassandraData{
 				times: 1,
@@ -69,9 +69,9 @@ func TestRegisterUser(t *testing.T) {
 			expectedStatus: http.StatusInternalServerError,
 			user:           testUserData["username1"].UserAccount,
 			authHashData: &mockAuthData{
-				outputParam: "hashed password",
-				outputErr:   errors.New("password hash failure"),
-				times:       1,
+				outputParam1: "hashed password",
+				outputErr:    errors.New("password hash failure"),
+				times:        1,
 			},
 			cassandraCreateData: &mockCassandraData{
 				times: 0,
@@ -85,8 +85,8 @@ func TestRegisterUser(t *testing.T) {
 			expectedStatus: http.StatusNotFound,
 			user:           testUserData["username1"].UserAccount,
 			authHashData: &mockAuthData{
-				outputParam: "hashed password",
-				times:       1,
+				outputParam1: "hashed password",
+				times:        1,
 			},
 			cassandraCreateData: &mockCassandraData{
 				outputErr: &cassandra.Error{Status: http.StatusNotFound},
@@ -101,8 +101,8 @@ func TestRegisterUser(t *testing.T) {
 			expectedStatus: http.StatusInternalServerError,
 			user:           testUserData["username1"].UserAccount,
 			authHashData: &mockAuthData{
-				outputParam: "hashed password",
-				times:       1,
+				outputParam1: "hashed password",
+				times:        1,
 			},
 			cassandraCreateData: &mockCassandraData{
 				times: 1,
@@ -127,7 +127,7 @@ func TestRegisterUser(t *testing.T) {
 			require.NoErrorf(t, err, "failed to marshall JSON: %v", err)
 
 			mockAuth.EXPECT().HashPassword(gomock.Any()).Return(
-				testCase.authHashData.outputParam,
+				testCase.authHashData.outputParam1,
 				testCase.authHashData.outputErr,
 			).Times(testCase.authHashData.times)
 
@@ -137,7 +137,7 @@ func TestRegisterUser(t *testing.T) {
 			).Times(testCase.cassandraCreateData.times)
 
 			mockAuth.EXPECT().GenerateJWT(gomock.Any()).Return(
-				testCase.authGenJWTData.outputParam,
+				testCase.authGenJWTData.outputParam1,
 				testCase.authGenJWTData.outputErr,
 			).Times(testCase.authGenJWTData.times)
 
@@ -175,8 +175,8 @@ func TestLoginUser(t *testing.T) {
 				times: 0,
 			},
 			authCheckPwdData: &mockAuthData{
-				outputParam: "",
-				times:       0,
+				outputParam1: "",
+				times:        0,
 			},
 			authGenJWTData: &mockAuthData{
 				times: 0,
@@ -206,8 +206,8 @@ func TestLoginUser(t *testing.T) {
 				times:     1,
 			},
 			authCheckPwdData: &mockAuthData{
-				outputParam: "hashed password",
-				times:       0,
+				outputParam1: "hashed password",
+				times:        0,
 			},
 			authGenJWTData: &mockAuthData{
 				times: 0,
@@ -289,7 +289,7 @@ func TestLoginUser(t *testing.T) {
 			).Times(testCase.authCheckPwdData.times)
 
 			mockAuth.EXPECT().GenerateJWT(gomock.Any()).Return(
-				testCase.authGenJWTData.outputParam,
+				testCase.authGenJWTData.outputParam1,
 				testCase.authGenJWTData.outputErr,
 			).Times(testCase.authGenJWTData.times)
 
@@ -327,8 +327,8 @@ func TestLoginRefresh(t *testing.T) {
 				times: 0,
 			},
 			authValidateJWTData: &mockAuthData{
-				outputParam: "",
-				times:       0,
+				outputParam1: "",
+				times:        0,
 			},
 			authGenJWTData: &mockAuthData{
 				times: 0,
@@ -339,14 +339,16 @@ func TestLoginRefresh(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			token: &model_rest.JWTAuthResponse{
 				Token:   "test token",
-				Expires: time.Now().Add(-time.Duration(30) * time.Second).Unix()},
+				Expires: 1,
+			},
 			cassandraReadData: &mockCassandraData{
 				outputParam: testUserData["username1"],
 				times:       1,
 			},
 			authValidateJWTData: &mockAuthData{
-				outputParam: "username1",
-				times:       1,
+				outputParam1: "username1",
+				outputParam2: time.Now().Add(-time.Duration(30) * time.Second).Unix(),
+				times:        1,
 			},
 			authGenJWTData: &mockAuthData{
 				times: 1,
@@ -357,14 +359,16 @@ func TestLoginRefresh(t *testing.T) {
 			expectedStatus: http.StatusNotExtended,
 			token: &model_rest.JWTAuthResponse{
 				Token:   "test token",
-				Expires: time.Now().Add(-time.Duration(3) * time.Minute).Unix()},
+				Expires: 1,
+			},
 			cassandraReadData: &mockCassandraData{
 				outputParam: testUserData["username1"],
 				times:       1,
 			},
 			authValidateJWTData: &mockAuthData{
-				outputParam: "username1",
-				times:       1,
+				outputParam1: "username1",
+				outputParam2: time.Now().Add(-time.Duration(3) * time.Minute).Unix(),
+				times:        1,
 			},
 			authGenJWTData: &mockAuthData{
 				times: 0,
@@ -375,15 +379,16 @@ func TestLoginRefresh(t *testing.T) {
 			expectedStatus: http.StatusForbidden,
 			token: &model_rest.JWTAuthResponse{
 				Token:   "test token",
-				Expires: time.Now().Add(-time.Duration(30) * time.Second).Unix()},
+				Expires: 1},
 			cassandraReadData: &mockCassandraData{
 				outputParam: testUserData["username1"],
 				times:       0,
 			},
 			authValidateJWTData: &mockAuthData{
-				outputParam: "username1",
-				outputErr:   errors.New("validate JWT failure"),
-				times:       1,
+				outputParam1: "username1",
+				outputParam2: time.Now().Add(-time.Duration(30) * time.Second).Unix(),
+				outputErr:    errors.New("validate JWT failure"),
+				times:        1,
 			},
 			authGenJWTData: &mockAuthData{
 				times: 0,
@@ -394,14 +399,16 @@ func TestLoginRefresh(t *testing.T) {
 			expectedStatus: http.StatusInternalServerError,
 			token: &model_rest.JWTAuthResponse{
 				Token:   "test token",
-				Expires: time.Now().Add(-time.Duration(30) * time.Second).Unix()},
+				Expires: 1,
+			},
 			cassandraReadData: &mockCassandraData{
 				outputErr: errors.New("db failure"),
 				times:     1,
 			},
 			authValidateJWTData: &mockAuthData{
-				outputParam: "username1",
-				times:       1,
+				outputParam1: "username1",
+				outputParam2: time.Now().Add(-time.Duration(30) * time.Second).Unix(),
+				times:        1,
 			},
 			authGenJWTData: &mockAuthData{
 				times: 0,
@@ -412,7 +419,8 @@ func TestLoginRefresh(t *testing.T) {
 			expectedStatus: http.StatusForbidden,
 			token: &model_rest.JWTAuthResponse{
 				Token:   "test token",
-				Expires: time.Now().Add(-time.Duration(30) * time.Second).Unix()},
+				Expires: 1,
+			},
 			cassandraReadData: &mockCassandraData{
 				outputParam: &model_cassandra.User{
 					IsDeleted: true,
@@ -420,8 +428,8 @@ func TestLoginRefresh(t *testing.T) {
 				times: 1,
 			},
 			authValidateJWTData: &mockAuthData{
-				outputParam: "username1",
-				times:       1,
+				outputParam1: "username1",
+				times:        1,
 			},
 			authGenJWTData: &mockAuthData{
 				times: 0,
@@ -432,14 +440,16 @@ func TestLoginRefresh(t *testing.T) {
 			expectedStatus: http.StatusInternalServerError,
 			token: &model_rest.JWTAuthResponse{
 				Token:   "test token",
-				Expires: time.Now().Add(-time.Duration(30) * time.Second).Unix()},
+				Expires: 1,
+			},
 			cassandraReadData: &mockCassandraData{
 				outputParam: testUserData["username1"],
 				times:       1,
 			},
 			authValidateJWTData: &mockAuthData{
-				outputParam: "username1",
-				times:       1,
+				outputParam1: "username1",
+				outputParam2: time.Now().Add(-time.Duration(30) * time.Second).Unix(),
+				times:        1,
 			},
 			authGenJWTData: &mockAuthData{
 				outputErr: errors.New("failed to generate token"),
@@ -466,12 +476,13 @@ func TestLoginRefresh(t *testing.T) {
 			).Times(testCase.cassandraReadData.times)
 
 			mockAuth.EXPECT().ValidateJWT(gomock.Any()).Return(
-				testCase.authValidateJWTData.outputParam,
+				testCase.authValidateJWTData.outputParam1,
+				testCase.authValidateJWTData.outputParam2,
 				testCase.authValidateJWTData.outputErr,
 			).Times(testCase.authValidateJWTData.times)
 
 			mockAuth.EXPECT().GenerateJWT(gomock.Any()).Return(
-				testCase.authGenJWTData.outputParam,
+				testCase.authGenJWTData.outputParam1,
 				testCase.authGenJWTData.outputErr,
 			).Times(testCase.authGenJWTData.times)
 
@@ -507,8 +518,8 @@ func TestDeleteUser(t *testing.T) {
 			expectedStatus: http.StatusBadRequest,
 			deleteRequest:  &model_rest.DeleteUserRequest{},
 			authValidateJWTData: &mockAuthData{
-				outputParam: "",
-				times:       0,
+				outputParam1: "",
+				times:        0,
 			},
 			cassandraReadData: &mockCassandraData{
 				times: 0,
@@ -531,8 +542,8 @@ func TestDeleteUser(t *testing.T) {
 				Confirmation: fmt.Sprintf(constants.GetDeleteUserAccountConfirmation(), "username1"),
 			},
 			authValidateJWTData: &mockAuthData{
-				outputParam: "username1",
-				times:       1,
+				outputParam1: "username1",
+				times:        1,
 			},
 			cassandraReadData: &mockCassandraData{
 				outputParam: testUserData["username1"],
@@ -556,8 +567,8 @@ func TestDeleteUser(t *testing.T) {
 				Confirmation: fmt.Sprintf(constants.GetDeleteUserAccountConfirmation(), "username1"),
 			},
 			authValidateJWTData: &mockAuthData{
-				outputParam: "username mismatch",
-				times:       1,
+				outputParam1: "username mismatch",
+				times:        1,
 			},
 			cassandraReadData: &mockCassandraData{
 				times: 0,
@@ -580,8 +591,8 @@ func TestDeleteUser(t *testing.T) {
 				Confirmation: fmt.Sprintf(constants.GetDeleteUserAccountConfirmation(), "username1"),
 			},
 			authValidateJWTData: &mockAuthData{
-				outputParam: "username1",
-				times:       1,
+				outputParam1: "username1",
+				times:        1,
 			},
 			cassandraReadData: &mockCassandraData{
 				outputParam: testUserData["username1"],
@@ -606,8 +617,8 @@ func TestDeleteUser(t *testing.T) {
 				Confirmation: fmt.Sprintf(constants.GetDeleteUserAccountConfirmation(), "username1"),
 			},
 			authValidateJWTData: &mockAuthData{
-				outputParam: "username1",
-				times:       1,
+				outputParam1: "username1",
+				times:        1,
 			},
 			cassandraReadData: &mockCassandraData{
 				outputParam: &model_cassandra.User{
@@ -633,8 +644,8 @@ func TestDeleteUser(t *testing.T) {
 				Confirmation: fmt.Sprintf(constants.GetDeleteUserAccountConfirmation(), "username1"),
 			},
 			authValidateJWTData: &mockAuthData{
-				outputParam: "username1",
-				times:       1,
+				outputParam1: "username1",
+				times:        1,
 			},
 			cassandraReadData: &mockCassandraData{
 				outputParam: testUserData["username1"],
@@ -659,8 +670,8 @@ func TestDeleteUser(t *testing.T) {
 				Confirmation: fmt.Sprintf(constants.GetDeleteUserAccountConfirmation(), "incorrect and incomplete confirmation"),
 			},
 			authValidateJWTData: &mockAuthData{
-				outputParam: "username1",
-				times:       1,
+				outputParam1: "username1",
+				times:        1,
 			},
 			cassandraReadData: &mockCassandraData{
 				times: 0,
@@ -683,8 +694,8 @@ func TestDeleteUser(t *testing.T) {
 				Confirmation: fmt.Sprintf(constants.GetDeleteUserAccountConfirmation(), "username1"),
 			},
 			authValidateJWTData: &mockAuthData{
-				outputParam: "username1",
-				times:       1,
+				outputParam1: "username1",
+				times:        1,
 			},
 			cassandraReadData: &mockCassandraData{
 				outputParam: testUserData["username1"],
@@ -727,7 +738,8 @@ func TestDeleteUser(t *testing.T) {
 			)
 
 			mockAuth.EXPECT().ValidateJWT(authToken).Return(
-				testCase.authValidateJWTData.outputParam,
+				testCase.authValidateJWTData.outputParam1,
+				testCase.authValidateJWTData.outputParam2,
 				testCase.authValidateJWTData.outputErr,
 			).Times(testCase.authValidateJWTData.times)
 

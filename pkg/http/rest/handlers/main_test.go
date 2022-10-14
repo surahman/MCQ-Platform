@@ -60,11 +60,12 @@ func getRouter() *gin.Engine {
 
 // mockAuthData is the parameter data for Auth mocking that is used in the test grid.
 type mockAuthData struct {
-	inputParam1 string
-	inputParam2 string
-	outputParam any
-	outputErr   error
-	times       int
+	inputParam1  string
+	inputParam2  string
+	outputParam1 any
+	outputParam2 int64
+	outputErr    error
+	times        int
 }
 
 // mockCassandraData is the parameter data for Cassandra mocking that is used in the test grid.

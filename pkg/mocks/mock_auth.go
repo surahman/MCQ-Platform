@@ -8,7 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	model_http "github.com/surahman/mcq-platform/pkg/model/http"
+	model_rest "github.com/surahman/mcq-platform/pkg/model/http"
 )
 
 // MockAuth is a mock of Auth interface.
@@ -49,10 +49,10 @@ func (mr *MockAuthMockRecorder) CheckPassword(arg0, arg1 interface{}) *gomock.Ca
 }
 
 // GenerateJWT mocks base method.
-func (m *MockAuth) GenerateJWT(arg0 string) (*model_http.JWTAuthResponse, error) {
+func (m *MockAuth) GenerateJWT(arg0 string) (*model_rest.JWTAuthResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GenerateJWT", arg0)
-	ret0, _ := ret[0].(*model_http.JWTAuthResponse)
+	ret0, _ := ret[0].(*model_rest.JWTAuthResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -79,10 +79,10 @@ func (mr *MockAuthMockRecorder) HashPassword(arg0 interface{}) *gomock.Call {
 }
 
 // RefreshJWT mocks base method.
-func (m *MockAuth) RefreshJWT(arg0 string) (*model_http.JWTAuthResponse, error) {
+func (m *MockAuth) RefreshJWT(arg0 string) (*model_rest.JWTAuthResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RefreshJWT", arg0)
-	ret0, _ := ret[0].(*model_http.JWTAuthResponse)
+	ret0, _ := ret[0].(*model_rest.JWTAuthResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -94,12 +94,13 @@ func (mr *MockAuthMockRecorder) RefreshJWT(arg0 interface{}) *gomock.Call {
 }
 
 // ValidateJWT mocks base method.
-func (m *MockAuth) ValidateJWT(arg0 string) (string, error) {
+func (m *MockAuth) ValidateJWT(arg0 string) (string, int64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidateJWT", arg0)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(int64)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // ValidateJWT indicates an expected call of ValidateJWT.

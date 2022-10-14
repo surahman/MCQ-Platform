@@ -20,7 +20,7 @@ type Auth interface {
 	HashPassword(string) (string, error)
 	CheckPassword(string, string) error
 	GenerateJWT(string) (*model_rest.JWTAuthResponse, error)
-	ValidateJWT(string) (string, error)
+	ValidateJWT(string) (string, int64, error)
 	RefreshJWT(string) (*model_rest.JWTAuthResponse, error)
 }
 
@@ -99,33 +99,38 @@ func (a *authImpl) GenerateJWT(username string) (*model_rest.JWTAuthResponse, er
 }
 
 // ValidateJWT will validate a signed JWT and extracts the username from it.
-func (a *authImpl) ValidateJWT(signedToken string) (string, error) {
+func (a *authImpl) ValidateJWT(signedToken string) (string, int64, error) {
 	claims := jwt.MapClaims{}
 	if _, err := jwt.ParseWithClaims(signedToken, &claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(a.conf.JWTConfig.Key), nil
 	}); err != nil {
-		return "", err
+		return "", -1, err
 	}
 
 	if !claims.VerifyExpiresAt(time.Now().Unix(), true) {
-		return "", errors.New("token has expired")
+		return "", -1, errors.New("token has expired")
 	}
 	if !claims.VerifyIssuer(a.conf.JWTConfig.Issuer, true) {
-		return "", errors.New("unauthorized issuer")
+		return "", -1, errors.New("unauthorized issuer")
 	}
 
 	username, ok := claims["username"]
 	if !ok {
-		return "", errors.New("username not found")
+		return "", -1, errors.New("username not found")
 	}
 
-	return username.(string), nil
+	expiresAt, ok := claims["exp"]
+	if !ok {
+		return "", -1, errors.New("expiration time not found")
+	}
+
+	return username.(string), int64(expiresAt.(float64)), nil
 }
 
 // RefreshJWT will extend a valid JWT's lease by generating a fresh valid JWT.
 func (a *authImpl) RefreshJWT(token string) (authResponse *model_rest.JWTAuthResponse, err error) {
 	var username string
-	if username, err = a.ValidateJWT(token); err != nil {
+	if username, _, err = a.ValidateJWT(token); err != nil {
 		return
 	}
 	if authResponse, err = a.GenerateJWT(username); err != nil {

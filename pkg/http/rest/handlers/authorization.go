@@ -16,7 +16,7 @@ func AuthMiddleware(auth auth.Auth) gin.HandlerFunc {
 			context.Abort()
 			return
 		}
-		if _, err := auth.ValidateJWT(tokenString); err != nil {
+		if _, _, err := auth.ValidateJWT(tokenString); err != nil {
 			context.JSON(http.StatusUnauthorized, err.Error())
 			context.Abort()
 			return

@@ -8,7 +8,7 @@ import (
 // know when to refresh the token.
 type JWTAuthResponse struct {
 	Token   string `json:"token" yaml:"token" validate:"required"`     // JWT string sent too and validated by server.
-	Expires int64  `json:"expires" yaml:"expires" validate:"required"` // Expiration time as unix time stamp.
+	Expires int64  `json:"expires" yaml:"expires" validate:"required"` // Expiration time as unix time stamp. Strictly used by client to gauge when to refresh the token.
 }
 
 // Error is a generic error message that is returned to the requester.
