@@ -28,7 +28,7 @@ func TestAuthConfigs_Load(t *testing.T) {
 			"empty - etc dir",
 			authConfigTestData["empty"],
 			require.Error,
-			3,
+			5,
 		},
 		{
 			"valid - etc dir",

@@ -282,8 +282,8 @@ type config struct {
         JWTConfig struct {
                 Key                string `json:"key,omitempty" yaml:"key,omitempty" mapstructure:"key" validate:"required,min=8,max=256"`
                 Issuer             string `json:"issuer,omitempty" yaml:"issuer,omitempty" mapstructure:"issuer" validate:"required"`
-                ExpirationDuration int64  `json:"expiration_duration,omitempty" yaml:"expiration_duration,omitempty" mapstructure:"expiration_duration" validate:"required,min=60"`
-                RefreshThreshold   int64  `json:"refresh_threshold,omitempty" yaml:"refresh_threshold,omitempty" mapstructure:"refresh_threshold" validate:"required,min=1"`
+                ExpirationDuration int64  `json:"expiration_duration,omitempty" yaml:"expiration_duration,omitempty" mapstructure:"expiration_duration" validate:"required,min=60,gtefield=RefreshThreshold"`
+                RefreshThreshold   int64  `json:"refresh_threshold,omitempty" yaml:"refresh_threshold,omitempty" mapstructure:"refresh_threshold" validate:"required,min=1,ltefield=ExpirationDuration"`
         } `json:"jwt,omitempty" yaml:"jwt,omitempty" mapstructure:"jwt" validate:"required"`
         General struct {
                 BcryptCost int `json:"bcrypt_cost,omitempty" yaml:"bcrypt_cost,omitempty" mapstructure:"bcrypt_cost" validate:"required,min=4,max=31"`
@@ -296,7 +296,7 @@ func newConfig() *config <span class="cov4" title="3">{
 }</span>
 
 // Load will attempt to load configurations from a file on a file system and then overwrite values using environment variables.
-func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="13">{
+func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="14">{
         viper.SetFs(fs)
         viper.SetConfigName(constants.GetAuthFileName())
         viper.SetConfigType("yaml")
@@ -311,11 +311,11 @@ func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="13">
                 return
         }</span>
 
-        <span class="cov9" title="12">if err = viper.Unmarshal(cfg); err != nil </span><span class="cov0" title="0">{
+        <span class="cov9" title="13">if err = viper.Unmarshal(cfg); err != nil </span><span class="cov0" title="0">{
                 return
         }</span>
 
-        <span class="cov9" title="12">if err = validator.ValidateStruct(cfg); err != nil </span><span class="cov8" title="8">{
+        <span class="cov9" title="13">if err = validator.ValidateStruct(cfg); err != nil </span><span class="cov8" title="9">{
                 return
         }</span>
 
@@ -371,7 +371,7 @@ jwt:
   key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
   issuer: MCQ Platform
   expiration_duration: 59
-  refresh_threshold: 60
+  refresh_threshold: 40
 general:
   bcrypt_cost: 8`,
 
@@ -396,8 +396,18 @@ general:
                 "low_refresh_threshold": `
 jwt:
   key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
+  issuer: MCQ Platform
   expiration_duration: 600
   refresh_threshold: 0
+general:
+  bcrypt_cost: 8`,
+
+                "refresh_threshold_gt_expiration": `
+jwt:
+  key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
+  issuer: MCQ Platform
+  expiration_duration: 600
+  refresh_threshold: 601
 general:
   bcrypt_cost: 8`,
         }
