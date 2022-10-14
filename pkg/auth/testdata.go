@@ -46,7 +46,7 @@ jwt:
   key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
   issuer: MCQ Platform
   expiration_duration: 59
-  refresh_threshold: 60
+  refresh_threshold: 40
 general:
   bcrypt_cost: 8`,
 
@@ -71,8 +71,18 @@ general:
 		"low_refresh_threshold": `
 jwt:
   key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
+  issuer: MCQ Platform
   expiration_duration: 600
   refresh_threshold: 0
+general:
+  bcrypt_cost: 8`,
+
+		"refresh_threshold_gt_expiration": `
+jwt:
+  key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
+  issuer: MCQ Platform
+  expiration_duration: 600
+  refresh_threshold: 601
 general:
   bcrypt_cost: 8`,
 	}
