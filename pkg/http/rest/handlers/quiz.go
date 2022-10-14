@@ -4,6 +4,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/surahman/mcq-platform/pkg/cassandra"
+	"github.com/surahman/mcq-platform/pkg/grading"
+	"github.com/surahman/mcq-platform/pkg/logger"
 )
 
 // ViewQuiz will retrieve a test using a variable in the URL.
@@ -21,8 +24,10 @@ import (
 // @Failure     404     {object} model_rest.Error   "Error message with any available details in payload"
 // @Failure     500     {object} model_rest.Error   "Error message with any available details in payload"
 // @Router      /quiz/view/{test_id} [get]
-func ViewQuiz(context *gin.Context) {
-	context.JSON(http.StatusNotImplemented, nil)
+func ViewQuiz(logger *logger.Logger, db cassandra.Cassandra) gin.HandlerFunc {
+	return func(context *gin.Context) {
+		context.JSON(http.StatusNotImplemented, nil)
+	}
 }
 
 // CreateQuiz will submit a quiz and write back the GetScore ID.
@@ -39,8 +44,10 @@ func ViewQuiz(context *gin.Context) {
 // @Failure     400     {object} model_rest.Error         "Error message with any available details in payload"
 // @Failure     500     {object} model_rest.Error         "Error message with any available details in payload"
 // @Router      /quiz/create/ [post]
-func CreateQuiz(context *gin.Context) {
-	context.JSON(http.StatusNotImplemented, nil)
+func CreateQuiz(logger *logger.Logger, db cassandra.Cassandra) gin.HandlerFunc {
+	return func(context *gin.Context) {
+		context.JSON(http.StatusNotImplemented, nil)
+	}
 }
 
 // UpdateQuiz will update a quiz.
@@ -60,8 +67,10 @@ func CreateQuiz(context *gin.Context) {
 // @Failure     404     {object} model_rest.Error         "Error message with any available details in payload"
 // @Failure     500     {object} model_rest.Error         "Error message with any available details in payload"
 // @Router      /quiz/update/{test_id} [put]
-func UpdateQuiz(context *gin.Context) {
-	context.JSON(http.StatusNotImplemented, nil)
+func UpdateQuiz(logger *logger.Logger, db cassandra.Cassandra) gin.HandlerFunc {
+	return func(context *gin.Context) {
+		context.JSON(http.StatusNotImplemented, nil)
+	}
 }
 
 // DeleteQuiz will delete a quiz using a variable in the URL.
@@ -78,8 +87,10 @@ func UpdateQuiz(context *gin.Context) {
 // @Failure     404     {object} model_rest.Error   "Error message with any available details in payload"
 // @Failure     500     {object} model_rest.Error   "Error message with any available details in payload"
 // @Router      /quiz/delete/{test_id} [delete]
-func DeleteQuiz(context *gin.Context) {
-	context.JSON(http.StatusNotImplemented, nil)
+func DeleteQuiz(logger *logger.Logger, db cassandra.Cassandra) gin.HandlerFunc {
+	return func(context *gin.Context) {
+		context.JSON(http.StatusNotImplemented, nil)
+	}
 }
 
 // PublishQuiz will publish a quiz using a variable in the URL.
@@ -97,8 +108,10 @@ func DeleteQuiz(context *gin.Context) {
 // @Failure     404     {object} model_rest.Error   "Error message with any available details in payload"
 // @Failure     500     {object} model_rest.Error   "Error message with any available details in payload"
 // @Router      /quiz/publish/{test_id} [put]
-func PublishQuiz(context *gin.Context) {
-	context.JSON(http.StatusNotImplemented, nil)
+func PublishQuiz(logger *logger.Logger, db cassandra.Cassandra) gin.HandlerFunc {
+	return func(context *gin.Context) {
+		context.JSON(http.StatusNotImplemented, nil)
+	}
 }
 
 // TakeQuiz will submit the answers to a quiz using a variable in the URL.
@@ -117,6 +130,8 @@ func PublishQuiz(context *gin.Context) {
 // @Failure     404     {object} model_rest.Error             "Error message with any available details in payload"
 // @Failure     500     {object} model_rest.Error             "Error message with any available details in payload"
 // @Router      /quiz/take/{test_id} [post]
-func TakeQuiz(context *gin.Context) {
-	context.JSON(http.StatusNotImplemented, nil)
+func TakeQuiz(logger *logger.Logger, db cassandra.Cassandra, grader grading.Grading) gin.HandlerFunc {
+	return func(context *gin.Context) {
+		context.JSON(http.StatusNotImplemented, nil)
+	}
 }

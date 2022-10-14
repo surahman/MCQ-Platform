@@ -132,10 +132,10 @@ func (s *HttpRest) initialize() {
 	scoreGroup.GET("/stats/:test_id", http_handlers.GetStats)
 
 	quizGroup := api.Group("/quiz").Use(authMiddleware)
-	quizGroup.GET("/view/:test_id", http_handlers.ViewQuiz)
-	quizGroup.POST("/create", http_handlers.CreateQuiz)
-	quizGroup.PUT("/update/:test_id", http_handlers.UpdateQuiz)
-	quizGroup.DELETE("/delete/:test_id", http_handlers.DeleteQuiz)
-	quizGroup.PUT("/publish/:test_id", http_handlers.PublishQuiz)
-	quizGroup.POST("/take/:test_id", http_handlers.TakeQuiz)
+	quizGroup.GET("/view/:test_id", http_handlers.ViewQuiz(s.logger, s.db))
+	quizGroup.POST("/create", http_handlers.CreateQuiz(s.logger, s.db))
+	quizGroup.PUT("/update/:test_id", http_handlers.UpdateQuiz(s.logger, s.db))
+	quizGroup.DELETE("/delete/:test_id", http_handlers.DeleteQuiz(s.logger, s.db))
+	quizGroup.PUT("/publish/:test_id", http_handlers.PublishQuiz(s.logger, s.db))
+	quizGroup.POST("/take/:test_id", http_handlers.TakeQuiz(s.logger, s.db, s.grading))
 }
