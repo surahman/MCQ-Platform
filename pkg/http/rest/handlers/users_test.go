@@ -309,12 +309,13 @@ func TestLoginRefresh(t *testing.T) {
 	router := getRouter()
 
 	testCases := []struct {
-		name                string
-		path                string
-		expectedStatus      int
-		authValidateJWTData *mockAuthData
-		authGenJWTData      *mockAuthData
-		cassandraReadData   *mockCassandraData
+		name                 string
+		path                 string
+		expectedStatus       int
+		authValidateJWTData  *mockAuthData
+		authGenJWTData       *mockAuthData
+		authRefThresholdData *mockAuthData
+		cassandraReadData    *mockCassandraData
 	}{
 		// ----- test cases start ----- //
 		{
@@ -328,6 +329,10 @@ func TestLoginRefresh(t *testing.T) {
 			},
 			cassandraReadData: &mockCassandraData{
 				times: 0,
+			},
+			authRefThresholdData: &mockAuthData{
+				outputParam1: 60.0,
+				times:        0,
 			},
 			authGenJWTData: &mockAuthData{
 				times: 0,
@@ -345,6 +350,10 @@ func TestLoginRefresh(t *testing.T) {
 				outputParam: testUserData["username1"],
 				times:       1,
 			},
+			authRefThresholdData: &mockAuthData{
+				outputParam1: 60.0,
+				times:        1,
+			},
 			authGenJWTData: &mockAuthData{
 				times: 1,
 			},
@@ -360,6 +369,10 @@ func TestLoginRefresh(t *testing.T) {
 			cassandraReadData: &mockCassandraData{
 				outputParam: testUserData["username1"],
 				times:       1,
+			},
+			authRefThresholdData: &mockAuthData{
+				outputParam1: 60.0,
+				times:        1,
 			},
 			authGenJWTData: &mockAuthData{
 				times: 0,
@@ -378,6 +391,10 @@ func TestLoginRefresh(t *testing.T) {
 				outputParam: testUserData["username1"],
 				times:       0,
 			},
+			authRefThresholdData: &mockAuthData{
+				outputParam1: 60.0,
+				times:        0,
+			},
 			authGenJWTData: &mockAuthData{
 				times: 0,
 			},
@@ -393,6 +410,10 @@ func TestLoginRefresh(t *testing.T) {
 			cassandraReadData: &mockCassandraData{
 				outputErr: errors.New("db failure"),
 				times:     1,
+			},
+			authRefThresholdData: &mockAuthData{
+				outputParam1: 60.0,
+				times:        0,
 			},
 			authGenJWTData: &mockAuthData{
 				times: 0,
@@ -411,6 +432,10 @@ func TestLoginRefresh(t *testing.T) {
 				},
 				times: 1,
 			},
+			authRefThresholdData: &mockAuthData{
+				outputParam1: 60.0,
+				times:        0,
+			},
 			authGenJWTData: &mockAuthData{
 				times: 0,
 			},
@@ -426,6 +451,10 @@ func TestLoginRefresh(t *testing.T) {
 			cassandraReadData: &mockCassandraData{
 				outputParam: testUserData["username1"],
 				times:       1,
+			},
+			authRefThresholdData: &mockAuthData{
+				outputParam1: 60.0,
+				times:        1,
 			},
 			authGenJWTData: &mockAuthData{
 				outputErr: errors.New("failed to generate token"),
@@ -457,6 +486,10 @@ func TestLoginRefresh(t *testing.T) {
 				testCase.authGenJWTData.outputParam1,
 				testCase.authGenJWTData.outputErr,
 			).Times(testCase.authGenJWTData.times)
+
+			mockAuth.EXPECT().RefreshThreshold().Return(
+				testCase.authRefThresholdData.outputParam1,
+			).Times(testCase.authRefThresholdData.times)
 
 			// Endpoint setup for test.
 			router.POST(testCase.path, LoginRefresh(zapLogger, mockAuth, mockCassandra, "Authorization"))

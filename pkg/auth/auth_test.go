@@ -306,3 +306,7 @@ func TestAuthImpl_RefreshJWT(t *testing.T) {
 		})
 	}
 }
+
+func TestAuthImpl_RefreshThreshold(t *testing.T) {
+	require.Equal(t, refreshThreshold, testAuth.RefreshThreshold(), "token refresh threshold did not match expected threshold")
+}

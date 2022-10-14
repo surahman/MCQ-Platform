@@ -93,6 +93,20 @@ func (mr *MockAuthMockRecorder) RefreshJWT(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RefreshJWT", reflect.TypeOf((*MockAuth)(nil).RefreshJWT), arg0)
 }
 
+// RefreshThreshold mocks base method.
+func (m *MockAuth) RefreshThreshold() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RefreshThreshold")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// RefreshThreshold indicates an expected call of RefreshThreshold.
+func (mr *MockAuthMockRecorder) RefreshThreshold() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RefreshThreshold", reflect.TypeOf((*MockAuth)(nil).RefreshThreshold))
+}
+
 // ValidateJWT mocks base method.
 func (m *MockAuth) ValidateJWT(arg0 string) (string, int64, error) {
 	m.ctrl.T.Helper()

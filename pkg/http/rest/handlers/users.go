@@ -170,7 +170,7 @@ func LoginRefresh(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra,
 		}
 
 		// Do not refresh tokens that have more than a minute left to expire.
-		if math.Abs(float64(time.Now().Unix()-expiresAt)) > 60 {
+		if math.Abs(float64(time.Now().Unix()-expiresAt)) > auth.RefreshThreshold() {
 			context.JSON(http.StatusNotExtended, &model_rest.Error{Message: "JWT is still valid for more than 60 seconds"})
 			return
 		}

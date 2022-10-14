@@ -22,6 +22,7 @@ type Auth interface {
 	GenerateJWT(string) (*model_rest.JWTAuthResponse, error)
 	ValidateJWT(string) (string, int64, error)
 	RefreshJWT(string) (*model_rest.JWTAuthResponse, error)
+	RefreshThreshold() float64
 }
 
 // Check to ensure the Auth interface has been implemented.
@@ -138,4 +139,9 @@ func (a *authImpl) RefreshJWT(token string) (authResponse *model_rest.JWTAuthRes
 	}
 
 	return
+}
+
+// RefreshThreshold is the seconds before expiration that a JWT can be refreshed in.
+func (a *authImpl) RefreshThreshold() float64 {
+	return a.conf.JWTConfig.RefreshThreshold
 }

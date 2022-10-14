@@ -48,6 +48,7 @@ The expected file name is `AuthConfig.yaml`. All the configuration items below a
 | ↳ key                 | ↳ `.KEY`                 | string                        | The encryption key used for the JSON Web Token.                                                                      |
 | ↳ issuer              | ↳ `.ISSUER`              | string                        | The issuer of the JSON Web Token.                                                                                    |
 | ↳ expiration_duration | ↳ `.EXPIRATION_DURATION` | int64                         | The validity duration in seconds for the JSON Web Token.                                                             |
+| ↳ refresh_threshold   | ↳ `.REFRESH_THRESHOLD`   | int64                         | The seconds before expiration that a JSON Web Token can be refreshed before.                                         |
 | **_General_**         | `AUTH_CONFIG `           | **_General Configurations._** | **_Parent key for general authentication configurations._**                                                          |
 | ↳ bcrypt_cost         | ↳ `.BCRYPT_COST`         | int                           | The [cost](https://pkg.go.dev/golang.org/x/crypto/bcrypt#pkg-constants) value that is used for the BCrypt algorithm. |
 
