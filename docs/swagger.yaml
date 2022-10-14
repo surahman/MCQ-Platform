@@ -577,13 +577,6 @@ paths:
       description: Refreshes a user's JWT by validating it and then issuing a fresh
         JWT with an extended validity time. JWT must be expiring in under 60 seconds.
       operationId: loginRefresh
-      parameters:
-      - description: A valid JWT expiring in less than 60 seconds to be extended
-        in: body
-        name: token
-        required: true
-        schema:
-          $ref: '#/definitions/model_rest.JWTAuthResponse'
       produces:
       - application/json
       responses:

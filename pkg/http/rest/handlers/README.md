@@ -78,7 +78,7 @@ _Response:_ A valid JWT will be returned as an authorization response.
 
 #### Refresh
 
-_Request:_ All fields are required and a valid JWT must be provided in the header. 
+_Request:_ A valid JWT must be provided in the request header and will be validated with a fresh token issued against it. 
 _Response:_ A valid JWT will be returned as an authorization response. 
 
 ```json

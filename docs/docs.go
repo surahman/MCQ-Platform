@@ -652,17 +652,6 @@ const docTemplate = `{
                 ],
                 "summary": "Refresh a user's JWT by extending its expiration time.",
                 "operationId": "loginRefresh",
-                "parameters": [
-                    {
-                        "description": "A valid JWT expiring in less than 60 seconds to be extended",
-                        "name": "token",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model_rest.JWTAuthResponse"
-                        }
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "A new valid JWT",

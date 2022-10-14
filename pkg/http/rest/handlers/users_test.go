@@ -312,7 +312,6 @@ func TestLoginRefresh(t *testing.T) {
 		name                string
 		path                string
 		expectedStatus      int
-		token               *model_rest.JWTAuthResponse
 		authValidateJWTData *mockAuthData
 		authGenJWTData      *mockAuthData
 		cassandraReadData   *mockCassandraData
@@ -321,14 +320,14 @@ func TestLoginRefresh(t *testing.T) {
 		{
 			name:           "empty token",
 			path:           "/refresh/empty-token",
-			expectedStatus: http.StatusBadRequest,
-			token:          &model_rest.JWTAuthResponse{},
-			cassandraReadData: &mockCassandraData{
-				times: 0,
-			},
+			expectedStatus: http.StatusForbidden,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "",
-				times:        0,
+				outputErr:    errors.New("invalid token"),
+				times:        1,
+			},
+			cassandraReadData: &mockCassandraData{
+				times: 0,
 			},
 			authGenJWTData: &mockAuthData{
 				times: 0,
@@ -337,18 +336,14 @@ func TestLoginRefresh(t *testing.T) {
 			name:           "valid token",
 			path:           "/refresh/valid-token",
 			expectedStatus: http.StatusOK,
-			token: &model_rest.JWTAuthResponse{
-				Token:   "test token",
-				Expires: 1,
-			},
-			cassandraReadData: &mockCassandraData{
-				outputParam: testUserData["username1"],
-				times:       1,
-			},
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "username1",
 				outputParam2: time.Now().Add(-time.Duration(30) * time.Second).Unix(),
 				times:        1,
+			},
+			cassandraReadData: &mockCassandraData{
+				outputParam: testUserData["username1"],
+				times:       1,
 			},
 			authGenJWTData: &mockAuthData{
 				times: 1,
@@ -357,18 +352,14 @@ func TestLoginRefresh(t *testing.T) {
 			name:           "valid token not expiring",
 			path:           "/refresh/valid-token-not-expiring",
 			expectedStatus: http.StatusNotExtended,
-			token: &model_rest.JWTAuthResponse{
-				Token:   "test token",
-				Expires: 1,
-			},
-			cassandraReadData: &mockCassandraData{
-				outputParam: testUserData["username1"],
-				times:       1,
-			},
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "username1",
 				outputParam2: time.Now().Add(-time.Duration(3) * time.Minute).Unix(),
 				times:        1,
+			},
+			cassandraReadData: &mockCassandraData{
+				outputParam: testUserData["username1"],
+				times:       1,
 			},
 			authGenJWTData: &mockAuthData{
 				times: 0,
@@ -377,18 +368,15 @@ func TestLoginRefresh(t *testing.T) {
 			name:           "invalid token",
 			path:           "/refresh/invalid-token",
 			expectedStatus: http.StatusForbidden,
-			token: &model_rest.JWTAuthResponse{
-				Token:   "test token",
-				Expires: 1},
-			cassandraReadData: &mockCassandraData{
-				outputParam: testUserData["username1"],
-				times:       0,
-			},
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "username1",
 				outputParam2: time.Now().Add(-time.Duration(30) * time.Second).Unix(),
 				outputErr:    errors.New("validate JWT failure"),
 				times:        1,
+			},
+			cassandraReadData: &mockCassandraData{
+				outputParam: testUserData["username1"],
+				times:       0,
 			},
 			authGenJWTData: &mockAuthData{
 				times: 0,
@@ -397,18 +385,14 @@ func TestLoginRefresh(t *testing.T) {
 			name:           "db failure",
 			path:           "/refresh/db-failure",
 			expectedStatus: http.StatusInternalServerError,
-			token: &model_rest.JWTAuthResponse{
-				Token:   "test token",
-				Expires: 1,
-			},
-			cassandraReadData: &mockCassandraData{
-				outputErr: errors.New("db failure"),
-				times:     1,
-			},
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "username1",
 				outputParam2: time.Now().Add(-time.Duration(30) * time.Second).Unix(),
 				times:        1,
+			},
+			cassandraReadData: &mockCassandraData{
+				outputErr: errors.New("db failure"),
+				times:     1,
 			},
 			authGenJWTData: &mockAuthData{
 				times: 0,
@@ -417,19 +401,15 @@ func TestLoginRefresh(t *testing.T) {
 			name:           "deleted user",
 			path:           "/refresh/deleted-user",
 			expectedStatus: http.StatusForbidden,
-			token: &model_rest.JWTAuthResponse{
-				Token:   "test token",
-				Expires: 1,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "username1",
+				times:        1,
 			},
 			cassandraReadData: &mockCassandraData{
 				outputParam: &model_cassandra.User{
 					IsDeleted: true,
 				},
 				times: 1,
-			},
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "username1",
-				times:        1,
 			},
 			authGenJWTData: &mockAuthData{
 				times: 0,
@@ -438,18 +418,14 @@ func TestLoginRefresh(t *testing.T) {
 			name:           "token generation failure",
 			path:           "/refresh/token-generation-failure",
 			expectedStatus: http.StatusInternalServerError,
-			token: &model_rest.JWTAuthResponse{
-				Token:   "test token",
-				Expires: 1,
-			},
-			cassandraReadData: &mockCassandraData{
-				outputParam: testUserData["username1"],
-				times:       1,
-			},
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "username1",
 				outputParam2: time.Now().Add(-time.Duration(30) * time.Second).Unix(),
 				times:        1,
+			},
+			cassandraReadData: &mockCassandraData{
+				outputParam: testUserData["username1"],
+				times:       1,
 			},
 			authGenJWTData: &mockAuthData{
 				outputErr: errors.New("failed to generate token"),
@@ -465,10 +441,6 @@ func TestLoginRefresh(t *testing.T) {
 			defer mockCtrl.Finish()
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockCassandra := mocks.NewMockCassandra(mockCtrl)
-
-			token := testCase.token
-			tokenJson, err := json.Marshal(&token)
-			require.NoErrorf(t, err, "failed to marshall JSON: %v", err)
 
 			mockCassandra.EXPECT().Execute(gomock.Any(), gomock.Any()).Return(
 				testCase.cassandraReadData.outputParam,
@@ -487,8 +459,8 @@ func TestLoginRefresh(t *testing.T) {
 			).Times(testCase.authGenJWTData.times)
 
 			// Endpoint setup for test.
-			router.POST(testCase.path, LoginRefresh(zapLogger, mockAuth, mockCassandra))
-			req, _ := http.NewRequest("POST", testCase.path, bytes.NewBuffer(tokenJson))
+			router.POST(testCase.path, LoginRefresh(zapLogger, mockAuth, mockCassandra, "Authorization"))
+			req, _ := http.NewRequest("POST", testCase.path, nil)
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
 

@@ -134,34 +134,22 @@ func LoginUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gi
 // @Accept      json
 // @Produce     json
 // @Security    ApiKeyAuth
-// @Param       token body     model_rest.JWTAuthResponse true "A valid JWT expiring in less than 60 seconds to be extended"
-// @Success     200   {object} model_rest.JWTAuthResponse "A new valid JWT"
-// @Failure     400   {object} model_rest.Error           "error message with any available details in payload"
-// @Failure     403   {object} model_rest.Error           "error message with any available details in payload"
-// @Failure     500   {object} model_rest.Error           "error message with any available details in payload"
-// @Failure     510   {object} model_rest.Error           "error message with any available details in payload"
+// @Success     200 {object} model_rest.JWTAuthResponse "A new valid JWT"
+// @Failure     400 {object} model_rest.Error           "error message with any available details in payload"
+// @Failure     403 {object} model_rest.Error           "error message with any available details in payload"
+// @Failure     500 {object} model_rest.Error           "error message with any available details in payload"
+// @Failure     510 {object} model_rest.Error           "error message with any available details in payload"
 // @Router      /user/refresh [post]
-func LoginRefresh(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc {
+func LoginRefresh(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, authHeaderKey string) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		var err error
-		var originalToken model_rest.JWTAuthResponse
 		var freshToken *model_rest.JWTAuthResponse
 		var username string
 		var dbResponse any
 		var expiresAt int64
+		originalToken := context.GetHeader(authHeaderKey)
 
-		if err = context.ShouldBindJSON(&originalToken); err != nil {
-			context.JSON(http.StatusBadRequest, &model_rest.Error{Message: err.Error()})
-			context.Abort()
-			return
-		}
-
-		if err = validator.ValidateStruct(&originalToken); err != nil {
-			context.JSON(http.StatusBadRequest, &model_rest.Error{Message: "validation", Payload: err})
-			return
-		}
-
-		if username, expiresAt, err = auth.ValidateJWT(originalToken.Token); err != nil {
+		if username, expiresAt, err = auth.ValidateJWT(originalToken); err != nil {
 			context.JSON(http.StatusForbidden, &model_rest.Error{Message: err.Error()})
 			context.Abort()
 			return
@@ -183,7 +171,7 @@ func LoginRefresh(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra)
 
 		// Do not refresh tokens that have more than a minute left to expire.
 		if math.Abs(float64(time.Now().Unix()-expiresAt)) > 60 {
-			context.JSON(http.StatusNotExtended, &model_rest.Error{Message: "JWT is still valid for more than a minute"})
+			context.JSON(http.StatusNotExtended, &model_rest.Error{Message: "JWT is still valid for more than 60 seconds"})
 			return
 		}
 
