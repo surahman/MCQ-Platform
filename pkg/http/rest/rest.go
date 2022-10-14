@@ -118,19 +118,20 @@ func (s *HttpRest) initialize() {
 	s.router.GET(s.conf.Server.SwaggerPath, ginSwagger.WrapHandler(swaggerfiles.Handler))
 
 	// Endpoint configurations
+	authMiddleware := http_handlers.AuthMiddleware(s.auth)
 	api := s.router.Group(s.conf.Server.BasePath)
 
 	userGroup := api.Group("/user")
 	userGroup.POST("/register", http_handlers.RegisterUser(s.logger, s.auth, s.db))
 	userGroup.POST("/login", http_handlers.LoginUser(s.logger, s.auth, s.db))
-	userGroup.POST("/refresh", http_handlers.LoginRefresh(s.logger, s.auth, s.db)).Use(http_handlers.AuthMiddleware(s.auth))
-	userGroup.DELETE("/delete", http_handlers.DeleteUser(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey)).Use(http_handlers.AuthMiddleware(s.auth))
+	userGroup.Use(authMiddleware).POST("/refresh", http_handlers.LoginRefresh(s.logger, s.auth, s.db))
+	userGroup.Use(authMiddleware).DELETE("/delete", http_handlers.DeleteUser(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 
-	scoreGroup := api.Group("/score").Use(http_handlers.AuthMiddleware(s.auth))
+	scoreGroup := api.Group("/score").Use(authMiddleware)
 	scoreGroup.GET("/test/:test_id", http_handlers.GetScore)
 	scoreGroup.GET("/stats/:test_id", http_handlers.GetStats)
 
-	quizGroup := api.Group("/quiz").Use(http_handlers.AuthMiddleware(s.auth))
+	quizGroup := api.Group("/quiz").Use(authMiddleware)
 	quizGroup.GET("/view/:test_id", http_handlers.ViewQuiz)
 	quizGroup.POST("/create", http_handlers.CreateQuiz)
 	quizGroup.PUT("/update/:test_id", http_handlers.UpdateQuiz)
