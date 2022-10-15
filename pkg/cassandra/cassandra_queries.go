@@ -137,9 +137,10 @@ func ReadQuizQuery(c Cassandra, params any) (response any, err error) {
 	if err = conn.session.Query(model_cassandra.ReadQuiz, input).Scan(
 		&resp.QuizID, &resp.Author, &resp.IsDeleted, &resp.IsPublished, &resp.MarkingType, &resp.Questions, &resp.Title); err != nil {
 		conn.logger.Error("failed to read quiz record", zap.String("Quiz info:", input.String()), zap.Error(err))
+		return nil, NewError("quiz not found").notFoundError()
 	}
 
-	return &resp, err
+	return &resp, nil
 }
 
 // UpdateQuizQuery will update a quiz record in the quizzes table.

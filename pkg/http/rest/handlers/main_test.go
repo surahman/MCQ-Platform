@@ -17,6 +17,9 @@ var zapLogger *logger.Logger
 // testUserData is the test user account data.
 var testUserData = cassandra.GetTestUsers()
 
+// testQuizData is the test quiz data.
+var testQuizData = cassandra.GetTestQuizzes()
+
 func TestMain(m *testing.M) {
 	var err error
 	// Configure logger.

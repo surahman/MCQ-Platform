@@ -31,17 +31,7 @@ definitions:
     type: object
   model_cassandra.QuizCore:
     properties:
-      questions:
-        description: A list of questions in the quiz.
-        items:
-          $ref: '#/definitions/model_cassandra.Question'
-        maxItems: 10
-        minItems: 1
-        type: array
-      title:
-        description: The title description of the quiz.
-        type: string
-      type:
+      marking_type:
         description: Marking scheme type can be not marked, negative marking, or all
           or nothing.
         enum:
@@ -53,6 +43,16 @@ definitions:
         - non-negative
         - Binary
         - binary
+        type: string
+      questions:
+        description: A list of questions in the quiz.
+        items:
+          $ref: '#/definitions/model_cassandra.Question'
+        maxItems: 10
+        minItems: 1
+        type: array
+      title:
+        description: The title description of the quiz.
         type: string
     required:
     - questions
@@ -180,7 +180,7 @@ paths:
       parameters:
       - description: The Quiz to be created as unpublished
         in: body
-        name: answers
+        name: quiz
         required: true
         schema:
           $ref: '#/definitions/model_cassandra.QuizCore'
@@ -188,11 +188,15 @@ paths:
       - application/json
       responses:
         "200":
-          description: The message will contain the Test ID of the newly generated
+          description: The message will contain the Quiz ID of the newly generated
             quiz
           schema:
             $ref: '#/definitions/model_rest.Success'
         "400":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "409":
           description: Error message with any available details in payload
           schema:
             $ref: '#/definitions/model_rest.Error'
@@ -205,7 +209,7 @@ paths:
       summary: Create a quiz.
       tags:
       - create test quiz
-  /quiz/delete/{test_id}:
+  /quiz/delete/{quiz_id}:
     delete:
       consumes:
       - application/json
@@ -215,7 +219,7 @@ paths:
       parameters:
       - description: The Test ID for the quiz being deleted.
         in: path
-        name: test_id
+        name: quiz_id
         required: true
         type: string
       produces:
@@ -242,7 +246,7 @@ paths:
       summary: Delete a quiz.
       tags:
       - delete remove test quiz
-  /quiz/publish/{test_id}:
+  /quiz/publish/{quiz_id}:
     put:
       consumes:
       - application/json
@@ -253,7 +257,7 @@ paths:
       parameters:
       - description: The Test ID for the quiz being published.
         in: path
-        name: test_id
+        name: quiz_id
         required: true
         type: string
       produces:
@@ -280,7 +284,7 @@ paths:
       summary: Publish a quiz.
       tags:
       - publish test quiz create
-  /quiz/take/{test_id}:
+  /quiz/take/{quiz_id}:
     post:
       consumes:
       - application/json
@@ -290,7 +294,7 @@ paths:
       parameters:
       - description: The Test ID for the answers being submitted.
         in: path
-        name: test_id
+        name: quiz_id
         required: true
         type: string
       - description: The answer card to be submitted.
@@ -327,7 +331,7 @@ paths:
       summary: Take a quiz.
       tags:
       - take test quiz submit answer
-  /quiz/update/{test_id}:
+  /quiz/update/{quiz_id}:
     put:
       consumes:
       - application/json
@@ -337,12 +341,12 @@ paths:
       parameters:
       - description: The Test ID for the quiz being updated.
         in: path
-        name: test_id
+        name: quiz_id
         required: true
         type: string
       - description: The Quiz to replace the one already submitted
         in: body
-        name: answers
+        name: quiz
         required: true
         schema:
           $ref: '#/definitions/model_cassandra.QuizCore'
@@ -378,7 +382,7 @@ paths:
       summary: Update a quiz.
       tags:
       - update modify test quiz
-  /quiz/view/{test_id}:
+  /quiz/view/{quiz_id}:
     get:
       consumes:
       - application/json
@@ -388,7 +392,7 @@ paths:
       parameters:
       - description: The Test ID for the quiz being requested.
         in: path
-        name: test_id
+        name: quiz_id
         required: true
         type: string
       produces:
@@ -399,11 +403,7 @@ paths:
             the quiz
           schema:
             $ref: '#/definitions/model_rest.Success'
-        "400":
-          description: Error message with any available details in payload
-          schema:
-            $ref: '#/definitions/model_rest.Error'
-        "401":
+        "403":
           description: Error message with any available details in payload
           schema:
             $ref: '#/definitions/model_rest.Error'
@@ -420,7 +420,7 @@ paths:
       summary: View a quiz.
       tags:
       - view test quiz
-  /score/stats/{test_id}:
+  /score/stats/{quiz_id}:
     get:
       consumes:
       - application/json
@@ -431,7 +431,7 @@ paths:
       parameters:
       - description: The Test ID for the requested statistics.
         in: path
-        name: test_id
+        name: quiz_id
         required: true
         type: string
       produces:
@@ -462,7 +462,7 @@ paths:
       summary: Get all statistics associated with a specific test.
       tags:
       - score scores stats statistics
-  /score/test/{test_id}:
+  /score/test/{quiz_id}:
     get:
       consumes:
       - application/json
@@ -472,7 +472,7 @@ paths:
       parameters:
       - description: The Test ID for the requested scorecard.
         in: path
-        name: test_id
+        name: quiz_id
         required: true
         type: string
       produces:

@@ -52,7 +52,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "description": "The Quiz to be created as unpublished",
-                        "name": "answers",
+                        "name": "quiz",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -62,12 +62,18 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "The message will contain the Test ID of the newly generated quiz",
+                        "description": "The message will contain the Quiz ID of the newly generated quiz",
                         "schema": {
                             "$ref": "#/definitions/model_rest.Success"
                         }
                     },
                     "400": {
+                        "description": "Error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/model_rest.Error"
+                        }
+                    },
+                    "409": {
                         "description": "Error message with any available details in payload",
                         "schema": {
                             "$ref": "#/definitions/model_rest.Error"
@@ -82,7 +88,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/quiz/delete/{test_id}": {
+        "/quiz/delete/{quiz_id}": {
             "delete": {
                 "security": [
                     {
@@ -105,7 +111,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "The Test ID for the quiz being deleted.",
-                        "name": "test_id",
+                        "name": "quiz_id",
                         "in": "path",
                         "required": true
                     }
@@ -138,7 +144,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/quiz/publish/{test_id}": {
+        "/quiz/publish/{quiz_id}": {
             "put": {
                 "security": [
                     {
@@ -161,7 +167,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "The Test ID for the quiz being published.",
-                        "name": "test_id",
+                        "name": "quiz_id",
                         "in": "path",
                         "required": true
                     }
@@ -194,7 +200,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/quiz/take/{test_id}": {
+        "/quiz/take/{quiz_id}": {
             "post": {
                 "security": [
                     {
@@ -217,7 +223,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "The Test ID for the answers being submitted.",
-                        "name": "test_id",
+                        "name": "quiz_id",
                         "in": "path",
                         "required": true
                     },
@@ -265,7 +271,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/quiz/update/{test_id}": {
+        "/quiz/update/{quiz_id}": {
             "put": {
                 "security": [
                     {
@@ -288,13 +294,13 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "The Test ID for the quiz being updated.",
-                        "name": "test_id",
+                        "name": "quiz_id",
                         "in": "path",
                         "required": true
                     },
                     {
                         "description": "The Quiz to replace the one already submitted",
-                        "name": "answers",
+                        "name": "quiz",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -342,7 +348,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/quiz/view/{test_id}": {
+        "/quiz/view/{quiz_id}": {
             "get": {
                 "security": [
                     {
@@ -365,7 +371,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "The Test ID for the quiz being requested.",
-                        "name": "test_id",
+                        "name": "quiz_id",
                         "in": "path",
                         "required": true
                     }
@@ -377,13 +383,7 @@ const docTemplate = `{
                             "$ref": "#/definitions/model_rest.Success"
                         }
                     },
-                    "400": {
-                        "description": "Error message with any available details in payload",
-                        "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
-                        }
-                    },
-                    "401": {
+                    "403": {
                         "description": "Error message with any available details in payload",
                         "schema": {
                             "$ref": "#/definitions/model_rest.Error"
@@ -404,7 +404,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/score/stats/{test_id}": {
+        "/score/stats/{quiz_id}": {
             "get": {
                 "security": [
                     {
@@ -427,7 +427,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "The Test ID for the requested statistics.",
-                        "name": "test_id",
+                        "name": "quiz_id",
                         "in": "path",
                         "required": true
                     }
@@ -466,7 +466,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/score/test/{test_id}": {
+        "/score/test/{quiz_id}": {
             "get": {
                 "security": [
                     {
@@ -489,7 +489,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "The Test ID for the requested scorecard.",
-                        "name": "test_id",
+                        "name": "quiz_id",
                         "in": "path",
                         "required": true
                     }
@@ -784,20 +784,7 @@ const docTemplate = `{
                 "title"
             ],
             "properties": {
-                "questions": {
-                    "description": "A list of questions in the quiz.",
-                    "type": "array",
-                    "maxItems": 10,
-                    "minItems": 1,
-                    "items": {
-                        "$ref": "#/definitions/model_cassandra.Question"
-                    }
-                },
-                "title": {
-                    "description": "The title description of the quiz.",
-                    "type": "string"
-                },
-                "type": {
+                "marking_type": {
                     "description": "Marking scheme type can be not marked, negative marking, or all or nothing.",
                     "type": "string",
                     "enum": [
@@ -810,6 +797,19 @@ const docTemplate = `{
                         "Binary",
                         "binary"
                     ]
+                },
+                "questions": {
+                    "description": "A list of questions in the quiz.",
+                    "type": "array",
+                    "maxItems": 10,
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/model_cassandra.Question"
+                    }
+                },
+                "title": {
+                    "description": "The title description of the quiz.",
+                    "type": "string"
                 }
             }
         },
