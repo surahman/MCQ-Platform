@@ -150,6 +150,12 @@ func GetQuizzedUUIDMapping() map[string]gocql.UUID {
 	if data["invalidOptionsNoPubQuiz"], err = gocql.ParseUUID("45ba24bf-8bd9-4b20-af7a-4dddbf2428b9"); err != nil {
 		log.Fatalln("Failed to parse UUID")
 	}
+	if data["myPubQuizDeleted"], err = gocql.ParseUUID("17166e35-1a70-47da-8779-21460e0d52f5"); err != nil {
+		log.Fatalln("Failed to parse UUID")
+	}
+	if data["myNoPubQuizDeleted"], err = gocql.ParseUUID("166bdda4-9d9d-406f-a3a7-9eb67b5311ad"); err != nil {
+		log.Fatalln("Failed to parse UUID")
+	}
 
 	return data
 }
@@ -231,13 +237,13 @@ func GetTestQuizzes() map[string]*model_cassandra.Quiz {
 		MarkingType: "Negative",
 		Questions:   []*model_cassandra.Question{&invalidQuestion},
 	}}
-	data["myPubQuizDeleted"] = &model_cassandra.Quiz{QuizID: quizzesUUIDMapping["myPubQuiz"], Author: "user-2", IsPublished: true, IsDeleted: true,
+	data["myPubQuizDeleted"] = &model_cassandra.Quiz{QuizID: quizzesUUIDMapping["myPubQuizDeleted"], Author: "user-2", IsPublished: true, IsDeleted: true,
 		QuizCore: &model_cassandra.QuizCore{
 			Title:       "My sample quiz published",
 			MarkingType: "Negative",
 			Questions:   []*model_cassandra.Question{&weightQuestion, &booleanQuestion},
 		}}
-	data["myNoPubQuizDeleted"] = &model_cassandra.Quiz{QuizID: quizzesUUIDMapping["myNoPubQuiz"], Author: "user-3", IsDeleted: true,
+	data["myNoPubQuizDeleted"] = &model_cassandra.Quiz{QuizID: quizzesUUIDMapping["myNoPubQuizDeleted"], Author: "user-3", IsDeleted: true,
 		QuizCore: &model_cassandra.QuizCore{
 			Title:       "My sample quiz not published",
 			MarkingType: "Negative",

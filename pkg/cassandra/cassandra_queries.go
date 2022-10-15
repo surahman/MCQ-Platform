@@ -111,7 +111,7 @@ func CreateQuizQuery(c Cassandra, params any) (response any, err error) {
 	applied := false
 	if applied, err = conn.session.Query(model_cassandra.CreateQuiz,
 		input.QuizID, input.Author, input.Title, input.Questions, input.MarkingType).ScanCAS(
-		&resp.QuizID, &resp.Author, &resp.IsDeleted, &resp.IsPublished, &resp.MarkingType, &resp.Questions); err != nil {
+		&resp.QuizID, &resp.Author, &resp.IsDeleted, &resp.IsPublished, &resp.MarkingType, &resp.Questions, &resp.Title); err != nil {
 		conn.logger.Error("failed to create quiz record",
 			zap.Strings("Quiz info:", []string{input.QuizID.String(), input.Author}), zap.Error(err))
 		return nil, err
