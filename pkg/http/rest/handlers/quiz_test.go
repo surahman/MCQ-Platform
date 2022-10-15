@@ -8,12 +8,13 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gocql/gocql"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"github.com/surahman/mcq-platform/pkg/cassandra"
 	"github.com/surahman/mcq-platform/pkg/mocks"
 	"github.com/surahman/mcq-platform/pkg/model/cassandra"
-	model_rest "github.com/surahman/mcq-platform/pkg/model/http"
+	"github.com/surahman/mcq-platform/pkg/model/http"
 )
 
 func TestCreateQuiz(t *testing.T) {
@@ -164,5 +165,173 @@ func TestCreateQuiz(t *testing.T) {
 }
 
 func TestViewQuiz(t *testing.T) {
+	router := getRouter()
 
+	// Generate a reusable UUID across tests.
+	quizId := gocql.TimeUUID()
+
+	testCases := []struct {
+		name                string
+		path                string
+		expectedStatus      int
+		expectAnswers       require.BoolAssertionFunc
+		quiz                *model_cassandra.QuizCore
+		authValidateJWTData *mockAuthData
+		cassandraCreateData *mockCassandraData
+	}{
+		// ----- test cases start ----- //
+		{
+			name:           "empty token",
+			path:           "/view/empty-token/",
+			expectedStatus: http.StatusInternalServerError,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "",
+				outputErr:    errors.New("invalid token"),
+				times:        1,
+			},
+			cassandraCreateData: &mockCassandraData{
+				times: 0,
+			},
+		}, {
+			name:           "db failure",
+			path:           "/view/db-failure/",
+			expectedStatus: http.StatusNotFound,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "",
+				times:        1,
+			},
+			cassandraCreateData: &mockCassandraData{
+				outputErr: &cassandra.Error{Message: "db failure", Status: http.StatusNotFound},
+				times:     1,
+			},
+		}, {
+			name:           "unpublished not owner",
+			path:           "/view/unpublished-not-owner/",
+			expectedStatus: http.StatusForbidden,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "not owner",
+				times:        1,
+			},
+			cassandraCreateData: &mockCassandraData{
+				outputParam: cassandra.GetTestQuizzes()["myNoPubQuiz"],
+				outputErr:   nil,
+				times:       1,
+			},
+		}, {
+			name:           "published but deleted not owner",
+			path:           "/view/published-but-deleted-not-owner/",
+			expectedStatus: http.StatusForbidden,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "not owner",
+				times:        1,
+			},
+			cassandraCreateData: &mockCassandraData{
+				outputParam: cassandra.GetTestQuizzes()["myPubQuizDeleted"],
+				outputErr:   nil,
+				times:       1,
+			},
+		}, {
+			name:           "published not owner",
+			path:           "/view/published-not-owner/",
+			expectedStatus: http.StatusOK,
+			expectAnswers:  require.False,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "not owner",
+				times:        1,
+			},
+			cassandraCreateData: &mockCassandraData{
+				outputParam: cassandra.GetTestQuizzes()["myPubQuiz"],
+				outputErr:   nil,
+				times:       1,
+			},
+		}, {
+			name:           "published owner",
+			path:           "/view/published-owner/",
+			expectedStatus: http.StatusOK,
+			expectAnswers:  require.True,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "user-2",
+				times:        1,
+			},
+			cassandraCreateData: &mockCassandraData{
+				outputParam: cassandra.GetTestQuizzes()["myPubQuiz"],
+				outputErr:   nil,
+				times:       1,
+			},
+		}, {
+			name:           "unpublished owner",
+			path:           "/view/unpublished-owner/",
+			expectedStatus: http.StatusOK,
+			expectAnswers:  require.True,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "user-3",
+				times:        1,
+			},
+			cassandraCreateData: &mockCassandraData{
+				outputParam: cassandra.GetTestQuizzes()["myNoPubQuiz"],
+				outputErr:   nil,
+				times:       1,
+			},
+		}, {
+			name:           "published deleted owner",
+			path:           "/view/published-deleted-owner/",
+			expectedStatus: http.StatusOK,
+			expectAnswers:  require.True,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "user-2",
+				times:        1,
+			},
+			cassandraCreateData: &mockCassandraData{
+				outputParam: cassandra.GetTestQuizzes()["myPubQuizDeleted"],
+				outputErr:   nil,
+				times:       1,
+			},
+		},
+		// ----- test cases end ----- //
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockCassandra := mocks.NewMockCassandra(mockCtrl)
+
+			mockCassandra.EXPECT().Execute(gomock.Any(), gomock.Any()).Return(
+				testCase.cassandraCreateData.outputParam,
+				testCase.cassandraCreateData.outputErr,
+			).Times(testCase.cassandraCreateData.times)
+
+			mockAuth.EXPECT().ValidateJWT(gomock.Any()).Return(
+				testCase.authValidateJWTData.outputParam1,
+				testCase.authValidateJWTData.outputParam2,
+				testCase.authValidateJWTData.outputErr,
+			).Times(testCase.authValidateJWTData.times)
+
+			// Endpoint setup for test.
+			router.GET(testCase.path+":quiz_id", ViewQuiz(zapLogger, mockAuth, mockCassandra))
+			req, _ := http.NewRequest("GET", testCase.path+quizId.String(), nil)
+			w := httptest.NewRecorder()
+			router.ServeHTTP(w, req)
+
+			// Verify responses
+			require.Equal(t, testCase.expectedStatus, w.Code, "expected status codes do not match")
+
+			// Check message and quiz id.
+			if testCase.expectedStatus == http.StatusOK {
+				response := model_rest.Success{}
+				require.NoError(t, json.NewDecoder(w.Body).Decode(&response), "failed to unmarshall response body.")
+
+				require.True(t, len(quizId.String()) != 0, "did not receive quiz id in response")
+
+				questions, ok := response.Payload.(map[string]any)["questions"]
+				require.True(t, ok, "failed to extract questions.")
+
+				for _, question := range questions.([]any) {
+					_, found := question.(map[string]any)["answers"]
+					testCase.expectAnswers(t, found, "answer condition failed")
+				}
+			}
+		})
+	}
 }

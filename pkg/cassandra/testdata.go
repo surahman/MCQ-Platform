@@ -202,7 +202,7 @@ func GetTestQuizzes() map[string]*model_cassandra.Quiz {
 		Options: []string{"Yes"},
 		Answers: []int32{0}}
 
-	data["providedPubQuiz"] = &model_cassandra.Quiz{QuizID: quizzesUUIDMapping["providedPubQuiz"], Author: "user-1",
+	data["providedPubQuiz"] = &model_cassandra.Quiz{QuizID: quizzesUUIDMapping["providedPubQuiz"], Author: "user-1", IsPublished: true,
 		QuizCore: &model_cassandra.QuizCore{
 			Title:       "Sample quiz published",
 			MarkingType: "Negative",
@@ -214,7 +214,7 @@ func GetTestQuizzes() map[string]*model_cassandra.Quiz {
 			MarkingType: "Negative",
 			Questions:   []*model_cassandra.Question{&temperatureQuestion, &moonQuestion},
 		}}
-	data["myPubQuiz"] = &model_cassandra.Quiz{QuizID: quizzesUUIDMapping["myPubQuiz"], Author: "user-2",
+	data["myPubQuiz"] = &model_cassandra.Quiz{QuizID: quizzesUUIDMapping["myPubQuiz"], Author: "user-2", IsPublished: true,
 		QuizCore: &model_cassandra.QuizCore{
 			Title:       "My sample quiz published",
 			MarkingType: "Negative",
@@ -231,6 +231,18 @@ func GetTestQuizzes() map[string]*model_cassandra.Quiz {
 		MarkingType: "Negative",
 		Questions:   []*model_cassandra.Question{&invalidQuestion},
 	}}
+	data["myPubQuizDeleted"] = &model_cassandra.Quiz{QuizID: quizzesUUIDMapping["myPubQuiz"], Author: "user-2", IsPublished: true, IsDeleted: true,
+		QuizCore: &model_cassandra.QuizCore{
+			Title:       "My sample quiz published",
+			MarkingType: "Negative",
+			Questions:   []*model_cassandra.Question{&weightQuestion, &booleanQuestion},
+		}}
+	data["myNoPubQuizDeleted"] = &model_cassandra.Quiz{QuizID: quizzesUUIDMapping["myNoPubQuiz"], Author: "user-3", IsDeleted: true,
+		QuizCore: &model_cassandra.QuizCore{
+			Title:       "My sample quiz not published",
+			MarkingType: "Negative",
+			Questions:   []*model_cassandra.Question{&weightQuestion, &booleanQuestion},
+		}}
 
 	return data
 }

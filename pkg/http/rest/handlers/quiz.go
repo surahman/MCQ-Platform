@@ -17,14 +17,14 @@ import (
 
 // ViewQuiz will retrieve a test using a variable in the URL.
 // @Summary     View a quiz.
-// @Description This endpoint will retrieve a quiz with a provided Test ID if it is published.
+// @Description This endpoint will retrieve a quiz with a provided quiz ID if it is published.
 // @Tags        view test quiz
 // @Id          viewQuiz
 // @Accept      json
 // @Produce     json
 // @Security    ApiKeyAuth
-// @Param       quiz_id path     string             true "The Test ID for the quiz being requested."
-// @Success     200     {object} model_rest.Success "The message will contain the Test ID and the payload will contain the quiz"
+// @Param       quiz_id path     string             true "The quiz ID for the quiz being requested."
+// @Success     200     {object} model_rest.Success "The message will contain the quiz ID and the payload will contain the quiz"
 // @Failure     403     {object} model_rest.Error   "Error message with any available details in payload"
 // @Failure     404     {object} model_rest.Error   "Error message with any available details in payload"
 // @Failure     500     {object} model_rest.Error   "Error message with any available details in payload"
@@ -71,7 +71,7 @@ func ViewQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin
 			}
 		}
 
-		context.JSON(http.StatusOK, &model_rest.Success{Message: "quiz found", Payload: &quiz})
+		context.JSON(http.StatusOK, &model_rest.Success{Message: quiz.QuizID.String(), Payload: &quiz.QuizCore})
 	}
 }
 
