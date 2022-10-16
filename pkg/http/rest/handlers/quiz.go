@@ -119,9 +119,11 @@ func CreateQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) g
 
 		// Prepare quiz by adding username and generating quiz id, then insert record.
 		quiz := model_cassandra.Quiz{
-			QuizCore: &request,
-			QuizID:   gocql.TimeUUID(),
-			Author:   username,
+			QuizCore:    &request,
+			QuizID:      gocql.TimeUUID(),
+			Author:      username,
+			IsPublished: false,
+			IsDeleted:   false,
 		}
 		if _, err = db.Execute(cassandra.CreateQuizQuery, &quiz); err != nil {
 			cassandraError := err.(*cassandra.Error)

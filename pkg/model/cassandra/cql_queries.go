@@ -75,7 +75,7 @@ WHERE username = ? AND account_id = ? IF EXISTS;`
 	// CreateQuiz inserts a new Quiz record into the Quizzes table if it does not already exist.
 	// Query Params: quiz_id, author, title, questions, marking_type
 	CreateQuiz = `INSERT INTO quizzes (quiz_id, author, title, questions, marking_type, is_published, is_deleted)
-VALUES (?, ?, ?, ?, ?, false, false)
+VALUES (?, ?, ?, ?, ?, ?, ?)
 IF NOT EXISTS ;`
 
 	// ReadQuiz retrieves a Quiz record from the Quizzes table.

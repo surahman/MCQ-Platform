@@ -110,7 +110,7 @@ func CreateQuizQuery(c Cassandra, params any) (response any, err error) {
 	resp := model_cassandra.Quiz{QuizCore: &model_cassandra.QuizCore{}} // Discarded, only used as container for Cassandra response.
 	applied := false
 	if applied, err = conn.session.Query(model_cassandra.CreateQuiz,
-		input.QuizID, input.Author, input.Title, input.Questions, input.MarkingType).ScanCAS(
+		input.QuizID, input.Author, input.Title, input.Questions, input.MarkingType, input.IsPublished, input.IsDeleted).ScanCAS(
 		&resp.QuizID, &resp.Author, &resp.IsDeleted, &resp.IsPublished, &resp.MarkingType, &resp.Questions, &resp.Title); err != nil {
 		conn.logger.Error("failed to create quiz record",
 			zap.Strings("Quiz info:", []string{input.QuizID.String(), input.Author}), zap.Error(err))
