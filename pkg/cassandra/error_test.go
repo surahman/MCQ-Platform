@@ -31,6 +31,10 @@ func TestErrors(t *testing.T) {
 			name:   "Conflict",
 			err:    NewError(xid.New().String()).conflictError(),
 			status: http.StatusConflict,
+		}, {
+			name:   "Forbidden",
+			err:    NewError(xid.New().String()).forbiddenError(),
+			status: http.StatusForbidden,
 		},
 		// ----- test cases end ----- //
 	}

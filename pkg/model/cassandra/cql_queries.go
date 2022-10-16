@@ -93,7 +93,7 @@ WHERE quiz_id = ? IF is_published = false;`
 	// Query Params: quiz_id
 	DeleteQuiz = `UPDATE quizzes
 SET is_deleted = true, is_published = false
-WHERE quiz_id = ? IF EXISTS;`
+WHERE quiz_id = ? IF author = ?;`
 
 	// PublishQuiz marks a Quiz record as published in the Quizzes table.
 	// Query Params: quiz_id

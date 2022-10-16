@@ -172,19 +172,19 @@ func UpdateQuizQuery(c Cassandra, params any) (response any, err error) {
 // Param: quiz id
 func DeleteQuizQuery(c Cassandra, params any) (response any, err error) {
 	conn := c.(*cassandraImpl)
-	input := params.(gocql.UUID)
+	input := params.(*model_cassandra.QuizDelPubRequest)
 	resp := model_cassandra.Quiz{QuizCore: &model_cassandra.QuizCore{}}
 
 	applied := false
-	if applied, err = conn.session.Query(model_cassandra.DeleteQuiz, input).ScanCAS(
+	if applied, err = conn.session.Query(model_cassandra.DeleteQuiz, input.QuizID, input.Username).ScanCAS(
 		&resp.QuizID, &resp.Author, &resp.IsDeleted, &resp.IsPublished, &resp.MarkingType, &resp.Questions, &resp.Title); err != nil {
-		conn.logger.Error("failed to delete quiz record", zap.String("Quiz info:", input.String()), zap.Error(err))
+		conn.logger.Error("failed to delete quiz record", zap.Strings("Quiz info:", []string{input.QuizID.String(), input.Username}), zap.Error(err))
 		return nil, err
 	}
 
 	if !applied {
 		msg := "failed to find and delete quiz record"
-		conn.logger.Error(msg, zap.String("Quiz info:", input.String()), zap.Error(err))
+		conn.logger.Error(msg, zap.Strings("Quiz info:", []string{input.QuizID.String(), input.Username}), zap.Error(err))
 		return nil, errors.New(msg)
 	}
 
@@ -203,13 +203,13 @@ func PublishQuizQuery(c Cassandra, params any) (response any, err error) {
 	applied := false
 	if applied, err = conn.session.Query(model_cassandra.PublishQuiz, input).ScanCAS(&resp.isDeleted); err != nil {
 		conn.logger.Error("failed to publish quiz record", zap.String("Quiz info:", input.String()), zap.Error(err))
-		return nil, err
+		return nil, NewError("unable to publish quiz").internalError()
 	}
 
 	if !applied {
-		msg := "failed to find and publish quiz record"
+		msg := "failed to find or publish quiz record"
 		conn.logger.Error(msg, zap.String("Quiz info:", input.String()), zap.Error(err))
-		return nil, errors.New(msg)
+		return nil, NewError(msg).notFoundError()
 	}
 
 	return nil, err

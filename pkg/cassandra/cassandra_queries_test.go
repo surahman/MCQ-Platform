@@ -250,12 +250,32 @@ func TestDeleteQuizQuery(t *testing.T) {
 	insertTestQuizzes(t)
 
 	// Non-existent quiz.
-	_, errNonExistent := connection.db.Execute(DeleteQuizQuery, gocql.TimeUUID())
+	_, errNonExistent := connection.db.Execute(DeleteQuizQuery, &model_cassandra.QuizDelPubRequest{
+		Username: "",
+		QuizID:   gocql.TimeUUID(),
+	})
 	require.Error(t, errNonExistent, "quiz that does not exist")
 
+	// Not owner deletion failures.
 	for key, testCase := range testQuizRecords {
 		t.Run(fmt.Sprintf("Test case %s", key), func(t *testing.T) {
-			_, err := connection.db.Execute(DeleteQuizQuery, testCase.QuizID)
+			req := model_cassandra.QuizDelPubRequest{
+				Username: testCase.Author + "no-owner",
+				QuizID:   testCase.QuizID,
+			}
+			_, err := connection.db.Execute(DeleteQuizQuery, &req)
+			require.Error(t, err, "delete record succeeded with not author")
+		})
+	}
+
+	// Owner deletion success.
+	for key, testCase := range testQuizRecords {
+		t.Run(fmt.Sprintf("Test case %s", key), func(t *testing.T) {
+			req := model_cassandra.QuizDelPubRequest{
+				Username: testCase.Author,
+				QuizID:   testCase.QuizID,
+			}
+			_, err := connection.db.Execute(DeleteQuizQuery, &req)
 			require.NoError(t, err, "delete record failed")
 
 			var resp any
