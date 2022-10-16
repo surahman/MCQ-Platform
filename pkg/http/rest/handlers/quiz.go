@@ -35,7 +35,13 @@ func ViewQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin
 		var response any
 		var quiz *model_cassandra.Quiz
 		var username string
-		quizId := context.Param("quiz_id")
+		var quizId gocql.UUID
+
+		if quizId, err = gocql.ParseUUID(context.Param("quiz_id")); err != nil {
+			context.JSON(http.StatusBadRequest, &model_rest.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
+			context.Abort()
+			return
+		}
 
 		// Get username from JWT.
 		if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil {

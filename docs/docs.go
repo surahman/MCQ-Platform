@@ -355,7 +355,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "This endpoint will retrieve a quiz with a provided Test ID if it is published.",
+                "description": "This endpoint will retrieve a quiz with a provided quiz ID if it is published.",
                 "consumes": [
                     "application/json"
                 ],
@@ -370,7 +370,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "The Test ID for the quiz being requested.",
+                        "description": "The quiz ID for the quiz being requested.",
                         "name": "quiz_id",
                         "in": "path",
                         "required": true
@@ -378,7 +378,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "The message will contain the Test ID and the payload will contain the quiz",
+                        "description": "The message will contain the quiz ID and the payload will contain the quiz",
                         "schema": {
                             "$ref": "#/definitions/model_rest.Success"
                         }

@@ -386,11 +386,11 @@ paths:
     get:
       consumes:
       - application/json
-      description: This endpoint will retrieve a quiz with a provided Test ID if it
+      description: This endpoint will retrieve a quiz with a provided quiz ID if it
         is published.
       operationId: viewQuiz
       parameters:
-      - description: The Test ID for the quiz being requested.
+      - description: The quiz ID for the quiz being requested.
         in: path
         name: quiz_id
         required: true
@@ -399,7 +399,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: The message will contain the Test ID and the payload will contain
+          description: The message will contain the quiz ID and the payload will contain
             the quiz
           schema:
             $ref: '#/definitions/model_rest.Success'

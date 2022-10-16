@@ -167,12 +167,10 @@ func TestCreateQuiz(t *testing.T) {
 func TestViewQuiz(t *testing.T) {
 	router := getRouter()
 
-	// Generate a reusable UUID across tests.
-	quizId := gocql.TimeUUID()
-
 	testCases := []struct {
 		name                string
 		path                string
+		quizId              string
 		expectedStatus      int
 		expectAnswers       require.BoolAssertionFunc
 		quiz                *model_cassandra.QuizCore
@@ -183,6 +181,7 @@ func TestViewQuiz(t *testing.T) {
 		{
 			name:           "empty token",
 			path:           "/view/empty-token/",
+			quizId:         gocql.TimeUUID().String(),
 			expectedStatus: http.StatusInternalServerError,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "",
@@ -193,8 +192,21 @@ func TestViewQuiz(t *testing.T) {
 				times: 0,
 			},
 		}, {
+			name:           "invalid quiz id",
+			path:           "/view/invalid-quiz-id",
+			quizId:         "not a valid uuid",
+			expectedStatus: http.StatusBadRequest,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "",
+				times:        0,
+			},
+			cassandraCreateData: &mockCassandraData{
+				times: 0,
+			},
+		}, {
 			name:           "db failure",
 			path:           "/view/db-failure/",
+			quizId:         gocql.TimeUUID().String(),
 			expectedStatus: http.StatusNotFound,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "",
@@ -207,6 +219,7 @@ func TestViewQuiz(t *testing.T) {
 		}, {
 			name:           "unpublished not owner",
 			path:           "/view/unpublished-not-owner/",
+			quizId:         gocql.TimeUUID().String(),
 			expectedStatus: http.StatusForbidden,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "not owner",
@@ -220,6 +233,7 @@ func TestViewQuiz(t *testing.T) {
 		}, {
 			name:           "published but deleted not owner",
 			path:           "/view/published-but-deleted-not-owner/",
+			quizId:         gocql.TimeUUID().String(),
 			expectedStatus: http.StatusForbidden,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "not owner",
@@ -233,6 +247,7 @@ func TestViewQuiz(t *testing.T) {
 		}, {
 			name:           "published not owner",
 			path:           "/view/published-not-owner/",
+			quizId:         gocql.TimeUUID().String(),
 			expectedStatus: http.StatusOK,
 			expectAnswers:  require.False,
 			authValidateJWTData: &mockAuthData{
@@ -247,6 +262,7 @@ func TestViewQuiz(t *testing.T) {
 		}, {
 			name:           "published owner",
 			path:           "/view/published-owner/",
+			quizId:         gocql.TimeUUID().String(),
 			expectedStatus: http.StatusOK,
 			expectAnswers:  require.True,
 			authValidateJWTData: &mockAuthData{
@@ -261,6 +277,7 @@ func TestViewQuiz(t *testing.T) {
 		}, {
 			name:           "unpublished owner",
 			path:           "/view/unpublished-owner/",
+			quizId:         gocql.TimeUUID().String(),
 			expectedStatus: http.StatusOK,
 			expectAnswers:  require.True,
 			authValidateJWTData: &mockAuthData{
@@ -275,6 +292,7 @@ func TestViewQuiz(t *testing.T) {
 		}, {
 			name:           "published deleted owner",
 			path:           "/view/published-deleted-owner/",
+			quizId:         gocql.TimeUUID().String(),
 			expectedStatus: http.StatusOK,
 			expectAnswers:  require.True,
 			authValidateJWTData: &mockAuthData{
@@ -310,7 +328,7 @@ func TestViewQuiz(t *testing.T) {
 
 			// Endpoint setup for test.
 			router.GET(testCase.path+":quiz_id", ViewQuiz(zapLogger, mockAuth, mockCassandra))
-			req, _ := http.NewRequest("GET", testCase.path+quizId.String(), nil)
+			req, _ := http.NewRequest("GET", testCase.path+testCase.quizId, nil)
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
 
@@ -322,7 +340,7 @@ func TestViewQuiz(t *testing.T) {
 				response := model_rest.Success{}
 				require.NoError(t, json.NewDecoder(w.Body).Decode(&response), "failed to unmarshall response body.")
 
-				require.True(t, len(quizId.String()) != 0, "did not receive quiz id in response")
+				require.True(t, len(response.Message) != 0, "did not receive quiz id in response")
 
 				questions, ok := response.Payload.(map[string]any)["questions"]
 				require.True(t, ok, "failed to extract questions.")

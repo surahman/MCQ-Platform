@@ -144,3 +144,14 @@ _Response:_ A success response containing the `quiz id` in the payload.
   "title": "The title of the quiz"
 }
 ```
+
+#### View
+
+Only quizzes neither published nor deleted may be viewed by non-authors. Authors of quizzes can view both deleted and
+unpublished quizzes. Answer keys will only be returned to requesters who are the quiz's authors. The username of the
+requester is extracted from their JWT.
+
+_Request:_ The Quiz ID must be supplied in the request the URL.
+
+_Response:_ A success response containing the `quiz id` in the message and the quiz in the payload.
+
