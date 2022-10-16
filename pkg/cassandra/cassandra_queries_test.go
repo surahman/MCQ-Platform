@@ -221,13 +221,18 @@ func TestUpdateQuizQuery(t *testing.T) {
 			testCase.Questions[0].Description = "updated quiz description"
 
 			_, err = connection.db.Execute(UpdateQuizQuery, testCase)
+			if testCase.IsPublished {
+				require.Error(t, err, "update to a published record should failed")
+				return
+			}
 			require.NoError(t, err, "update record failed")
 
 			var resp any
 			resp, err = connection.db.Execute(ReadQuizQuery, testCase.QuizID)
 			require.NoError(t, err, "read record failed")
+
 			actual := resp.(*model_cassandra.Quiz)
-			require.Truef(t, reflect.DeepEqual(testCase, actual), "expected quiz, %v, does not match actual, %v", testCase, actual)
+			require.Truef(t, reflect.DeepEqual(*testCase, *actual), "expected quiz, %v, does not match actual, %v", testCase, actual)
 		})
 	}
 }

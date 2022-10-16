@@ -148,18 +148,20 @@ func ReadQuizQuery(c Cassandra, params any) (response any, err error) {
 func UpdateQuizQuery(c Cassandra, params any) (response any, err error) {
 	conn := c.(*cassandraImpl)
 	input := params.(*model_cassandra.Quiz)
-	resp := model_cassandra.Quiz{QuizCore: &model_cassandra.QuizCore{}}
+	resp := struct {
+		isPublished bool
+	}{}
 
 	applied := false
 	if applied, err = conn.session.Query(model_cassandra.UpdateQuiz, input.Title, input.Questions, input.MarkingType, input.QuizID).ScanCAS(
-		&resp.QuizID, &resp.Author, &resp.IsDeleted, &resp.IsPublished, &resp.MarkingType, &resp.Questions, &resp.Title); err != nil {
+		&resp.isPublished); err != nil {
 		conn.logger.Error("failed to update quiz record", zap.Strings("Quiz info:", []string{input.QuizID.String(), input.Author}), zap.Error(err))
 		return nil, err
 	}
 
 	if !applied {
 		msg := "failed to update quiz, either it does not exist or is already published"
-		conn.logger.Error(msg, zap.Strings("Quiz info:", []string{input.Title, input.QuizID.String()}), zap.Error(err))
+		conn.logger.Error(msg, zap.Strings("Quiz info:", []string{input.Author, input.QuizID.String()}), zap.Error(err))
 		return nil, errors.New(msg)
 	}
 
