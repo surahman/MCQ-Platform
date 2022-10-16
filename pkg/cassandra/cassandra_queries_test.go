@@ -286,6 +286,10 @@ func TestPublishQuizQuery(t *testing.T) {
 	for key, testCase := range testQuizRecords {
 		t.Run(fmt.Sprintf("Test case %s", key), func(t *testing.T) {
 			_, err := connection.db.Execute(PublishQuizQuery, testCase.QuizID)
+			if testCase.IsDeleted {
+				require.Error(t, err, "a deleted record should not be published")
+				return
+			}
 			require.NoError(t, err, "publish record failed")
 
 			var resp any

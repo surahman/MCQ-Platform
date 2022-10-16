@@ -196,11 +196,12 @@ func DeleteQuizQuery(c Cassandra, params any) (response any, err error) {
 func PublishQuizQuery(c Cassandra, params any) (response any, err error) {
 	conn := c.(*cassandraImpl)
 	input := params.(gocql.UUID)
-	resp := model_cassandra.Quiz{QuizCore: &model_cassandra.QuizCore{}}
+	resp := struct {
+		isDeleted bool
+	}{}
 
 	applied := false
-	if applied, err = conn.session.Query(model_cassandra.PublishQuiz, input).ScanCAS(
-		&resp.QuizID, &resp.Author, &resp.IsDeleted, &resp.IsPublished, &resp.MarkingType, &resp.Questions, &resp.Title); err != nil {
+	if applied, err = conn.session.Query(model_cassandra.PublishQuiz, input).ScanCAS(&resp.isDeleted); err != nil {
 		conn.logger.Error("failed to publish quiz record", zap.String("Quiz info:", input.String()), zap.Error(err))
 		return nil, err
 	}
