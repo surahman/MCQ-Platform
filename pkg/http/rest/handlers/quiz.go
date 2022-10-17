@@ -187,7 +187,7 @@ func UpdateQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) g
 				QuizCore: &request,
 			},
 		}
-		if _, err = db.Execute(cassandra.CreateQuizQuery, &updateRequest); err != nil {
+		if _, err = db.Execute(cassandra.UpdateQuizQuery, &updateRequest); err != nil {
 			cassandraError := err.(*cassandra.Error)
 			context.AbortWithStatusJSON(cassandraError.Status, &model_rest.Error{Message: "error updating quiz", Payload: cassandraError.Message})
 			return
