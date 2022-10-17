@@ -146,9 +146,7 @@ func CreateQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) g
 // @Param       quiz    body     model_cassandra.QuizCore true "The Quiz to replace the one already submitted"
 // @Success     200     {object} model_rest.Success       "The message will contain a confirmation of the update"
 // @Failure     400     {object} model_rest.Error         "Error message with any available details in payload"
-// @Failure     401     {object} model_rest.Error         "Error message with any available details in payload"
 // @Failure     403     {object} model_rest.Error         "Error message with any available details in payload"
-// @Failure     404     {object} model_rest.Error         "Error message with any available details in payload"
 // @Failure     500     {object} model_rest.Error         "Error message with any available details in payload"
 // @Router      /quiz/update/{quiz_id} [patch]
 func UpdateQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc {
