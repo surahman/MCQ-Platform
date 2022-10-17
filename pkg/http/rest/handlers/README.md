@@ -155,3 +155,21 @@ _Request:_ The Quiz ID must be supplied in the request the URL.
 
 _Response:_ A success response containing the `quiz id` in the message and the quiz in the payload.
 
+#### Delete
+
+Only the authors of a quiz may mark it as deleted. Once deleted, a quiz will be set to unpublished and will no longer
+be eligible for publishing and editing. The quiz will remain in the database and can only be viewed by the author.
+
+_Request:_ The Quiz ID must be supplied in the request the URL.
+
+_Response:_ A success response containing the `quiz id` in the message and the quiz in the payload.
+
+#### Publish
+
+Only the authors of a quiz may mark it as published. Once published, a quiz will be generally available to all users and
+will no longer be eligible for editing. The quiz can be made unavailable by deleting it.
+
+_Request:_ The Quiz ID must be supplied in the request the URL.
+
+_Response:_ A success response containing the `quiz id` in the message and the quiz in the payload.
+
