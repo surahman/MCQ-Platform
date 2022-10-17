@@ -158,8 +158,8 @@ func CreateQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) g
 // @Failure     403     {object} model_rest.Error         "Error message with any available details in payload"
 // @Failure     404     {object} model_rest.Error         "Error message with any available details in payload"
 // @Failure     500     {object} model_rest.Error         "Error message with any available details in payload"
-// @Router      /quiz/update/{quiz_id} [put]
-func UpdateQuiz(logger *logger.Logger, db cassandra.Cassandra) gin.HandlerFunc {
+// @Router      /quiz/update/{quiz_id} [patch]
+func UpdateQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		context.JSON(http.StatusNotImplemented, nil)
 	}
