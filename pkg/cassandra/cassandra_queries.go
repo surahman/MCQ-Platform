@@ -226,21 +226,21 @@ func PublishQuizQuery(c Cassandra, params any) (response any, err error) {
 func CreateResponseQuery(c Cassandra, params any) (response any, err error) {
 	conn := c.(*cassandraImpl)
 	input := params.(*model_cassandra.Response)
+	resp := model_cassandra.Response{QuizResponse: &model_cassandra.QuizResponse{}}
 
-	resp := model_cassandra.Response{QuizResponse: &model_cassandra.QuizResponse{}} // Discarded, only used as container for Cassandra response.
 	applied := false
 	if applied, err = conn.session.Query(model_cassandra.CreateResponse,
 		input.Username, input.QuizID, input.Score, input.Responses).ScanCAS(
 		&resp.Username, &resp.QuizID, &resp.Responses, &resp.Score); err != nil {
 		conn.logger.Error("failed to create response record",
 			zap.Strings("Response info:", []string{input.Username, input.QuizID.String()}), zap.Error(err))
-		return nil, err
+		return nil, NewError(err.Error()).internalError()
 	}
 
 	if !applied {
 		msg := "failed to record response, user has already taken this quiz"
 		conn.logger.Error(msg, zap.Strings("Response info:", []string{input.Username, input.QuizID.String()}), zap.Error(err))
-		return nil, errors.New(msg)
+		return nil, NewError(msg).conflictError()
 	}
 
 	return nil, nil

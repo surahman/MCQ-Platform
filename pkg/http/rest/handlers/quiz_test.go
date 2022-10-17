@@ -613,7 +613,6 @@ func TestUpdateQuiz(t *testing.T) {
 		path                string
 		quizId              string
 		expectedStatus      int
-		expectAnswers       require.BoolAssertionFunc
 		quiz                *model_cassandra.QuizCore
 		authValidateJWTData *mockAuthData
 		cassandraUpdateData *mockCassandraData
@@ -748,6 +747,327 @@ func TestUpdateQuiz(t *testing.T) {
 
 				require.True(t, len(response.Message) != 0, "did not receive quiz id message response")
 				require.True(t, len(response.Payload.(string)) != 0, "did not receive quiz id in response")
+			}
+		})
+	}
+}
+
+func TestTakeQuiz(t *testing.T) {
+	router := getRouter()
+
+	testCases := []struct {
+		name                string
+		path                string
+		quizId              string
+		expectedStatus      int
+		quizResponse        *model_cassandra.QuizResponse
+		authValidateJWTData *mockAuthData
+		cassandraReadData   *mockCassandraData
+		cassandraTakeData   *mockCassandraData
+		graderData          *mockGraderData
+	}{
+		// ----- test cases start ----- //
+		{
+			name:           "empty token",
+			path:           "/take/empty-token/",
+			quizId:         gocql.TimeUUID().String(),
+			expectedStatus: http.StatusInternalServerError,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "",
+				outputErr:    errors.New("invalid token"),
+				times:        1,
+			},
+			cassandraReadData: &mockCassandraData{
+				times: 0,
+			},
+			cassandraTakeData: &mockCassandraData{
+				times: 0,
+			},
+			graderData: &mockGraderData{
+				times: 0,
+			},
+		}, {
+			name:           "invalid quiz id",
+			path:           "/take/invalid-quiz-id",
+			quizId:         "not a valid uuid",
+			expectedStatus: http.StatusBadRequest,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "",
+				times:        0,
+			},
+			cassandraReadData: &mockCassandraData{
+				times: 0,
+			},
+			cassandraTakeData: &mockCassandraData{
+				times: 0,
+			},
+			graderData: &mockGraderData{
+				times: 0,
+			},
+		}, {
+			name:           "request validate failure",
+			path:           "/take/request-validate-failure/",
+			quizId:         gocql.TimeUUID().String(),
+			expectedStatus: http.StatusBadRequest,
+			quizResponse:   &model_cassandra.QuizResponse{Responses: [][]int32{{-1}, {1, 2, 3, 4}}},
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "",
+				times:        1,
+			},
+			cassandraReadData: &mockCassandraData{
+				times: 0,
+			},
+			cassandraTakeData: &mockCassandraData{
+				times: 0,
+			},
+			graderData: &mockGraderData{
+				times: 0,
+			},
+		}, {
+			name:           "db read unauthorized",
+			path:           "/take/db-read-unauthorized/",
+			quizId:         gocql.TimeUUID().String(),
+			expectedStatus: http.StatusForbidden,
+			quizResponse:   &model_cassandra.QuizResponse{Responses: [][]int32{{}}},
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "",
+				times:        1,
+			},
+			cassandraReadData: &mockCassandraData{
+				outputErr: &cassandra.Error{
+					Message: "",
+					Status:  http.StatusForbidden,
+				},
+				times: 1,
+			},
+			cassandraTakeData: &mockCassandraData{
+				times: 0,
+			},
+			graderData: &mockGraderData{
+				times: 0,
+			},
+		}, {
+			name:           "db read failure",
+			path:           "/take/db-read-failure/",
+			quizId:         gocql.TimeUUID().String(),
+			expectedStatus: http.StatusInternalServerError,
+			quizResponse:   &model_cassandra.QuizResponse{Responses: [][]int32{{}}},
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "",
+				times:        1,
+			},
+			cassandraReadData: &mockCassandraData{
+				outputErr: &cassandra.Error{
+					Message: "",
+					Status:  http.StatusInternalServerError,
+				},
+				times: 1,
+			},
+			cassandraTakeData: &mockCassandraData{
+				times: 0,
+			},
+			graderData: &mockGraderData{
+				times: 0,
+			},
+		}, {
+			name:           "quiz unpublished",
+			path:           "/take/quiz-unpublished/",
+			quizId:         gocql.TimeUUID().String(),
+			expectedStatus: http.StatusForbidden,
+			quizResponse:   &model_cassandra.QuizResponse{Responses: [][]int32{{}}},
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "",
+				times:        1,
+			},
+			cassandraReadData: &mockCassandraData{
+				outputParam: &model_cassandra.Quiz{
+					IsPublished: false,
+				},
+				times: 1,
+			},
+			cassandraTakeData: &mockCassandraData{
+				times: 0,
+			},
+			graderData: &mockGraderData{
+				times: 0,
+			},
+		}, {
+			name:           "quiz deleted",
+			path:           "/take/quiz-deleted/",
+			quizId:         gocql.TimeUUID().String(),
+			expectedStatus: http.StatusForbidden,
+			quizResponse:   &model_cassandra.QuizResponse{Responses: [][]int32{{}}},
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "",
+				times:        1,
+			},
+			cassandraReadData: &mockCassandraData{
+				outputParam: &model_cassandra.Quiz{
+					IsPublished: true,
+					IsDeleted:   true,
+				},
+				times: 1,
+			},
+			cassandraTakeData: &mockCassandraData{
+				times: 0,
+			},
+			graderData: &mockGraderData{
+				times: 0,
+			},
+		}, {
+			name:           "grader failure",
+			path:           "/take/grader-failure/",
+			quizId:         gocql.TimeUUID().String(),
+			expectedStatus: http.StatusBadRequest,
+			quizResponse:   &model_cassandra.QuizResponse{Responses: [][]int32{{}}},
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "",
+				times:        1,
+			},
+			cassandraReadData: &mockCassandraData{
+				outputParam: &model_cassandra.Quiz{IsPublished: true},
+				outputErr:   nil,
+				times:       1,
+			},
+			cassandraTakeData: &mockCassandraData{
+				times: 0,
+			},
+			graderData: &mockGraderData{
+				outputErr: errors.New("grader failure"),
+				times:     1,
+			},
+		}, {
+			name:           "db take unauthorized",
+			path:           "/take/db-take-unauthorized/",
+			quizId:         gocql.TimeUUID().String(),
+			expectedStatus: http.StatusForbidden,
+			quizResponse:   &model_cassandra.QuizResponse{Responses: [][]int32{{}}},
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "",
+				times:        1,
+			},
+			cassandraReadData: &mockCassandraData{
+				outputParam: &model_cassandra.Quiz{IsPublished: true},
+				outputErr:   nil,
+				times:       1,
+			},
+			cassandraTakeData: &mockCassandraData{
+				outputErr: &cassandra.Error{
+					Message: "db take auth failure",
+					Status:  http.StatusForbidden,
+				},
+				times: 1,
+			},
+			graderData: &mockGraderData{
+				outputParam: 1.333,
+				times:       1,
+			},
+		}, {
+			name:           "db take failure",
+			path:           "/take/db-take-failure/",
+			quizId:         gocql.TimeUUID().String(),
+			expectedStatus: http.StatusInternalServerError,
+			quizResponse:   &model_cassandra.QuizResponse{Responses: [][]int32{{}}},
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "",
+				times:        1,
+			},
+			cassandraReadData: &mockCassandraData{
+				outputParam: &model_cassandra.Quiz{IsPublished: true},
+				outputErr:   nil,
+				times:       1,
+			},
+			cassandraTakeData: &mockCassandraData{
+				outputErr: &cassandra.Error{
+					Message: "db take auth failure",
+					Status:  http.StatusInternalServerError,
+				},
+				times: 1,
+			},
+			graderData: &mockGraderData{
+				outputParam: 1.333,
+				times:       1,
+			},
+		}, {
+			name:           "success",
+			path:           "/take/success/",
+			quizId:         gocql.TimeUUID().String(),
+			expectedStatus: http.StatusOK,
+			quizResponse:   &model_cassandra.QuizResponse{Responses: [][]int32{{}}},
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "",
+				times:        1,
+			},
+			cassandraReadData: &mockCassandraData{
+				outputParam: &model_cassandra.Quiz{IsPublished: true},
+				outputErr:   nil,
+				times:       1,
+			},
+			cassandraTakeData: &mockCassandraData{
+				times: 1,
+			},
+			graderData: &mockGraderData{
+				outputParam: 1.333,
+				times:       1,
+			},
+		},
+		// ----- test cases end ----- //
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockCassandra := mocks.NewMockCassandra(mockCtrl)
+			mockGrader := mocks.NewMockGrading(mockCtrl)
+
+			gomock.InOrder(
+				// Read quizResponse.
+				mockCassandra.EXPECT().Execute(gomock.Any(), gomock.Any()).Return(
+					testCase.cassandraReadData.outputParam,
+					testCase.cassandraReadData.outputErr,
+				).Times(testCase.cassandraReadData.times),
+				// Submit response.
+				mockCassandra.EXPECT().Execute(gomock.Any(), gomock.Any()).Return(
+					testCase.cassandraTakeData.outputParam,
+					testCase.cassandraTakeData.outputErr,
+				).Times(testCase.cassandraTakeData.times),
+			)
+
+			mockAuth.EXPECT().ValidateJWT(gomock.Any()).Return(
+				testCase.authValidateJWTData.outputParam1,
+				testCase.authValidateJWTData.outputParam2,
+				testCase.authValidateJWTData.outputErr,
+			).Times(testCase.authValidateJWTData.times)
+
+			mockGrader.EXPECT().Grade(gomock.Any(), gomock.Any()).Return(
+				testCase.graderData.outputParam,
+				testCase.graderData.outputErr,
+			).Times(testCase.graderData.times)
+
+			responseJson, err := json.Marshal(&testCase.quizResponse)
+			require.NoErrorf(t, err, "failed to marshall JSON: %v", err)
+
+			// Endpoint setup for test.
+			router.POST(testCase.path+":quiz_id", TakeQuiz(zapLogger, mockAuth, mockCassandra, mockGrader))
+			req, _ := http.NewRequest("POST", testCase.path+testCase.quizId, bytes.NewBuffer(responseJson))
+			w := httptest.NewRecorder()
+			router.ServeHTTP(w, req)
+
+			// Verify responses
+			require.Equal(t, testCase.expectedStatus, w.Code, "expected status codes do not match")
+
+			// Check message and quizResponse id.
+			if testCase.expectedStatus == http.StatusOK {
+				response := model_rest.Success{}
+				require.NoError(t, json.NewDecoder(w.Body).Decode(&response), "failed to unmarshall response body")
+
+				require.True(t, len(response.Message) != 0, "did not receive quiz response message")
+
+				responseMap, ok := response.Payload.(map[string]any)
+				require.True(t, ok, "failed to convert payload to an index-able map")
+				require.NotEqual(t, 0, responseMap["score"], "failed to get score from payload")
 			}
 		})
 	}

@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/surahman/mcq-platform/pkg/cassandra"
 	"github.com/surahman/mcq-platform/pkg/logger"
+	model_cassandra "github.com/surahman/mcq-platform/pkg/model/cassandra"
 	"go.uber.org/zap"
 )
 
@@ -78,4 +79,13 @@ type mockCassandraData struct {
 	outputParam any
 	outputErr   error
 	times       int
+}
+
+// mockGraderData is the parameter data for Grader mocking that is used in the test grid.
+type mockGraderData struct {
+	inputQuizResp *model_cassandra.QuizResponse
+	inputQuiz     *model_cassandra.Quiz
+	outputParam   float64
+	outputErr     error
+	times         int
 }
