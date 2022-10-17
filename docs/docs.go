@@ -260,7 +260,7 @@ const docTemplate = `{
             }
         },
         "/quiz/update/{quiz_id}": {
-            "put": {
+            "patch": {
                 "security": [
                     {
                         "ApiKeyAuth": []

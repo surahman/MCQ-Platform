@@ -173,7 +173,6 @@ func TestViewQuiz(t *testing.T) {
 		quizId              string
 		expectedStatus      int
 		expectAnswers       require.BoolAssertionFunc
-		quiz                *model_cassandra.QuizCore
 		authValidateJWTData *mockAuthData
 		cassandraCreateData *mockCassandraData
 	}{
@@ -362,8 +361,6 @@ func TestDeleteQuiz(t *testing.T) {
 		path                string
 		quizId              string
 		expectedStatus      int
-		expectAnswers       require.BoolAssertionFunc
-		quiz                *model_cassandra.QuizCore
 		authValidateJWTData *mockAuthData
 		cassandraDeleteData *mockCassandraData
 	}{
@@ -490,8 +487,6 @@ func TestPublishQuiz(t *testing.T) {
 		path                 string
 		quizId               string
 		expectedStatus       int
-		expectAnswers        require.BoolAssertionFunc
-		quiz                 *model_cassandra.QuizCore
 		authValidateJWTData  *mockAuthData
 		cassandraPublishData *mockCassandraData
 	}{
@@ -540,7 +535,7 @@ func TestPublishQuiz(t *testing.T) {
 			},
 		}, {
 			name:           "db unauthorized",
-			path:           "/publish/db- unauthorized/",
+			path:           "/publish/db-unauthorized/",
 			quizId:         gocql.TimeUUID().String(),
 			expectedStatus: http.StatusForbidden,
 			authValidateJWTData: &mockAuthData{
@@ -560,7 +555,7 @@ func TestPublishQuiz(t *testing.T) {
 			quizId:         gocql.TimeUUID().String(),
 			expectedStatus: http.StatusOK,
 			authValidateJWTData: &mockAuthData{
-				outputParam1: "not owner",
+				outputParam1: "",
 				times:        1,
 			},
 			cassandraPublishData: &mockCassandraData{
@@ -592,6 +587,154 @@ func TestPublishQuiz(t *testing.T) {
 			// Endpoint setup for test.
 			router.PATCH(testCase.path+":quiz_id", PublishQuiz(zapLogger, mockAuth, mockCassandra))
 			req, _ := http.NewRequest("PATCH", testCase.path+testCase.quizId, nil)
+			w := httptest.NewRecorder()
+			router.ServeHTTP(w, req)
+
+			// Verify responses
+			require.Equal(t, testCase.expectedStatus, w.Code, "expected status codes do not match")
+
+			// Check message and quiz id.
+			if testCase.expectedStatus == http.StatusOK {
+				response := model_rest.Success{}
+				require.NoError(t, json.NewDecoder(w.Body).Decode(&response), "failed to unmarshall response body.")
+
+				require.True(t, len(response.Message) != 0, "did not receive quiz id message response")
+				require.True(t, len(response.Payload.(string)) != 0, "did not receive quiz id in response")
+			}
+		})
+	}
+}
+
+func TestUpdateQuiz(t *testing.T) {
+	router := getRouter()
+
+	testCases := []struct {
+		name                string
+		path                string
+		quizId              string
+		expectedStatus      int
+		expectAnswers       require.BoolAssertionFunc
+		quiz                *model_cassandra.QuizCore
+		authValidateJWTData *mockAuthData
+		cassandraUpdateData *mockCassandraData
+	}{
+		// ----- test cases start ----- //
+		{
+			name:           "empty token",
+			path:           "/update/empty-token/",
+			quizId:         gocql.TimeUUID().String(),
+			expectedStatus: http.StatusInternalServerError,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "",
+				outputErr:    errors.New("invalid token"),
+				times:        1,
+			},
+			cassandraUpdateData: &mockCassandraData{
+				outputErr: nil,
+				times:     0,
+			},
+		}, {
+			name:           "invalid quiz id",
+			path:           "/update/invalid-quiz-id",
+			quizId:         "not a valid uuid",
+			expectedStatus: http.StatusBadRequest,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "",
+				times:        0,
+			},
+			cassandraUpdateData: &mockCassandraData{
+				times: 0,
+			},
+		}, {
+			name:           "request validate failure",
+			path:           "/update/request-validate-failure/",
+			quizId:         gocql.TimeUUID().String(),
+			expectedStatus: http.StatusBadRequest,
+			quiz:           testQuizData["invalidOptionsNoPubQuiz"].QuizCore,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "",
+				times:        1,
+			},
+			cassandraUpdateData: &mockCassandraData{
+				times: 0,
+			},
+		}, {
+			name:           "db unauthorized",
+			path:           "/update/db-unauthorized/",
+			quizId:         gocql.TimeUUID().String(),
+			expectedStatus: http.StatusForbidden,
+			quiz:           testQuizData["myNoPubQuiz"].QuizCore,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "",
+				times:        1,
+			},
+			cassandraUpdateData: &mockCassandraData{
+				outputErr: &cassandra.Error{
+					Message: "",
+					Status:  http.StatusForbidden,
+				},
+				times: 1,
+			},
+		}, {
+			name:           "db failure",
+			path:           "/update/db-failure/",
+			quizId:         gocql.TimeUUID().String(),
+			expectedStatus: http.StatusInternalServerError,
+			quiz:           testQuizData["myNoPubQuiz"].QuizCore,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "",
+				times:        1,
+			},
+			cassandraUpdateData: &mockCassandraData{
+				outputErr: &cassandra.Error{
+					Message: "",
+					Status:  http.StatusInternalServerError,
+				},
+				times: 1,
+			},
+		}, {
+			name:           "success",
+			path:           "/update/success/",
+			quizId:         gocql.TimeUUID().String(),
+			expectedStatus: http.StatusOK,
+			quiz:           testQuizData["myNoPubQuiz"].QuizCore,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "",
+				times:        1,
+			},
+			cassandraUpdateData: &mockCassandraData{
+				outputErr: nil,
+				times:     1,
+			},
+		},
+		// ----- test cases end ----- //
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockCassandra := mocks.NewMockCassandra(mockCtrl)
+
+			mockCassandra.EXPECT().Execute(gomock.Any(), gomock.Any()).Return(
+				testCase.cassandraUpdateData.outputParam,
+				testCase.cassandraUpdateData.outputErr,
+			).Times(testCase.cassandraUpdateData.times)
+
+			mockAuth.EXPECT().ValidateJWT(gomock.Any()).Return(
+				testCase.authValidateJWTData.outputParam1,
+				testCase.authValidateJWTData.outputParam2,
+				testCase.authValidateJWTData.outputErr,
+			).Times(testCase.authValidateJWTData.times)
+
+			quiz := testCase.quiz
+			quizJson, err := json.Marshal(&quiz)
+			require.NoErrorf(t, err, "failed to marshall JSON: %v", err)
+
+			// Endpoint setup for test.
+			router.PATCH(testCase.path+":quiz_id", UpdateQuiz(zapLogger, mockAuth, mockCassandra))
+			req, _ := http.NewRequest("PATCH", testCase.path+testCase.quizId, bytes.NewBuffer(quizJson))
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
 

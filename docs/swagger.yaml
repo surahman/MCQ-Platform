@@ -324,7 +324,7 @@ paths:
       tags:
       - take test quiz submit answer
   /quiz/update/{quiz_id}:
-    put:
+    patch:
       consumes:
       - application/json
       description: This endpoint will update a quiz with the provided Test ID if it

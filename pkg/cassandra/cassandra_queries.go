@@ -106,8 +106,8 @@ func DeleteUserQuery(c Cassandra, params any) (response any, err error) {
 func CreateQuizQuery(c Cassandra, params any) (response any, err error) {
 	conn := c.(*cassandraImpl)
 	input := params.(*model_cassandra.Quiz)
+	resp := model_cassandra.Quiz{QuizCore: &model_cassandra.QuizCore{}}
 
-	resp := model_cassandra.Quiz{QuizCore: &model_cassandra.QuizCore{}} // Discarded, only used as container for Cassandra response.
 	applied := false
 	if applied, err = conn.session.Query(model_cassandra.CreateQuiz,
 		input.QuizID, input.Author, input.Title, input.Questions, input.MarkingType, input.IsPublished, input.IsDeleted).ScanCAS(
@@ -162,7 +162,7 @@ func UpdateQuizQuery(c Cassandra, params any) (response any, err error) {
 	}
 
 	if !applied {
-		msg := "failed to update quiz, either it does not exist or is already published"
+		msg := "failed to update quiz. Either it does not exist, is already published, or the requester is not the author"
 		conn.logger.Error(msg, zap.Strings("Quiz info:", []string{input.QuizID.String(), input.Username, input.Quiz.Author}), zap.Error(err))
 		return nil, NewError(msg).forbiddenError()
 	}

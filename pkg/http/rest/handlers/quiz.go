@@ -161,7 +161,49 @@ func CreateQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) g
 // @Router      /quiz/update/{quiz_id} [patch]
 func UpdateQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc {
 	return func(context *gin.Context) {
-		context.JSON(http.StatusNotImplemented, nil)
+		var err error
+		var username string
+		var request model_cassandra.QuizCore
+		var quizId gocql.UUID
+
+		if quizId, err = gocql.ParseUUID(context.Param("quiz_id")); err != nil {
+			context.AbortWithStatusJSON(http.StatusBadRequest, &model_rest.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
+			return
+		}
+
+		// Get username from JWT.
+		if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil {
+			logger.Error("failed to validate JWT in update quiz handler", zap.Error(err))
+			context.AbortWithStatusJSON(http.StatusInternalServerError, &model_rest.Error{Message: "unable to verify username"})
+			return
+		}
+
+		// Get quiz core from request and validate.
+		if err = context.ShouldBindJSON(&request); err != nil {
+			context.AbortWithStatusJSON(http.StatusBadRequest, &model_rest.Error{Message: err.Error()})
+			return
+		}
+
+		if err = validator.ValidateStruct(&request); err != nil {
+			context.AbortWithStatusJSON(http.StatusBadRequest, &model_rest.Error{Message: "validation", Payload: err})
+			return
+		}
+
+		// Prepare quiz by adding username and generating quiz id, then insert record.
+		updateRequest := model_cassandra.QuizMutateRequest{
+			Username: username,
+			QuizID:   quizId,
+			Quiz: &model_cassandra.Quiz{
+				QuizCore: &request,
+			},
+		}
+		if _, err = db.Execute(cassandra.CreateQuizQuery, &updateRequest); err != nil {
+			cassandraError := err.(*cassandra.Error)
+			context.AbortWithStatusJSON(cassandraError.Status, &model_rest.Error{Message: "error updating quiz", Payload: cassandraError.Message})
+			return
+		}
+
+		context.JSON(http.StatusOK, &model_rest.Success{Message: "updated quiz with id", Payload: quizId.String()})
 	}
 }
 
