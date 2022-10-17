@@ -38,24 +38,21 @@ func ViewQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin
 		var quizId gocql.UUID
 
 		if quizId, err = gocql.ParseUUID(context.Param("quiz_id")); err != nil {
-			context.JSON(http.StatusBadRequest, &model_rest.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
-			context.Abort()
+			context.AbortWithStatusJSON(http.StatusBadRequest, &model_rest.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
 			return
 		}
 
 		// Get username from JWT.
 		if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil {
 			logger.Error("failed to validate JWT in create quiz handler", zap.Error(err))
-			context.JSON(http.StatusInternalServerError, &model_rest.Error{Message: "unable to verify username"})
-			context.Abort()
+			context.AbortWithStatusJSON(http.StatusInternalServerError, &model_rest.Error{Message: "unable to verify username"})
 			return
 		}
 
 		// Get quiz record from database.
 		if response, err = db.Execute(cassandra.ReadQuizQuery, quizId); err != nil {
 			cassandraError := err.(*cassandra.Error)
-			context.JSON(cassandraError.Status, &model_rest.Error{Message: "error retrieving quiz", Payload: cassandraError.Message})
-			context.Abort()
+			context.AbortWithStatusJSON(cassandraError.Status, &model_rest.Error{Message: "error retrieving quiz", Payload: cassandraError.Message})
 			return
 		}
 		quiz = response.(*model_cassandra.Quiz)
@@ -65,8 +62,7 @@ func ViewQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin
 		// [2] Requester is not the author
 		// FAIL
 		if (!quiz.IsPublished || quiz.IsDeleted) && username != quiz.Author {
-			context.JSON(http.StatusForbidden, &model_rest.Error{Message: "quiz is not available"})
-			context.Abort()
+			context.AbortWithStatusJSON(http.StatusForbidden, &model_rest.Error{Message: "quiz is not available"})
 			return
 		}
 
@@ -105,21 +101,18 @@ func CreateQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) g
 		// Get username from JWT.
 		if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil {
 			logger.Error("failed to validate JWT in create quiz handler", zap.Error(err))
-			context.JSON(http.StatusInternalServerError, &model_rest.Error{Message: "unable to verify username"})
-			context.Abort()
+			context.AbortWithStatusJSON(http.StatusInternalServerError, &model_rest.Error{Message: "unable to verify username"})
 			return
 		}
 
 		// Get quiz core from request and validate.
 		if err = context.ShouldBindJSON(&request); err != nil {
-			context.JSON(http.StatusBadRequest, &model_rest.Error{Message: err.Error()})
-			context.Abort()
+			context.AbortWithStatusJSON(http.StatusBadRequest, &model_rest.Error{Message: err.Error()})
 			return
 		}
 
 		if err = validator.ValidateStruct(&request); err != nil {
-			context.JSON(http.StatusBadRequest, &model_rest.Error{Message: "validation", Payload: err})
-			context.Abort()
+			context.AbortWithStatusJSON(http.StatusBadRequest, &model_rest.Error{Message: "validation", Payload: err})
 			return
 		}
 
@@ -133,8 +126,7 @@ func CreateQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) g
 		}
 		if _, err = db.Execute(cassandra.CreateQuizQuery, &quiz); err != nil {
 			cassandraError := err.(*cassandra.Error)
-			context.JSON(cassandraError.Status, &model_rest.Error{Message: "error creating quiz", Payload: cassandraError.Message})
-			context.Abort()
+			context.AbortWithStatusJSON(cassandraError.Status, &model_rest.Error{Message: "error creating quiz", Payload: cassandraError.Message})
 			return
 		}
 
@@ -227,16 +219,14 @@ func DeleteQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) g
 		var quizId gocql.UUID
 
 		if quizId, err = gocql.ParseUUID(context.Param("quiz_id")); err != nil {
-			context.JSON(http.StatusBadRequest, &model_rest.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
-			context.Abort()
+			context.AbortWithStatusJSON(http.StatusBadRequest, &model_rest.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
 			return
 		}
 
 		// Get username from JWT.
 		if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil {
 			logger.Error("failed to validate JWT in create quiz handler", zap.Error(err))
-			context.JSON(http.StatusInternalServerError, &model_rest.Error{Message: "unable to verify username"})
-			context.Abort()
+			context.AbortWithStatusJSON(http.StatusInternalServerError, &model_rest.Error{Message: "unable to verify username"})
 			return
 		}
 
@@ -247,8 +237,7 @@ func DeleteQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) g
 		}
 		if _, err = db.Execute(cassandra.DeleteQuizQuery, &request); err != nil {
 			cassandraError := err.(*cassandra.Error)
-			context.JSON(cassandraError.Status, &model_rest.Error{Message: "error deleting quiz", Payload: cassandraError.Message})
-			context.Abort()
+			context.AbortWithStatusJSON(cassandraError.Status, &model_rest.Error{Message: "error deleting quiz", Payload: cassandraError.Message})
 			return
 		}
 
@@ -277,16 +266,14 @@ func PublishQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) 
 		var quizId gocql.UUID
 
 		if quizId, err = gocql.ParseUUID(context.Param("quiz_id")); err != nil {
-			context.JSON(http.StatusBadRequest, &model_rest.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
-			context.Abort()
+			context.AbortWithStatusJSON(http.StatusBadRequest, &model_rest.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
 			return
 		}
 
 		// Get username from JWT.
 		if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil {
 			logger.Error("failed to validate JWT in create quiz handler", zap.Error(err))
-			context.JSON(http.StatusInternalServerError, &model_rest.Error{Message: "unable to verify username"})
-			context.Abort()
+			context.AbortWithStatusJSON(http.StatusInternalServerError, &model_rest.Error{Message: "unable to verify username"})
 			return
 		}
 
@@ -297,8 +284,7 @@ func PublishQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) 
 		}
 		if _, err = db.Execute(cassandra.PublishQuizQuery, &request); err != nil {
 			cassandraError := err.(*cassandra.Error)
-			context.JSON(cassandraError.Status, &model_rest.Error{Message: "error publishing quiz", Payload: cassandraError.Message})
-			context.Abort()
+			context.AbortWithStatusJSON(cassandraError.Status, &model_rest.Error{Message: "error publishing quiz", Payload: cassandraError.Message})
 			return
 		}
 
