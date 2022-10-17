@@ -481,3 +481,131 @@ func TestDeleteQuiz(t *testing.T) {
 		})
 	}
 }
+
+func TestPublishQuiz(t *testing.T) {
+	router := getRouter()
+
+	testCases := []struct {
+		name                 string
+		path                 string
+		quizId               string
+		expectedStatus       int
+		expectAnswers        require.BoolAssertionFunc
+		quiz                 *model_cassandra.QuizCore
+		authValidateJWTData  *mockAuthData
+		cassandraPublishData *mockCassandraData
+	}{
+		// ----- test cases start ----- //
+		{
+			name:           "empty token",
+			path:           "/publish/empty-token/",
+			quizId:         gocql.TimeUUID().String(),
+			expectedStatus: http.StatusInternalServerError,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "",
+				outputErr:    errors.New("invalid token"),
+				times:        1,
+			},
+			cassandraPublishData: &mockCassandraData{
+				outputErr: nil,
+				times:     0,
+			},
+		}, {
+			name:           "invalid quiz id",
+			path:           "/publish/invalid-quiz-id",
+			quizId:         "not a valid uuid",
+			expectedStatus: http.StatusBadRequest,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "",
+				times:        0,
+			},
+			cassandraPublishData: &mockCassandraData{
+				times: 0,
+			},
+		}, {
+			name:           "db failure",
+			path:           "/publish/db-failure/",
+			quizId:         gocql.TimeUUID().String(),
+			expectedStatus: http.StatusInternalServerError,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "",
+				times:        1,
+			},
+			cassandraPublishData: &mockCassandraData{
+				outputErr: &cassandra.Error{
+					Message: "",
+					Status:  http.StatusInternalServerError,
+				},
+				times: 1,
+			},
+		}, {
+			name:           "db unauthorized",
+			path:           "/publish/db- unauthorized/",
+			quizId:         gocql.TimeUUID().String(),
+			expectedStatus: http.StatusForbidden,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "",
+				times:        1,
+			},
+			cassandraPublishData: &mockCassandraData{
+				outputErr: &cassandra.Error{
+					Message: "",
+					Status:  http.StatusForbidden,
+				},
+				times: 1,
+			},
+		}, {
+			name:           "success",
+			path:           "/publish/success/",
+			quizId:         gocql.TimeUUID().String(),
+			expectedStatus: http.StatusOK,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "not owner",
+				times:        1,
+			},
+			cassandraPublishData: &mockCassandraData{
+				outputErr: nil,
+				times:     1,
+			},
+		},
+		// ----- test cases end ----- //
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockCassandra := mocks.NewMockCassandra(mockCtrl)
+
+			mockCassandra.EXPECT().Execute(gomock.Any(), gomock.Any()).Return(
+				testCase.cassandraPublishData.outputParam,
+				testCase.cassandraPublishData.outputErr,
+			).Times(testCase.cassandraPublishData.times)
+
+			mockAuth.EXPECT().ValidateJWT(gomock.Any()).Return(
+				testCase.authValidateJWTData.outputParam1,
+				testCase.authValidateJWTData.outputParam2,
+				testCase.authValidateJWTData.outputErr,
+			).Times(testCase.authValidateJWTData.times)
+
+			// Endpoint setup for test.
+			router.PATCH(testCase.path+":quiz_id", PublishQuiz(zapLogger, mockAuth, mockCassandra))
+			req, _ := http.NewRequest("PATCH", testCase.path+testCase.quizId, nil)
+			w := httptest.NewRecorder()
+			router.ServeHTTP(w, req)
+
+			// Verify responses
+			require.Equal(t, testCase.expectedStatus, w.Code, "expected status codes do not match")
+
+			// Check message and quiz id.
+			if testCase.expectedStatus == http.StatusOK {
+				response := model_rest.Success{}
+				require.NoError(t, json.NewDecoder(w.Body).Decode(&response), "failed to unmarshall response body.")
+
+				require.True(t, len(response.Message) != 0, "did not receive quiz id message response")
+				require.True(t, len(response.Payload.(string)) != 0, "did not receive quiz id in response")
+			}
+		})
+	}
+}

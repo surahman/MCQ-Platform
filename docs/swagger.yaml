@@ -213,8 +213,8 @@ paths:
     delete:
       consumes:
       - application/json
-      description: This endpoint will delete a quiz with the provided Test ID if it
-        was created by the requester.
+      description: This endpoint will mark a quiz as delete if it was created by the
+        requester. The provided Test ID is provided is a path parameter.
       operationId: deleteQuiz
       parameters:
       - description: The Test ID for the quiz being deleted.
@@ -243,7 +243,7 @@ paths:
       tags:
       - delete remove test quiz
   /quiz/publish/{quiz_id}:
-    put:
+    patch:
       consumes:
       - application/json
       description: |-
@@ -263,11 +263,7 @@ paths:
           description: The message will contain a confirmation of publishing
           schema:
             $ref: '#/definitions/model_rest.Success'
-        "401":
-          description: Error message with any available details in payload
-          schema:
-            $ref: '#/definitions/model_rest.Error'
-        "404":
+        "403":
           description: Error message with any available details in payload
           schema:
             $ref: '#/definitions/model_rest.Error'

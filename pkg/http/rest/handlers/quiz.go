@@ -225,13 +225,42 @@ func DeleteQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) g
 // @Security    ApiKeyAuth
 // @Param       quiz_id path     string             true "The Test ID for the quiz being published."
 // @Success     200     {object} model_rest.Success "The message will contain a confirmation of publishing"
-// @Failure     401     {object} model_rest.Error   "Error message with any available details in payload"
-// @Failure     404     {object} model_rest.Error   "Error message with any available details in payload"
+// @Failure     403     {object} model_rest.Error   "Error message with any available details in payload"
 // @Failure     500     {object} model_rest.Error   "Error message with any available details in payload"
-// @Router      /quiz/publish/{quiz_id} [put]
-func PublishQuiz(logger *logger.Logger, db cassandra.Cassandra) gin.HandlerFunc {
+// @Router      /quiz/publish/{quiz_id} [patch]
+func PublishQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc {
 	return func(context *gin.Context) {
-		context.JSON(http.StatusNotImplemented, nil)
+		var err error
+		var username string
+		var quizId gocql.UUID
+
+		if quizId, err = gocql.ParseUUID(context.Param("quiz_id")); err != nil {
+			context.JSON(http.StatusBadRequest, &model_rest.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
+			context.Abort()
+			return
+		}
+
+		// Get username from JWT.
+		if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil {
+			logger.Error("failed to validate JWT in create quiz handler", zap.Error(err))
+			context.JSON(http.StatusInternalServerError, &model_rest.Error{Message: "unable to verify username"})
+			context.Abort()
+			return
+		}
+
+		// Publish quiz record in database.
+		request := model_cassandra.QuizDelPubRequest{
+			Username: username,
+			QuizID:   quizId,
+		}
+		if _, err = db.Execute(cassandra.PublishQuizQuery, &request); err != nil {
+			cassandraError := err.(*cassandra.Error)
+			context.JSON(cassandraError.Status, &model_rest.Error{Message: "error publishing quiz", Payload: cassandraError.Message})
+			context.Abort()
+			return
+		}
+
+		context.JSON(http.StatusOK, &model_rest.Success{Message: "published quiz with id", Payload: quizId.String()})
 	}
 }
 

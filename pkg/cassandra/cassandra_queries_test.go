@@ -282,7 +282,7 @@ func TestDeleteQuizQuery(t *testing.T) {
 			resp, err = connection.db.Execute(ReadQuizQuery, testCase.QuizID)
 			require.NoError(t, err, "read quiz record failed")
 			actual := resp.(*model_cassandra.Quiz)
-			require.Truef(t, actual.IsDeleted, "expected quiz, %v, does not match actual, %v", testCase, actual)
+			require.Truef(t, actual.IsDeleted, "expected quiz to be deleted but actual, %v", actual)
 		})
 	}
 }
@@ -300,12 +300,32 @@ func TestPublishQuizQuery(t *testing.T) {
 	insertTestQuizzes(t)
 
 	// Non-existent quiz.
-	_, errNonExistent := connection.db.Execute(PublishQuizQuery, gocql.TimeUUID())
+	_, errNonExistent := connection.db.Execute(PublishQuizQuery, &model_cassandra.QuizDelPubRequest{
+		Username: "",
+		QuizID:   gocql.TimeUUID(),
+	})
 	require.Error(t, errNonExistent, "quiz that does not exist")
 
+	// Not owner publish failures.
 	for key, testCase := range testQuizRecords {
 		t.Run(fmt.Sprintf("Test case %s", key), func(t *testing.T) {
-			_, err := connection.db.Execute(PublishQuizQuery, testCase.QuizID)
+			req := model_cassandra.QuizDelPubRequest{
+				Username: testCase.Author + "no-owner",
+				QuizID:   testCase.QuizID,
+			}
+			_, err := connection.db.Execute(PublishQuizQuery, &req)
+			require.Error(t, err, "publish record succeeded with not author")
+		})
+	}
+
+	// Owner publish success.
+	for key, testCase := range testQuizRecords {
+		t.Run(fmt.Sprintf("Test case %s", key), func(t *testing.T) {
+			req := model_cassandra.QuizDelPubRequest{
+				Username: testCase.Author,
+				QuizID:   testCase.QuizID,
+			}
+			_, err := connection.db.Execute(PublishQuizQuery, &req)
 			if testCase.IsDeleted {
 				require.Error(t, err, "a deleted record should not be published")
 				return
@@ -316,7 +336,7 @@ func TestPublishQuizQuery(t *testing.T) {
 			resp, err = connection.db.Execute(ReadQuizQuery, testCase.QuizID)
 			require.NoError(t, err, "read quiz record failed")
 			actual := resp.(*model_cassandra.Quiz)
-			require.Truef(t, actual.IsPublished, "expected quiz, %v, does not match actual, %v", testCase, actual)
+			require.Truef(t, actual.IsPublished, "expected quiz to be published but actual, %v", actual)
 		})
 	}
 }

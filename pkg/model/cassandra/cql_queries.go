@@ -99,7 +99,7 @@ WHERE quiz_id = ? IF author = ?;`
 	// Query Params: quiz_id
 	PublishQuiz = `UPDATE quizzes
 SET is_published = true
-WHERE quiz_id = ? IF is_deleted = false;`
+WHERE quiz_id = ? IF author = ? AND is_deleted = false;`
 
 	// -----   Responses Table Queries   -----
 

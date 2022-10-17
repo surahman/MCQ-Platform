@@ -95,7 +95,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "This endpoint will delete a quiz with the provided Test ID if it was created by the requester.",
+                "description": "This endpoint will mark a quiz as delete if it was created by the requester. The provided Test ID is provided is a path parameter.",
                 "consumes": [
                     "application/json"
                 ],
@@ -139,7 +139,7 @@ const docTemplate = `{
             }
         },
         "/quiz/publish/{quiz_id}": {
-            "put": {
+            "patch": {
                 "security": [
                     {
                         "ApiKeyAuth": []
@@ -173,13 +173,7 @@ const docTemplate = `{
                             "$ref": "#/definitions/model_rest.Success"
                         }
                     },
-                    "401": {
-                        "description": "Error message with any available details in payload",
-                        "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
-                        }
-                    },
-                    "404": {
+                    "403": {
                         "description": "Error message with any available details in payload",
                         "schema": {
                             "$ref": "#/definitions/model_rest.Error"
