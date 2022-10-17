@@ -123,13 +123,7 @@ const docTemplate = `{
                             "$ref": "#/definitions/model_rest.Success"
                         }
                     },
-                    "401": {
-                        "description": "Error message with any available details in payload",
-                        "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
-                        }
-                    },
-                    "404": {
+                    "403": {
                         "description": "Error message with any available details in payload",
                         "schema": {
                             "$ref": "#/definitions/model_rest.Error"

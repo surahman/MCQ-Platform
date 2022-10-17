@@ -167,7 +167,7 @@ func UpdateQuiz(logger *logger.Logger, db cassandra.Cassandra) gin.HandlerFunc {
 
 // DeleteQuiz will delete a quiz using a variable in the URL.
 // @Summary     Delete a quiz.
-// @Description This endpoint will delete a quiz with the provided Test ID if it was created by the requester.
+// @Description This endpoint will mark a quiz as delete if it was created by the requester. The provided Test ID is provided is a path parameter.
 // @Tags        delete remove test quiz
 // @Id          deleteQuiz
 // @Accept      json
@@ -175,13 +175,42 @@ func UpdateQuiz(logger *logger.Logger, db cassandra.Cassandra) gin.HandlerFunc {
 // @Security    ApiKeyAuth
 // @Param       quiz_id path     string             true "The Test ID for the quiz being deleted."
 // @Success     200     {object} model_rest.Success "The message will contain a confirmation of deletion"
-// @Failure     401     {object} model_rest.Error   "Error message with any available details in payload"
-// @Failure     404     {object} model_rest.Error   "Error message with any available details in payload"
+// @Failure     403     {object} model_rest.Error   "Error message with any available details in payload"
 // @Failure     500     {object} model_rest.Error   "Error message with any available details in payload"
 // @Router      /quiz/delete/{quiz_id} [delete]
-func DeleteQuiz(logger *logger.Logger, db cassandra.Cassandra) gin.HandlerFunc {
+func DeleteQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc {
 	return func(context *gin.Context) {
-		context.JSON(http.StatusNotImplemented, nil)
+		var err error
+		var username string
+		var quizId gocql.UUID
+
+		if quizId, err = gocql.ParseUUID(context.Param("quiz_id")); err != nil {
+			context.JSON(http.StatusBadRequest, &model_rest.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
+			context.Abort()
+			return
+		}
+
+		// Get username from JWT.
+		if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil {
+			logger.Error("failed to validate JWT in create quiz handler", zap.Error(err))
+			context.JSON(http.StatusInternalServerError, &model_rest.Error{Message: "unable to verify username"})
+			context.Abort()
+			return
+		}
+
+		// Delete quiz record from database.
+		request := model_cassandra.QuizDelPubRequest{
+			Username: username,
+			QuizID:   quizId,
+		}
+		if _, err = db.Execute(cassandra.DeleteQuizQuery, &request); err != nil {
+			cassandraError := err.(*cassandra.Error)
+			context.JSON(cassandraError.Status, &model_rest.Error{Message: "error deleting quiz", Payload: cassandraError.Message})
+			context.Abort()
+			return
+		}
+
+		context.JSON(http.StatusOK, &model_rest.Success{Message: "deleted quiz with id", Payload: quizId.String()})
 	}
 }
 

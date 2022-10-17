@@ -173,19 +173,20 @@ func UpdateQuizQuery(c Cassandra, params any) (response any, err error) {
 func DeleteQuizQuery(c Cassandra, params any) (response any, err error) {
 	conn := c.(*cassandraImpl)
 	input := params.(*model_cassandra.QuizDelPubRequest)
-	resp := model_cassandra.Quiz{QuizCore: &model_cassandra.QuizCore{}}
+	resp := struct {
+		author string
+	}{}
 
 	applied := false
-	if applied, err = conn.session.Query(model_cassandra.DeleteQuiz, input.QuizID, input.Username).ScanCAS(
-		&resp.QuizID, &resp.Author, &resp.IsDeleted, &resp.IsPublished, &resp.MarkingType, &resp.Questions, &resp.Title); err != nil {
+	if applied, err = conn.session.Query(model_cassandra.DeleteQuiz, input.QuizID, input.Username).ScanCAS(&resp.author); err != nil {
 		conn.logger.Error("failed to delete quiz record", zap.Strings("Quiz info:", []string{input.QuizID.String(), input.Username}), zap.Error(err))
-		return nil, err
+		return nil, NewError(err.Error()).internalError()
 	}
 
 	if !applied {
-		msg := "failed to find and delete quiz record"
+		msg := "failed to delete quiz record"
 		conn.logger.Error(msg, zap.Strings("Quiz info:", []string{input.QuizID.String(), input.Username}), zap.Error(err))
-		return nil, errors.New(msg)
+		return nil, NewError(msg).forbiddenError()
 	}
 
 	return nil, err
