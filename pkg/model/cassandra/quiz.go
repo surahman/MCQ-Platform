@@ -36,8 +36,9 @@ type QuizCore struct {
 	Questions   []*Question `json:"questions,omitempty" cql:"questions" validate:"required,min=1,max=10,dive"`                                                                      // A list of questions in the quiz.
 }
 
-// QuizDelPubRequest is the request data sent to the database handler to change the Delete and Update status of a quiz record.
-type QuizDelPubRequest struct {
+// QuizMutateRequest is the request data sent to the database handler to change the Delete and Update status of a quiz record.
+type QuizMutateRequest struct {
 	Username string
 	QuizID   gocql.UUID
+	Quiz     *Quiz
 }

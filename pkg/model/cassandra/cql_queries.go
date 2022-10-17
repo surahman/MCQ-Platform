@@ -82,14 +82,13 @@ IF NOT EXISTS ;`
 	// Query Params: quiz_id,
 	ReadQuiz = `SELECT * FROM quizzes WHERE quiz_id = ?;`
 
-	// UpdateQuiz updates a Quiz record in the Quizzes table if it is not published. This query does not require IF EXISTS
-	// as the IF condition will fail if the record does not exist.
+	// UpdateQuiz updates a Quiz record in the Quizzes table if it is not published.
 	// Query Params: title, questions, marking_type, quiz_id
 	UpdateQuiz = `UPDATE quizzes
 SET title = ?, questions = ?, marking_type = ?
-WHERE quiz_id = ? IF is_published = false;`
+WHERE quiz_id = ? IF author = ? AND is_published = false AND is_deleted = false;`
 
-	// DeleteQuiz marks a Quiz record as deleted in the Quizzes table.
+	// DeleteQuiz marks a Quiz record as deleted in the Quizzes table. A deleted quiz will be set to unpublished.
 	// Query Params: quiz_id
 	DeleteQuiz = `UPDATE quizzes
 SET is_deleted = true, is_published = false

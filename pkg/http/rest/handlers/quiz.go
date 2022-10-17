@@ -199,7 +199,7 @@ func DeleteQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) g
 		}
 
 		// Delete quiz record from database.
-		request := model_cassandra.QuizDelPubRequest{
+		request := model_cassandra.QuizMutateRequest{
 			Username: username,
 			QuizID:   quizId,
 		}
@@ -249,7 +249,7 @@ func PublishQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) 
 		}
 
 		// Publish quiz record in database.
-		request := model_cassandra.QuizDelPubRequest{
+		request := model_cassandra.QuizMutateRequest{
 			Username: username,
 			QuizID:   quizId,
 		}

@@ -203,14 +203,17 @@ func TestUpdateQuizQuery(t *testing.T) {
 	var err error
 
 	// Non-existent quiz.
-	nonexistentQuiz := &model_cassandra.Quiz{
-		Author:      "someone or another",
-		QuizCore:    &model_cassandra.QuizCore{},
-		QuizID:      gocql.TimeUUID(),
-		IsPublished: false,
-		IsDeleted:   false,
-	}
-	_, err = connection.db.Execute(UpdateQuizQuery, nonexistentQuiz)
+	_, err = connection.db.Execute(UpdateQuizQuery, &model_cassandra.QuizMutateRequest{
+		Username: "not the author",
+		QuizID:   gocql.TimeUUID(),
+		Quiz: &model_cassandra.Quiz{
+			Author:      "someone or another",
+			QuizCore:    &model_cassandra.QuizCore{},
+			QuizID:      gocql.TimeUUID(),
+			IsPublished: false,
+			IsDeleted:   false,
+		},
+	})
 	require.Error(t, err, "quiz that does not exist")
 
 	expectedQuizzes := GetTestQuizzes()
@@ -220,8 +223,14 @@ func TestUpdateQuizQuery(t *testing.T) {
 			testCase.MarkingType = "updated marking type"
 			testCase.Questions[0].Description = "updated quiz description"
 
-			_, err = connection.db.Execute(UpdateQuizQuery, testCase)
-			if testCase.IsPublished {
+			req := &model_cassandra.QuizMutateRequest{
+				Username: testCase.Author,
+				QuizID:   testCase.QuizID,
+				Quiz:     testCase,
+			}
+
+			_, err = connection.db.Execute(UpdateQuizQuery, req)
+			if testCase.IsPublished || testCase.IsDeleted {
 				require.Error(t, err, "update to a published record should failed")
 				return
 			}
@@ -250,7 +259,7 @@ func TestDeleteQuizQuery(t *testing.T) {
 	insertTestQuizzes(t)
 
 	// Non-existent quiz.
-	_, errNonExistent := connection.db.Execute(DeleteQuizQuery, &model_cassandra.QuizDelPubRequest{
+	_, errNonExistent := connection.db.Execute(DeleteQuizQuery, &model_cassandra.QuizMutateRequest{
 		Username: "",
 		QuizID:   gocql.TimeUUID(),
 	})
@@ -259,7 +268,7 @@ func TestDeleteQuizQuery(t *testing.T) {
 	// Not owner deletion failures.
 	for key, testCase := range testQuizRecords {
 		t.Run(fmt.Sprintf("Test case %s", key), func(t *testing.T) {
-			req := model_cassandra.QuizDelPubRequest{
+			req := model_cassandra.QuizMutateRequest{
 				Username: testCase.Author + "no-owner",
 				QuizID:   testCase.QuizID,
 			}
@@ -271,7 +280,7 @@ func TestDeleteQuizQuery(t *testing.T) {
 	// Owner deletion success.
 	for key, testCase := range testQuizRecords {
 		t.Run(fmt.Sprintf("Test case %s", key), func(t *testing.T) {
-			req := model_cassandra.QuizDelPubRequest{
+			req := model_cassandra.QuizMutateRequest{
 				Username: testCase.Author,
 				QuizID:   testCase.QuizID,
 			}
@@ -300,7 +309,7 @@ func TestPublishQuizQuery(t *testing.T) {
 	insertTestQuizzes(t)
 
 	// Non-existent quiz.
-	_, errNonExistent := connection.db.Execute(PublishQuizQuery, &model_cassandra.QuizDelPubRequest{
+	_, errNonExistent := connection.db.Execute(PublishQuizQuery, &model_cassandra.QuizMutateRequest{
 		Username: "",
 		QuizID:   gocql.TimeUUID(),
 	})
@@ -309,7 +318,7 @@ func TestPublishQuizQuery(t *testing.T) {
 	// Not owner publish failures.
 	for key, testCase := range testQuizRecords {
 		t.Run(fmt.Sprintf("Test case %s", key), func(t *testing.T) {
-			req := model_cassandra.QuizDelPubRequest{
+			req := model_cassandra.QuizMutateRequest{
 				Username: testCase.Author + "no-owner",
 				QuizID:   testCase.QuizID,
 			}
@@ -321,7 +330,7 @@ func TestPublishQuizQuery(t *testing.T) {
 	// Owner publish success.
 	for key, testCase := range testQuizRecords {
 		t.Run(fmt.Sprintf("Test case %s", key), func(t *testing.T) {
-			req := model_cassandra.QuizDelPubRequest{
+			req := model_cassandra.QuizMutateRequest{
 				Username: testCase.Author,
 				QuizID:   testCase.QuizID,
 			}

@@ -147,22 +147,24 @@ func ReadQuizQuery(c Cassandra, params any) (response any, err error) {
 // Param: pointer to the quiz struct containing the query parameters
 func UpdateQuizQuery(c Cassandra, params any) (response any, err error) {
 	conn := c.(*cassandraImpl)
-	input := params.(*model_cassandra.Quiz)
+	input := params.(*model_cassandra.QuizMutateRequest)
 	resp := struct {
+		author      string
+		isDeleted   bool
 		isPublished bool
 	}{}
 
 	applied := false
-	if applied, err = conn.session.Query(model_cassandra.UpdateQuiz, input.Title, input.Questions, input.MarkingType, input.QuizID).ScanCAS(
-		&resp.isPublished); err != nil {
-		conn.logger.Error("failed to update quiz record", zap.Strings("Quiz info:", []string{input.QuizID.String(), input.Author}), zap.Error(err))
-		return nil, err
+	if applied, err = conn.session.Query(model_cassandra.UpdateQuiz, input.Quiz.Title, input.Quiz.Questions, input.Quiz.MarkingType, input.QuizID, input.Username).ScanCAS(
+		&resp.author, &resp.isDeleted, &resp.isPublished); err != nil {
+		conn.logger.Error("failed to update quiz record", zap.Strings("Quiz info:", []string{input.QuizID.String(), input.Username, input.Quiz.Author}), zap.Error(err))
+		return nil, NewError("failed to update quiz").internalError()
 	}
 
 	if !applied {
 		msg := "failed to update quiz, either it does not exist or is already published"
-		conn.logger.Error(msg, zap.Strings("Quiz info:", []string{input.Author, input.QuizID.String()}), zap.Error(err))
-		return nil, errors.New(msg)
+		conn.logger.Error(msg, zap.Strings("Quiz info:", []string{input.QuizID.String(), input.Username, input.Quiz.Author}), zap.Error(err))
+		return nil, NewError(msg).forbiddenError()
 	}
 
 	return nil, err
@@ -172,7 +174,7 @@ func UpdateQuizQuery(c Cassandra, params any) (response any, err error) {
 // Param: quiz id
 func DeleteQuizQuery(c Cassandra, params any) (response any, err error) {
 	conn := c.(*cassandraImpl)
-	input := params.(*model_cassandra.QuizDelPubRequest)
+	input := params.(*model_cassandra.QuizMutateRequest)
 	resp := struct {
 		author string
 	}{}
@@ -196,7 +198,7 @@ func DeleteQuizQuery(c Cassandra, params any) (response any, err error) {
 // Param: quiz id
 func PublishQuizQuery(c Cassandra, params any) (response any, err error) {
 	conn := c.(*cassandraImpl)
-	input := params.(*model_cassandra.QuizDelPubRequest)
+	input := params.(*model_cassandra.QuizMutateRequest)
 	resp := struct {
 		author    string
 		isDeleted bool
