@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/surahman/mcq-platform/pkg/cassandra"
 	"github.com/surahman/mcq-platform/pkg/logger"
-	model_cassandra "github.com/surahman/mcq-platform/pkg/model/cassandra"
+	"github.com/surahman/mcq-platform/pkg/model/cassandra"
 	"go.uber.org/zap"
 )
 
