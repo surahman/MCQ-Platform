@@ -10,17 +10,20 @@ The REST API schema can be tested and reviewed through the Swagger UI that is ex
 - [Error Response](#error-response)
 - [Success Response](#success-response)
 - [User Endpoints `/user/`](#user-endpoints-user)
-    - [Register](#register)
-    - [Login](#login)
-    - [Refresh](#refresh)
-    - [Delete](#delete)
+  - [Register](#register)
+  - [Login](#login)
+  - [Refresh](#refresh)
+  - [Delete](#delete)
 - [Quiz Endpoints `/quiz/`](#quiz-endpoints-quiz)
-    - [Create](#create)
-    - [View](#view)
-    - [Update](#update)
-    - [Delete](#delete)
-    - [Publish](#publish)
-    - [Take](#take)
+  - [Create](#create)
+  - [View](#view)
+  - [Update](#update)
+  - [Delete](#delete)
+  - [Publish](#publish)
+  - [Take](#take)
+- [Score Endpoints `/score/`](#score-endpoints-score)
+  - [Test](#test)
+  - [Stats](#stats)
 
 <br/>
 
@@ -265,3 +268,35 @@ _TODO: Result pagination._
 _Request:_ The Quiz ID must be supplied in the request URL.
 
 _Response:_ A success response containing a message with the scorecards in the payload. An example response is below.
+
+```json
+{
+  "message": "score cards",
+  "payload": [
+    {
+      "username": "username4",
+      "score": 0.4444,
+      "responses": [ [0, 1, 2], [1, 3] ],
+      "quiz_id": "0a704c4b-4ea2-11ed-bd5a-305a3a460e3e"
+    },
+    {
+      "username": "username3",
+      "score": 0.1111,
+      "responses": [ [0, 1, 2], [1, 3] ],
+      "quiz_id": "0a704c4b-4ea2-11ed-bd5a-305a3a460e3e"
+    },
+    {
+      "username": "username2",
+      "score": 0.2222,
+      "responses": [ [0, 1, 2], [1, 3] ],
+      "quiz_id": "0a704c4b-4ea2-11ed-bd5a-305a3a460e3e"
+    },
+    {
+      "username": "username1",
+      "score": 0.6666666666666666,
+      "responses": [ [0, 1, 2], [1, 3] ],
+      "quiz_id": "0a704c4b-4ea2-11ed-bd5a-305a3a460e3e"
+    }
+  ]
+}
+```
