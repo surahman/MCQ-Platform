@@ -10,11 +10,12 @@ below.
 <br/>
 
 **_TODO:_** _There are a number of items that I will complete as time permits:_
--[ ] REST API `score/stats` response pagination: The response to a stats request could contain far too many records to 
+
+- [ ] REST API `score/stats` response pagination: The response to a stats request could contain far too many records to 
      send back in a single request and must be paginated.
--[ ] Redis Cache: To improve the performance of the API, published tests should be cached with an eager write to cache, 
+- [ ] Redis Cache: To improve the performance of the API, published tests should be cached with an eager write to cache, 
      and lazy loading to the cache on misses.
--[ ] GraphQL: Essential for performance on bandwidth restricted connections.
+- [ ] GraphQL: Essential for performance on bandwidth restricted connections.
 
 <br/>
 
