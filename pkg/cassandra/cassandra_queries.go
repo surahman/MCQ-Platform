@@ -251,16 +251,17 @@ func CreateResponseQuery(c Cassandra, params any) (response any, err error) {
 // Return: address to a response record
 func ReadResponseQuery(c Cassandra, params any) (response any, err error) {
 	conn := c.(*cassandraImpl)
-	input := params.(*model_cassandra.Response)
+	input := params.(*model_cassandra.QuizMutateRequest)
 	resp := model_cassandra.Response{QuizResponse: &model_cassandra.QuizResponse{}}
 
 	if err = conn.session.Query(model_cassandra.ReadResponse, input.Username, input.QuizID).Scan(
 		&resp.Username, &resp.QuizID, &resp.Responses, &resp.Score); err != nil {
 		conn.logger.Error("failed to read response record",
 			zap.Strings("Response info:", []string{input.Username, input.QuizID.String()}), zap.Error(err))
+		return nil, NewError("score card not found").notFoundError()
 	}
 
-	return &resp, err
+	return &resp, nil
 }
 
 // ReadResponseStatisticsQuery will read all response records from the responses table corresponding to a Quiz ID.
