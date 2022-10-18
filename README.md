@@ -4,6 +4,8 @@ This is a demonstration project in `Golang` that provides an API for Tests and Q
 or ungraded with various marking types, please refer to the grading section below.
 
 The limitations on questions and answer options are superficial and are being enforced to demonstrate data validation.
+For details on the structure of the JSON requests and responses to the various endpoints, please see the REST API section
+below.
 
 <br/>
 
@@ -11,8 +13,8 @@ The limitations on questions and answer options are superficial and are being en
 -[ ] REST API `score/stats` response pagination: The response to a stats request could contain far too many records to 
      send back in a single request and must be paginated.
 -[ ] Redis Cache: To improve the performance of the API, published tests should be cached with an eager write to cache, 
-     and lazy loading on cache misses.
--[ ] GraphQL: For performance on bandwidth restricted connections this is essential.
+     and lazy loading to the cache on misses.
+-[ ] GraphQL: Essential for performance on bandwidth restricted connections.
 
 <br/>
 
@@ -53,8 +55,11 @@ Details on the HTTP endpoints can be found in their respective packages below.
 ### REST
 
 The HTTP endpoint details are located in the [`http_rest`](pkg/http/rest) package. The model used for REST API calls can
-be found in the [`model_http`](pkg/model/http). The REST API server does provide a Swagger UI to examine and test the API
-calls and details on request formats.
+be found in the [`model_http`](pkg/model/http).
+
+To review the REST API request and response formats please see the readme in the [`http_handlers`](pkg/http/rest/handlers)
+package. The REST API server does also provide a Swagger UI to examine and test the API calls with details on request
+formats.
 
 ### GraphQL
 
