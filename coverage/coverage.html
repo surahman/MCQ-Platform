@@ -83,7 +83,7 @@
 				
 				<option value="file13">github.com/surahman/mcq-platform/pkg/http/rest/handlers/score.go (100.0%)</option>
 				
-				<option value="file14">github.com/surahman/mcq-platform/pkg/http/rest/handlers/users.go (91.5%)</option>
+				<option value="file14">github.com/surahman/mcq-platform/pkg/http/rest/handlers/users.go (92.7%)</option>
 				
 				<option value="file15">github.com/surahman/mcq-platform/pkg/http/rest/rest.go (7.9%)</option>
 				
@@ -2153,33 +2153,29 @@ func RegisterUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra)
                 var user model_cassandra.UserAccount
 
                 if err = context.ShouldBindJSON(&amp;user); err != nil </span><span class="cov0" title="0">{
-                        context.JSON(http.StatusBadRequest, &amp;model_rest.Error{Message: err.Error()})
-                        context.Abort()
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: err.Error()})
                         return
                 }</span>
 
                 <span class="cov7" title="5">if err = validator.ValidateStruct(&amp;user); err != nil </span><span class="cov1" title="1">{
-                        context.JSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "validation", Payload: err})
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "validation", Payload: err})
                         return
                 }</span>
 
                 <span class="cov7" title="4">if user.Password, err = auth.HashPassword(user.Password); err != nil </span><span class="cov1" title="1">{
                         logger.Error("failure hashing password", zap.Error(err))
-                        context.JSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: err.Error()})
-                        context.Abort()
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: err.Error()})
                         return
                 }</span>
 
                 <span class="cov5" title="3">if _, err = db.Execute(cassandra.CreateUserQuery, &amp;model_cassandra.User{UserAccount: &amp;user}); err != nil </span><span class="cov1" title="1">{
-                        context.JSON(err.(*cassandra.Error).Status, &amp;model_rest.Error{Message: err.Error()})
-                        context.Abort()
+                        context.AbortWithStatusJSON(err.(*cassandra.Error).Status, &amp;model_rest.Error{Message: err.Error()})
                         return
                 }</span>
 
                 <span class="cov4" title="2">if authToken, err = auth.GenerateJWT(user.Username); err != nil </span><span class="cov1" title="1">{
                         logger.Error("failure generating JWT during account creation", zap.Error(err))
-                        context.JSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: err.Error()})
-                        context.Abort()
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: err.Error()})
                         return
                 }</span>
 
@@ -2208,8 +2204,7 @@ func LoginUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gi
                 var dbResponse any
 
                 if err = context.ShouldBindJSON(&amp;loginRequest); err != nil </span><span class="cov0" title="0">{
-                        context.JSON(http.StatusBadRequest, &amp;model_rest.Error{Message: err.Error()})
-                        context.Abort()
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: err.Error()})
                         return
                 }</span>
 
@@ -2219,22 +2214,19 @@ func LoginUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gi
                 }</span>
 
                 <span class="cov7" title="5">if dbResponse, err = db.Execute(cassandra.ReadUserQuery, loginRequest.Username); err != nil </span><span class="cov1" title="1">{
-                        context.JSON(http.StatusForbidden, &amp;model_rest.Error{Message: "invalid username or password"})
-                        context.Abort()
+                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_rest.Error{Message: "invalid username or password"})
                         return
                 }</span>
 
                 <span class="cov7" title="4">truth := dbResponse.(*model_cassandra.User)
                 if err = auth.CheckPassword(truth.Password, loginRequest.Password); err != nil || truth.IsDeleted </span><span class="cov4" title="2">{
-                        context.JSON(http.StatusForbidden, &amp;model_rest.Error{Message: "invalid username or password"})
-                        context.Abort()
+                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_rest.Error{Message: "invalid username or password"})
                         return
                 }</span>
 
                 <span class="cov4" title="2">if authToken, err = auth.GenerateJWT(loginRequest.Username); err != nil </span><span class="cov1" title="1">{
                         logger.Error("failure generating JWT during login", zap.Error(err))
-                        context.JSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: err.Error()})
-                        context.Abort()
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: err.Error()})
                         return
                 }</span>
 

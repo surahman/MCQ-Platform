@@ -37,33 +37,29 @@ func RegisterUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra)
 		var user model_cassandra.UserAccount
 
 		if err = context.ShouldBindJSON(&user); err != nil {
-			context.JSON(http.StatusBadRequest, &model_rest.Error{Message: err.Error()})
-			context.Abort()
+			context.AbortWithStatusJSON(http.StatusBadRequest, &model_rest.Error{Message: err.Error()})
 			return
 		}
 
 		if err = validator.ValidateStruct(&user); err != nil {
-			context.JSON(http.StatusBadRequest, &model_rest.Error{Message: "validation", Payload: err})
+			context.AbortWithStatusJSON(http.StatusBadRequest, &model_rest.Error{Message: "validation", Payload: err})
 			return
 		}
 
 		if user.Password, err = auth.HashPassword(user.Password); err != nil {
 			logger.Error("failure hashing password", zap.Error(err))
-			context.JSON(http.StatusInternalServerError, &model_rest.Error{Message: err.Error()})
-			context.Abort()
+			context.AbortWithStatusJSON(http.StatusInternalServerError, &model_rest.Error{Message: err.Error()})
 			return
 		}
 
 		if _, err = db.Execute(cassandra.CreateUserQuery, &model_cassandra.User{UserAccount: &user}); err != nil {
-			context.JSON(err.(*cassandra.Error).Status, &model_rest.Error{Message: err.Error()})
-			context.Abort()
+			context.AbortWithStatusJSON(err.(*cassandra.Error).Status, &model_rest.Error{Message: err.Error()})
 			return
 		}
 
 		if authToken, err = auth.GenerateJWT(user.Username); err != nil {
 			logger.Error("failure generating JWT during account creation", zap.Error(err))
-			context.JSON(http.StatusInternalServerError, &model_rest.Error{Message: err.Error()})
-			context.Abort()
+			context.AbortWithStatusJSON(http.StatusInternalServerError, &model_rest.Error{Message: err.Error()})
 			return
 		}
 
@@ -92,8 +88,7 @@ func LoginUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gi
 		var dbResponse any
 
 		if err = context.ShouldBindJSON(&loginRequest); err != nil {
-			context.JSON(http.StatusBadRequest, &model_rest.Error{Message: err.Error()})
-			context.Abort()
+			context.AbortWithStatusJSON(http.StatusBadRequest, &model_rest.Error{Message: err.Error()})
 			return
 		}
 
@@ -103,22 +98,19 @@ func LoginUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gi
 		}
 
 		if dbResponse, err = db.Execute(cassandra.ReadUserQuery, loginRequest.Username); err != nil {
-			context.JSON(http.StatusForbidden, &model_rest.Error{Message: "invalid username or password"})
-			context.Abort()
+			context.AbortWithStatusJSON(http.StatusForbidden, &model_rest.Error{Message: "invalid username or password"})
 			return
 		}
 
 		truth := dbResponse.(*model_cassandra.User)
 		if err = auth.CheckPassword(truth.Password, loginRequest.Password); err != nil || truth.IsDeleted {
-			context.JSON(http.StatusForbidden, &model_rest.Error{Message: "invalid username or password"})
-			context.Abort()
+			context.AbortWithStatusJSON(http.StatusForbidden, &model_rest.Error{Message: "invalid username or password"})
 			return
 		}
 
 		if authToken, err = auth.GenerateJWT(loginRequest.Username); err != nil {
 			logger.Error("failure generating JWT during login", zap.Error(err))
-			context.JSON(http.StatusInternalServerError, &model_rest.Error{Message: err.Error()})
-			context.Abort()
+			context.AbortWithStatusJSON(http.StatusInternalServerError, &model_rest.Error{Message: err.Error()})
 			return
 		}
 
