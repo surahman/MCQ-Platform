@@ -17,7 +17,7 @@ import (
 	"github.com/surahman/mcq-platform/pkg/constants"
 	"github.com/surahman/mcq-platform/pkg/mocks"
 	"github.com/surahman/mcq-platform/pkg/model/cassandra"
-	model_rest "github.com/surahman/mcq-platform/pkg/model/http"
+	"github.com/surahman/mcq-platform/pkg/model/http"
 )
 
 func TestRegisterUser(t *testing.T) {
