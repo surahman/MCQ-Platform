@@ -128,7 +128,7 @@ func (s *HttpRest) initialize() {
 	userGroup.Use(authMiddleware).DELETE("/delete", http_handlers.DeleteUser(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 
 	scoreGroup := api.Group("/score").Use(authMiddleware)
-	scoreGroup.GET("/test/:quiz_id", http_handlers.GetScore)
+	scoreGroup.GET("/test/:quiz_id", http_handlers.GetScore(s.logger, s.auth, s.db))
 	scoreGroup.GET("/stats/:quiz_id", http_handlers.GetStats)
 
 	quizGroup := api.Group("/quiz").Use(authMiddleware)
