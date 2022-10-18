@@ -10,6 +10,11 @@ override the settings in the configuration files. The configuration files are al
 
 ## Table of contents
 
+- [File Location(s)](#file-locations)
+- [Configuration File](#configuration-file)
+    - [Example Configuration File](#example-configuration-file)
+    - [Example Environment Variables](#example-environment-variables)
+- [Swagger UI](#swagger-ui)
 
 <br/>
 
