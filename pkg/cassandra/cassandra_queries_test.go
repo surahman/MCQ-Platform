@@ -384,11 +384,9 @@ func TestReadResponseQuery(t *testing.T) {
 	insertTestResponses(t)
 
 	// Non-existent Response.
-	nonExistentResponse := &model_cassandra.Response{
-		Username:     "user-1",
-		Score:        0,
-		QuizResponse: nil,
-		QuizID:       gocql.TimeUUID(),
+	nonExistentResponse := &model_cassandra.QuizMutateRequest{
+		Username: "user-1",
+		QuizID:   gocql.TimeUUID(),
 	}
 	_, err := connection.db.Execute(ReadResponseQuery, nonExistentResponse)
 	require.Error(t, err, "user response that does not exist")
@@ -396,7 +394,11 @@ func TestReadResponseQuery(t *testing.T) {
 	// Username and quiz id collisions.
 	for key, testCase := range testResponseRecords {
 		t.Run(fmt.Sprintf("Test case %s", key), func(t *testing.T) {
-			resp, err := connection.db.Execute(ReadResponseQuery, testCase)
+			request := &model_cassandra.QuizMutateRequest{
+				Username: testCase.Username,
+				QuizID:   testCase.QuizID,
+			}
+			resp, err := connection.db.Execute(ReadResponseQuery, request)
 			require.NoError(t, err)
 			actual := resp.(*model_cassandra.Response)
 			require.Truef(t, reflect.DeepEqual(testCase, actual), "expected response, %v, does not match actual, %v", testCase, actual)
