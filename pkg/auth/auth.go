@@ -17,11 +17,25 @@ import (
 
 // Auth is the interface through which the authorization operations can be accessed. Created to support mock testing.
 type Auth interface {
+	// HashPassword will take a plaintext string and generate a hashed representation of it.
 	HashPassword(string) (string, error)
+
+	// CheckPassword will take the plaintext and hashed passwords as input, in that order, and verify if they match.
 	CheckPassword(string, string) error
+
+	// GenerateJWT will create a valid JSON Web Token and return it in a JWT Authorization Response structure.
 	GenerateJWT(string) (*model_rest.JWTAuthResponse, error)
+
+	// ValidateJWT will take the JSON Web Token and validate it. It will extract and return the username and expiration
+	// time (Unix timestamp) or an error if validation fails.
 	ValidateJWT(string) (string, int64, error)
+
+	// RefreshJWT will take a valid JSON Web Token, and if valid and expiring soon, issue a fresh valid JWT with the time
+	// extended in JWT Authorization Response structure.
 	RefreshJWT(string) (*model_rest.JWTAuthResponse, error)
+
+	// RefreshThreshold returns the time before the end of the JSON Web Tokens validity interval that a JWT can be
+	// refreshed in.
 	RefreshThreshold() int64
 }
 
