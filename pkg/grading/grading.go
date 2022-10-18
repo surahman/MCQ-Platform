@@ -14,6 +14,7 @@ import (
 
 // Grading is the interface through which the test grading is facilitated. Created to support mock testing.
 type Grading interface {
+	// Grade will take grade or mark a quiz response using the answer key provided by the actual quiz.
 	Grade(*model_cassandra.QuizResponse, *model_cassandra.QuizCore) (float64, error)
 }
 
