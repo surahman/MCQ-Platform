@@ -1,5 +1,18 @@
 # Multiple Choice Question Platform
 
+This is a demonstration project in `Golang` that provides an API for Tests and Questionnaires. The tests can be graded
+or ungraded with various marking types, please refer to the grading section below.
+
+The limitations on questions and answer options are superficial and are being enforced to demonstrate data validation.
+
+<br/>
+
+**_TODO:_** _There are a number of items that I will complete as time permits:_
+-[ ] REST API `score/stats` response pagination: The response to a stats request could contain far too many records to 
+     send back in a single request and must be paginated.
+-[ ] Redis Cache: To improve the performance of the API, published tests should be cached with an eager write to cache, 
+     and lazy loading on cache misses.
+-[ ] GraphQL: For performance on bandwidth restricted connections this is essential.
 
 <br/>
 
@@ -15,10 +28,20 @@ Information regarding authentication configurations can be found in the [`auth`]
 
 <br/>
 
+## Grading
+
+Responses can be graded or ungraded. Details on the grading schemes can be viewed from the [`grading`](pkg/grading) package.
+
+<br/>
+
 ## Cassandra
 
 Information on how to configure the Apache Cassandra connection can be found in the [`cassandra`](pkg/cassandra) package.
 Details on the scheme used as well as the design and technical decisions taken can be found in the
+[`model_cassandra`](pkg/model/cassandra) package.
+
+A docker-compose file is provided to bring up the necessary services, including a Cassandra single-node cluster. The
+keyspace and schema will need to be deployed to the cluster manually. CQL statements to achieve this are located in the
 [`model_cassandra`](pkg/model/cassandra) package.
 
 <br/>
@@ -36,12 +59,6 @@ calls and details on request formats.
 ### GraphQL
 
 Coming soon.
-
-<br/>
-
-## Grading
-
-Responses can be graded or ungraded. Details on the grading schemes can be viewed from the [`grading`](pkg/grading) package.
 
 <br/>
 
