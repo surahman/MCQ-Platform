@@ -21,8 +21,13 @@ import (
 
 // Cassandra is the interface through which the cluster can be accessed. Created to support mock testing.
 type Cassandra interface {
+	// Open will create a connection pool and establish a connection to the database backend.
 	Open() error
+
+	// Close will shut down the connection pool and ensure that the connection to the database backend is terminated correctly.
 	Close() error
+
+	// Execute will execute statements or run a lightweight transaction on the database backend, leveraging the connection pool.
 	Execute(func(Cassandra, any) (any, error), any) (any, error)
 }
 
