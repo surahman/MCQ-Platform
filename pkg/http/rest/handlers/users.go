@@ -150,35 +150,31 @@ func LoginRefresh(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra,
 		originalToken := context.GetHeader(authHeaderKey)
 
 		if username, expiresAt, err = auth.ValidateJWT(originalToken); err != nil {
-			context.JSON(http.StatusForbidden, &model_rest.Error{Message: err.Error()})
-			context.Abort()
+			context.AbortWithStatusJSON(http.StatusForbidden, &model_rest.Error{Message: err.Error()})
 			return
 		}
 
 		if dbResponse, err = db.Execute(cassandra.ReadUserQuery, username); err != nil {
 			logger.Warn("failed to read user record for a valid JWT", zap.String("username", username), zap.Error(err))
-			context.JSON(http.StatusInternalServerError, &model_rest.Error{Message: "please retry your request later"})
-			context.Abort()
+			context.AbortWithStatusJSON(http.StatusInternalServerError, &model_rest.Error{Message: "please retry your request later"})
 			return
 		}
 
 		if dbResponse.(*model_cassandra.User).IsDeleted {
 			logger.Warn("attempt to refresh a JWT for a deleted user", zap.String("username", username))
-			context.JSON(http.StatusForbidden, &model_rest.Error{Message: "invalid token"})
-			context.Abort()
+			context.AbortWithStatusJSON(http.StatusForbidden, &model_rest.Error{Message: "invalid token"})
 			return
 		}
 
 		// Do not refresh tokens that have more than a minute left to expire.
 		if math.Abs(float64(time.Now().Unix()-expiresAt)) > float64(auth.RefreshThreshold()) {
-			context.JSON(http.StatusNotExtended, &model_rest.Error{Message: "JWT is still valid for more than 60 seconds"})
+			context.AbortWithStatusJSON(http.StatusNotExtended, &model_rest.Error{Message: "JWT is still valid for more than 60 seconds"})
 			return
 		}
 
 		if freshToken, err = auth.GenerateJWT(username); err != nil {
 			logger.Error("failure generating JWT during token refresh", zap.Error(err))
-			context.JSON(http.StatusInternalServerError, &model_rest.Error{Message: err.Error()})
-			context.Abort()
+			context.AbortWithStatusJSON(http.StatusInternalServerError, &model_rest.Error{Message: err.Error()})
 			return
 		}
 
@@ -210,41 +206,36 @@ func DeleteUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, a
 
 		// Get the delete request from the message body and validate it.
 		if err = context.ShouldBindJSON(&deleteRequest); err != nil {
-			context.JSON(http.StatusBadRequest, &model_rest.Error{Message: err.Error()})
-			context.Abort()
+			context.AbortWithStatusJSON(http.StatusBadRequest, &model_rest.Error{Message: err.Error()})
 			return
 		}
 
 		if err = validator.ValidateStruct(&deleteRequest); err != nil {
-			context.JSON(http.StatusBadRequest, &model_rest.Error{Message: "validation", Payload: err})
+			context.AbortWithStatusJSON(http.StatusBadRequest, &model_rest.Error{Message: "validation", Payload: err})
 			return
 		}
 
 		// Validate the JWT and extract the username, compare the username against the deletion request login credentials.
 		if username, _, err = auth.ValidateJWT(jwt); err != nil {
-			context.JSON(http.StatusForbidden, &model_rest.Error{Message: err.Error()})
-			context.Abort()
+			context.AbortWithStatusJSON(http.StatusForbidden, &model_rest.Error{Message: err.Error()})
 			return
 		}
 
 		if username != deleteRequest.Username {
-			context.JSON(http.StatusForbidden, &model_rest.Error{Message: "invalid deletion request"})
-			context.Abort()
+			context.AbortWithStatusJSON(http.StatusForbidden, &model_rest.Error{Message: "invalid deletion request"})
 			return
 		}
 
 		// Check confirmation message.
 		if fmt.Sprintf(constants.GetDeleteUserAccountConfirmation(), username) != deleteRequest.Confirmation {
-			context.JSON(http.StatusBadRequest, &model_rest.Error{Message: "incorrect or incomplete deletion request confirmation"})
-			context.Abort()
+			context.AbortWithStatusJSON(http.StatusBadRequest, &model_rest.Error{Message: "incorrect or incomplete deletion request confirmation"})
 			return
 		}
 
 		// Get user record.
 		if dbResponse, err = db.Execute(cassandra.ReadUserQuery, username); err != nil {
 			logger.Warn("failed to read user record during an account deletion request", zap.String("username", username), zap.Error(err))
-			context.JSON(http.StatusInternalServerError, &model_rest.Error{Message: "please retry your request later"})
-			context.Abort()
+			context.AbortWithStatusJSON(http.StatusInternalServerError, &model_rest.Error{Message: "please retry your request later"})
 			return
 		}
 		truth := dbResponse.(*model_cassandra.User)
@@ -252,22 +243,19 @@ func DeleteUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, a
 		// Check to make sure the account is not already deleted.
 		if truth.IsDeleted {
 			logger.Warn("attempt to delete an already deleted user account", zap.String("username", username))
-			context.JSON(http.StatusForbidden, &model_rest.Error{Message: "user account is already deleted"})
-			context.Abort()
+			context.AbortWithStatusJSON(http.StatusForbidden, &model_rest.Error{Message: "user account is already deleted"})
 			return
 		}
 
 		if err = auth.CheckPassword(truth.Password, deleteRequest.Password); err != nil {
-			context.JSON(http.StatusForbidden, &model_rest.Error{Message: "invalid username or password"})
-			context.Abort()
+			context.AbortWithStatusJSON(http.StatusForbidden, &model_rest.Error{Message: "invalid username or password"})
 			return
 		}
 
 		// Mark account as deleted.
 		if _, err = db.Execute(cassandra.DeleteUserQuery, username); err != nil {
 			logger.Warn("failed to mark a user record as deleted", zap.String("username", username), zap.Error(err))
-			context.JSON(http.StatusInternalServerError, &model_rest.Error{Message: "please retry your request later"})
-			context.Abort()
+			context.AbortWithStatusJSON(http.StatusInternalServerError, &model_rest.Error{Message: "please retry your request later"})
 			return
 		}
 

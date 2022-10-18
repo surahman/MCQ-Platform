@@ -52,7 +52,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "description": "The Quiz to be created as unpublished",
-                        "name": "answers",
+                        "name": "quiz",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -62,12 +62,18 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "The message will contain the Test ID of the newly generated quiz",
+                        "description": "The message will contain the Quiz ID of the newly generated quiz",
                         "schema": {
                             "$ref": "#/definitions/model_rest.Success"
                         }
                     },
                     "400": {
+                        "description": "Error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/model_rest.Error"
+                        }
+                    },
+                    "409": {
                         "description": "Error message with any available details in payload",
                         "schema": {
                             "$ref": "#/definitions/model_rest.Error"
@@ -82,14 +88,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/quiz/delete/{test_id}": {
+        "/quiz/delete/{quiz_id}": {
             "delete": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "This endpoint will delete a quiz with the provided Test ID if it was created by the requester.",
+                "description": "This endpoint will mark a quiz as delete if it was created by the requester. The provided Test ID is provided is a path parameter.",
                 "consumes": [
                     "application/json"
                 ],
@@ -105,7 +111,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "The Test ID for the quiz being deleted.",
-                        "name": "test_id",
+                        "name": "quiz_id",
                         "in": "path",
                         "required": true
                     }
@@ -117,13 +123,7 @@ const docTemplate = `{
                             "$ref": "#/definitions/model_rest.Success"
                         }
                     },
-                    "401": {
-                        "description": "Error message with any available details in payload",
-                        "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
-                        }
-                    },
-                    "404": {
+                    "403": {
                         "description": "Error message with any available details in payload",
                         "schema": {
                             "$ref": "#/definitions/model_rest.Error"
@@ -138,8 +138,8 @@ const docTemplate = `{
                 }
             }
         },
-        "/quiz/publish/{test_id}": {
-            "put": {
+        "/quiz/publish/{quiz_id}": {
+            "patch": {
                 "security": [
                     {
                         "ApiKeyAuth": []
@@ -161,7 +161,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "The Test ID for the quiz being published.",
-                        "name": "test_id",
+                        "name": "quiz_id",
                         "in": "path",
                         "required": true
                     }
@@ -173,13 +173,7 @@ const docTemplate = `{
                             "$ref": "#/definitions/model_rest.Success"
                         }
                     },
-                    "401": {
-                        "description": "Error message with any available details in payload",
-                        "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
-                        }
-                    },
-                    "404": {
+                    "403": {
                         "description": "Error message with any available details in payload",
                         "schema": {
                             "$ref": "#/definitions/model_rest.Error"
@@ -194,7 +188,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/quiz/take/{test_id}": {
+        "/quiz/take/{quiz_id}": {
             "post": {
                 "security": [
                     {
@@ -217,7 +211,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "The Test ID for the answers being submitted.",
-                        "name": "test_id",
+                        "name": "quiz_id",
                         "in": "path",
                         "required": true
                     },
@@ -244,13 +238,7 @@ const docTemplate = `{
                             "$ref": "#/definitions/model_rest.Error"
                         }
                     },
-                    "401": {
-                        "description": "Error message with any available details in payload",
-                        "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
-                        }
-                    },
-                    "404": {
+                    "403": {
                         "description": "Error message with any available details in payload",
                         "schema": {
                             "$ref": "#/definitions/model_rest.Error"
@@ -265,8 +253,8 @@ const docTemplate = `{
                 }
             }
         },
-        "/quiz/update/{test_id}": {
-            "put": {
+        "/quiz/update/{quiz_id}": {
+            "patch": {
                 "security": [
                     {
                         "ApiKeyAuth": []
@@ -288,13 +276,13 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "The Test ID for the quiz being updated.",
-                        "name": "test_id",
+                        "name": "quiz_id",
                         "in": "path",
                         "required": true
                     },
                     {
                         "description": "The Quiz to replace the one already submitted",
-                        "name": "answers",
+                        "name": "quiz",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -315,10 +303,54 @@ const docTemplate = `{
                             "$ref": "#/definitions/model_rest.Error"
                         }
                     },
-                    "401": {
+                    "403": {
                         "description": "Error message with any available details in payload",
                         "schema": {
                             "$ref": "#/definitions/model_rest.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/model_rest.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/quiz/view/{quiz_id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "This endpoint will retrieve a quiz with a provided quiz ID if it is published.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "view test quiz"
+                ],
+                "summary": "View a quiz.",
+                "operationId": "viewQuiz",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The quiz ID for the quiz being requested.",
+                        "name": "quiz_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The message will contain the quiz ID and the payload will contain the quiz",
+                        "schema": {
+                            "$ref": "#/definitions/model_rest.Success"
                         }
                     },
                     "403": {
@@ -342,69 +374,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/quiz/view/{test_id}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "This endpoint will retrieve a quiz with a provided Test ID if it is published.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "view test quiz"
-                ],
-                "summary": "View a quiz.",
-                "operationId": "viewQuiz",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "The Test ID for the quiz being requested.",
-                        "name": "test_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The message will contain the Test ID and the payload will contain the quiz",
-                        "schema": {
-                            "$ref": "#/definitions/model_rest.Success"
-                        }
-                    },
-                    "400": {
-                        "description": "Error message with any available details in payload",
-                        "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
-                        }
-                    },
-                    "401": {
-                        "description": "Error message with any available details in payload",
-                        "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
-                        }
-                    },
-                    "404": {
-                        "description": "Error message with any available details in payload",
-                        "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
-                        }
-                    },
-                    "500": {
-                        "description": "Error message with any available details in payload",
-                        "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
-                        }
-                    }
-                }
-            }
-        },
-        "/score/stats/{test_id}": {
+        "/score/stats/{quiz_id}": {
             "get": {
                 "security": [
                     {
@@ -427,7 +397,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "The Test ID for the requested statistics.",
-                        "name": "test_id",
+                        "name": "quiz_id",
                         "in": "path",
                         "required": true
                     }
@@ -466,7 +436,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/score/test/{test_id}": {
+        "/score/test/{quiz_id}": {
             "get": {
                 "security": [
                     {
@@ -489,7 +459,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "The Test ID for the requested scorecard.",
-                        "name": "test_id",
+                        "name": "quiz_id",
                         "in": "path",
                         "required": true
                     }
@@ -784,20 +754,7 @@ const docTemplate = `{
                 "title"
             ],
             "properties": {
-                "questions": {
-                    "description": "A list of questions in the quiz.",
-                    "type": "array",
-                    "maxItems": 10,
-                    "minItems": 1,
-                    "items": {
-                        "$ref": "#/definitions/model_cassandra.Question"
-                    }
-                },
-                "title": {
-                    "description": "The title description of the quiz.",
-                    "type": "string"
-                },
-                "type": {
+                "marking_type": {
                     "description": "Marking scheme type can be not marked, negative marking, or all or nothing.",
                     "type": "string",
                     "enum": [
@@ -810,6 +767,19 @@ const docTemplate = `{
                         "Binary",
                         "binary"
                     ]
+                },
+                "questions": {
+                    "description": "A list of questions in the quiz.",
+                    "type": "array",
+                    "maxItems": 10,
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/model_cassandra.Question"
+                    }
+                },
+                "title": {
+                    "description": "The title description of the quiz.",
+                    "type": "string"
                 }
             }
         },

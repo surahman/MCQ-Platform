@@ -44,3 +44,9 @@ func (err *Error) conflictError() *Error {
 	err.Status = http.StatusConflict
 	return err
 }
+
+// forbiddenError sets the HTTP Forbidden status code.
+func (err *Error) forbiddenError() *Error {
+	err.Status = http.StatusForbidden
+	return err
+}

@@ -14,12 +14,12 @@ import (
 // @Accept      json
 // @Produce     json
 // @Security    ApiKeyAuth
-// @Param       test_id path     string             true "The Test ID for the requested scorecard."
+// @Param       quiz_id path     string             true "The Test ID for the requested scorecard."
 // @Success     200     {object} model_rest.Success "Score will be in the payload"
 // @Failure     400     {object} model_rest.Error   "Error message with any available details in payload"
 // @Failure     404     {object} model_rest.Error   "Error message with any available details in payload"
 // @Failure     500     {object} model_rest.Error   "Error message with any available details in payload"
-// @Router      /score/test/{test_id} [get]
+// @Router      /score/test/{quiz_id} [get]
 func GetScore(context *gin.Context) {
 	context.JSON(http.StatusNotImplemented, nil)
 }
@@ -33,13 +33,13 @@ func GetScore(context *gin.Context) {
 // @Accept      json
 // @Produce     json
 // @Security    ApiKeyAuth
-// @Param       test_id path     string             true "The Test ID for the requested statistics."
+// @Param       quiz_id path     string             true "The Test ID for the requested statistics."
 // @Success     200     {object} model_rest.Success "Statistics will be in the payload"
 // @Failure     400     {object} model_rest.Error   "Error message with any available details in payload"
 // @Failure     401     {object} model_rest.Error   "Error message with any available details in payload"
 // @Failure     404     {object} model_rest.Error   "Error message with any available details in payload"
 // @Failure     500     {object} model_rest.Error   "Error message with any available details in payload"
-// @Router      /score/stats/{test_id} [get]
+// @Router      /score/stats/{quiz_id} [get]
 func GetStats(context *gin.Context) {
 	context.JSON(http.StatusNotImplemented, nil)
 }

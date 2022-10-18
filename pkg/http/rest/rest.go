@@ -128,14 +128,14 @@ func (s *HttpRest) initialize() {
 	userGroup.Use(authMiddleware).DELETE("/delete", http_handlers.DeleteUser(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 
 	scoreGroup := api.Group("/score").Use(authMiddleware)
-	scoreGroup.GET("/test/:test_id", http_handlers.GetScore)
-	scoreGroup.GET("/stats/:test_id", http_handlers.GetStats)
+	scoreGroup.GET("/test/:quiz_id", http_handlers.GetScore)
+	scoreGroup.GET("/stats/:quiz_id", http_handlers.GetStats)
 
 	quizGroup := api.Group("/quiz").Use(authMiddleware)
-	quizGroup.GET("/view/:test_id", http_handlers.ViewQuiz)
-	quizGroup.POST("/create", http_handlers.CreateQuiz)
-	quizGroup.PUT("/update/:test_id", http_handlers.UpdateQuiz)
-	quizGroup.DELETE("/delete/:test_id", http_handlers.DeleteQuiz)
-	quizGroup.PUT("/publish/:test_id", http_handlers.PublishQuiz)
-	quizGroup.POST("/take/:test_id", http_handlers.TakeQuiz)
+	quizGroup.GET("/view/:quiz_id", http_handlers.ViewQuiz(s.logger, s.auth, s.db))
+	quizGroup.POST("/create", http_handlers.CreateQuiz(s.logger, s.auth, s.db))
+	quizGroup.PATCH("/update/:quiz_id", http_handlers.UpdateQuiz(s.logger, s.auth, s.db))
+	quizGroup.DELETE("/delete/:quiz_id", http_handlers.DeleteQuiz(s.logger, s.auth, s.db))
+	quizGroup.PATCH("/publish/:quiz_id", http_handlers.PublishQuiz(s.logger, s.auth, s.db))
+	quizGroup.POST("/take/:quiz_id", http_handlers.TakeQuiz(s.logger, s.auth, s.db, s.grading))
 }
