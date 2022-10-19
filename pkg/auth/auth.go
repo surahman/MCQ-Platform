@@ -1,7 +1,12 @@
 package auth
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
+	"encoding/base64"
 	"errors"
+	"io"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -44,8 +49,9 @@ var _ Auth = &authImpl{}
 
 // authImpl implements the Auth interface and contains the logic for authorization functionality.
 type authImpl struct {
-	conf   *config
-	logger *logger.Logger
+	cryptoSecret []byte
+	conf         *config
+	logger       *logger.Logger
 }
 
 // NewAuth will create a new Authorization configuration by loading it.
@@ -63,6 +69,8 @@ func newAuthImpl(fs *afero.Fs, logger *logger.Logger) (a *authImpl, err error) {
 		a.logger.Error("failed to load Authorization configurations from disk", zap.Error(err))
 		return nil, err
 	}
+	a.cryptoSecret = []byte(a.conf.General.CryptoSecret)
+
 	return
 }
 
@@ -159,4 +167,62 @@ func (a *authImpl) RefreshJWT(token string) (authResponse *model_rest.JWTAuthRes
 // RefreshThreshold is the seconds before expiration that a JWT can be refreshed in.
 func (a *authImpl) RefreshThreshold() int64 {
 	return a.conf.JWTConfig.RefreshThreshold
+}
+
+// encryptAES256 employs Authenticated Encryption with Associated Data using Galois/Counter mode and returns the cipher
+// bytes and optionally a Base64 encoded string of the cipher bytes to be used in URIs.
+func (a *authImpl) encryptAES256(data []byte, toString bool) (cipherStr string, cipherBytes []byte, err error) {
+	var cipherBlock cipher.Block
+	var gcm cipher.AEAD
+
+	if cipherBlock, err = aes.NewCipher(a.cryptoSecret); err != nil {
+		return
+	}
+
+	if gcm, err = cipher.NewGCM(cipherBlock); err != nil {
+		return
+	}
+
+	nonce := make([]byte, gcm.NonceSize())
+	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
+		return
+	}
+
+	// Encrypt to cipher text.
+	cipherBytes = gcm.Seal(nonce, nonce, data, nil)
+
+	// Only convert to base64 if requested to save compute time.
+	if toString {
+		cipherStr = base64.URLEncoding.EncodeToString(cipherBytes)
+	}
+
+	return
+}
+
+// decryptAES256 employs Authenticated Encryption with Associated Data using Galois/Counter mode and returns the
+// decrypted plaintext bytes.
+func (a *authImpl) decryptAES256(data []byte) (cipherBytes []byte, err error) {
+	var cipherBlock cipher.Block
+	var gcm cipher.AEAD
+	var nonceSize int
+
+	if cipherBlock, err = aes.NewCipher(a.cryptoSecret); err != nil {
+		return
+	}
+
+	if gcm, err = cipher.NewGCM(cipherBlock); err != nil {
+		return
+	}
+
+	if nonceSize = gcm.NonceSize(); nonceSize < 0 {
+		return nil, errors.New("bad nonce size")
+	}
+
+	// Extract the nonce and cipher blocks from the data.
+	nonce, cipherText := data[:nonceSize], data[nonceSize:]
+
+	// Decrypt cipher text.
+	cipherBytes, err = gcm.Open(nil, nonce, cipherText, nil)
+
+	return
 }
