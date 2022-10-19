@@ -30,6 +30,36 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/health": {
+            "get": {
+                "description": "This endpoint is exposed to allow load balancers etc. to check the health of the service.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health healthcheck liveness"
+                ],
+                "summary": "Healthcheck for service liveness.",
+                "operationId": "healthcheck",
+                "responses": {
+                    "200": {
+                        "description": "message: healthy",
+                        "schema": {
+                            "$ref": "#/definitions/model_rest.Success"
+                        }
+                    },
+                    "503": {
+                        "description": "error message with any available details",
+                        "schema": {
+                            "$ref": "#/definitions/model_rest.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/quiz/create/": {
             "post": {
                 "security": [
