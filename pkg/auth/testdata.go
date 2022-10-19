@@ -103,7 +103,7 @@ jwt:
   refresh_threshold: 60
 general:
   bcrypt_cost: 8
-  crypto_secret: Xp2s5v8`,
+  crypto_secret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z`,
 
 		"crypto_key_too_long": `
 jwt:

@@ -51,6 +51,7 @@ The expected file name is `AuthConfig.yaml`. All the configuration items below a
 | ↳ refresh_threshold   | ↳ `.REFRESH_THRESHOLD`   | int64                         | The seconds before expiration that a JSON Web Token can be refreshed before.                                         |
 | **_General_**         | `AUTH_CONFIG `           | **_General Configurations._** | **_Parent key for general authentication configurations._**                                                          |
 | ↳ bcrypt_cost         | ↳ `.BCRYPT_COST`         | int                           | The [cost](https://pkg.go.dev/golang.org/x/crypto/bcrypt#pkg-constants) value that is used for the BCrypt algorithm. |
+| ↳ crypto_secret       | ↳ `.CRYPTO_SECRET`       | string                        | A 32 character secret key to be used for AES256 encryption and decryption.                                           |
 
 #### Example Configuration File
 

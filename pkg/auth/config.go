@@ -17,7 +17,7 @@ type config struct {
 	} `json:"jwt,omitempty" yaml:"jwt,omitempty" mapstructure:"jwt" validate:"required"`
 	General struct {
 		BcryptCost   int    `json:"bcrypt_cost,omitempty" yaml:"bcrypt_cost,omitempty" mapstructure:"bcrypt_cost" validate:"required,min=4,max=31"`
-		CryptoSecret string `json:"crypto_secret,omitempty" yaml:"crypto_secret,omitempty" mapstructure:"crypto_secret" validate:"required,min=8,max=32"`
+		CryptoSecret string `json:"crypto_secret,omitempty" yaml:"crypto_secret,omitempty" mapstructure:"crypto_secret" validate:"required,len=32"`
 	} `json:"general,omitempty" yaml:"general,omitempty" mapstructure:"general" validate:"required"`
 }
 
