@@ -349,3 +349,27 @@ func TestAuthImpl_encryptAES256_and_decryptAES256(t *testing.T) {
 		})
 	}
 }
+
+func TestAuthImpl_Encrypt_Decrypt_String(t *testing.T) {
+	toEncrypt := "this is a text string to be encrypted/decrypted"
+
+	ciphertext, err := testAuth.EncryptToString([]byte(toEncrypt))
+	require.NoError(t, err, "encrypt to string failed")
+	require.True(t, len(ciphertext) > 0, "encrypted string is empty")
+
+	plaintext, err := testAuth.DecryptFromString(ciphertext)
+	require.NoError(t, err, "encrypt from string failed")
+	require.Equal(t, toEncrypt, string(plaintext), "decrypted string does not match original")
+}
+
+func TestAuthImpl_Encrypt_Decrypt_Bytes(t *testing.T) {
+	toEncrypt := []byte("this is a text string to be encrypted/decrypted")
+
+	ciphertext, err := testAuth.EncryptToBytes(toEncrypt)
+	require.NoError(t, err, "encrypt to bytes failed")
+	require.True(t, len(ciphertext) > 0, "encrypted bytes array is empty")
+
+	plaintext, err := testAuth.DecryptFromBytes(ciphertext)
+	require.NoError(t, err, "encrypt from string failed")
+	require.Equal(t, toEncrypt, plaintext, "decrypted bytes array does not match original")
+}

@@ -42,6 +42,18 @@ type Auth interface {
 	// RefreshThreshold returns the time before the end of the JSON Web Tokens validity interval that a JWT can be
 	// refreshed in.
 	RefreshThreshold() int64
+
+	// EncryptToString will generate an encrypted base64 encoded character from the plaintext.
+	EncryptToString([]byte) (string, error)
+
+	// EncryptToBytes will generate an encrypted byte array from the plaintext.
+	EncryptToBytes([]byte) ([]byte, error)
+
+	// DecryptFromString will decrypt an encrypted base64 encoded character from the ciphertext.
+	DecryptFromString(string) ([]byte, error)
+
+	// DecryptFromBytes will decrypt an encrypted base64 encoded character from the plaintext.
+	DecryptFromBytes([]byte) ([]byte, error)
 }
 
 // Check to ensure the Auth interface has been implemented.
@@ -225,4 +237,30 @@ func (a *authImpl) decryptAES256(data []byte) (cipherBytes []byte, err error) {
 	cipherBytes, err = gcm.Open(nil, nonce, cipherText, nil)
 
 	return
+}
+
+// EncryptToString will generate an encrypted base64 encoded character from the plaintext.
+func (a *authImpl) EncryptToString(plaintext []byte) (ciphertext string, err error) {
+	ciphertext, _, err = a.encryptAES256(plaintext, true)
+	return
+}
+
+// EncryptToBytes will generate an encrypted byte array from the plaintext.
+func (a *authImpl) EncryptToBytes(plaintext []byte) (ciphertext []byte, err error) {
+	_, ciphertext, err = a.encryptAES256(plaintext, false)
+	return
+}
+
+// DecryptFromString will decrypt an encrypted base64 encoded character from the ciphertext.
+func (a *authImpl) DecryptFromString(ciphertext string) (plaintext []byte, err error) {
+	var bytes []byte
+	if bytes, err = base64.URLEncoding.DecodeString(ciphertext); err != nil {
+		return
+	}
+	return a.decryptAES256(bytes)
+}
+
+// DecryptFromBytes will decrypt an encrypted base64 encoded character from the plaintext.
+func (a *authImpl) DecryptFromBytes(ciphertext []byte) (plaintext []byte, err error) {
+	return a.decryptAES256(ciphertext)
 }

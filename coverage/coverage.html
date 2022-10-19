@@ -55,7 +55,7 @@
 			<div id="nav">
 				<select id="files">
 				
-				<option value="file0">github.com/surahman/mcq-platform/pkg/auth/auth.go (86.7%)</option>
+				<option value="file0">github.com/surahman/mcq-platform/pkg/auth/auth.go (83.8%)</option>
 				
 				<option value="file1">github.com/surahman/mcq-platform/pkg/auth/config.go (93.8%)</option>
 				
@@ -123,7 +123,12 @@
 		<pre class="file" id="file0" style="display: none">package auth
 
 import (
+        "crypto/aes"
+        "crypto/cipher"
+        "crypto/rand"
+        "encoding/base64"
         "errors"
+        "io"
         "time"
 
         "github.com/golang-jwt/jwt/v4"
@@ -159,6 +164,18 @@ type Auth interface {
         // RefreshThreshold returns the time before the end of the JSON Web Tokens validity interval that a JWT can be
         // refreshed in.
         RefreshThreshold() int64
+
+        // EncryptToString will generate an encrypted base64 encoded character from the plaintext.
+        EncryptToString([]byte) (string, error)
+
+        // EncryptToBytes will generate an encrypted byte array from the plaintext.
+        EncryptToBytes([]byte) ([]byte, error)
+
+        // DecryptFromString will decrypt an encrypted base64 encoded character from the ciphertext.
+        DecryptFromString(string) ([]byte, error)
+
+        // DecryptFromBytes will decrypt an encrypted base64 encoded character from the plaintext.
+        DecryptFromBytes([]byte) ([]byte, error)
 }
 
 // Check to ensure the Auth interface has been implemented.
@@ -166,8 +183,9 @@ var _ Auth = &amp;authImpl{}
 
 // authImpl implements the Auth interface and contains the logic for authorization functionality.
 type authImpl struct {
-        conf   *config
-        logger *logger.Logger
+        cryptoSecret []byte
+        conf         *config
+        logger       *logger.Logger
 }
 
 // NewAuth will create a new Authorization configuration by loading it.
@@ -185,7 +203,9 @@ func newAuthImpl(fs *afero.Fs, logger *logger.Logger) (a *authImpl, err error) <
                 a.logger.Error("failed to load Authorization configurations from disk", zap.Error(err))
                 return nil, err
         }</span>
-        <span class="cov3" title="2">return</span>
+        <span class="cov3" title="2">a.cryptoSecret = []byte(a.conf.General.CryptoSecret)
+
+        return</span>
 }
 
 // HashPassword hashes a password using the Bcrypt algorithm to avoid plaintext storage.
@@ -282,6 +302,90 @@ func (a *authImpl) RefreshJWT(token string) (authResponse *model_rest.JWTAuthRes
 func (a *authImpl) RefreshThreshold() int64 <span class="cov1" title="1">{
         return a.conf.JWTConfig.RefreshThreshold
 }</span>
+
+// encryptAES256 employs Authenticated Encryption with Associated Data using Galois/Counter mode and returns the cipher
+// bytes and optionally a Base64 encoded string of the cipher bytes to be used in URIs.
+func (a *authImpl) encryptAES256(data []byte, toString bool) (cipherStr string, cipherBytes []byte, err error) <span class="cov6" title="4">{
+        var cipherBlock cipher.Block
+        var gcm cipher.AEAD
+
+        if cipherBlock, err = aes.NewCipher(a.cryptoSecret); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov6" title="4">if gcm, err = cipher.NewGCM(cipherBlock); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov6" title="4">nonce := make([]byte, gcm.NonceSize())
+        if _, err = io.ReadFull(rand.Reader, nonce); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        // Encrypt to cipher text.
+        <span class="cov6" title="4">cipherBytes = gcm.Seal(nonce, nonce, data, nil)
+
+        // Only convert to base64 if requested to save compute time.
+        if toString </span><span class="cov3" title="2">{
+                cipherStr = base64.URLEncoding.EncodeToString(cipherBytes)
+        }</span>
+
+        <span class="cov6" title="4">return</span>
+}
+
+// decryptAES256 employs Authenticated Encryption with Associated Data using Galois/Counter mode and returns the
+// decrypted plaintext bytes.
+func (a *authImpl) decryptAES256(data []byte) (cipherBytes []byte, err error) <span class="cov6" title="4">{
+        var cipherBlock cipher.Block
+        var gcm cipher.AEAD
+        var nonceSize int
+
+        if cipherBlock, err = aes.NewCipher(a.cryptoSecret); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov6" title="4">if gcm, err = cipher.NewGCM(cipherBlock); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov6" title="4">if nonceSize = gcm.NonceSize(); nonceSize &lt; 0 </span><span class="cov0" title="0">{
+                return nil, errors.New("bad nonce size")
+        }</span>
+
+        // Extract the nonce and cipher blocks from the data.
+        <span class="cov6" title="4">nonce, cipherText := data[:nonceSize], data[nonceSize:]
+
+        // Decrypt cipher text.
+        cipherBytes, err = gcm.Open(nil, nonce, cipherText, nil)
+
+        return</span>
+}
+
+// EncryptToString will generate an encrypted base64 encoded character from the plaintext.
+func (a *authImpl) EncryptToString(plaintext []byte) (ciphertext string, err error) <span class="cov1" title="1">{
+        ciphertext, _, err = a.encryptAES256(plaintext, true)
+        return
+}</span>
+
+// EncryptToBytes will generate an encrypted byte array from the plaintext.
+func (a *authImpl) EncryptToBytes(plaintext []byte) (ciphertext []byte, err error) <span class="cov1" title="1">{
+        _, ciphertext, err = a.encryptAES256(plaintext, false)
+        return
+}</span>
+
+// DecryptFromString will decrypt an encrypted base64 encoded character from the ciphertext.
+func (a *authImpl) DecryptFromString(ciphertext string) (plaintext []byte, err error) <span class="cov1" title="1">{
+        var bytes []byte
+        if bytes, err = base64.URLEncoding.DecodeString(ciphertext); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+        <span class="cov1" title="1">return a.decryptAES256(bytes)</span>
+}
+
+// DecryptFromBytes will decrypt an encrypted base64 encoded character from the plaintext.
+func (a *authImpl) DecryptFromBytes(ciphertext []byte) (plaintext []byte, err error) <span class="cov1" title="1">{
+        return a.decryptAES256(ciphertext)
+}</span>
 </pre>
 		
 		<pre class="file" id="file1" style="display: none">package auth
@@ -302,7 +406,8 @@ type config struct {
                 RefreshThreshold   int64  `json:"refresh_threshold,omitempty" yaml:"refresh_threshold,omitempty" mapstructure:"refresh_threshold" validate:"required,min=1,ltefield=ExpirationDuration"`
         } `json:"jwt,omitempty" yaml:"jwt,omitempty" mapstructure:"jwt" validate:"required"`
         General struct {
-                BcryptCost int `json:"bcrypt_cost,omitempty" yaml:"bcrypt_cost,omitempty" mapstructure:"bcrypt_cost" validate:"required,min=4,max=31"`
+                BcryptCost   int    `json:"bcrypt_cost,omitempty" yaml:"bcrypt_cost,omitempty" mapstructure:"bcrypt_cost" validate:"required,min=4,max=31"`
+                CryptoSecret string `json:"crypto_secret,omitempty" yaml:"crypto_secret,omitempty" mapstructure:"crypto_secret" validate:"required,len=32"`
         } `json:"general,omitempty" yaml:"general,omitempty" mapstructure:"general" validate:"required"`
 }
 
@@ -312,7 +417,7 @@ func newConfig() *config <span class="cov4" title="3">{
 }</span>
 
 // Load will attempt to load configurations from a file on a file system and then overwrite values using environment variables.
-func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="14">{
+func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="16">{
         viper.SetFs(fs)
         viper.SetConfigName(constants.GetAuthFileName())
         viper.SetConfigType("yaml")
@@ -327,11 +432,11 @@ func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="14">
                 return
         }</span>
 
-        <span class="cov9" title="13">if err = viper.Unmarshal(cfg); err != nil </span><span class="cov0" title="0">{
+        <span class="cov9" title="15">if err = viper.Unmarshal(cfg); err != nil </span><span class="cov0" title="0">{
                 return
         }</span>
 
-        <span class="cov9" title="13">if err = validator.ValidateStruct(cfg); err != nil </span><span class="cov8" title="9">{
+        <span class="cov9" title="15">if err = validator.ValidateStruct(cfg); err != nil </span><span class="cov8" title="11">{
                 return
         }</span>
 
@@ -354,7 +459,8 @@ jwt:
   expiration_duration: 600
   refresh_threshold: 60
 general:
-  bcrypt_cost: 8`,
+  bcrypt_cost: 8
+  crypto_secret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z$`,
 
                 "no_issuer": `
 jwt:
@@ -362,7 +468,8 @@ jwt:
   expiration_duration: 600
   refresh_threshold: 60
 general:
-  bcrypt_cost: 8`,
+  bcrypt_cost: 8
+  crypto_secret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z$`,
 
                 "bcrypt_cost_below_4": `
 jwt:
@@ -371,7 +478,8 @@ jwt:
   expiration_duration: 600
   refresh_threshold: 60
 general:
-  bcrypt_cost: 2`,
+  bcrypt_cost: 2
+  crypto_secret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z$`,
 
                 "bcrypt_cost_above_31": `
 jwt:
@@ -380,7 +488,8 @@ jwt:
   expiration_duration: 600
   refresh_threshold: 60
 general:
-  bcrypt_cost: 32`,
+  bcrypt_cost: 32
+  crypto_secret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z$`,
 
                 "jwt_expiration_below_60s": `
 jwt:
@@ -389,7 +498,8 @@ jwt:
   expiration_duration: 59
   refresh_threshold: 40
 general:
-  bcrypt_cost: 8`,
+  bcrypt_cost: 8
+  crypto_secret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z$`,
 
                 "jwt_key_below_8": `
 jwt:
@@ -398,7 +508,8 @@ jwt:
   expiration_duration: 600
   refresh_threshold: 60
 general:
-  bcrypt_cost: 8`,
+  bcrypt_cost: 8
+  crypto_secret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z$`,
 
                 "jwt_key_above_256": `
 jwt:
@@ -407,7 +518,8 @@ jwt:
   expiration_duration: 600
   refresh_threshold: 60
 general:
-  bcrypt_cost: 8`,
+  bcrypt_cost: 8
+  crypto_secret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z$`,
 
                 "low_refresh_threshold": `
 jwt:
@@ -416,7 +528,8 @@ jwt:
   expiration_duration: 600
   refresh_threshold: 0
 general:
-  bcrypt_cost: 8`,
+  bcrypt_cost: 8
+  crypto_secret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z$`,
 
                 "refresh_threshold_gt_expiration": `
 jwt:
@@ -425,7 +538,28 @@ jwt:
   expiration_duration: 600
   refresh_threshold: 601
 general:
-  bcrypt_cost: 8`,
+  bcrypt_cost: 8
+  crypto_secret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z$`,
+
+                "crypto_key_too_short": `
+jwt:
+  key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
+  issuer: MCQ Platform
+  expiration_duration: 600
+  refresh_threshold: 60
+general:
+  bcrypt_cost: 8
+  crypto_secret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z`,
+
+                "crypto_key_too_long": `
+jwt:
+  key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
+  issuer: MCQ Platform
+  expiration_duration: 600
+  refresh_threshold: 60
+general:
+  bcrypt_cost: 8
+  crypto_secret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z$*`,
         }
 }</span>
 </pre>
