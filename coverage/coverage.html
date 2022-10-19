@@ -63,7 +63,7 @@
 				
 				<option value="file3">github.com/surahman/mcq-platform/pkg/cassandra/cassandra.go (87.8%)</option>
 				
-				<option value="file4">github.com/surahman/mcq-platform/pkg/cassandra/cassandra_queries.go (86.7%)</option>
+				<option value="file4">github.com/surahman/mcq-platform/pkg/cassandra/cassandra_queries.go (85.8%)</option>
 				
 				<option value="file5">github.com/surahman/mcq-platform/pkg/cassandra/config.go (93.8%)</option>
 				
@@ -79,23 +79,25 @@
 				
 				<option value="file11">github.com/surahman/mcq-platform/pkg/http/rest/handlers/authorization.go (100.0%)</option>
 				
-				<option value="file12">github.com/surahman/mcq-platform/pkg/http/rest/handlers/quiz.go (95.7%)</option>
+				<option value="file12">github.com/surahman/mcq-platform/pkg/http/rest/handlers/healthcheck.go (100.0%)</option>
 				
-				<option value="file13">github.com/surahman/mcq-platform/pkg/http/rest/handlers/score.go (100.0%)</option>
+				<option value="file13">github.com/surahman/mcq-platform/pkg/http/rest/handlers/quiz.go (95.7%)</option>
 				
-				<option value="file14">github.com/surahman/mcq-platform/pkg/http/rest/handlers/users.go (92.7%)</option>
+				<option value="file14">github.com/surahman/mcq-platform/pkg/http/rest/handlers/score.go (100.0%)</option>
 				
-				<option value="file15">github.com/surahman/mcq-platform/pkg/http/rest/rest.go (7.9%)</option>
+				<option value="file15">github.com/surahman/mcq-platform/pkg/http/rest/handlers/users.go (92.7%)</option>
 				
-				<option value="file16">github.com/surahman/mcq-platform/pkg/http/rest/testdata.go (100.0%)</option>
+				<option value="file16">github.com/surahman/mcq-platform/pkg/http/rest/rest.go (7.7%)</option>
 				
-				<option value="file17">github.com/surahman/mcq-platform/pkg/logger/config.go (78.9%)</option>
+				<option value="file17">github.com/surahman/mcq-platform/pkg/http/rest/testdata.go (100.0%)</option>
 				
-				<option value="file18">github.com/surahman/mcq-platform/pkg/logger/logger.go (73.6%)</option>
+				<option value="file18">github.com/surahman/mcq-platform/pkg/logger/config.go (78.9%)</option>
 				
-				<option value="file19">github.com/surahman/mcq-platform/pkg/logger/testdata.go (100.0%)</option>
+				<option value="file19">github.com/surahman/mcq-platform/pkg/logger/logger.go (73.6%)</option>
 				
-				<option value="file20">github.com/surahman/mcq-platform/pkg/validator/validator.go (72.0%)</option>
+				<option value="file20">github.com/surahman/mcq-platform/pkg/logger/testdata.go (100.0%)</option>
+				
+				<option value="file21">github.com/surahman/mcq-platform/pkg/validator/validator.go (72.0%)</option>
 				
 				</select>
 			</div>
@@ -598,6 +600,20 @@ func truncateTableQuery(c Cassandra, params any) (response any, err error) <span
         }</span>
 
         <span class="cov6" title="11">return</span>
+}
+
+// HealthcheckQuery will run a query on the cluster to check if it responds.
+// Return: release version string
+func HealthcheckQuery(c Cassandra, params any) (response any, err error) <span class="cov1" title="1">{
+        conn := c.(*cassandraImpl)
+        resp := ""
+
+        if err = conn.session.Query(model_cassandra.HealthCheck).Scan(&amp;resp); err != nil </span><span class="cov0" title="0">{
+                conn.logger.Error("Cassandra healthcheck query failed", zap.Error(err))
+                return nil, NewError("healthcheck failed").internalError()
+        }</span>
+
+        <span class="cov1" title="1">return resp, nil</span>
 }
 
 // -----   Users Table Queries   -----
@@ -1617,6 +1633,44 @@ import (
         "net/http"
 
         "github.com/gin-gonic/gin"
+        "github.com/surahman/mcq-platform/pkg/cassandra"
+        "github.com/surahman/mcq-platform/pkg/logger"
+        "github.com/surahman/mcq-platform/pkg/model/http"
+        "go.uber.org/zap"
+)
+
+// Healthcheck checks if the service is healthy.
+// @Summary     Healthcheck for service liveness.
+// @Description This endpoint is exposed to allow load balancers etc. to check the health of the service.
+// @Tags        health healthcheck liveness
+// @Id          healthcheck
+// @Accept      json
+// @Produce     json
+// @Success     200 {object} model_rest.Success "message: healthy"
+// @Failure     503 {object} model_rest.Error   "error message with any available details"
+// @Router      /health [get]
+func Healthcheck(logger *logger.Logger, db cassandra.Cassandra) gin.HandlerFunc <span class="cov10" title="2">{
+        return func(context *gin.Context) </span><span class="cov10" title="2">{
+                var err error
+
+                if _, err = db.Execute(cassandra.HealthcheckQuery, nil); err != nil </span><span class="cov1" title="1">{
+                        msg := "Cassandra healthcheck failed"
+                        logger.Warn(msg, zap.Error(err))
+                        context.AbortWithStatusJSON(http.StatusServiceUnavailable, &amp;model_rest.Error{Message: msg})
+                        return
+                }</span>
+
+                <span class="cov1" title="1">context.JSON(http.StatusOK, &amp;model_rest.Success{Message: "healthy"})</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file13" style="display: none">package http_handlers
+
+import (
+        "net/http"
+
+        "github.com/gin-gonic/gin"
         "github.com/gocql/gocql"
         "github.com/surahman/mcq-platform/pkg/auth"
         "github.com/surahman/mcq-platform/pkg/cassandra"
@@ -1989,7 +2043,7 @@ func TakeQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, gra
 }
 </pre>
 		
-		<pre class="file" id="file13" style="display: none">package http_handlers
+		<pre class="file" id="file14" style="display: none">package http_handlers
 
 import (
         "net/http"
@@ -2114,7 +2168,7 @@ func GetStats(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin
 }
 </pre>
 		
-		<pre class="file" id="file14" style="display: none">package http_handlers
+		<pre class="file" id="file15" style="display: none">package http_handlers
 
 import (
         "fmt"
@@ -2372,7 +2426,7 @@ func DeleteUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, a
 }
 </pre>
 		
-		<pre class="file" id="file15" style="display: none">package rest
+		<pre class="file" id="file16" style="display: none">package rest
 
 import (
         "context"
@@ -2495,6 +2549,8 @@ func (s *HttpRest) initialize() <span class="cov0" title="0">{
         authMiddleware := http_handlers.AuthMiddleware(s.auth)
         api := s.router.Group(s.conf.Server.BasePath)
 
+        api.GET("/health", http_handlers.Healthcheck(s.logger, s.db))
+
         userGroup := api.Group("/user")
         userGroup.POST("/register", http_handlers.RegisterUser(s.logger, s.auth, s.db))
         userGroup.POST("/login", http_handlers.LoginUser(s.logger, s.auth, s.db))
@@ -2515,7 +2571,7 @@ func (s *HttpRest) initialize() <span class="cov0" title="0">{
 }</span>
 </pre>
 		
-		<pre class="file" id="file16" style="display: none">package rest
+		<pre class="file" id="file17" style="display: none">package rest
 
 // configTestData will return a map of test data containing valid and invalid Authorization configs.
 func configTestData() map[string]string <span class="cov8" title="1">{
@@ -2575,7 +2631,7 @@ server:
 }</span>
 </pre>
 		
-		<pre class="file" id="file17" style="display: none">package logger
+		<pre class="file" id="file18" style="display: none">package logger
 
 import (
         "github.com/spf13/afero"
@@ -2654,7 +2710,7 @@ func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="13">
 }
 </pre>
 		
-		<pre class="file" id="file18" style="display: none">package logger
+		<pre class="file" id="file19" style="display: none">package logger
 
 import (
         "errors"
@@ -2793,7 +2849,7 @@ func NewTestLogger() (logger *Logger, err error) <span class="cov1" title="1">{
 }
 </pre>
 		
-		<pre class="file" id="file19" style="display: none">package logger
+		<pre class="file" id="file20" style="display: none">package logger
 
 // configTestData will return a map of test data containing valid and invalid logger configs.
 func configTestData() map[string]string <span class="cov8" title="1">{
@@ -2839,7 +2895,7 @@ encoder_config:
 }</span>
 </pre>
 		
-		<pre class="file" id="file20" style="display: none">package validator
+		<pre class="file" id="file21" style="display: none">package validator
 
 import (
         "bytes"

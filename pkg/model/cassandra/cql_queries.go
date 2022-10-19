@@ -1,6 +1,9 @@
 package model_cassandra
 
 const (
+	// HealthCheck is a quick query to check for cluster liveness and is faster than generating a UUID using now().
+	HealthCheck = `SELECT release_version FROM system.local;`
+
 	// CreateKeyspace sets up the keyspace in the cluster.
 	// String Param 1: keyspace name
 	// String Param 2: replication strategy

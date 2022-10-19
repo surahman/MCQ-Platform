@@ -24,6 +24,7 @@ The REST API schema can be tested and reviewed through the Swagger UI that is ex
 - [Score Endpoints `/score/`](#score-endpoints-score)
   - [Test](#test)
   - [Stats](#stats)
+- [Healthcheck Endpoint `/health`](#healthcheck-endpoint-health)
 
 <br/>
 
@@ -229,8 +230,6 @@ in the payload. Please see the [`grading`](../../../grading) package for details
 }
 ```
 
-
-
 <br/>
 
 ### Score Endpoints `/score/`
@@ -300,3 +299,13 @@ _Response:_ A success response containing a message with the scorecards in the p
   ]
 }
 ```
+
+<br/>
+
+### Healthcheck Endpoint `/health`
+
+The health check endpoint is exposed to facilitate liveness checks on the service. The check will verify whether the
+service is connected to all the ancillary services and responds appropriately.
+
+This check is essential for load balancers and container orchestrators to determine whether to route traffic or restart
+the container.

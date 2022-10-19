@@ -21,6 +21,20 @@ func truncateTableQuery(c Cassandra, params any) (response any, err error) {
 	return
 }
 
+// HealthcheckQuery will run a query on the cluster to check if it responds.
+// Return: release version string
+func HealthcheckQuery(c Cassandra, params any) (response any, err error) {
+	conn := c.(*cassandraImpl)
+	resp := ""
+
+	if err = conn.session.Query(model_cassandra.HealthCheck).Scan(&resp); err != nil {
+		conn.logger.Error("Cassandra healthcheck query failed", zap.Error(err))
+		return nil, NewError("healthcheck failed").internalError()
+	}
+
+	return resp, nil
+}
+
 // -----   Users Table Queries   -----
 
 // CreateUserQuery will insert a user record into the users table.

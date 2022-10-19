@@ -463,3 +463,15 @@ func TestReadResponseStatisticsQuery(t *testing.T) {
 		})
 	}
 }
+
+func TestHealthcheckQuery(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		t.Skip()
+	}
+
+	response, err := HealthcheckQuery(connection.db, nil)
+	require.NoError(t, err, "healthcheck query returned an error")
+	require.NotNil(t, response, "response to healthcheck query is nil")
+	require.Truef(t, len(response.(string)) > 0, "release version string empty")
+}
