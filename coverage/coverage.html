@@ -87,7 +87,7 @@
 				
 				<option value="file15">github.com/surahman/mcq-platform/pkg/http/rest/handlers/users.go (92.7%)</option>
 				
-				<option value="file16">github.com/surahman/mcq-platform/pkg/http/rest/rest.go (7.9%)</option>
+				<option value="file16">github.com/surahman/mcq-platform/pkg/http/rest/rest.go (7.7%)</option>
 				
 				<option value="file17">github.com/surahman/mcq-platform/pkg/http/rest/testdata.go (100.0%)</option>
 				
@@ -2548,6 +2548,8 @@ func (s *HttpRest) initialize() <span class="cov0" title="0">{
         // Endpoint configurations
         authMiddleware := http_handlers.AuthMiddleware(s.auth)
         api := s.router.Group(s.conf.Server.BasePath)
+
+        api.GET("/health", http_handlers.Healthcheck(s.logger, s.db))
 
         userGroup := api.Group("/user")
         userGroup.POST("/register", http_handlers.RegisterUser(s.logger, s.auth, s.db))
