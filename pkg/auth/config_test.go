@@ -28,7 +28,7 @@ func TestAuthConfigs_Load(t *testing.T) {
 			"empty - etc dir",
 			authConfigTestData["empty"],
 			require.Error,
-			5,
+			6,
 		},
 		{
 			"valid - etc dir",
@@ -83,6 +83,18 @@ func TestAuthConfigs_Load(t *testing.T) {
 			authConfigTestData["refresh_threshold_gt_expiration"],
 			require.Error,
 			2,
+		},
+		{
+			"crypto_key_too_short- etc dir",
+			authConfigTestData["crypto_key_too_short"],
+			require.Error,
+			1,
+		},
+		{
+			"crypto_key_too_long- etc dir",
+			authConfigTestData["crypto_key_too_long"],
+			require.Error,
+			1,
 		},
 		// ----- test cases end ----- //
 	}
