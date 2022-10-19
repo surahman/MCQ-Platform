@@ -286,18 +286,22 @@ func ReadResponseStatisticsQuery(c Cassandra, params any) (response any, err err
 	input := params.(gocql.UUID)
 	var results []*model_cassandra.Response
 
-	scanner := conn.session.Query(model_cassandra.ReadResponseStatistics, input).Iter().Scanner()
-	defer func(scanner gocql.Scanner) {
-		err := scanner.Err()
-		if err != nil {
-			conn.logger.Error("failed to close scanner whilst reading response statistics",
+	iter := conn.session.Query(model_cassandra.ReadResponseStatistics, input).Iter()
+	defer func(iter *gocql.Iter) {
+		if err := iter.Close(); err != nil {
+			conn.logger.Error("failed to close iterator whilst reading response statistics",
 				zap.String("quiz_id", input.String()), zap.Error(err))
 		}
-	}(scanner)
+	}(iter)
 
-	for scanner.Next() {
+	if numRows := iter.NumRows(); numRows > 0 {
+		results = make([]*model_cassandra.Response, 0, numRows)
+	}
+
+	scanRows := iter.Scanner()
+	for scanRows.Next() {
 		row := model_cassandra.Response{QuizResponse: &model_cassandra.QuizResponse{}}
-		err = scanner.Scan(&row.Username, &row.QuizID, &row.Responses, &row.Score)
+		err = scanRows.Scan(&row.Username, &row.QuizID, &row.Responses, &row.Score)
 		if err != nil {
 			conn.logger.Error("failed to read row in response statistics",
 				zap.String("quiz_id", input.String()), zap.Error(err))
