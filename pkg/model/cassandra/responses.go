@@ -21,19 +21,7 @@ type QuizResponse struct {
 
 // StatsRequest is a request for statistics for a specific quiz.
 type StatsRequest struct {
-	QuizID     gocql.UUID
-	PageCursor string `json:"page_cursor"`
-	PageSize   int    `json:"page_size"`
-}
-
-// StatsResponse is a paginated response to a request for statistics for a specific quiz.
-type StatsResponse struct {
-	Records  []*Response `json:"records"`
-	Metadata struct {
-		QuizID     gocql.UUID `json:"quiz_id"`
-		NumRecords int        `json:"num_records"`
-	} `json:"metadata,omitempty"`
-	Links struct {
-		NextPage string `json:"next_page"`
-	} `json:"links,omitempty"`
+	QuizID     gocql.UUID // The UUID to the quiz for which statistics are being requested.
+	PageCursor []byte     // A cursor to where the next page of data will begin.
+	PageSize   int        // Number of records to read from the page.
 }
