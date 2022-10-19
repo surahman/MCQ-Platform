@@ -463,3 +463,10 @@ func TestReadResponseStatisticsQuery(t *testing.T) {
 		})
 	}
 }
+
+func TestHealthcheckQuery(t *testing.T) {
+	response, err := HealthcheckQuery(connection.db, nil)
+	require.NoError(t, err, "healthcheck query returned an error")
+	require.NotNil(t, response, "response to healthcheck query is nil")
+	require.Truef(t, len(response.(string)) > 0, "release version string empty")
+}
