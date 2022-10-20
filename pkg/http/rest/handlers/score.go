@@ -148,11 +148,12 @@ func GetStatsPage(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra)
 	return func(context *gin.Context) {
 		var err error
 		var dbRecord any
-		var response []*model_cassandra.Response
+		var statRequest *model_cassandra.StatsRequest
+		var restResponse *model_rest.StatsResponse
 		var username string
 		var quizId gocql.UUID
 
-		if quizId, err = gocql.ParseUUID(context.Param("quizId")); err != nil {
+		if quizId, err = gocql.ParseUUID(context.Param("quiz_id")); err != nil {
 			context.AbortWithStatusJSON(http.StatusBadRequest, &model_rest.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
 			return
 		}
@@ -175,15 +176,26 @@ func GetStatsPage(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra)
 			return
 		}
 
-		// Get scorecard record from database.
-		if dbRecord, err = db.Execute(cassandra.ReadResponseStatisticsQuery, quizId); err != nil {
-			cassandraError := err.(*cassandra.Error)
-			context.AbortWithStatusJSON(cassandraError.Status, &model_rest.Error{Message: "error retrieving score card", Payload: cassandraError.Message})
+		// Prepare stats page request for database.
+		if statRequest, err = prepareStatsRequest(auth, quizId, context.Query("pageCursor"), context.Query("pageSize")); err != nil {
+			context.AbortWithStatusJSON(http.StatusBadRequest, &model_rest.Error{Message: "malformed query request", Payload: err.Error()})
 			return
 		}
-		response = dbRecord.([]*model_cassandra.Response)
 
-		context.JSON(http.StatusOK, &model_rest.Success{Message: "score cards", Payload: response})
+		// Get scorecard record page from database.
+		if dbRecord, err = db.Execute(cassandra.ReadResponseStatisticsPageQuery, statRequest); err != nil {
+			cassandraError := err.(*cassandra.Error)
+			context.AbortWithStatusJSON(cassandraError.Status, &model_rest.Error{Message: "error retrieving scorecard page", Payload: cassandraError.Message})
+			return
+		}
+		statsResponse := dbRecord.(*model_cassandra.StatsResponse)
+
+		// Prepare REST response.
+		if restResponse, err = prepareStatsResponse(auth, statsResponse, quizId); err != nil {
+			context.AbortWithStatusJSON(http.StatusInternalServerError, &model_rest.Error{Message: "error preparing stats page", Payload: err.Error()})
+		}
+
+		context.JSON(http.StatusOK, restResponse)
 	}
 }
 
