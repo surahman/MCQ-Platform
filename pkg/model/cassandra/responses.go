@@ -32,4 +32,5 @@ type StatsRequest struct {
 type StatsResponse struct {
 	PageCursor []byte      // A cursor to where the next page of data will begin.
 	Records    []*Response // Response rows from the database.
+	PageSize   int         // Maximum number of records on the requested page.
 }

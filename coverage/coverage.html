@@ -63,7 +63,7 @@
 				
 				<option value="file3">github.com/surahman/mcq-platform/pkg/cassandra/cassandra.go (87.8%)</option>
 				
-				<option value="file4">github.com/surahman/mcq-platform/pkg/cassandra/cassandra_queries.go (85.1%)</option>
+				<option value="file4">github.com/surahman/mcq-platform/pkg/cassandra/cassandra_queries.go (85.2%)</option>
 				
 				<option value="file5">github.com/surahman/mcq-platform/pkg/cassandra/config.go (93.8%)</option>
 				
@@ -83,7 +83,7 @@
 				
 				<option value="file13">github.com/surahman/mcq-platform/pkg/http/rest/handlers/quiz.go (95.7%)</option>
 				
-				<option value="file14">github.com/surahman/mcq-platform/pkg/http/rest/handlers/score.go (100.0%)</option>
+				<option value="file14">github.com/surahman/mcq-platform/pkg/http/rest/handlers/score.go (69.8%)</option>
 				
 				<option value="file15">github.com/surahman/mcq-platform/pkg/http/rest/handlers/users.go (92.7%)</option>
 				
@@ -1044,8 +1044,9 @@ func ReadResponseStatisticsPageQuery(c Cassandra, params any) (response any, err
                 }</span>
         }(iter)
 
-        // Configure results with next pages cursor and current pages data container.
-        <span class="cov7" title="13">results.PageCursor = iter.PageState()
+        // Configure results with next pages cursor, current results per page, and current pages data container.
+        <span class="cov7" title="13">results.PageSize = input.PageSize
+        results.PageCursor = iter.PageState()
         if numRows := iter.NumRows(); numRows &gt; 0 </span><span class="cov6" title="10">{
                 results.Records = make([]*model_cassandra.Response, 0, numRows)
         }</span>
@@ -2238,7 +2239,10 @@ func TakeQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, gra
 		<pre class="file" id="file14" style="display: none">package http_handlers
 
 import (
+        "bytes"
+        "fmt"
         "net/http"
+        "strconv"
 
         "github.com/gin-gonic/gin"
         "github.com/gocql/gocql"
@@ -2357,6 +2361,121 @@ func GetStats(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin
 
                 context.JSON(http.StatusOK, &amp;model_rest.Success{Message: "score cards", Payload: response})</span>
         }
+}
+
+// GetStatsPage will retrieve paginated test statistics with the provided test id and the username from the JWT payload.
+// @Summary     Get paginated statistics associated with a specific test.
+// @Description Gets the paginated statistics associated with a specific test if the user created the test.
+// @Description Extracts username from the JWT and the Test ID is provided as a query parameter.
+// @Description A query string to be appended to the next request to retrieve the next page of data will be returned in the response.
+// @Tags        score scores stats statistics
+// @Id          getStatsPaged
+// @Accept      json
+// @Produce     json
+// @Security    ApiKeyAuth
+// @Param       quiz_id    path     string                   true  "The Test ID for the requested statistics."
+// @Param       pageCursor query    string                   false "The page cursor into the query results records."
+// @Param       pageSize   query    int                      false "The number of records to retrieve on this page."
+// @Success     200        {object} model_rest.StatsResponse "A page of statistics data"
+// @Failure     400        {object} model_rest.Error         "Error message with any available details in payload"
+// @Failure     403        {object} model_rest.Error         "Error message with any available details in payload"
+// @Failure     404        {object} model_rest.Error         "Error message with any available details in payload"
+// @Failure     500        {object} model_rest.Error         "Error message with any available details in payload"
+// @Router      /score/stats/{quiz_id} [get]
+func GetStatsPage(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc <span class="cov0" title="0">{
+        return func(context *gin.Context) </span><span class="cov0" title="0">{
+                var err error
+                var dbRecord any
+                var response []*model_cassandra.Response
+                var username string
+                var quizId gocql.UUID
+
+                if quizId, err = gocql.ParseUUID(context.Param("quizId")); err != nil </span><span class="cov0" title="0">{
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
+                        return
+                }</span>
+
+                // Get username from JWT.
+                <span class="cov0" title="0">if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil </span><span class="cov0" title="0">{
+                        logger.Error("failed to validate JWT in create quiz handler", zap.Error(err))
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "unable to verify username"})
+                        return
+                }</span>
+
+                // Get quiz record from database and check to ensure requester is author.
+                <span class="cov0" title="0">if dbRecord, err = db.Execute(cassandra.ReadQuizQuery, quizId); err != nil </span><span class="cov0" title="0">{
+                        cassandraError := err.(*cassandra.Error)
+                        context.AbortWithStatusJSON(cassandraError.Status, &amp;model_rest.Error{Message: "error verifying quiz author", Payload: cassandraError.Message})
+                        return
+                }</span>
+                <span class="cov0" title="0">if username != dbRecord.(*model_cassandra.Quiz).Author </span><span class="cov0" title="0">{
+                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_rest.Error{Message: "error verifying quiz author"})
+                        return
+                }</span>
+
+                // Get scorecard record from database.
+                <span class="cov0" title="0">if dbRecord, err = db.Execute(cassandra.ReadResponseStatisticsQuery, quizId); err != nil </span><span class="cov0" title="0">{
+                        cassandraError := err.(*cassandra.Error)
+                        context.AbortWithStatusJSON(cassandraError.Status, &amp;model_rest.Error{Message: "error retrieving score card", Payload: cassandraError.Message})
+                        return
+                }</span>
+                <span class="cov0" title="0">response = dbRecord.([]*model_cassandra.Response)
+
+                context.JSON(http.StatusOK, &amp;model_rest.Success{Message: "score cards", Payload: response})</span>
+        }
+}
+
+// prepareStatsRequest will prepare the paged statistics request for the database query.
+func prepareStatsRequest(auth auth.Auth, quizId gocql.UUID, cursor string, size string) (req *model_cassandra.StatsRequest, err error) <span class="cov8" title="5">{
+        req = &amp;model_cassandra.StatsRequest{QuizID: quizId}
+
+        if req.PageSize, err = strconv.Atoi(size); err != nil </span><span class="cov1" title="1">{
+                return nil, fmt.Errorf("failed to convert page size: %s", err.Error())
+        }</span>
+        <span class="cov7" title="4">if req.PageSize &lt; 1 </span><span class="cov1" title="1">{
+                req.PageSize = 10
+        }</span>
+
+        // Null cursor must be set if there was no cursor in the URI.
+        <span class="cov7" title="4">if len(cursor) != 0 </span><span class="cov6" title="3">{
+                if req.PageCursor, err = auth.DecryptFromString(cursor); err != nil </span><span class="cov1" title="1">{
+                        return nil, fmt.Errorf("failed to decrypt page cursor: %s", err.Error())
+                }</span>
+        }
+
+        <span class="cov6" title="3">return</span>
+}
+
+// prepareStatsResponse will prepare a http response from a database stats response. It will generate a link to the next
+// page of data as appropriate.
+func prepareStatsResponse(auth auth.Auth, dbResponse *model_cassandra.StatsResponse, quizId gocql.UUID) (response *model_rest.StatsResponse, err error) <span class="cov8" title="5">{
+        response = &amp;model_rest.StatsResponse{Records: dbResponse.Records}
+        response.Metadata.QuizID = quizId
+        response.Metadata.NumRecords = len(dbResponse.Records)
+
+        var nextPageLink bytes.Buffer
+
+        // Construct page cursor link segment.
+        if len(dbResponse.PageCursor) != 0 </span><span class="cov4" title="2">{
+                cursor, err := auth.EncryptToString(dbResponse.PageCursor)
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+                <span class="cov4" title="2">if _, err := nextPageLink.WriteString(fmt.Sprintf("?pageCursor=%s", cursor)); err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("failed to generate next page cursor link segment: %s", err.Error())
+                }</span>
+        }
+
+        // Construct page size link segment.
+        <span class="cov8" title="5">if len(dbResponse.PageCursor) != 0 &amp;&amp; dbResponse.PageSize &gt; 0 </span><span class="cov1" title="1">{
+                if _, err := nextPageLink.WriteString(fmt.Sprintf("&amp;pageSize=%d", dbResponse.PageSize)); err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("failed to generate next page size link segment: %s", err.Error())
+                }</span>
+        }
+
+        <span class="cov8" title="5">response.Links.NextPage = nextPageLink.String()
+
+        return</span>
 }
 </pre>
 		

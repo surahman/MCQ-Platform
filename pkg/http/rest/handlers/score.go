@@ -1,6 +1,7 @@
 package http_handlers
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -203,6 +204,38 @@ func prepareStatsRequest(auth auth.Auth, quizId gocql.UUID, cursor string, size 
 			return nil, fmt.Errorf("failed to decrypt page cursor: %s", err.Error())
 		}
 	}
+
+	return
+}
+
+// prepareStatsResponse will prepare a http response from a database stats response. It will generate a link to the next
+// page of data as appropriate.
+func prepareStatsResponse(auth auth.Auth, dbResponse *model_cassandra.StatsResponse, quizId gocql.UUID) (response *model_rest.StatsResponse, err error) {
+	response = &model_rest.StatsResponse{Records: dbResponse.Records}
+	response.Metadata.QuizID = quizId
+	response.Metadata.NumRecords = len(dbResponse.Records)
+
+	var nextPageLink bytes.Buffer
+
+	// Construct page cursor link segment.
+	if len(dbResponse.PageCursor) != 0 {
+		cursor, err := auth.EncryptToString(dbResponse.PageCursor)
+		if err != nil {
+			return nil, err
+		}
+		if _, err := nextPageLink.WriteString(fmt.Sprintf("?pageCursor=%s", cursor)); err != nil {
+			return nil, fmt.Errorf("failed to generate next page cursor link segment: %s", err.Error())
+		}
+	}
+
+	// Construct page size link segment.
+	if len(dbResponse.PageCursor) != 0 && dbResponse.PageSize > 0 {
+		if _, err := nextPageLink.WriteString(fmt.Sprintf("&pageSize=%d", dbResponse.PageSize)); err != nil {
+			return nil, fmt.Errorf("failed to generate next page size link segment: %s", err.Error())
+		}
+	}
+
+	response.Links.NextPage = nextPageLink.String()
 
 	return
 }

@@ -535,7 +535,7 @@ func TestReadResponseStatisticsPageQuery(t *testing.T) {
 			request: &model_cassandra.StatsRequest{
 				QuizID:     quizzesUUIDMapping["myPubQuiz"],
 				PageCursor: nil,
-				PageSize:   6,
+				PageSize:   8,
 			},
 		},
 		// ----- test cases end ----- //
@@ -566,6 +566,7 @@ func TestReadResponseStatisticsPageQuery(t *testing.T) {
 				response, err := connection.db.Execute(ReadResponseStatisticsPageQuery, request)
 				require.NoError(t, err, "failed to execute paged response statistics query")
 				actual = response.(*model_cassandra.StatsResponse)
+				require.Equal(t, testCase.request.PageSize, actual.PageSize, "page size not set in response")
 				recordCount += len(actual.Records)
 
 				if len(actual.PageCursor) == 0 {

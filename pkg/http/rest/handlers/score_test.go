@@ -352,15 +352,11 @@ func TestGetStats(t *testing.T) {
 
 func TestPrepareStatsRequest(t *testing.T) {
 	testCases := []struct {
-		name       string
-		pageCursor string
-		pageSize   string
-		quizId     gocql.UUID
-		authData   struct {
-			times  int
-			output []byte
-			err    error
-		}
+		name            string
+		pageCursor      string
+		pageSize        string
+		quizId          gocql.UUID
+		mockAuthData    *mockAuthData
 		expectPageSize  int
 		expectErr       require.ErrorAssertionFunc
 		expectNil       require.ValueAssertionFunc
@@ -368,27 +364,23 @@ func TestPrepareStatsRequest(t *testing.T) {
 	}{
 		// ----- test cases start ----- //
 		{
-			name:       "non-numeric page size",
-			pageCursor: "some page cursor string",
-			pageSize:   "this should be a natural number",
-			quizId:     gocql.TimeUUID(),
-			authData: struct {
-				times  int
-				output []byte
-				err    error
-			}{times: 0},
-			expectErr: require.Error,
-			expectNil: require.Nil,
+			name:         "non-numeric page size",
+			pageCursor:   "some page cursor string",
+			pageSize:     "this should be a natural number",
+			quizId:       gocql.TimeUUID(),
+			mockAuthData: &mockAuthData{times: 0},
+			expectErr:    require.Error,
+			expectNil:    require.Nil,
 		}, {
 			name:       "failed to decrypt cursor",
 			pageCursor: "some page cursor string",
 			pageSize:   "3",
 			quizId:     gocql.TimeUUID(),
-			authData: struct {
-				times  int
-				output []byte
-				err    error
-			}{times: 1, output: nil, err: fmt.Errorf("failure decrypting")},
+			mockAuthData: &mockAuthData{
+				times:        1,
+				outputParam1: nil,
+				outputErr:    fmt.Errorf("failure decrypting"),
+			},
 			expectErr: require.Error,
 			expectNil: require.Nil,
 		}, {
@@ -396,25 +388,20 @@ func TestPrepareStatsRequest(t *testing.T) {
 			pageCursor: "some page cursor string",
 			pageSize:   "0",
 			quizId:     gocql.TimeUUID(),
-			authData: struct {
-				times  int
-				output []byte
-				err    error
-			}{times: 1, output: []byte{1}},
+			mockAuthData: &mockAuthData{
+				times:        1,
+				outputParam1: []byte{1},
+			},
 			expectPageSize:  10,
 			expectErr:       require.NoError,
 			expectNil:       require.NotNil,
 			expectNilCursor: require.NotNil,
 		}, {
-			name:       "success - empty page cursor",
-			pageCursor: "",
-			pageSize:   "3",
-			quizId:     gocql.TimeUUID(),
-			authData: struct {
-				times  int
-				output []byte
-				err    error
-			}{times: 0},
+			name:            "success - empty page cursor",
+			pageCursor:      "",
+			pageSize:        "3",
+			quizId:          gocql.TimeUUID(),
+			mockAuthData:    &mockAuthData{times: 0},
 			expectPageSize:  3,
 			expectErr:       require.NoError,
 			expectNil:       require.NotNil,
@@ -424,11 +411,10 @@ func TestPrepareStatsRequest(t *testing.T) {
 			pageCursor: "some page cursor string",
 			pageSize:   "3",
 			quizId:     gocql.TimeUUID(),
-			authData: struct {
-				times  int
-				output []byte
-				err    error
-			}{times: 1, output: []byte{1}},
+			mockAuthData: &mockAuthData{
+				times:        1,
+				outputParam1: []byte{1},
+			},
 			expectPageSize:  3,
 			expectErr:       require.NoError,
 			expectNil:       require.NotNil,
@@ -444,9 +430,9 @@ func TestPrepareStatsRequest(t *testing.T) {
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 
 			mockAuth.EXPECT().DecryptFromString(gomock.Any()).Return(
-				testCase.authData.output,
-				testCase.authData.err,
-			).Times(testCase.authData.times)
+				testCase.mockAuthData.outputParam1,
+				testCase.mockAuthData.outputErr,
+			).Times(testCase.mockAuthData.times)
 
 			req, err := prepareStatsRequest(mockAuth, testCase.quizId, testCase.pageCursor, testCase.pageSize)
 			testCase.expectErr(t, err, "error expectation condition failed")
@@ -457,6 +443,117 @@ func TestPrepareStatsRequest(t *testing.T) {
 				testCase.expectNilCursor(t, req.PageCursor, "page cursor nil expectation failed")
 			}
 
+		})
+	}
+}
+
+func TestPrepareStatsResponse(t *testing.T) {
+	testCases := []struct {
+		name            string
+		quizId          gocql.UUID
+		dbResponse      *model_cassandra.StatsResponse
+		mockAuthData    *mockAuthData
+		expectErr       require.ErrorAssertionFunc
+		expectNil       require.ValueAssertionFunc
+		expectEmptyLink require.BoolAssertionFunc
+		expectCursor    require.ComparisonAssertionFunc
+		expectPage      require.ComparisonAssertionFunc
+	}{
+		// ----- test cases start ----- //
+		{
+			name:   "nil cursor",
+			quizId: gocql.TimeUUID(),
+			dbResponse: &model_cassandra.StatsResponse{
+				PageCursor: nil,
+				Records:    nil,
+				PageSize:   0,
+			},
+			mockAuthData:    &mockAuthData{times: 0, outputParam1: ""},
+			expectErr:       require.NoError,
+			expectNil:       require.NotNil,
+			expectEmptyLink: require.True,
+			expectCursor:    require.NotContains,
+			expectPage:      require.NotContains,
+		}, {
+			name:   "empty cursor",
+			quizId: gocql.TimeUUID(),
+			dbResponse: &model_cassandra.StatsResponse{
+				PageCursor: []byte{},
+				Records:    nil,
+				PageSize:   0,
+			},
+			mockAuthData:    &mockAuthData{times: 0, outputParam1: ""},
+			expectErr:       require.NoError,
+			expectNil:       require.NotNil,
+			expectEmptyLink: require.True,
+			expectCursor:    require.NotContains,
+			expectPage:      require.NotContains,
+		}, {
+			name:   "cursor only",
+			quizId: gocql.TimeUUID(),
+			dbResponse: &model_cassandra.StatsResponse{
+				PageCursor: []byte("page-cursor-byte-string"),
+				Records:    nil,
+				PageSize:   0,
+			},
+			mockAuthData:    &mockAuthData{times: 1, outputParam1: ""},
+			expectErr:       require.NoError,
+			expectNil:       require.NotNil,
+			expectEmptyLink: require.False,
+			expectCursor:    require.Contains,
+			expectPage:      require.NotContains,
+		}, {
+			name:   "page only",
+			quizId: gocql.TimeUUID(),
+			dbResponse: &model_cassandra.StatsResponse{
+				PageCursor: nil,
+				Records:    nil,
+				PageSize:   1,
+			},
+			mockAuthData:    &mockAuthData{times: 0, outputParam1: ""},
+			expectErr:       require.NoError,
+			expectNil:       require.NotNil,
+			expectEmptyLink: require.True,
+			expectCursor:    require.NotContains,
+			expectPage:      require.NotContains,
+		}, {
+			name:   "cursor and page",
+			quizId: gocql.TimeUUID(),
+			dbResponse: &model_cassandra.StatsResponse{
+				PageCursor: []byte("page-cursor-byte-string"),
+				Records:    nil,
+				PageSize:   3,
+			},
+			mockAuthData:    &mockAuthData{times: 1, outputParam1: ""},
+			expectErr:       require.NoError,
+			expectNil:       require.NotNil,
+			expectEmptyLink: require.False,
+			expectCursor:    require.Contains,
+			expectPage:      require.Contains,
+		},
+		// ----- test cases end ----- //
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+
+			mockAuth.EXPECT().EncryptToString(gomock.Any()).Return(
+				testCase.mockAuthData.outputParam1,
+				testCase.mockAuthData.outputErr,
+			).Times(testCase.mockAuthData.times)
+
+			req, err := prepareStatsResponse(mockAuth, testCase.dbResponse, testCase.quizId)
+			testCase.expectErr(t, err, "error expectation condition failed")
+			testCase.expectNil(t, req, "nil expectation condition failed")
+
+			if err == nil {
+				testCase.expectEmptyLink(t, len(req.Links.NextPage) == 0, "link existence condition failed")
+				testCase.expectCursor(t, req.Links.NextPage, "?pageCursor=", "page cursor condition failed")
+				testCase.expectPage(t, req.Links.NextPage, "&pageSize=", "page size condition failed")
+			}
 		})
 	}
 }

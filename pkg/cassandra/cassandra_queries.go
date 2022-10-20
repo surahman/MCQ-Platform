@@ -329,7 +329,8 @@ func ReadResponseStatisticsPageQuery(c Cassandra, params any) (response any, err
 		}
 	}(iter)
 
-	// Configure results with next pages cursor and current pages data container.
+	// Configure results with next pages cursor, current results per page, and current pages data container.
+	results.PageSize = input.PageSize
 	results.PageCursor = iter.PageState()
 	if numRows := iter.NumRows(); numRows > 0 {
 		results.Records = make([]*model_cassandra.Response, 0, numRows)
