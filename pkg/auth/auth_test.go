@@ -315,20 +315,13 @@ func TestAuthImpl_encryptAES256_and_decryptAES256(t *testing.T) {
 	testCases := []struct {
 		name      string
 		plainText string
-		toString  bool
 		expectStr require.BoolAssertionFunc
 	}{
 		// ----- test cases start ----- //
 		{
 			name:      "to string",
 			plainText: "this text should be encrypted",
-			toString:  true,
 			expectStr: require.True,
-		}, {
-			name:      "no string",
-			plainText: "this text should be encrypted but not returned as a string",
-			toString:  false,
-			expectStr: require.False,
 		},
 		// ----- test cases end ----- //
 	}
@@ -336,7 +329,7 @@ func TestAuthImpl_encryptAES256_and_decryptAES256(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 
 			// Encrypt phase.
-			cipherStr, cipherBytes, err := testAuth.encryptAES256([]byte(testCase.plainText), testCase.toString)
+			cipherStr, cipherBytes, err := testAuth.encryptAES256([]byte(testCase.plainText))
 			require.NoError(t, err, "error encrypting to AES256")
 			require.NotNil(t, cipherBytes, "no cipher block returned as bytes")
 			testCase.expectStr(t, len(cipherStr) > 0, "cipher string expectation failed")
@@ -360,16 +353,4 @@ func TestAuthImpl_Encrypt_Decrypt_String(t *testing.T) {
 	plaintext, err := testAuth.DecryptFromString(ciphertext)
 	require.NoError(t, err, "encrypt from string failed")
 	require.Equal(t, toEncrypt, string(plaintext), "decrypted string does not match original")
-}
-
-func TestAuthImpl_Encrypt_Decrypt_Bytes(t *testing.T) {
-	toEncrypt := []byte("this is a text string to be encrypted/decrypted")
-
-	ciphertext, err := testAuth.EncryptToBytes(toEncrypt)
-	require.NoError(t, err, "encrypt to bytes failed")
-	require.True(t, len(ciphertext) > 0, "encrypted bytes array is empty")
-
-	plaintext, err := testAuth.DecryptFromBytes(ciphertext)
-	require.NoError(t, err, "encrypt from string failed")
-	require.Equal(t, toEncrypt, plaintext, "decrypted bytes array does not match original")
 }

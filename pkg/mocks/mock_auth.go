@@ -48,21 +48,6 @@ func (mr *MockAuthMockRecorder) CheckPassword(arg0, arg1 interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckPassword", reflect.TypeOf((*MockAuth)(nil).CheckPassword), arg0, arg1)
 }
 
-// DecryptFromBytes mocks base method.
-func (m *MockAuth) DecryptFromBytes(arg0 []byte) ([]byte, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DecryptFromBytes", arg0)
-	ret0, _ := ret[0].([]byte)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// DecryptFromBytes indicates an expected call of DecryptFromBytes.
-func (mr *MockAuthMockRecorder) DecryptFromBytes(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DecryptFromBytes", reflect.TypeOf((*MockAuth)(nil).DecryptFromBytes), arg0)
-}
-
 // DecryptFromString mocks base method.
 func (m *MockAuth) DecryptFromString(arg0 string) ([]byte, error) {
 	m.ctrl.T.Helper()
@@ -76,21 +61,6 @@ func (m *MockAuth) DecryptFromString(arg0 string) ([]byte, error) {
 func (mr *MockAuthMockRecorder) DecryptFromString(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DecryptFromString", reflect.TypeOf((*MockAuth)(nil).DecryptFromString), arg0)
-}
-
-// EncryptToBytes mocks base method.
-func (m *MockAuth) EncryptToBytes(arg0 []byte) ([]byte, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "EncryptToBytes", arg0)
-	ret0, _ := ret[0].([]byte)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// EncryptToBytes indicates an expected call of EncryptToBytes.
-func (mr *MockAuthMockRecorder) EncryptToBytes(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EncryptToBytes", reflect.TypeOf((*MockAuth)(nil).EncryptToBytes), arg0)
 }
 
 // EncryptToString mocks base method.

@@ -46,14 +46,8 @@ type Auth interface {
 	// EncryptToString will generate an encrypted base64 encoded character from the plaintext.
 	EncryptToString([]byte) (string, error)
 
-	// EncryptToBytes will generate an encrypted byte array from the plaintext.
-	EncryptToBytes([]byte) ([]byte, error)
-
 	// DecryptFromString will decrypt an encrypted base64 encoded character from the ciphertext.
 	DecryptFromString(string) ([]byte, error)
-
-	// DecryptFromBytes will decrypt an encrypted base64 encoded character from the plaintext.
-	DecryptFromBytes([]byte) ([]byte, error)
 }
 
 // Check to ensure the Auth interface has been implemented.
@@ -182,8 +176,8 @@ func (a *authImpl) RefreshThreshold() int64 {
 }
 
 // encryptAES256 employs Authenticated Encryption with Associated Data using Galois/Counter mode and returns the cipher
-// bytes and optionally a Base64 encoded string of the cipher bytes to be used in URIs.
-func (a *authImpl) encryptAES256(data []byte, toString bool) (cipherStr string, cipherBytes []byte, err error) {
+// as a Base64 encoded string to be used in URIs.
+func (a *authImpl) encryptAES256(data []byte) (cipherStr string, cipherBytes []byte, err error) {
 	var cipherBlock cipher.Block
 	var gcm cipher.AEAD
 
@@ -203,10 +197,8 @@ func (a *authImpl) encryptAES256(data []byte, toString bool) (cipherStr string, 
 	// Encrypt to cipher text.
 	cipherBytes = gcm.Seal(nonce, nonce, data, nil)
 
-	// Only convert to base64 if requested to save compute time.
-	if toString {
-		cipherStr = base64.URLEncoding.EncodeToString(cipherBytes)
-	}
+	// Convert to Base64 URL encoded string for use in URLs.
+	cipherStr = base64.URLEncoding.EncodeToString(cipherBytes)
 
 	return
 }
@@ -241,13 +233,7 @@ func (a *authImpl) decryptAES256(data []byte) (cipherBytes []byte, err error) {
 
 // EncryptToString will generate an encrypted base64 encoded character from the plaintext.
 func (a *authImpl) EncryptToString(plaintext []byte) (ciphertext string, err error) {
-	ciphertext, _, err = a.encryptAES256(plaintext, true)
-	return
-}
-
-// EncryptToBytes will generate an encrypted byte array from the plaintext.
-func (a *authImpl) EncryptToBytes(plaintext []byte) (ciphertext []byte, err error) {
-	_, ciphertext, err = a.encryptAES256(plaintext, false)
+	ciphertext, _, err = a.encryptAES256(plaintext)
 	return
 }
 
@@ -258,9 +244,4 @@ func (a *authImpl) DecryptFromString(ciphertext string) (plaintext []byte, err e
 		return
 	}
 	return a.decryptAES256(bytes)
-}
-
-// DecryptFromBytes will decrypt an encrypted base64 encoded character from the plaintext.
-func (a *authImpl) DecryptFromBytes(ciphertext []byte) (plaintext []byte, err error) {
-	return a.decryptAES256(ciphertext)
 }
