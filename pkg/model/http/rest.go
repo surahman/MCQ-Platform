@@ -32,12 +32,6 @@ type DeleteUserRequest struct {
 	Confirmation string `json:"confirmation" yaml:"confirmation" validate:"required"`
 }
 
-// StatsRequest is a request for statistics for a specific quiz.
-type StatsRequest struct {
-	PageCursor string `json:"page_cursor"`
-	PageSize   int    `json:"page_size"`
-}
-
 // StatsResponse is a paginated response to a request for statistics for a specific quiz.
 type StatsResponse struct {
 	Records  []*model_cassandra.Response `json:"records"`

@@ -1,7 +1,9 @@
 package http_handlers
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gocql/gocql"
@@ -182,4 +184,25 @@ func GetStatsPage(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra)
 
 		context.JSON(http.StatusOK, &model_rest.Success{Message: "score cards", Payload: response})
 	}
+}
+
+// prepareStatsRequest will prepare the paged statistics request for the database query.
+func prepareStatsRequest(auth auth.Auth, quizId gocql.UUID, cursor string, size string) (req *model_cassandra.StatsRequest, err error) {
+	req = &model_cassandra.StatsRequest{QuizID: quizId}
+
+	if req.PageSize, err = strconv.Atoi(size); err != nil {
+		return nil, fmt.Errorf("failed to convert page size: %s", err.Error())
+	}
+	if req.PageSize < 1 {
+		req.PageSize = 10
+	}
+
+	// Null cursor must be set if there was no cursor in the URI.
+	if len(cursor) != 0 {
+		if req.PageCursor, err = auth.DecryptFromString(cursor); err != nil {
+			return nil, fmt.Errorf("failed to decrypt page cursor: %s", err.Error())
+		}
+	}
+
+	return
 }

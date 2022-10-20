@@ -1,6 +1,8 @@
 package model_cassandra
 
-import "github.com/gocql/gocql"
+import (
+	"github.com/gocql/gocql"
+)
 
 // Response represents a response to a quiz and is a row in responses table.
 type Response struct {
@@ -26,6 +28,7 @@ type StatsRequest struct {
 	PageSize   int        // Number of records to read from the page.
 }
 
+// StatsResponse from the database containing the rows and a cursor position into the query.
 type StatsResponse struct {
 	PageCursor []byte      // A cursor to where the next page of data will begin.
 	Records    []*Response // Response rows from the database.

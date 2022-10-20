@@ -3,6 +3,7 @@ package http_handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -345,6 +346,117 @@ func TestGetStats(t *testing.T) {
 					require.NotEqual(t, 0, responseMap["score"], "failed to get score from payload")
 				}
 			}
+		})
+	}
+}
+
+func TestPrepareStatsRequest(t *testing.T) {
+	testCases := []struct {
+		name       string
+		pageCursor string
+		pageSize   string
+		quizId     gocql.UUID
+		authData   struct {
+			times  int
+			output []byte
+			err    error
+		}
+		expectPageSize  int
+		expectErr       require.ErrorAssertionFunc
+		expectNil       require.ValueAssertionFunc
+		expectNilCursor require.ValueAssertionFunc
+	}{
+		// ----- test cases start ----- //
+		{
+			name:       "non-numeric page size",
+			pageCursor: "some page cursor string",
+			pageSize:   "this should be a natural number",
+			quizId:     gocql.TimeUUID(),
+			authData: struct {
+				times  int
+				output []byte
+				err    error
+			}{times: 0},
+			expectErr: require.Error,
+			expectNil: require.Nil,
+		}, {
+			name:       "failed to decrypt cursor",
+			pageCursor: "some page cursor string",
+			pageSize:   "3",
+			quizId:     gocql.TimeUUID(),
+			authData: struct {
+				times  int
+				output []byte
+				err    error
+			}{times: 1, output: nil, err: fmt.Errorf("failure decrypting")},
+			expectErr: require.Error,
+			expectNil: require.Nil,
+		}, {
+			name:       "success - not natural number page size",
+			pageCursor: "some page cursor string",
+			pageSize:   "0",
+			quizId:     gocql.TimeUUID(),
+			authData: struct {
+				times  int
+				output []byte
+				err    error
+			}{times: 1, output: []byte{1}},
+			expectPageSize:  10,
+			expectErr:       require.NoError,
+			expectNil:       require.NotNil,
+			expectNilCursor: require.NotNil,
+		}, {
+			name:       "success - empty page cursor",
+			pageCursor: "",
+			pageSize:   "3",
+			quizId:     gocql.TimeUUID(),
+			authData: struct {
+				times  int
+				output []byte
+				err    error
+			}{times: 0},
+			expectPageSize:  3,
+			expectErr:       require.NoError,
+			expectNil:       require.NotNil,
+			expectNilCursor: require.Nil,
+		}, {
+			name:       "success",
+			pageCursor: "some page cursor string",
+			pageSize:   "3",
+			quizId:     gocql.TimeUUID(),
+			authData: struct {
+				times  int
+				output []byte
+				err    error
+			}{times: 1, output: []byte{1}},
+			expectPageSize:  3,
+			expectErr:       require.NoError,
+			expectNil:       require.NotNil,
+			expectNilCursor: require.NotNil,
+		},
+		// ----- test cases end ----- //
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+
+			mockAuth.EXPECT().DecryptFromString(gomock.Any()).Return(
+				testCase.authData.output,
+				testCase.authData.err,
+			).Times(testCase.authData.times)
+
+			req, err := prepareStatsRequest(mockAuth, testCase.quizId, testCase.pageCursor, testCase.pageSize)
+			testCase.expectErr(t, err, "error expectation condition failed")
+			testCase.expectNil(t, req, "nil expectation condition failed")
+
+			if err == nil {
+				require.Equal(t, testCase.expectPageSize, req.PageSize, "expected page size check failed")
+				testCase.expectNilCursor(t, req.PageCursor, "page cursor nil expectation failed")
+			}
+
 		})
 	}
 }
