@@ -301,13 +301,51 @@ func ReadResponseStatisticsQuery(c Cassandra, params any) (response any, err err
 	scanRows := iter.Scanner()
 	for scanRows.Next() {
 		row := model_cassandra.Response{QuizResponse: &model_cassandra.QuizResponse{}}
-		err = scanRows.Scan(&row.Username, &row.QuizID, &row.Responses, &row.Score)
-		if err != nil {
+		if err = scanRows.Scan(&row.Username, &row.QuizID, &row.Responses, &row.Score); err != nil {
 			conn.logger.Error("failed to read row in response statistics",
 				zap.String("quiz_id", input.String()), zap.Error(err))
+			return nil, NewError(err.Error()).internalError()
 		}
 		results = append(results, &row)
 	}
 
 	return results, err
+}
+
+// ReadResponseStatisticsPageQuery will read response records pages from the responses table corresponding to a Quiz ID.
+// Param: StatsRequest containing the page size and state to the page to be read
+// Return: address to slice of responses of a page size specified in the request
+func ReadResponseStatisticsPageQuery(c Cassandra, params any) (response any, err error) {
+	conn := c.(*cassandraImpl)
+	input := params.(*model_cassandra.StatsRequest)
+	var results model_cassandra.StatsResponse
+
+	// Get page of response records.
+	iter := conn.session.Query(model_cassandra.ReadResponseStatistics, input.QuizID).PageSize(input.PageSize).PageState(input.PageCursor).Iter()
+	defer func(iter *gocql.Iter) {
+		if err := iter.Close(); err != nil {
+			conn.logger.Error("failed to close iterator whilst reading response statistics page",
+				zap.String("quiz_id", input.QuizID.String()), zap.Error(err))
+		}
+	}(iter)
+
+	// Configure results with next pages cursor and current pages data container.
+	results.PageCursor = iter.PageState()
+	if numRows := iter.NumRows(); numRows > 0 {
+		results.Records = make([]*model_cassandra.Response, 0, numRows)
+	}
+
+	// Read-in rows from the database.
+	scanRows := iter.Scanner()
+	for scanRows.Next() {
+		row := model_cassandra.Response{QuizResponse: &model_cassandra.QuizResponse{}}
+		if err = scanRows.Scan(&row.Username, &row.QuizID, &row.Responses, &row.Score); err != nil {
+			conn.logger.Error("failed to read row in response statistics page",
+				zap.String("quiz_id", input.QuizID.String()), zap.Error(err))
+			return nil, NewError(err.Error()).internalError()
+		}
+		results.Records = append(results.Records, &row)
+	}
+
+	return &results, err
 }

@@ -25,3 +25,8 @@ type StatsRequest struct {
 	PageCursor []byte     // A cursor to where the next page of data will begin.
 	PageSize   int        // Number of records to read from the page.
 }
+
+type StatsResponse struct {
+	PageCursor []byte      // A cursor to where the next page of data will begin.
+	Records    []*Response // Response rows from the database.
+}
