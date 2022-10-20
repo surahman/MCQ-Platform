@@ -411,7 +411,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Gets the statistics associated with a specific test if the user created the test.\nExtracts username from the JWT and the Test ID is provided as a path parameter.",
+                "description": "Gets the paginated statistics associated with a specific test if the user created the test.\nExtracts username from the JWT and the Test ID is provided as a query parameter.\nA query string to be appended to the next request to retrieve the next page of data will be returned in the response.",
                 "consumes": [
                     "application/json"
                 ],
@@ -421,8 +421,8 @@ const docTemplate = `{
                 "tags": [
                     "score scores stats statistics"
                 ],
-                "summary": "Get all statistics associated with a specific test.",
-                "operationId": "getStats",
+                "summary": "Get paginated statistics associated with a specific test.",
+                "operationId": "getStatsPaged",
                 "parameters": [
                     {
                         "type": "string",
@@ -430,13 +430,25 @@ const docTemplate = `{
                         "name": "quiz_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The page cursor into the query results records.",
+                        "name": "pageCursor",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The number of records to retrieve on this page.",
+                        "name": "pageSize",
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Statistics will be in the payload",
+                        "description": "A page of statistics data",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Success"
+                            "$ref": "#/definitions/model_rest.StatsResponse"
                         }
                     },
                     "400": {
@@ -833,6 +845,35 @@ const docTemplate = `{
                 }
             }
         },
+        "model_cassandra.Response": {
+            "type": "object",
+            "required": [
+                "responses"
+            ],
+            "properties": {
+                "quiz_id": {
+                    "type": "string"
+                },
+                "responses": {
+                    "description": "The answer card to a quiz. The rows indices are the question numbers and the columns indices are the selected option numbers.",
+                    "type": "array",
+                    "maxItems": 10,
+                    "minItems": 0,
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "score": {
+                    "type": "number"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "model_cassandra.UserAccount": {
             "type": "object",
             "required": [
@@ -931,6 +972,36 @@ const docTemplate = `{
                 "token": {
                     "description": "JWT string sent to and validated by the server.",
                     "type": "string"
+                }
+            }
+        },
+        "model_rest.StatsResponse": {
+            "type": "object",
+            "properties": {
+                "links": {
+                    "type": "object",
+                    "properties": {
+                        "next_page": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "metadata": {
+                    "type": "object",
+                    "properties": {
+                        "num_records": {
+                            "type": "integer"
+                        },
+                        "quiz_id": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "records": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model_cassandra.Response"
+                    }
                 }
             }
         },

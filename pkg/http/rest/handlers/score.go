@@ -121,3 +121,65 @@ func GetStats(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin
 		context.JSON(http.StatusOK, &model_rest.Success{Message: "score cards", Payload: response})
 	}
 }
+
+// GetStatsPage will retrieve paginated test statistics with the provided test id and the username from the JWT payload.
+// @Summary     Get paginated statistics associated with a specific test.
+// @Description Gets the paginated statistics associated with a specific test if the user created the test.
+// @Description Extracts username from the JWT and the Test ID is provided as a query parameter.
+// @Description A query string to be appended to the next request to retrieve the next page of data will be returned in the response.
+// @Tags        score scores stats statistics
+// @Id          getStatsPaged
+// @Accept      json
+// @Produce     json
+// @Security    ApiKeyAuth
+// @Param       quiz_id    path     string                   true  "The Test ID for the requested statistics."
+// @Param       pageCursor query    string                   false "The page cursor into the query results records."
+// @Param       pageSize   query    int                      false "The number of records to retrieve on this page."
+// @Success     200        {object} model_rest.StatsResponse "A page of statistics data"
+// @Failure     400        {object} model_rest.Error         "Error message with any available details in payload"
+// @Failure     403        {object} model_rest.Error         "Error message with any available details in payload"
+// @Failure     404        {object} model_rest.Error         "Error message with any available details in payload"
+// @Failure     500        {object} model_rest.Error         "Error message with any available details in payload"
+// @Router      /score/stats/{quiz_id} [get]
+func GetStatsPage(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc {
+	return func(context *gin.Context) {
+		var err error
+		var dbRecord any
+		var response []*model_cassandra.Response
+		var username string
+		var quizId gocql.UUID
+
+		if quizId, err = gocql.ParseUUID(context.Param("quizId")); err != nil {
+			context.AbortWithStatusJSON(http.StatusBadRequest, &model_rest.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
+			return
+		}
+
+		// Get username from JWT.
+		if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil {
+			logger.Error("failed to validate JWT in create quiz handler", zap.Error(err))
+			context.AbortWithStatusJSON(http.StatusInternalServerError, &model_rest.Error{Message: "unable to verify username"})
+			return
+		}
+
+		// Get quiz record from database and check to ensure requester is author.
+		if dbRecord, err = db.Execute(cassandra.ReadQuizQuery, quizId); err != nil {
+			cassandraError := err.(*cassandra.Error)
+			context.AbortWithStatusJSON(cassandraError.Status, &model_rest.Error{Message: "error verifying quiz author", Payload: cassandraError.Message})
+			return
+		}
+		if username != dbRecord.(*model_cassandra.Quiz).Author {
+			context.AbortWithStatusJSON(http.StatusForbidden, &model_rest.Error{Message: "error verifying quiz author"})
+			return
+		}
+
+		// Get scorecard record from database.
+		if dbRecord, err = db.Execute(cassandra.ReadResponseStatisticsQuery, quizId); err != nil {
+			cassandraError := err.(*cassandra.Error)
+			context.AbortWithStatusJSON(cassandraError.Status, &model_rest.Error{Message: "error retrieving score card", Payload: cassandraError.Message})
+			return
+		}
+		response = dbRecord.([]*model_cassandra.Response)
+
+		context.JSON(http.StatusOK, &model_rest.Success{Message: "score cards", Payload: response})
+	}
+}

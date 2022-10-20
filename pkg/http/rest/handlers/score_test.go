@@ -348,3 +348,8 @@ func TestGetStats(t *testing.T) {
 		})
 	}
 }
+
+func TestGetStatsPage(t *testing.T) {
+	router := getRouter()
+	_ = router
+}
