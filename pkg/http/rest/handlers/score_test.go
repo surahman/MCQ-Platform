@@ -780,6 +780,36 @@ func TestGetStatsPage(t *testing.T) {
 				outputParam1: "tHisIsAnEnCrYPtEdCUrS0r",
 				times:        1,
 			},
+		}, {
+			name:           "success no cursor",
+			path:           "/stats-page/success-no-cursor/",
+			quizId:         gocql.TimeUUID().String(),
+			querySegment:   "?pageSize=3",
+			expectedLen:    3,
+			expectedStatus: http.StatusOK,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "expected-username",
+				times:        1,
+			},
+			cassandraQuizData: &mockCassandraData{
+				outputParam: &model_cassandra.Quiz{
+					Author: "expected-username",
+				},
+				times: 1,
+			},
+			authDecryptData: &mockAuthData{times: 0},
+			cassandraStatsData: &mockCassandraData{
+				outputParam: &model_cassandra.StatsResponse{
+					PageCursor: []byte("cursor to next page"),
+					Records:    []*model_cassandra.Response{{}, {}, {}},
+					PageSize:   3,
+				},
+				times: 1,
+			},
+			authEncryptData: &mockAuthData{
+				outputParam1: "tHisIsAnEnCrYPtEdCUrS0r",
+				times:        1,
+			},
 		},
 		// ----- test cases end ----- //
 	}

@@ -143,7 +143,7 @@ func GetStats(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin
 // @Failure     403        {object} model_rest.Error         "Error message with any available details in payload"
 // @Failure     404        {object} model_rest.Error         "Error message with any available details in payload"
 // @Failure     500        {object} model_rest.Error         "Error message with any available details in payload"
-// @Router      /score/stats/{quiz_id} [get]
+// @Router      /score/stats-paged/{quiz_id} [get]
 func GetStatsPage(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		var err error

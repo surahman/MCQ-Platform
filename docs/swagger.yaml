@@ -461,7 +461,7 @@ paths:
       summary: View a quiz.
       tags:
       - view test quiz
-  /score/stats/{quiz_id}:
+  /score/stats-paged/{quiz_id}:
     get:
       consumes:
       - application/json
@@ -510,6 +510,48 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get paginated statistics associated with a specific test.
+      tags:
+      - score scores stats statistics
+  /score/stats/{quiz_id}:
+    get:
+      consumes:
+      - application/json
+      description: |-
+        Gets the statistics associated with a specific test if the user created the test.
+        Extracts username from the JWT and the Test ID is provided as a path parameter.
+      operationId: getStats
+      parameters:
+      - description: The Test ID for the requested statistics.
+        in: path
+        name: quiz_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Statistics will be in the payload
+          schema:
+            $ref: '#/definitions/model_rest.Success'
+        "400":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "403":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "404":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "500":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+      security:
+      - ApiKeyAuth: []
+      summary: Get all statistics associated with a specific test.
       tags:
       - score scores stats statistics
   /score/test/{quiz_id}:

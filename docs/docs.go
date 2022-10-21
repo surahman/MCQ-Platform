@@ -404,7 +404,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/score/stats/{quiz_id}": {
+        "/score/stats-paged/{quiz_id}": {
             "get": {
                 "security": [
                     {
@@ -449,6 +449,68 @@ const docTemplate = `{
                         "description": "A page of statistics data",
                         "schema": {
                             "$ref": "#/definitions/model_rest.StatsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/model_rest.Error"
+                        }
+                    },
+                    "403": {
+                        "description": "Error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/model_rest.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/model_rest.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/model_rest.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/score/stats/{quiz_id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Gets the statistics associated with a specific test if the user created the test.\nExtracts username from the JWT and the Test ID is provided as a path parameter.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "score scores stats statistics"
+                ],
+                "summary": "Get all statistics associated with a specific test.",
+                "operationId": "getStats",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The Test ID for the requested statistics.",
+                        "name": "quiz_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Statistics will be in the payload",
+                        "schema": {
+                            "$ref": "#/definitions/model_rest.Success"
                         }
                     },
                     "400": {
