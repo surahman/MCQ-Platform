@@ -7,6 +7,7 @@ import (
 // Response represents a response to a quiz and is a row in responses table.
 type Response struct {
 	Username      string  `json:"username,omitempty" cql:"username" validator:"required"`
+	Author        string  `json:"author,omitempty" cql:"author" validator:"required"`
 	Score         float64 `json:"score,omitempty" cql:"score" validator:"required"`
 	*QuizResponse `validator:"required"`
 	QuizID        gocql.UUID `json:"quiz_id,omitempty" cql:"quiz_id" validator:"required"`

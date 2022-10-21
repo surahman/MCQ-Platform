@@ -2449,18 +2449,18 @@ func prepareStatsResponse(auth auth.Auth, dbResponse *model_cassandra.StatsRespo
         var nextPageLink bytes.Buffer
 
         // Construct page cursor link segment.
-        if len(dbResponse.PageCursor) != 0 </span><span class="cov7" title="5">{
+        if len(dbResponse.PageCursor) != 0 </span><span class="cov6" title="4">{
                 cursor, err := auth.EncryptToString(dbResponse.PageCursor)
                 if err != nil </span><span class="cov1" title="1">{
                         return nil, err
                 }</span>
-                <span class="cov6" title="4">if _, err := nextPageLink.WriteString(fmt.Sprintf("?pageCursor=%s", cursor)); err != nil </span><span class="cov0" title="0">{
+                <span class="cov5" title="3">if _, err := nextPageLink.WriteString(fmt.Sprintf("?pageCursor=%s", cursor)); err != nil </span><span class="cov0" title="0">{
                         return nil, fmt.Errorf("failed to generate next page cursor link segment: %s", err.Error())
                 }</span>
         }
 
         // Construct page size link segment.
-        <span class="cov8" title="7">if len(dbResponse.PageCursor) != 0 &amp;&amp; dbResponse.PageSize &gt; 0 </span><span class="cov5" title="3">{
+        <span class="cov8" title="7">if len(dbResponse.PageCursor) != 0 &amp;&amp; dbResponse.PageSize &gt; 0 </span><span class="cov3" title="2">{
                 if _, err := nextPageLink.WriteString(fmt.Sprintf("&amp;pageSize=%d", dbResponse.PageSize)); err != nil </span><span class="cov0" title="0">{
                         return nil, fmt.Errorf("failed to generate next page size link segment: %s", err.Error())
                 }</span>
