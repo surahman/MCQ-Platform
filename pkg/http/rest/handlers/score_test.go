@@ -567,6 +567,7 @@ func TestGetStatsPage(t *testing.T) {
 		querySegment        string
 		expectedLen         int
 		expectedStatus      int
+		expectLink          require.BoolAssertionFunc
 		authValidateJWTData *mockAuthData
 		cassandraQuizData   *mockCassandraData
 		authDecryptData     *mockAuthData
@@ -581,6 +582,7 @@ func TestGetStatsPage(t *testing.T) {
 			querySegment:   "?pageCursor=PaGeCuRs0R==&pageSize=3",
 			expectedLen:    0,
 			expectedStatus: http.StatusBadRequest,
+			expectLink:     require.False,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "",
 				times:        0,
@@ -603,6 +605,7 @@ func TestGetStatsPage(t *testing.T) {
 			querySegment:   "?pageCursor=PaGeCuRs0R==&pageSize=3",
 			expectedLen:    0,
 			expectedStatus: http.StatusInternalServerError,
+			expectLink:     require.False,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "",
 				outputErr:    errors.New("invalid token"),
@@ -626,6 +629,7 @@ func TestGetStatsPage(t *testing.T) {
 			querySegment:   "?pageCursor=PaGeCuRs0R==&pageSize=3",
 			expectedLen:    0,
 			expectedStatus: http.StatusNotFound,
+			expectLink:     require.False,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "expected-username",
 				times:        1,
@@ -652,6 +656,7 @@ func TestGetStatsPage(t *testing.T) {
 			querySegment:   "?pageCursor=PaGeCuRs0R==&pageSize=3",
 			expectedLen:    0,
 			expectedStatus: http.StatusForbidden,
+			expectLink:     require.False,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "expected-username",
 				times:        1,
@@ -677,6 +682,7 @@ func TestGetStatsPage(t *testing.T) {
 			querySegment:   "?pageCursor=PaGeCuRs0R==&pageSize=ThisShouldBeANaturalNumber",
 			expectedLen:    0,
 			expectedStatus: http.StatusBadRequest,
+			expectLink:     require.False,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "expected-username",
 				times:        1,
@@ -702,6 +708,7 @@ func TestGetStatsPage(t *testing.T) {
 			querySegment:   "?pageCursor=PaGeCuRs0R==&pageSize=3",
 			expectedLen:    0,
 			expectedStatus: http.StatusInternalServerError,
+			expectLink:     require.False,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "expected-username",
 				times:        1,
@@ -730,6 +737,7 @@ func TestGetStatsPage(t *testing.T) {
 			querySegment:   "?pageCursor=PaGeCuRs0R==&pageSize=3",
 			expectedLen:    0,
 			expectedStatus: http.StatusInternalServerError,
+			expectLink:     require.False,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "expected-username",
 				times:        1,
@@ -757,6 +765,7 @@ func TestGetStatsPage(t *testing.T) {
 			querySegment:   "?pageCursor=PaGeCuRs0R==&pageSize=3",
 			expectedLen:    3,
 			expectedStatus: http.StatusOK,
+			expectLink:     require.True,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "expected-username",
 				times:        1,
@@ -787,6 +796,7 @@ func TestGetStatsPage(t *testing.T) {
 			querySegment:   "?pageSize=3",
 			expectedLen:    3,
 			expectedStatus: http.StatusOK,
+			expectLink:     require.False,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "expected-username",
 				times:        1,
@@ -800,15 +810,15 @@ func TestGetStatsPage(t *testing.T) {
 			authDecryptData: &mockAuthData{times: 0},
 			cassandraStatsData: &mockCassandraData{
 				outputParam: &model_cassandra.StatsResponse{
-					PageCursor: []byte("cursor to next page"),
+					PageCursor: []byte{},
 					Records:    []*model_cassandra.Response{{}, {}, {}},
 					PageSize:   3,
 				},
 				times: 1,
 			},
 			authEncryptData: &mockAuthData{
-				outputParam1: "tHisIsAnEnCrYPtEdCUrS0r",
-				times:        1,
+				outputParam1: "",
+				times:        0,
 			},
 		},
 		// ----- test cases end ----- //
@@ -867,7 +877,7 @@ func TestGetStatsPage(t *testing.T) {
 				require.Equal(t, testCase.expectedLen, len(response.Records), "records count does not match expected")
 				require.Equal(t, testCase.expectedLen, response.Metadata.NumRecords, "metadata record count does not match expected")
 				require.Equal(t, testCase.quizId, response.Metadata.QuizID.String(), "quiz id does not match expected")
-				require.True(t, len(response.Links.NextPage) != 0, "link to next page should not be empty")
+				testCase.expectLink(t, len(response.Links.NextPage) != 0, "link to next page expectation failed")
 			}
 		})
 	}
