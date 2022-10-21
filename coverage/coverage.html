@@ -55,7 +55,7 @@
 			<div id="nav">
 				<select id="files">
 				
-				<option value="file0">github.com/surahman/mcq-platform/pkg/auth/auth.go (86.7%)</option>
+				<option value="file0">github.com/surahman/mcq-platform/pkg/auth/auth.go (82.9%)</option>
 				
 				<option value="file1">github.com/surahman/mcq-platform/pkg/auth/config.go (93.8%)</option>
 				
@@ -63,13 +63,13 @@
 				
 				<option value="file3">github.com/surahman/mcq-platform/pkg/cassandra/cassandra.go (87.8%)</option>
 				
-				<option value="file4">github.com/surahman/mcq-platform/pkg/cassandra/cassandra_queries.go (85.8%)</option>
+				<option value="file4">github.com/surahman/mcq-platform/pkg/cassandra/cassandra_queries.go (85.2%)</option>
 				
 				<option value="file5">github.com/surahman/mcq-platform/pkg/cassandra/config.go (93.8%)</option>
 				
 				<option value="file6">github.com/surahman/mcq-platform/pkg/cassandra/error.go (91.7%)</option>
 				
-				<option value="file7">github.com/surahman/mcq-platform/pkg/cassandra/testdata.go (87.9%)</option>
+				<option value="file7">github.com/surahman/mcq-platform/pkg/cassandra/testdata.go (86.8%)</option>
 				
 				<option value="file8">github.com/surahman/mcq-platform/pkg/constants/constants.go (100.0%)</option>
 				
@@ -83,11 +83,11 @@
 				
 				<option value="file13">github.com/surahman/mcq-platform/pkg/http/rest/handlers/quiz.go (95.7%)</option>
 				
-				<option value="file14">github.com/surahman/mcq-platform/pkg/http/rest/handlers/score.go (100.0%)</option>
+				<option value="file14">github.com/surahman/mcq-platform/pkg/http/rest/handlers/score.go (98.0%)</option>
 				
 				<option value="file15">github.com/surahman/mcq-platform/pkg/http/rest/handlers/users.go (92.7%)</option>
 				
-				<option value="file16">github.com/surahman/mcq-platform/pkg/http/rest/rest.go (7.7%)</option>
+				<option value="file16">github.com/surahman/mcq-platform/pkg/http/rest/rest.go (7.5%)</option>
 				
 				<option value="file17">github.com/surahman/mcq-platform/pkg/http/rest/testdata.go (100.0%)</option>
 				
@@ -123,7 +123,12 @@
 		<pre class="file" id="file0" style="display: none">package auth
 
 import (
+        "crypto/aes"
+        "crypto/cipher"
+        "crypto/rand"
+        "encoding/base64"
         "errors"
+        "io"
         "time"
 
         "github.com/golang-jwt/jwt/v4"
@@ -159,6 +164,12 @@ type Auth interface {
         // RefreshThreshold returns the time before the end of the JSON Web Tokens validity interval that a JWT can be
         // refreshed in.
         RefreshThreshold() int64
+
+        // EncryptToString will generate an encrypted base64 encoded character from the plaintext.
+        EncryptToString([]byte) (string, error)
+
+        // DecryptFromString will decrypt an encrypted base64 encoded character from the ciphertext.
+        DecryptFromString(string) ([]byte, error)
 }
 
 // Check to ensure the Auth interface has been implemented.
@@ -166,8 +177,9 @@ var _ Auth = &amp;authImpl{}
 
 // authImpl implements the Auth interface and contains the logic for authorization functionality.
 type authImpl struct {
-        conf   *config
-        logger *logger.Logger
+        cryptoSecret []byte
+        conf         *config
+        logger       *logger.Logger
 }
 
 // NewAuth will create a new Authorization configuration by loading it.
@@ -185,7 +197,9 @@ func newAuthImpl(fs *afero.Fs, logger *logger.Logger) (a *authImpl, err error) <
                 a.logger.Error("failed to load Authorization configurations from disk", zap.Error(err))
                 return nil, err
         }</span>
-        <span class="cov3" title="2">return</span>
+        <span class="cov3" title="2">a.cryptoSecret = []byte(a.conf.General.CryptoSecret)
+
+        return</span>
 }
 
 // HashPassword hashes a password using the Bcrypt algorithm to avoid plaintext storage.
@@ -282,6 +296,77 @@ func (a *authImpl) RefreshJWT(token string) (authResponse *model_rest.JWTAuthRes
 func (a *authImpl) RefreshThreshold() int64 <span class="cov1" title="1">{
         return a.conf.JWTConfig.RefreshThreshold
 }</span>
+
+// encryptAES256 employs Authenticated Encryption with Associated Data using Galois/Counter mode and returns the cipher
+// as a Base64 encoded string to be used in URIs.
+func (a *authImpl) encryptAES256(data []byte) (cipherStr string, cipherBytes []byte, err error) <span class="cov3" title="2">{
+        var cipherBlock cipher.Block
+        var gcm cipher.AEAD
+
+        if cipherBlock, err = aes.NewCipher(a.cryptoSecret); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov3" title="2">if gcm, err = cipher.NewGCM(cipherBlock); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov3" title="2">nonce := make([]byte, gcm.NonceSize())
+        if _, err = io.ReadFull(rand.Reader, nonce); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        // Encrypt to cipher text.
+        <span class="cov3" title="2">cipherBytes = gcm.Seal(nonce, nonce, data, nil)
+
+        // Convert to Base64 URL encoded string for use in URLs.
+        cipherStr = base64.URLEncoding.EncodeToString(cipherBytes)
+
+        return</span>
+}
+
+// decryptAES256 employs Authenticated Encryption with Associated Data using Galois/Counter mode and returns the
+// decrypted plaintext bytes.
+func (a *authImpl) decryptAES256(data []byte) (cipherBytes []byte, err error) <span class="cov3" title="2">{
+        var cipherBlock cipher.Block
+        var gcm cipher.AEAD
+        var nonceSize int
+
+        if cipherBlock, err = aes.NewCipher(a.cryptoSecret); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov3" title="2">if gcm, err = cipher.NewGCM(cipherBlock); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov3" title="2">if nonceSize = gcm.NonceSize(); nonceSize &lt; 0 </span><span class="cov0" title="0">{
+                return nil, errors.New("bad nonce size")
+        }</span>
+
+        // Extract the nonce and cipher blocks from the data.
+        <span class="cov3" title="2">nonce, cipherText := data[:nonceSize], data[nonceSize:]
+
+        // Decrypt cipher text.
+        cipherBytes, err = gcm.Open(nil, nonce, cipherText, nil)
+
+        return</span>
+}
+
+// EncryptToString will generate an encrypted base64 encoded character from the plaintext.
+func (a *authImpl) EncryptToString(plaintext []byte) (ciphertext string, err error) <span class="cov1" title="1">{
+        ciphertext, _, err = a.encryptAES256(plaintext)
+        return
+}</span>
+
+// DecryptFromString will decrypt an encrypted base64 encoded character from the ciphertext.
+func (a *authImpl) DecryptFromString(ciphertext string) (plaintext []byte, err error) <span class="cov1" title="1">{
+        var bytes []byte
+        if bytes, err = base64.URLEncoding.DecodeString(ciphertext); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+        <span class="cov1" title="1">return a.decryptAES256(bytes)</span>
+}
 </pre>
 		
 		<pre class="file" id="file1" style="display: none">package auth
@@ -302,7 +387,8 @@ type config struct {
                 RefreshThreshold   int64  `json:"refresh_threshold,omitempty" yaml:"refresh_threshold,omitempty" mapstructure:"refresh_threshold" validate:"required,min=1,ltefield=ExpirationDuration"`
         } `json:"jwt,omitempty" yaml:"jwt,omitempty" mapstructure:"jwt" validate:"required"`
         General struct {
-                BcryptCost int `json:"bcrypt_cost,omitempty" yaml:"bcrypt_cost,omitempty" mapstructure:"bcrypt_cost" validate:"required,min=4,max=31"`
+                BcryptCost   int    `json:"bcrypt_cost,omitempty" yaml:"bcrypt_cost,omitempty" mapstructure:"bcrypt_cost" validate:"required,min=4,max=31"`
+                CryptoSecret string `json:"crypto_secret,omitempty" yaml:"crypto_secret,omitempty" mapstructure:"crypto_secret" validate:"required,len=32"`
         } `json:"general,omitempty" yaml:"general,omitempty" mapstructure:"general" validate:"required"`
 }
 
@@ -312,7 +398,7 @@ func newConfig() *config <span class="cov4" title="3">{
 }</span>
 
 // Load will attempt to load configurations from a file on a file system and then overwrite values using environment variables.
-func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="14">{
+func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="16">{
         viper.SetFs(fs)
         viper.SetConfigName(constants.GetAuthFileName())
         viper.SetConfigType("yaml")
@@ -327,11 +413,11 @@ func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="14">
                 return
         }</span>
 
-        <span class="cov9" title="13">if err = viper.Unmarshal(cfg); err != nil </span><span class="cov0" title="0">{
+        <span class="cov9" title="15">if err = viper.Unmarshal(cfg); err != nil </span><span class="cov0" title="0">{
                 return
         }</span>
 
-        <span class="cov9" title="13">if err = validator.ValidateStruct(cfg); err != nil </span><span class="cov8" title="9">{
+        <span class="cov9" title="15">if err = validator.ValidateStruct(cfg); err != nil </span><span class="cov8" title="11">{
                 return
         }</span>
 
@@ -354,7 +440,8 @@ jwt:
   expiration_duration: 600
   refresh_threshold: 60
 general:
-  bcrypt_cost: 8`,
+  bcrypt_cost: 8
+  crypto_secret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z$`,
 
                 "no_issuer": `
 jwt:
@@ -362,7 +449,8 @@ jwt:
   expiration_duration: 600
   refresh_threshold: 60
 general:
-  bcrypt_cost: 8`,
+  bcrypt_cost: 8
+  crypto_secret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z$`,
 
                 "bcrypt_cost_below_4": `
 jwt:
@@ -371,7 +459,8 @@ jwt:
   expiration_duration: 600
   refresh_threshold: 60
 general:
-  bcrypt_cost: 2`,
+  bcrypt_cost: 2
+  crypto_secret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z$`,
 
                 "bcrypt_cost_above_31": `
 jwt:
@@ -380,7 +469,8 @@ jwt:
   expiration_duration: 600
   refresh_threshold: 60
 general:
-  bcrypt_cost: 32`,
+  bcrypt_cost: 32
+  crypto_secret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z$`,
 
                 "jwt_expiration_below_60s": `
 jwt:
@@ -389,7 +479,8 @@ jwt:
   expiration_duration: 59
   refresh_threshold: 40
 general:
-  bcrypt_cost: 8`,
+  bcrypt_cost: 8
+  crypto_secret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z$`,
 
                 "jwt_key_below_8": `
 jwt:
@@ -398,7 +489,8 @@ jwt:
   expiration_duration: 600
   refresh_threshold: 60
 general:
-  bcrypt_cost: 8`,
+  bcrypt_cost: 8
+  crypto_secret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z$`,
 
                 "jwt_key_above_256": `
 jwt:
@@ -407,7 +499,8 @@ jwt:
   expiration_duration: 600
   refresh_threshold: 60
 general:
-  bcrypt_cost: 8`,
+  bcrypt_cost: 8
+  crypto_secret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z$`,
 
                 "low_refresh_threshold": `
 jwt:
@@ -416,7 +509,8 @@ jwt:
   expiration_duration: 600
   refresh_threshold: 0
 general:
-  bcrypt_cost: 8`,
+  bcrypt_cost: 8
+  crypto_secret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z$`,
 
                 "refresh_threshold_gt_expiration": `
 jwt:
@@ -425,7 +519,28 @@ jwt:
   expiration_duration: 600
   refresh_threshold: 601
 general:
-  bcrypt_cost: 8`,
+  bcrypt_cost: 8
+  crypto_secret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z$`,
+
+                "crypto_key_too_short": `
+jwt:
+  key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
+  issuer: MCQ Platform
+  expiration_duration: 600
+  refresh_threshold: 60
+general:
+  bcrypt_cost: 8
+  crypto_secret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z`,
+
+                "crypto_key_too_long": `
+jwt:
+  key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
+  issuer: MCQ Platform
+  expiration_duration: 600
+  refresh_threshold: 60
+general:
+  bcrypt_cost: 8
+  crypto_secret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z$*`,
         }
 }</span>
 </pre>
@@ -525,7 +640,7 @@ func (c *cassandraImpl) Close() error <span class="cov3" title="4">{
 }
 
 // Execute wraps the methods that create, read, update, and delete records from tables on the Cassandra cluster.
-func (c *cassandraImpl) Execute(request func(Cassandra, any) (any, error), params any) (any, error) <span class="cov10" title="98">{
+func (c *cassandraImpl) Execute(request func(Cassandra, any) (any, error), params any) (any, error) <span class="cov10" title="117">{
         return request(c, params)
 }</span>
 
@@ -548,7 +663,7 @@ func (c *cassandraImpl) configureCluster() (cluster *gocql.ClusterConfig, err er
 }
 
 // verifySession will check to see if a session is established.
-func (c *cassandraImpl) verifySession() error <span class="cov5" title="8">{
+func (c *cassandraImpl) verifySession() error <span class="cov4" title="8">{
         if c.session == nil || c.session.Closed() </span><span class="cov4" title="5">{
                 return errors.New("no session established")
         }</span>
@@ -592,14 +707,14 @@ import (
 
 // truncateTableQuery will empty a table.
 // param: name of the table
-func truncateTableQuery(c Cassandra, params any) (response any, err error) <span class="cov6" title="11">{
+func truncateTableQuery(c Cassandra, params any) (response any, err error) <span class="cov6" title="12">{
         conn := c.(*cassandraImpl)
         tableName := params.(string)
         if err = conn.session.Query(fmt.Sprintf("TRUNCATE TABLE %s;", tableName)).Exec(); err != nil </span><span class="cov0" title="0">{
                 conn.logger.Error("failed to truncate table", zap.String("table name", tableName), zap.Error(err))
         }</span>
 
-        <span class="cov6" title="11">return</span>
+        <span class="cov6" title="12">return</span>
 }
 
 // HealthcheckQuery will run a query on the cluster to check if it responds.
@@ -818,7 +933,7 @@ func PublishQuizQuery(c Cassandra, params any) (response any, err error) <span c
 
 // CreateResponseQuery will insert a response record into the responses table.
 // Param: pointer to the user struct containing the response parameters
-func CreateResponseQuery(c Cassandra, params any) (response any, err error) <span class="cov7" title="16">{
+func CreateResponseQuery(c Cassandra, params any) (response any, err error) <span class="cov9" title="35">{
         conn := c.(*cassandraImpl)
         input := params.(*model_cassandra.Response)
         resp := model_cassandra.Response{QuizResponse: &amp;model_cassandra.QuizResponse{}}
@@ -832,19 +947,19 @@ func CreateResponseQuery(c Cassandra, params any) (response any, err error) <spa
                 return nil, NewError(err.Error()).internalError()
         }</span>
 
-        <span class="cov7" title="16">if !applied </span><span class="cov4" title="4">{
+        <span class="cov9" title="35">if !applied </span><span class="cov5" title="7">{
                 msg := "failed to record response, user has already taken this quiz"
                 conn.logger.Error(msg, zap.Strings("Response info:", []string{input.Username, input.QuizID.String()}), zap.Error(err))
                 return nil, NewError(msg).conflictError()
         }</span>
 
-        <span class="cov6" title="12">return nil, nil</span>
+        <span class="cov9" title="28">return nil, nil</span>
 }
 
 // ReadResponseQuery will read a response record from the responses table.
 // Param: pointer to the response struct containing the query parameters
 // Return: address to a response record
-func ReadResponseQuery(c Cassandra, params any) (response any, err error) <span class="cov4" title="5">{
+func ReadResponseQuery(c Cassandra, params any) (response any, err error) <span class="cov6" title="8">{
         conn := c.(*cassandraImpl)
         input := params.(*model_cassandra.QuizMutateRequest)
         resp := model_cassandra.Response{QuizResponse: &amp;model_cassandra.QuizResponse{}}
@@ -856,7 +971,7 @@ func ReadResponseQuery(c Cassandra, params any) (response any, err error) <span 
                 return nil, NewError("score card not found").notFoundError()
         }</span>
 
-        <span class="cov4" title="4">return &amp;resp, nil</span>
+        <span class="cov5" title="7">return &amp;resp, nil</span>
 }
 
 // ReadResponseStatisticsQuery will read all response records from the responses table corresponding to a Quiz ID.
@@ -867,26 +982,69 @@ func ReadResponseStatisticsQuery(c Cassandra, params any) (response any, err err
         input := params.(gocql.UUID)
         var results []*model_cassandra.Response
 
-        scanner := conn.session.Query(model_cassandra.ReadResponseStatistics, input).Iter().Scanner()
-        defer func(scanner gocql.Scanner) </span><span class="cov4" title="5">{
-                err := scanner.Err()
-                if err != nil </span><span class="cov0" title="0">{
-                        conn.logger.Error("failed to close scanner whilst reading response statistics",
+        iter := conn.session.Query(model_cassandra.ReadResponseStatistics, input).Iter()
+        defer func(iter *gocql.Iter) </span><span class="cov4" title="5">{
+                if err := iter.Close(); err != nil </span><span class="cov0" title="0">{
+                        conn.logger.Error("failed to close iterator whilst reading response statistics",
                                 zap.String("quiz_id", input.String()), zap.Error(err))
                 }</span>
-        }(scanner)
+        }(iter)
 
-        <span class="cov4" title="5">for scanner.Next() </span><span class="cov4" title="4">{
+        <span class="cov4" title="5">if numRows := iter.NumRows(); numRows &gt; 0 </span><span class="cov2" title="2">{
+                results = make([]*model_cassandra.Response, 0, numRows)
+        }</span>
+
+        <span class="cov4" title="5">scanRows := iter.Scanner()
+        for scanRows.Next() </span><span class="cov5" title="7">{
                 row := model_cassandra.Response{QuizResponse: &amp;model_cassandra.QuizResponse{}}
-                err = scanner.Scan(&amp;row.Username, &amp;row.QuizID, &amp;row.Responses, &amp;row.Score)
-                if err != nil </span><span class="cov0" title="0">{
+                if err = scanRows.Scan(&amp;row.Username, &amp;row.QuizID, &amp;row.Responses, &amp;row.Score); err != nil </span><span class="cov0" title="0">{
                         conn.logger.Error("failed to read row in response statistics",
                                 zap.String("quiz_id", input.String()), zap.Error(err))
+                        return nil, NewError(err.Error()).internalError()
                 }</span>
-                <span class="cov4" title="4">results = append(results, &amp;row)</span>
+                <span class="cov5" title="7">results = append(results, &amp;row)</span>
         }
 
         <span class="cov4" title="5">return results, err</span>
+}
+
+// ReadResponseStatisticsPageQuery will read response records pages from the responses table corresponding to a Quiz ID.
+// Param: StatsRequest containing the page size and state to the page to be read
+// Return: address to slice of responses of a page size specified in the request
+func ReadResponseStatisticsPageQuery(c Cassandra, params any) (response any, err error) <span class="cov7" title="13">{
+        conn := c.(*cassandraImpl)
+        input := params.(*model_cassandra.StatsRequest)
+        var results model_cassandra.StatsResponse
+
+        // Get page of response records.
+        iter := conn.session.Query(model_cassandra.ReadResponseStatistics, input.QuizID).PageSize(input.PageSize).PageState(input.PageCursor).Iter()
+        defer func(iter *gocql.Iter) </span><span class="cov7" title="13">{
+                if err := iter.Close(); err != nil </span><span class="cov0" title="0">{
+                        conn.logger.Error("failed to close iterator whilst reading response statistics page",
+                                zap.String("quiz_id", input.QuizID.String()), zap.Error(err))
+                }</span>
+        }(iter)
+
+        // Configure results with next pages cursor, current results per page, and current pages data container.
+        <span class="cov7" title="13">results.PageSize = input.PageSize
+        results.PageCursor = iter.PageState()
+        if numRows := iter.NumRows(); numRows &gt; 0 </span><span class="cov6" title="10">{
+                results.Records = make([]*model_cassandra.Response, 0, numRows)
+        }</span>
+
+        // Read-in rows from the database.
+        <span class="cov7" title="13">scanRows := iter.Scanner()
+        for scanRows.Next() </span><span class="cov8" title="20">{
+                row := model_cassandra.Response{QuizResponse: &amp;model_cassandra.QuizResponse{}}
+                if err = scanRows.Scan(&amp;row.Username, &amp;row.QuizID, &amp;row.Responses, &amp;row.Score); err != nil </span><span class="cov0" title="0">{
+                        conn.logger.Error("failed to read row in response statistics page",
+                                zap.String("quiz_id", input.QuizID.String()), zap.Error(err))
+                        return nil, NewError(err.Error()).internalError()
+                }</span>
+                <span class="cov8" title="20">results.Records = append(results.Records, &amp;row)</span>
+        }
+
+        <span class="cov7" title="13">return &amp;results, err</span>
 }
 </pre>
 		
@@ -965,7 +1123,7 @@ type Error struct {
 var _ error = &amp;Error{}
 
 // NewError will generate a new Cassandra error.
-func NewError(message string) *Error <span class="cov10" title="40">{
+func NewError(message string) *Error <span class="cov10" title="43">{
         return &amp;Error{Message: message}
 }</span>
 
@@ -993,7 +1151,7 @@ func (err *Error) notFoundError() *Error <span class="cov4" title="5">{
 }</span>
 
 // conflictError sets the HTTP Conflict status code.
-func (err *Error) conflictError() *Error <span class="cov6" title="9">{
+func (err *Error) conflictError() *Error <span class="cov6" title="12">{
         err.Status = http.StatusConflict
         return err
 }</span>
@@ -1262,34 +1420,50 @@ func GetTestQuizzes() map[string]*model_cassandra.Quiz <span class="cov5" title=
 
 // GetTestResponses is a map of test response data.
 func GetTestResponses() map[string]*model_cassandra.Response <span class="cov1" title="1">{
-        data := make(map[string]*model_cassandra.Response)
-
-        data["user-1_myPubQuiz"] = &amp;model_cassandra.Response{
-                Username:     "user-1",
-                Score:        1.0,
-                QuizResponse: &amp;model_cassandra.QuizResponse{Responses: [][]int32{{3}, {0}}},
-                QuizID:       quizzesUUIDMapping["myPubQuiz"],
+        return map[string]*model_cassandra.Response{
+                "user-1_myPubQuiz": {
+                        Username:     "user-1",
+                        Score:        1.0,
+                        QuizResponse: &amp;model_cassandra.QuizResponse{Responses: [][]int32{{3}, {0}}},
+                        QuizID:       quizzesUUIDMapping["myPubQuiz"],
+                },
+                "user-2_myPubQuiz": {
+                        Username:     "user-2",
+                        Score:        0.5,
+                        QuizResponse: &amp;model_cassandra.QuizResponse{Responses: [][]int32{{3}, {1}}},
+                        QuizID:       quizzesUUIDMapping["myPubQuiz"],
+                },
+                "user-3_providedPubQuiz": {
+                        Username:     "user-3",
+                        Score:        0.5,
+                        QuizResponse: &amp;model_cassandra.QuizResponse{Responses: [][]int32{{0, 1, 2}, {1}}},
+                        QuizID:       quizzesUUIDMapping["providedPubQuiz"],
+                },
+                "user-2_providedPubQuiz": {
+                        Username:     "user-2",
+                        Score:        2,
+                        QuizResponse: &amp;model_cassandra.QuizResponse{Responses: [][]int32{{0, 1, 2}, {0}}},
+                        QuizID:       quizzesUUIDMapping["providedPubQuiz"],
+                },
+                "user-4_myPubQuiz": {
+                        Username:     "user-4",
+                        Score:        4.4,
+                        QuizResponse: &amp;model_cassandra.QuizResponse{Responses: [][]int32{{3, 4}, {0, 4}}},
+                        QuizID:       quizzesUUIDMapping["myPubQuiz"],
+                },
+                "user-5_myPubQuiz": {
+                        Username:     "user-5",
+                        Score:        5.5,
+                        QuizResponse: &amp;model_cassandra.QuizResponse{Responses: [][]int32{{4, 5}, {1, 5}}},
+                        QuizID:       quizzesUUIDMapping["myPubQuiz"],
+                },
+                "user-6_myPubQuiz": {
+                        Username:     "user-6",
+                        Score:        6.6,
+                        QuizResponse: &amp;model_cassandra.QuizResponse{Responses: [][]int32{{5, 6}, {2, 6}}},
+                        QuizID:       quizzesUUIDMapping["myPubQuiz"],
+                },
         }
-        data["user-2_myPubQuiz"] = &amp;model_cassandra.Response{
-                Username:     "user-2",
-                Score:        0.5,
-                QuizResponse: &amp;model_cassandra.QuizResponse{Responses: [][]int32{{3}, {1}}},
-                QuizID:       quizzesUUIDMapping["myPubQuiz"],
-        }
-        data["user-3_providedPubQuiz"] = &amp;model_cassandra.Response{
-                Username:     "user-3",
-                Score:        0.5,
-                QuizResponse: &amp;model_cassandra.QuizResponse{Responses: [][]int32{{0, 1, 2}, {1}}},
-                QuizID:       quizzesUUIDMapping["providedPubQuiz"],
-        }
-        data["user-2_providedPubQuiz"] = &amp;model_cassandra.Response{
-                Username:     "user-2",
-                Score:        2,
-                QuizResponse: &amp;model_cassandra.QuizResponse{Responses: [][]int32{{0, 1, 2}, {0}}},
-                QuizID:       quizzesUUIDMapping["providedPubQuiz"],
-        }
-
-        return data
 }</span>
 </pre>
 		
@@ -2046,7 +2220,10 @@ func TakeQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, gra
 		<pre class="file" id="file14" style="display: none">package http_handlers
 
 import (
+        "bytes"
+        "fmt"
         "net/http"
+        "strconv"
 
         "github.com/gin-gonic/gin"
         "github.com/gocql/gocql"
@@ -2072,8 +2249,8 @@ import (
 // @Failure     404     {object} model_rest.Error   "Error message with any available details in payload"
 // @Failure     500     {object} model_rest.Error   "Error message with any available details in payload"
 // @Router      /score/test/{quiz_id} [get]
-func GetScore(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc <span class="cov7" title="4">{
-        return func(context *gin.Context) </span><span class="cov7" title="4">{
+func GetScore(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc <span class="cov6" title="4">{
+        return func(context *gin.Context) </span><span class="cov6" title="4">{
                 var err error
                 var dbRecord any
                 var response *model_cassandra.Response
@@ -2086,14 +2263,14 @@ func GetScore(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin
                 }</span>
 
                 // Get username from JWT.
-                <span class="cov6" title="3">if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil </span><span class="cov1" title="1">{
+                <span class="cov5" title="3">if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil </span><span class="cov1" title="1">{
                         logger.Error("failed to validate JWT in create quiz handler", zap.Error(err))
                         context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "unable to verify username"})
                         return
                 }</span>
 
                 // Get scorecard record from database.
-                <span class="cov4" title="2">scoreRequest := &amp;model_cassandra.QuizMutateRequest{
+                <span class="cov3" title="2">scoreRequest := &amp;model_cassandra.QuizMutateRequest{
                         Username: username,
                         QuizID:   quizId,
                 }
@@ -2124,8 +2301,8 @@ func GetScore(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin
 // @Failure     404     {object} model_rest.Error   "Error message with any available details in payload"
 // @Failure     500     {object} model_rest.Error   "Error message with any available details in payload"
 // @Router      /score/stats/{quiz_id} [get]
-func GetStats(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc <span class="cov10" title="7">{
-        return func(context *gin.Context) </span><span class="cov10" title="7">{
+func GetStats(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc <span class="cov8" title="7">{
+        return func(context *gin.Context) </span><span class="cov8" title="7">{
                 var err error
                 var dbRecord any
                 var response []*model_cassandra.Response
@@ -2138,33 +2315,160 @@ func GetStats(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin
                 }</span>
 
                 // Get username from JWT.
-                <span class="cov9" title="6">if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil </span><span class="cov1" title="1">{
+                <span class="cov8" title="6">if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil </span><span class="cov1" title="1">{
                         logger.Error("failed to validate JWT in create quiz handler", zap.Error(err))
                         context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "unable to verify username"})
                         return
                 }</span>
 
                 // Get quiz record from database and check to ensure requester is author.
-                <span class="cov8" title="5">if dbRecord, err = db.Execute(cassandra.ReadQuizQuery, quizId); err != nil </span><span class="cov1" title="1">{
+                <span class="cov7" title="5">if dbRecord, err = db.Execute(cassandra.ReadQuizQuery, quizId); err != nil </span><span class="cov1" title="1">{
                         cassandraError := err.(*cassandra.Error)
                         context.AbortWithStatusJSON(cassandraError.Status, &amp;model_rest.Error{Message: "error verifying quiz author", Payload: cassandraError.Message})
                         return
                 }</span>
-                <span class="cov7" title="4">if username != dbRecord.(*model_cassandra.Quiz).Author </span><span class="cov1" title="1">{
+                <span class="cov6" title="4">if username != dbRecord.(*model_cassandra.Quiz).Author </span><span class="cov1" title="1">{
                         context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_rest.Error{Message: "error verifying quiz author"})
                         return
                 }</span>
 
                 // Get scorecard record from database.
-                <span class="cov6" title="3">if dbRecord, err = db.Execute(cassandra.ReadResponseStatisticsQuery, quizId); err != nil </span><span class="cov1" title="1">{
+                <span class="cov5" title="3">if dbRecord, err = db.Execute(cassandra.ReadResponseStatisticsQuery, quizId); err != nil </span><span class="cov1" title="1">{
                         cassandraError := err.(*cassandra.Error)
                         context.AbortWithStatusJSON(cassandraError.Status, &amp;model_rest.Error{Message: "error retrieving score card", Payload: cassandraError.Message})
                         return
                 }</span>
-                <span class="cov4" title="2">response = dbRecord.([]*model_cassandra.Response)
+                <span class="cov3" title="2">response = dbRecord.([]*model_cassandra.Response)
 
                 context.JSON(http.StatusOK, &amp;model_rest.Success{Message: "score cards", Payload: response})</span>
         }
+}
+
+// GetStatsPage will retrieve paginated test statistics with the provided test id and the username from the JWT payload.
+// @Summary     Get paginated statistics associated with a specific test.
+// @Description Gets the paginated statistics associated with a specific test if the user created the test.
+// @Description Extracts username from the JWT and the Test ID is provided as a query parameter.
+// @Description A query string to be appended to the next request to retrieve the next page of data will be returned in the response.
+// @Tags        score scores stats statistics
+// @Id          getStatsPaged
+// @Accept      json
+// @Produce     json
+// @Security    ApiKeyAuth
+// @Param       quiz_id    path     string                   true  "The Test ID for the requested statistics."
+// @Param       pageCursor query    string                   false "The page cursor into the query results records."
+// @Param       pageSize   query    int                      false "The number of records to retrieve on this page."
+// @Success     200        {object} model_rest.StatsResponse "A page of statistics data"
+// @Failure     400        {object} model_rest.Error         "Error message with any available details in payload"
+// @Failure     403        {object} model_rest.Error         "Error message with any available details in payload"
+// @Failure     404        {object} model_rest.Error         "Error message with any available details in payload"
+// @Failure     500        {object} model_rest.Error         "Error message with any available details in payload"
+// @Router      /score/stats-paged/{quiz_id} [get]
+func GetStatsPage(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc <span class="cov9" title="9">{
+        return func(context *gin.Context) </span><span class="cov9" title="9">{
+                var err error
+                var dbRecord any
+                var statRequest *model_cassandra.StatsRequest
+                var restResponse *model_rest.StatsResponse
+                var username string
+                var quizId gocql.UUID
+
+                if quizId, err = gocql.ParseUUID(context.Param("quiz_id")); err != nil </span><span class="cov1" title="1">{
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
+                        return
+                }</span>
+
+                // Get username from JWT.
+                <span class="cov9" title="8">if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil </span><span class="cov1" title="1">{
+                        logger.Error("failed to validate JWT in create quiz handler", zap.Error(err))
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "unable to verify username"})
+                        return
+                }</span>
+
+                // Get quiz record from database and check to ensure requester is author.
+                <span class="cov8" title="7">if dbRecord, err = db.Execute(cassandra.ReadQuizQuery, quizId); err != nil </span><span class="cov1" title="1">{
+                        cassandraError := err.(*cassandra.Error)
+                        context.AbortWithStatusJSON(cassandraError.Status, &amp;model_rest.Error{Message: "error verifying quiz author", Payload: cassandraError.Message})
+                        return
+                }</span>
+                <span class="cov8" title="6">if username != dbRecord.(*model_cassandra.Quiz).Author </span><span class="cov1" title="1">{
+                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_rest.Error{Message: "error verifying quiz author"})
+                        return
+                }</span>
+
+                // Prepare stats page request for database.
+                <span class="cov7" title="5">if statRequest, err = prepareStatsRequest(auth, quizId, context.Query("pageCursor"), context.Query("pageSize")); err != nil </span><span class="cov1" title="1">{
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "malformed query request", Payload: err.Error()})
+                        return
+                }</span>
+
+                // Get scorecard record page from database.
+                <span class="cov6" title="4">if dbRecord, err = db.Execute(cassandra.ReadResponseStatisticsPageQuery, statRequest); err != nil </span><span class="cov1" title="1">{
+                        cassandraError := err.(*cassandra.Error)
+                        context.AbortWithStatusJSON(cassandraError.Status, &amp;model_rest.Error{Message: "error retrieving scorecard page", Payload: cassandraError.Message})
+                        return
+                }</span>
+                <span class="cov5" title="3">statsResponse := dbRecord.(*model_cassandra.StatsResponse)
+
+                // Prepare REST response.
+                if restResponse, err = prepareStatsResponse(auth, statsResponse, quizId); err != nil </span><span class="cov1" title="1">{
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "error preparing stats page", Payload: err.Error()})
+                }</span>
+
+                <span class="cov5" title="3">context.JSON(http.StatusOK, restResponse)</span>
+        }
+}
+
+// prepareStatsRequest will prepare the paged statistics request for the database query.
+func prepareStatsRequest(auth auth.Auth, quizId gocql.UUID, cursor string, size string) (req *model_cassandra.StatsRequest, err error) <span class="cov10" title="10">{
+        req = &amp;model_cassandra.StatsRequest{QuizID: quizId}
+
+        if req.PageSize, err = strconv.Atoi(size); err != nil </span><span class="cov3" title="2">{
+                return nil, fmt.Errorf("failed to convert page size: %s", err.Error())
+        }</span>
+        <span class="cov9" title="8">if req.PageSize &lt; 1 </span><span class="cov1" title="1">{
+                req.PageSize = 10
+        }</span>
+
+        // Null cursor must be set if there was no cursor in the URI.
+        <span class="cov9" title="8">if len(cursor) != 0 </span><span class="cov8" title="6">{
+                if req.PageCursor, err = auth.DecryptFromString(cursor); err != nil </span><span class="cov1" title="1">{
+                        return nil, fmt.Errorf("failed to decrypt page cursor: %s", err.Error())
+                }</span>
+        }
+
+        <span class="cov8" title="7">return</span>
+}
+
+// prepareStatsResponse will prepare a http response from a database stats response. It will generate a link to the next
+// page of data as appropriate.
+func prepareStatsResponse(auth auth.Auth, dbResponse *model_cassandra.StatsResponse, quizId gocql.UUID) (response *model_rest.StatsResponse, err error) <span class="cov9" title="8">{
+        response = &amp;model_rest.StatsResponse{Records: dbResponse.Records}
+        response.Metadata.QuizID = quizId
+        response.Metadata.NumRecords = len(dbResponse.Records)
+
+        var nextPageLink bytes.Buffer
+
+        // Construct page cursor link segment.
+        if len(dbResponse.PageCursor) != 0 </span><span class="cov7" title="5">{
+                cursor, err := auth.EncryptToString(dbResponse.PageCursor)
+                if err != nil </span><span class="cov1" title="1">{
+                        return nil, err
+                }</span>
+                <span class="cov6" title="4">if _, err := nextPageLink.WriteString(fmt.Sprintf("?pageCursor=%s", cursor)); err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("failed to generate next page cursor link segment: %s", err.Error())
+                }</span>
+        }
+
+        // Construct page size link segment.
+        <span class="cov8" title="7">if len(dbResponse.PageCursor) != 0 &amp;&amp; dbResponse.PageSize &gt; 0 </span><span class="cov5" title="3">{
+                if _, err := nextPageLink.WriteString(fmt.Sprintf("&amp;pageSize=%d", dbResponse.PageSize)); err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("failed to generate next page size link segment: %s", err.Error())
+                }</span>
+        }
+
+        <span class="cov8" title="7">response.Links.NextPage = nextPageLink.String()
+
+        return</span>
 }
 </pre>
 		
@@ -2560,6 +2864,7 @@ func (s *HttpRest) initialize() <span class="cov0" title="0">{
         scoreGroup := api.Group("/score").Use(authMiddleware)
         scoreGroup.GET("/test/:quiz_id", http_handlers.GetScore(s.logger, s.auth, s.db))
         scoreGroup.GET("/stats/:quiz_id", http_handlers.GetStats(s.logger, s.auth, s.db))
+        scoreGroup.GET("/stats-paged/:quiz_id", http_handlers.GetStatsPage(s.logger, s.auth, s.db))
 
         quizGroup := api.Group("/quiz").Use(authMiddleware)
         quizGroup.GET("/view/:quiz_id", http_handlers.ViewQuiz(s.logger, s.auth, s.db))

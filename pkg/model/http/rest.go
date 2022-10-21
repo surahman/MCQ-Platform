@@ -1,6 +1,7 @@
 package model_rest
 
 import (
+	"github.com/gocql/gocql"
 	"github.com/surahman/mcq-platform/pkg/model/cassandra"
 )
 
@@ -29,4 +30,16 @@ type Success struct {
 type DeleteUserRequest struct {
 	model_cassandra.UserLoginCredentials
 	Confirmation string `json:"confirmation" yaml:"confirmation" validate:"required"`
+}
+
+// StatsResponse is a paginated response to a request for statistics for a specific quiz.
+type StatsResponse struct {
+	Records  []*model_cassandra.Response `json:"records"`
+	Metadata struct {
+		QuizID     gocql.UUID `json:"quiz_id"`
+		NumRecords int        `json:"num_records"`
+	} `json:"metadata,omitempty"`
+	Links struct {
+		NextPage string `json:"next_page"`
+	} `json:"links,omitempty"`
 }

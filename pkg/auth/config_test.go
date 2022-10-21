@@ -28,7 +28,7 @@ func TestAuthConfigs_Load(t *testing.T) {
 			"empty - etc dir",
 			authConfigTestData["empty"],
 			require.Error,
-			5,
+			6,
 		},
 		{
 			"valid - etc dir",
@@ -84,6 +84,18 @@ func TestAuthConfigs_Load(t *testing.T) {
 			require.Error,
 			2,
 		},
+		{
+			"crypto_key_too_short- etc dir",
+			authConfigTestData["crypto_key_too_short"],
+			require.Error,
+			1,
+		},
+		{
+			"crypto_key_too_long- etc dir",
+			authConfigTestData["crypto_key_too_long"],
+			require.Error,
+			1,
+		},
 		// ----- test cases end ----- //
 	}
 	for _, testCase := range testCases {
@@ -115,18 +127,21 @@ func TestAuthConfigs_Load(t *testing.T) {
 			testRefThreshold := int64(555)
 			testBcryptCost := 16
 			testIssuer := "test issuer"
+			testCryptoSecret := "**crypto secret set in env var**"
 			t.Setenv(keyspaceJwt+"KEY", testKey)
 			t.Setenv(keyspaceJwt+"ISSUER", testIssuer)
 			t.Setenv(keyspaceJwt+"EXPIRATION_DURATION", strconv.FormatInt(testExpDur, 10))
 			t.Setenv(keyspaceJwt+"REFRESH_THRESHOLD", strconv.FormatInt(testRefThreshold, 10))
 			t.Setenv(keyspaceGen+"BCRYPT_COST", strconv.Itoa(testBcryptCost))
+			t.Setenv(keyspaceGen+"CRYPTO_SECRET", testCryptoSecret)
 			err = actual.Load(fs)
 			require.NoErrorf(t, err, "Failed to load constants file: %v", err)
-			require.Equalf(t, testKey, actual.JWTConfig.Key, "Failed to load key environment variable into configs")
-			require.Equalf(t, testIssuer, actual.JWTConfig.Issuer, "Failed to load issuer environment variable into configs")
-			require.Equalf(t, testExpDur, actual.JWTConfig.ExpirationDuration, "Failed to load duration environment variable into configs")
-			require.Equalf(t, testRefThreshold, actual.JWTConfig.RefreshThreshold, "Failed to load refresh threshold environment variable into configs")
-			require.Equalf(t, testBcryptCost, actual.General.BcryptCost, "Failed to load bcrypt cost environment variable into configs")
+			require.Equal(t, testKey, actual.JWTConfig.Key, "Failed to load key environment variable into configs")
+			require.Equal(t, testIssuer, actual.JWTConfig.Issuer, "Failed to load issuer environment variable into configs")
+			require.Equal(t, testExpDur, actual.JWTConfig.ExpirationDuration, "Failed to load duration environment variable into configs")
+			require.Equal(t, testRefThreshold, actual.JWTConfig.RefreshThreshold, "Failed to load refresh threshold environment variable into configs")
+			require.Equal(t, testBcryptCost, actual.General.BcryptCost, "Failed to load bcrypt cost environment variable into configs")
+			require.Equal(t, testCryptoSecret, actual.General.CryptoSecret, "Failed to load crypto secret environment variable into configs")
 		})
 	}
 }

@@ -10,7 +10,7 @@ import (
 )
 
 // testAuth is the Authorization object.
-var testAuth Auth
+var testAuth *authImpl
 
 // authConfigTestData is a map of Authentication configuration test data.
 var authConfigTestData = configTestData()
@@ -73,6 +73,7 @@ func getTestConfiguration() (auth *authImpl, err error) {
 	auth.conf.JWTConfig.ExpirationDuration = expirationDuration
 	auth.conf.JWTConfig.RefreshThreshold = refreshThreshold
 	auth.conf.General.BcryptCost = 4
+	auth.cryptoSecret = []byte("*****crypto key for testing*****")
 
 	return
 }

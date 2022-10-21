@@ -73,6 +73,27 @@ definitions:
     required:
     - responses
     type: object
+  model_cassandra.Response:
+    properties:
+      quiz_id:
+        type: string
+      responses:
+        description: The answer card to a quiz. The rows indices are the question
+          numbers and the columns indices are the selected option numbers.
+        items:
+          items:
+            type: integer
+          type: array
+        maxItems: 10
+        minItems: 0
+        type: array
+      score:
+        type: number
+      username:
+        type: string
+    required:
+    - responses
+    type: object
   model_cassandra.UserAccount:
     properties:
       email:
@@ -147,6 +168,25 @@ definitions:
     - expires
     - threshold
     - token
+    type: object
+  model_rest.StatsResponse:
+    properties:
+      links:
+        properties:
+          next_page:
+            type: string
+        type: object
+      metadata:
+        properties:
+          num_records:
+            type: integer
+          quiz_id:
+            type: string
+        type: object
+      records:
+        items:
+          $ref: '#/definitions/model_cassandra.Response'
+        type: array
     type: object
   model_rest.Success:
     properties:
@@ -421,6 +461,57 @@ paths:
       summary: View a quiz.
       tags:
       - view test quiz
+  /score/stats-paged/{quiz_id}:
+    get:
+      consumes:
+      - application/json
+      description: |-
+        Gets the paginated statistics associated with a specific test if the user created the test.
+        Extracts username from the JWT and the Test ID is provided as a query parameter.
+        A query string to be appended to the next request to retrieve the next page of data will be returned in the response.
+      operationId: getStatsPaged
+      parameters:
+      - description: The Test ID for the requested statistics.
+        in: path
+        name: quiz_id
+        required: true
+        type: string
+      - description: The page cursor into the query results records.
+        in: query
+        name: pageCursor
+        type: string
+      - description: The number of records to retrieve on this page.
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A page of statistics data
+          schema:
+            $ref: '#/definitions/model_rest.StatsResponse'
+        "400":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "403":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "404":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+        "500":
+          description: Error message with any available details in payload
+          schema:
+            $ref: '#/definitions/model_rest.Error'
+      security:
+      - ApiKeyAuth: []
+      summary: Get paginated statistics associated with a specific test.
+      tags:
+      - score scores stats statistics
   /score/stats/{quiz_id}:
     get:
       consumes:

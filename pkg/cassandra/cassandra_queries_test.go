@@ -2,6 +2,7 @@ package cassandra
 
 import (
 	"fmt"
+	"math"
 	"net/http"
 	"reflect"
 	"testing"
@@ -433,7 +434,7 @@ func TestReadResponseStatisticsQuery(t *testing.T) {
 		}, {
 			"myPubQuiz",
 			quizzesUUIDMapping["myPubQuiz"],
-			2,
+			5,
 			require.NotNil,
 		}, {
 			"providedPubQuiz",
@@ -474,4 +475,108 @@ func TestHealthcheckQuery(t *testing.T) {
 	require.NoError(t, err, "healthcheck query returned an error")
 	require.NotNil(t, response, "response to healthcheck query is nil")
 	require.Truef(t, len(response.(string)) > 0, "release version string empty")
+}
+
+func TestReadResponseStatisticsPageQuery(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		t.Skip()
+	}
+
+	// Lock connection to Cassandra cluster.
+	connection.mu.Lock()
+	defer connection.mu.Unlock()
+	// Insert new responses.
+	insertTestResponses(t)
+
+	testCases := []struct {
+		name                string
+		expectedRecordCount int
+		request             *model_cassandra.StatsRequest
+		expectNil           require.ValueAssertionFunc
+	}{
+		// ----- test cases start ----- //
+		{
+			name:                "not found",
+			expectedRecordCount: 0,
+			request: &model_cassandra.StatsRequest{
+				QuizID:     gocql.UUID{},
+				PageCursor: nil,
+				PageSize:   0,
+			},
+			expectNil: require.Nil,
+		}, {
+			name:                "pages of size 5",
+			expectedRecordCount: 5,
+			request: &model_cassandra.StatsRequest{
+				QuizID:     quizzesUUIDMapping["myPubQuiz"],
+				PageCursor: nil,
+				PageSize:   5,
+			},
+		}, {
+			name:                "pages of size 2",
+			expectedRecordCount: 5,
+			request: &model_cassandra.StatsRequest{
+				QuizID:     quizzesUUIDMapping["myPubQuiz"],
+				PageCursor: nil,
+				PageSize:   2,
+			},
+		}, {
+			name:                "pages of size 1",
+			expectedRecordCount: 5,
+			request: &model_cassandra.StatsRequest{
+				QuizID:     quizzesUUIDMapping["myPubQuiz"],
+				PageCursor: nil,
+				PageSize:   1,
+			},
+		}, {
+			name:                "pages of size 6",
+			expectedRecordCount: 5,
+			request: &model_cassandra.StatsRequest{
+				QuizID:     quizzesUUIDMapping["myPubQuiz"],
+				PageCursor: nil,
+				PageSize:   8,
+			},
+		},
+		// ----- test cases end ----- //
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			var actual *model_cassandra.StatsResponse
+
+			if testCase.expectedRecordCount < 1 {
+				response, err := connection.db.Execute(ReadResponseStatisticsPageQuery, testCase.request)
+				require.NoError(t, err, "failed to execute paged response statistics query")
+				actual = response.(*model_cassandra.StatsResponse)
+				testCase.expectNil(t, actual.Records, "returned records array does not meet nil expectation")
+				require.Equal(t, testCase.expectedRecordCount, len(actual.Records), "number of response records doesn't match expected")
+				return
+			}
+
+			// Iterate over all pages and tally up the total records retrieved.
+			expectedPageCount := int(math.Ceil(float64(testCase.expectedRecordCount / testCase.request.PageSize)))
+			pageCount := 0
+			recordCount := 0
+			request := &model_cassandra.StatsRequest{
+				QuizID:     testCase.request.QuizID,
+				PageCursor: nil,
+				PageSize:   testCase.request.PageSize,
+			}
+			for {
+				response, err := connection.db.Execute(ReadResponseStatisticsPageQuery, request)
+				require.NoError(t, err, "failed to execute paged response statistics query")
+				actual = response.(*model_cassandra.StatsResponse)
+				require.Equal(t, testCase.request.PageSize, actual.PageSize, "page size not set in response")
+				recordCount += len(actual.Records)
+
+				if len(actual.PageCursor) == 0 {
+					break
+				}
+				pageCount++
+				request.PageCursor = actual.PageCursor
+			}
+			require.Equal(t, expectedPageCount, pageCount, "incorrect number of pages received")
+			require.Equal(t, testCase.expectedRecordCount, recordCount, "number of response records doesn't match expected")
+		})
+	}
 }

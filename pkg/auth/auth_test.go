@@ -310,3 +310,47 @@ func TestAuthImpl_RefreshJWT(t *testing.T) {
 func TestAuthImpl_RefreshThreshold(t *testing.T) {
 	require.Equal(t, refreshThreshold, testAuth.RefreshThreshold(), "token refresh threshold did not match expected threshold")
 }
+
+func TestAuthImpl_encryptAES256_and_decryptAES256(t *testing.T) {
+	testCases := []struct {
+		name      string
+		plainText string
+		expectStr require.BoolAssertionFunc
+	}{
+		// ----- test cases start ----- //
+		{
+			name:      "to string",
+			plainText: "this text should be encrypted",
+			expectStr: require.True,
+		},
+		// ----- test cases end ----- //
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+
+			// Encrypt phase.
+			cipherStr, cipherBytes, err := testAuth.encryptAES256([]byte(testCase.plainText))
+			require.NoError(t, err, "error encrypting to AES256")
+			require.NotNil(t, cipherBytes, "no cipher block returned as bytes")
+			testCase.expectStr(t, len(cipherStr) > 0, "cipher string expectation failed")
+
+			// Decrypt phase.
+			plainTextBytes, err := testAuth.decryptAES256(cipherBytes)
+			require.NoError(t, err, "error decrypting from AES256")
+			require.NotNil(t, plainTextBytes, "no plaintext block returned as bytes")
+			require.Equal(t, testCase.plainText, string(plainTextBytes), "decrypted cipher does not match input plaintext")
+		})
+	}
+}
+
+func TestAuthImpl_Encrypt_Decrypt_String(t *testing.T) {
+	toEncrypt := "this is a text string to be encrypted/decrypted"
+
+	ciphertext, err := testAuth.EncryptToString([]byte(toEncrypt))
+	require.NoError(t, err, "encrypt to string failed")
+	require.True(t, len(ciphertext) > 0, "encrypted string is empty")
+
+	plaintext, err := testAuth.DecryptFromString(ciphertext)
+	require.NoError(t, err, "encrypt from string failed")
+	require.Equal(t, toEncrypt, string(plaintext), "decrypted string does not match original")
+}

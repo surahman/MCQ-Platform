@@ -132,6 +132,7 @@ func (s *HttpRest) initialize() {
 	scoreGroup := api.Group("/score").Use(authMiddleware)
 	scoreGroup.GET("/test/:quiz_id", http_handlers.GetScore(s.logger, s.auth, s.db))
 	scoreGroup.GET("/stats/:quiz_id", http_handlers.GetStats(s.logger, s.auth, s.db))
+	scoreGroup.GET("/stats-paged/:quiz_id", http_handlers.GetStatsPage(s.logger, s.auth, s.db))
 
 	quizGroup := api.Group("/quiz").Use(authMiddleware)
 	quizGroup.GET("/view/:quiz_id", http_handlers.ViewQuiz(s.logger, s.auth, s.db))

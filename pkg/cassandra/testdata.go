@@ -255,32 +255,48 @@ func GetTestQuizzes() map[string]*model_cassandra.Quiz {
 
 // GetTestResponses is a map of test response data.
 func GetTestResponses() map[string]*model_cassandra.Response {
-	data := make(map[string]*model_cassandra.Response)
-
-	data["user-1_myPubQuiz"] = &model_cassandra.Response{
-		Username:     "user-1",
-		Score:        1.0,
-		QuizResponse: &model_cassandra.QuizResponse{Responses: [][]int32{{3}, {0}}},
-		QuizID:       quizzesUUIDMapping["myPubQuiz"],
+	return map[string]*model_cassandra.Response{
+		"user-1_myPubQuiz": {
+			Username:     "user-1",
+			Score:        1.0,
+			QuizResponse: &model_cassandra.QuizResponse{Responses: [][]int32{{3}, {0}}},
+			QuizID:       quizzesUUIDMapping["myPubQuiz"],
+		},
+		"user-2_myPubQuiz": {
+			Username:     "user-2",
+			Score:        0.5,
+			QuizResponse: &model_cassandra.QuizResponse{Responses: [][]int32{{3}, {1}}},
+			QuizID:       quizzesUUIDMapping["myPubQuiz"],
+		},
+		"user-3_providedPubQuiz": {
+			Username:     "user-3",
+			Score:        0.5,
+			QuizResponse: &model_cassandra.QuizResponse{Responses: [][]int32{{0, 1, 2}, {1}}},
+			QuizID:       quizzesUUIDMapping["providedPubQuiz"],
+		},
+		"user-2_providedPubQuiz": {
+			Username:     "user-2",
+			Score:        2,
+			QuizResponse: &model_cassandra.QuizResponse{Responses: [][]int32{{0, 1, 2}, {0}}},
+			QuizID:       quizzesUUIDMapping["providedPubQuiz"],
+		},
+		"user-4_myPubQuiz": {
+			Username:     "user-4",
+			Score:        4.4,
+			QuizResponse: &model_cassandra.QuizResponse{Responses: [][]int32{{3, 4}, {0, 4}}},
+			QuizID:       quizzesUUIDMapping["myPubQuiz"],
+		},
+		"user-5_myPubQuiz": {
+			Username:     "user-5",
+			Score:        5.5,
+			QuizResponse: &model_cassandra.QuizResponse{Responses: [][]int32{{4, 5}, {1, 5}}},
+			QuizID:       quizzesUUIDMapping["myPubQuiz"],
+		},
+		"user-6_myPubQuiz": {
+			Username:     "user-6",
+			Score:        6.6,
+			QuizResponse: &model_cassandra.QuizResponse{Responses: [][]int32{{5, 6}, {2, 6}}},
+			QuizID:       quizzesUUIDMapping["myPubQuiz"],
+		},
 	}
-	data["user-2_myPubQuiz"] = &model_cassandra.Response{
-		Username:     "user-2",
-		Score:        0.5,
-		QuizResponse: &model_cassandra.QuizResponse{Responses: [][]int32{{3}, {1}}},
-		QuizID:       quizzesUUIDMapping["myPubQuiz"],
-	}
-	data["user-3_providedPubQuiz"] = &model_cassandra.Response{
-		Username:     "user-3",
-		Score:        0.5,
-		QuizResponse: &model_cassandra.QuizResponse{Responses: [][]int32{{0, 1, 2}, {1}}},
-		QuizID:       quizzesUUIDMapping["providedPubQuiz"],
-	}
-	data["user-2_providedPubQuiz"] = &model_cassandra.Response{
-		Username:     "user-2",
-		Score:        2,
-		QuizResponse: &model_cassandra.QuizResponse{Responses: [][]int32{{0, 1, 2}, {0}}},
-		QuizID:       quizzesUUIDMapping["providedPubQuiz"],
-	}
-
-	return data
 }

@@ -16,7 +16,8 @@ type config struct {
 		RefreshThreshold   int64  `json:"refresh_threshold,omitempty" yaml:"refresh_threshold,omitempty" mapstructure:"refresh_threshold" validate:"required,min=1,ltefield=ExpirationDuration"`
 	} `json:"jwt,omitempty" yaml:"jwt,omitempty" mapstructure:"jwt" validate:"required"`
 	General struct {
-		BcryptCost int `json:"bcrypt_cost,omitempty" yaml:"bcrypt_cost,omitempty" mapstructure:"bcrypt_cost" validate:"required,min=4,max=31"`
+		BcryptCost   int    `json:"bcrypt_cost,omitempty" yaml:"bcrypt_cost,omitempty" mapstructure:"bcrypt_cost" validate:"required,min=4,max=31"`
+		CryptoSecret string `json:"crypto_secret,omitempty" yaml:"crypto_secret,omitempty" mapstructure:"crypto_secret" validate:"required,len=32"`
 	} `json:"general,omitempty" yaml:"general,omitempty" mapstructure:"general" validate:"required"`
 }
 
