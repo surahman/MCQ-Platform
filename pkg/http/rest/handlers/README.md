@@ -24,6 +24,7 @@ The REST API schema can be tested and reviewed through the Swagger UI that is ex
 - [Score Endpoints `/score/`](#score-endpoints-score)
   - [Test](#test)
   - [Stats](#stats)
+  - [Stats - _Paginated_](#stats---paginated)
 - [Healthcheck Endpoint `/health`](#healthcheck-endpoint-health)
 
 <br/>
@@ -262,8 +263,6 @@ _Response:_ A success response containing a message with the scorecard in the pa
 An author of a quiz may request all the scorecards for their quiz. The scorecards will contain the `username`s, `score`s,
 as well as `answers` that all users have submitted for the quiz.
 
-_TODO: Result pagination._
-
 _Request:_ The Quiz ID must be supplied in the request URL.
 
 _Response:_ A success response containing a message with the scorecards in the payload. An example response is below.
@@ -300,6 +299,33 @@ _Response:_ A success response containing a message with the scorecards in the p
 }
 ```
 
+
+#### Stats - _Paginated_
+
+An author of a quiz may request all the scorecards for their quiz. The scorecards will contain the `username`s, `score`s,
+as well as `answers` that all users have submitted for the quiz.
+
+The records from this request can potentially number in the thousands. As such, this endpoint will return paged responses
+for the request with a link to the subsequent page of data provided in the response. The page cursor is a pointer into
+the records in the query where the read will resume from. The data contained in the page cursor can reveal sensitive
+information contained in the database and thus must be encrypted before being returned from the HTTP handler.
+
+_Request:_ The `Quiz ID` must be supplied in the request URL. The encrypted and Base64 URL encoded page cursor is provided
+with the query parameter `pageCursor`. The maximum number of records to retrieve in a request is set via the `pageSize`
+query parameter.
+
+_Response:_ A paged statistics response will be returned on a successful request. The following page of data can be
+accessed by appending the query string in the `Links.NextPage` to the base request URI that consists of the endpoint URI
+with the `Quiz ID` in the path.
+
+```json
+EXAMPLE RESPONSE HERE
+```
+
+To access the next page of data using the example above we would follow the URI below:
+
+EXAMPLE-URL-TO-NEXT-PAGE
+
 <br/>
 
 ### Healthcheck Endpoint `/health`
@@ -309,3 +335,7 @@ service is connected to all the ancillary services and responds appropriately.
 
 This check is essential for load balancers and container orchestrators to determine whether to route traffic or restart
 the container.
+
+_Healthy Response:_ HTTP 200 OK
+
+_Unhealthy Response:_ HTTP 503 Service Unavailable
