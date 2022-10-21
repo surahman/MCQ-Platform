@@ -165,17 +165,6 @@ func GetStatsPage(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra)
 			return
 		}
 
-		// Get quiz record from database and check to ensure requester is author.
-		if dbRecord, err = db.Execute(cassandra.ReadQuizQuery, quizId); err != nil {
-			cassandraError := err.(*cassandra.Error)
-			context.AbortWithStatusJSON(cassandraError.Status, &model_rest.Error{Message: "error verifying quiz author", Payload: cassandraError.Message})
-			return
-		}
-		if username != dbRecord.(*model_cassandra.Quiz).Author {
-			context.AbortWithStatusJSON(http.StatusForbidden, &model_rest.Error{Message: "error verifying quiz author"})
-			return
-		}
-
 		// Prepare stats page request for database.
 		if statRequest, err = prepareStatsRequest(auth, quizId, context.Query("pageCursor"), context.Query("pageSize")); err != nil {
 			context.AbortWithStatusJSON(http.StatusBadRequest, &model_rest.Error{Message: "malformed query request", Payload: err.Error()})
@@ -189,6 +178,16 @@ func GetStatsPage(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra)
 			return
 		}
 		statsResponse := dbRecord.(*model_cassandra.StatsResponse)
+
+		// Verify authorization.
+		if len(statsResponse.Records) == 0 {
+			context.AbortWithStatusJSON(http.StatusNotFound, &model_rest.Error{Message: "could not locate results"})
+			return
+		}
+		if username != statsResponse.Records[0].Author {
+			context.AbortWithStatusJSON(http.StatusForbidden, &model_rest.Error{Message: "error verifying quiz author"})
+			return
+		}
 
 		// Prepare REST response.
 		if restResponse, err = prepareStatsResponse(auth, statsResponse, quizId); err != nil {
