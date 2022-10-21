@@ -310,6 +310,10 @@ for the request with a link to the subsequent page of data provided in the respo
 the records in the query where the read will resume from. The data contained in the page cursor can reveal sensitive
 information contained in the database and thus must be encrypted before being returned from the HTTP handler.
 
+It is critical always to consider that adding or removing rows retrieved by a paginated query may result in missing or
+duplicated records between pages. Fortunately, the `responses` table is write-only and records remain immutable so this
+should not represent an issue.
+
 _Request:_ The `Quiz ID` must be supplied in the request URL. The encrypted and Base64 URL encoded page cursor is provided
 with the query parameter `pageCursor`. The maximum number of records to retrieve in a request is set via the `pageSize`
 query parameter.
@@ -319,12 +323,40 @@ accessed by appending the query string in the `Links.NextPage` to the base reque
 with the `Quiz ID` in the path.
 
 ```json
-EXAMPLE RESPONSE HERE
+{
+  "records": [
+    {
+      "username": "username4",
+      "score": 0.4444,
+      "responses": [[0, 1, 2], [1, 3]],
+      "quiz_id": "0a704c4b-4ea2-11ed-bd5a-305a3a460e3e"
+    },
+    {
+      "username": "username6",
+      "score": 0.7777,
+      "responses": [[0, 1, 2], [1, 3]],
+      "quiz_id": "0a704c4b-4ea2-11ed-bd5a-305a3a460e3e"
+    },
+    {
+      "username": "username5",
+      "score": 0.5555,
+      "responses": [[0, 1, 2], [1, 3]],
+      "quiz_id": "0a704c4b-4ea2-11ed-bd5a-305a3a460e3e"
+    }
+  ],
+  "metadata": {
+    "quiz_id": "0a704c4b-4ea2-11ed-bd5a-305a3a460e3e",
+    "num_records": 3
+  },
+  "links": {
+    "next_page": "?pageCursor=GnkrBKWMAmEVbB0okIP4Mr0lzU_TAX3yifbc6Fa8lIBOPbF30YOoTKyHOjVosFSnnYF8_3LQ8hQwqa6f6sJpvFbd9A==&pageSize=3"
+  }
+}
 ```
 
 To access the next page of data using the example above we would follow the URI below:
 
-EXAMPLE-URL-TO-NEXT-PAGE
+localhost:44243/api/rest/v1/0a704c4b-4ea2-11ed-bd5a-305a3a460e3e?pageCursor=GnkrBKWMAmEVbB0okIP4Mr0lzU_TAX3yifbc6Fa8lIBOPbF30YOoTKyHOjVosFSnnYF8_3LQ8hQwqa6f6sJpvFbd9A==&pageSize=3
 
 <br/>
 

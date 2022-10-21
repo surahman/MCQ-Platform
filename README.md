@@ -11,10 +11,13 @@ below.
 
 **_TODO:_** _There are a number of items that I will complete as time permits:_
 
-- [ ] REST API `score/stats` response pagination: The response to a stats request could contain far too many records to 
-     send back in a single request and must be paginated.
+- [x] REST API `score/stats` response pagination: The response to a stats request could contain far too many records to 
+      send back in a single request and must be paginated.
+- [ ] Denormalize the `responses` table by adding the quiz `Author` with each `response` row. This will allow queries
+      requesting statistics to merely make calls to the `response` table. It should then be possible to check
+      authorization using the returned rows.
 - [ ] Redis Cache: To improve the performance of the API, published tests should be cached with an eager write to cache, 
-     and lazy loading to the cache on misses.
+      and lazy loading to the cache on misses.
 - [ ] GraphQL: Essential for performance on bandwidth restricted connections.
 
 <br/>
