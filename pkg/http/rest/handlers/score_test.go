@@ -144,7 +144,6 @@ func TestGetStats(t *testing.T) {
 		expectedLen         int
 		expectedStatus      int
 		authValidateJWTData *mockAuthData
-		cassandraQuizData   *mockCassandraData
 		cassandraStatsData  *mockCassandraData
 	}{
 		// ----- test cases start ----- //
@@ -158,9 +157,6 @@ func TestGetStats(t *testing.T) {
 				outputErr:    errors.New("invalid token"),
 				times:        1,
 			},
-			cassandraQuizData: &mockCassandraData{
-				times: 0,
-			},
 			cassandraStatsData: &mockCassandraData{
 				times: 0,
 			},
@@ -173,46 +169,6 @@ func TestGetStats(t *testing.T) {
 				outputParam1: "",
 				times:        0,
 			},
-			cassandraQuizData: &mockCassandraData{
-				times: 0,
-			},
-			cassandraStatsData: &mockCassandraData{
-				times: 0,
-			},
-		}, {
-			name:           "db read not found",
-			path:           "/stats/db-read-not-found/",
-			quizId:         gocql.TimeUUID().String(),
-			expectedStatus: http.StatusNotFound,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "",
-				times:        1,
-			},
-			cassandraQuizData: &mockCassandraData{
-				outputErr: &cassandra.Error{
-					Message: "failed to find quiz",
-					Status:  http.StatusNotFound,
-				},
-				times: 1,
-			},
-			cassandraStatsData: &mockCassandraData{
-				times: 0,
-			},
-		}, {
-			name:           "db username does not match author",
-			path:           "/stats/db-username-does-not-match-author/",
-			quizId:         gocql.TimeUUID().String(),
-			expectedStatus: http.StatusForbidden,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "jwt username",
-				times:        1,
-			},
-			cassandraQuizData: &mockCassandraData{
-				outputParam: &model_cassandra.Quiz{
-					Author: "quiz author",
-				},
-				times: 1,
-			},
 			cassandraStatsData: &mockCassandraData{
 				times: 0,
 			},
@@ -224,12 +180,6 @@ func TestGetStats(t *testing.T) {
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "expected username",
 				times:        1,
-			},
-			cassandraQuizData: &mockCassandraData{
-				outputParam: &model_cassandra.Quiz{
-					Author: "expected username",
-				},
-				times: 1,
 			},
 			cassandraStatsData: &mockCassandraData{
 				outputErr: &cassandra.Error{
@@ -248,24 +198,52 @@ func TestGetStats(t *testing.T) {
 				outputParam1: "expected username",
 				times:        1,
 			},
-			cassandraQuizData: &mockCassandraData{
-				outputParam: &model_cassandra.Quiz{
-					Author: "expected username",
+			cassandraStatsData: &mockCassandraData{
+				outputParam: []*model_cassandra.Response{
+					{
+						Username: "username 1",
+						Author:   "expected username",
+						Score:    99.9,
+						QuizID:   gocql.TimeUUID(),
+					}, {
+						Username: "username 2",
+						Author:   "expected username",
+						Score:    95.9,
+						QuizID:   gocql.TimeUUID(),
+					}, {
+						Username: "username 3",
+						Author:   "expected username",
+						Score:    90.9,
+						QuizID:   gocql.TimeUUID(),
+					},
 				},
 				times: 1,
+			},
+		}, {
+			name:           "not authorized",
+			path:           "/stats/not-authorized/",
+			quizId:         gocql.TimeUUID().String(),
+			expectedLen:    3,
+			expectedStatus: http.StatusForbidden,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "expected username",
+				times:        1,
 			},
 			cassandraStatsData: &mockCassandraData{
 				outputParam: []*model_cassandra.Response{
 					{
 						Username: "username 1",
+						Author:   "not the author",
 						Score:    99.9,
 						QuizID:   gocql.TimeUUID(),
 					}, {
 						Username: "username 2",
+						Author:   "not the author",
 						Score:    95.9,
 						QuizID:   gocql.TimeUUID(),
 					}, {
 						Username: "username 3",
+						Author:   "not the author",
 						Score:    90.9,
 						QuizID:   gocql.TimeUUID(),
 					},
@@ -277,16 +255,10 @@ func TestGetStats(t *testing.T) {
 			path:           "/stats/success-no-responses/",
 			quizId:         gocql.TimeUUID().String(),
 			expectedLen:    0,
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusNotFound,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "expected username",
 				times:        1,
-			},
-			cassandraQuizData: &mockCassandraData{
-				outputParam: &model_cassandra.Quiz{
-					Author: "expected username",
-				},
-				times: 1,
 			},
 			cassandraStatsData: &mockCassandraData{
 				outputParam: []*model_cassandra.Response{},
@@ -303,18 +275,10 @@ func TestGetStats(t *testing.T) {
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockCassandra := mocks.NewMockCassandra(mockCtrl)
 
-			gomock.InOrder(
-				// Get quiz.
-				mockCassandra.EXPECT().Execute(gomock.Any(), gomock.Any()).Return(
-					testCase.cassandraQuizData.outputParam,
-					testCase.cassandraQuizData.outputErr,
-				).Times(testCase.cassandraQuizData.times),
-				// Get stats.
-				mockCassandra.EXPECT().Execute(gomock.Any(), gomock.Any()).Return(
-					testCase.cassandraStatsData.outputParam,
-					testCase.cassandraStatsData.outputErr,
-				).Times(testCase.cassandraStatsData.times),
-			)
+			mockCassandra.EXPECT().Execute(gomock.Any(), gomock.Any()).Return(
+				testCase.cassandraStatsData.outputParam,
+				testCase.cassandraStatsData.outputErr,
+			).Times(testCase.cassandraStatsData.times)
 
 			mockAuth.EXPECT().ValidateJWT(gomock.Any()).Return(
 				testCase.authValidateJWTData.outputParam1,

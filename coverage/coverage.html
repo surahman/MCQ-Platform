@@ -2308,8 +2308,8 @@ func GetScore(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin
 // @Failure     404     {object} model_rest.Error   "Error message with any available details in payload"
 // @Failure     500     {object} model_rest.Error   "Error message with any available details in payload"
 // @Router      /score/stats/{quiz_id} [get]
-func GetStats(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc <span class="cov8" title="7">{
-        return func(context *gin.Context) </span><span class="cov8" title="7">{
+func GetStats(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc <span class="cov7" title="6">{
+        return func(context *gin.Context) </span><span class="cov7" title="6">{
                 var err error
                 var dbRecord any
                 var response []*model_cassandra.Response
@@ -2322,32 +2322,31 @@ func GetStats(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin
                 }</span>
 
                 // Get username from JWT.
-                <span class="cov7" title="6">if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil </span><span class="cov1" title="1">{
+                <span class="cov6" title="5">if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil </span><span class="cov1" title="1">{
                         logger.Error("failed to validate JWT in create quiz handler", zap.Error(err))
                         context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "unable to verify username"})
                         return
                 }</span>
 
-                // Get quiz record from database and check to ensure requester is author.
-                <span class="cov6" title="5">if dbRecord, err = db.Execute(cassandra.ReadQuizQuery, quizId); err != nil </span><span class="cov1" title="1">{
-                        cassandraError := err.(*cassandra.Error)
-                        context.AbortWithStatusJSON(cassandraError.Status, &amp;model_rest.Error{Message: "error verifying quiz author", Payload: cassandraError.Message})
-                        return
-                }</span>
-                <span class="cov6" title="4">if username != dbRecord.(*model_cassandra.Quiz).Author </span><span class="cov1" title="1">{
-                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_rest.Error{Message: "error verifying quiz author"})
-                        return
-                }</span>
-
                 // Get scorecard record from database.
-                <span class="cov4" title="3">if dbRecord, err = db.Execute(cassandra.ReadResponseStatisticsQuery, quizId); err != nil </span><span class="cov1" title="1">{
+                <span class="cov6" title="4">if dbRecord, err = db.Execute(cassandra.ReadResponseStatisticsQuery, quizId); err != nil </span><span class="cov1" title="1">{
                         cassandraError := err.(*cassandra.Error)
                         context.AbortWithStatusJSON(cassandraError.Status, &amp;model_rest.Error{Message: "error retrieving score card", Payload: cassandraError.Message})
                         return
                 }</span>
-                <span class="cov3" title="2">response = dbRecord.([]*model_cassandra.Response)
+                <span class="cov4" title="3">response = dbRecord.([]*model_cassandra.Response)
 
-                context.JSON(http.StatusOK, &amp;model_rest.Success{Message: "score cards", Payload: response})</span>
+                // Verify authorization.
+                if len(response) == 0 </span><span class="cov1" title="1">{
+                        context.AbortWithStatusJSON(http.StatusNotFound, &amp;model_rest.Error{Message: "could not locate results"})
+                        return
+                }</span>
+                <span class="cov3" title="2">if username != response[0].Author </span><span class="cov1" title="1">{
+                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_rest.Error{Message: "error verifying quiz author"})
+                        return
+                }</span>
+
+                <span class="cov1" title="1">context.JSON(http.StatusOK, &amp;model_rest.Success{Message: "score card", Payload: response})</span>
         }
 }
 
