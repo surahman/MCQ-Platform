@@ -13,7 +13,7 @@ below.
 
 - [x] REST API `score/stats` response pagination: The response to a stats request could contain far too many records to 
       send back in a single request and must be paginated.
-- [ ] Denormalize the `responses` table by adding the quiz `Author` with each `response` row. This will allow queries
+- [x] Denormalize the `responses` table by adding the quiz `Author` with each `response` row. This will allow queries
       requesting statistics to merely make calls to the `response` table. It should then be possible to check
       authorization using the returned rows.
 - [ ] Redis Cache: To improve the performance of the API, published tests should be cached with an eager write to cache, 

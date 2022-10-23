@@ -310,13 +310,14 @@ for the request with a link to the subsequent page of data provided in the respo
 the records in the query where the read will resume from. The data contained in the page cursor can reveal sensitive
 information contained in the database and thus must be encrypted before being returned from the HTTP handler.
 
-It is critical always to consider that adding or removing rows retrieved by a paginated query may result in missing or
-duplicated records between pages. Fortunately, the `responses` table is write-only and records remain immutable so this
-should not represent an issue.
+It is critical to consider that adding or removing rows in other queries may affect the records being retrieved by a
+paginated query into the same table. Since paged queries rely on a cursor to a read position in the database table
+returned results from a paged query may return duplicated or missed records between pages.
 
 _Request:_ The `Quiz ID` must be supplied in the request URL. The encrypted and Base64 URL encoded page cursor is provided
 with the query parameter `pageCursor`. The maximum number of records to retrieve in a request is set via the `pageSize`
-query parameter.
+query parameter. The first request sent to this endpoint should only include the `pageSize`. The subsequent responses will
+have the query string link generated automatically.
 
 _Response:_ A paged statistics response will be returned on a successful request. The following page of data can be
 accessed by appending the query string in the `Links.NextPage` to the base request URI that consists of the endpoint URI

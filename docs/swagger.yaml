@@ -75,6 +75,8 @@ definitions:
     type: object
   model_cassandra.Response:
     properties:
+      author:
+        type: string
       quiz_id:
         type: string
       responses:

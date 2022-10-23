@@ -46,6 +46,7 @@ const (
 	CreateResponsesTable = `CREATE TABLE IF NOT EXISTS responses (
     username text,
     quiz_id uuid,
+    author text,
     score double,
     responses frozen<list<list<int>>>,
     PRIMARY KEY ( (username, quiz_id) )
@@ -106,9 +107,9 @@ WHERE quiz_id = ? IF author = ? AND is_deleted = false;`
 	// -----   Responses Table Queries   -----
 
 	// CreateResponse inserts a new Response record into the Quizzes table if it does not already exist.
-	// Query Params: username, quiz_id, score, responses
-	CreateResponse = `INSERT INTO responses (username, quiz_id, score, responses)
-VALUES (?, ?, ?, ?)
+	// Query Params: username, quiz_id, author, responses, score
+	CreateResponse = `INSERT INTO responses (username, quiz_id, author, responses, score)
+VALUES (?, ?, ?, ?, ?)
 IF NOT EXISTS;`
 
 	// ReadResponse retrieves a Response record from the Responses table.

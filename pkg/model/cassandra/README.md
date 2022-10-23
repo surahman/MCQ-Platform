@@ -29,7 +29,7 @@ A NoSQL database is ideal for this application for the following reasons:
 * Foreign key integrity in the tables is maintained by the service logic.
 * The `Quiz` table updates are only conducted by a single user. Once a record is marked as published it becomes 
   read-only with updates to mark it as deleted.
-* The `Score` table is read and write only with no updates permitted.
+* The `Responses` table is read and write only with no updates permitted.
 * The `User` table is read and write only with the only updates allowed to delete an account or update fields that are
   not the primary key (`username`).
 
@@ -127,6 +127,7 @@ This `struct` creates a representation of the responses table.
 |---------------|--------------------|-------------|--------------------------|-----------------------------------------------------|
 | Username      | string             | username    | text                     | Username of the test taker. Compound Partition Key. |
 | QuizID        | gocql.UUID         | quiz_id     | uuid                     | Taken quiz's id. Compound Partition Key.            |
+| Author        | string             | author      | text                     | Taken quiz author's username.                       |
 | Score         | float64            | score       | double                   | Score for this submission. Clustering Key.          |
 | Responses     | QuizResponse       | responses   | frozen<list<list<int>>>, | Recorded responses for the submission.              |
 
@@ -140,5 +141,8 @@ A secondary index will be constructed on just the `quiz_id` column. This is an i
 of its perceived high cardinality. When a quiz author requests statistics for their published quiz by its `quiz_id`,
 this index will be used to retrieve all the required records.
 
+The quiz `author`'s username has been added to the table to facilitate permission checking for statistics retrieval via an
+HTTP request.
+
 ### CQL Query
-The query to generate the user table can be found [here](responses.cql).
+The query to generate the responses table can be found [here](responses.cql).

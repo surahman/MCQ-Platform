@@ -913,6 +913,9 @@ const docTemplate = `{
                 "responses"
             ],
             "properties": {
+                "author": {
+                    "type": "string"
+                },
                 "quiz_id": {
                     "type": "string"
                 },

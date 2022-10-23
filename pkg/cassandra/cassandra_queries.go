@@ -244,8 +244,8 @@ func CreateResponseQuery(c Cassandra, params any) (response any, err error) {
 
 	applied := false
 	if applied, err = conn.session.Query(model_cassandra.CreateResponse,
-		input.Username, input.QuizID, input.Score, input.Responses).ScanCAS(
-		&resp.Username, &resp.QuizID, &resp.Responses, &resp.Score); err != nil {
+		input.Username, input.QuizID, input.Author, input.Responses, input.Score).ScanCAS(
+		&resp.Username, &resp.QuizID, &resp.Author, &resp.Responses, &resp.Score); err != nil {
 		conn.logger.Error("failed to create response record",
 			zap.Strings("Response info:", []string{input.Username, input.QuizID.String()}), zap.Error(err))
 		return nil, NewError(err.Error()).internalError()
@@ -269,7 +269,7 @@ func ReadResponseQuery(c Cassandra, params any) (response any, err error) {
 	resp := model_cassandra.Response{QuizResponse: &model_cassandra.QuizResponse{}}
 
 	if err = conn.session.Query(model_cassandra.ReadResponse, input.Username, input.QuizID).Scan(
-		&resp.Username, &resp.QuizID, &resp.Responses, &resp.Score); err != nil {
+		&resp.Username, &resp.QuizID, &resp.Author, &resp.Responses, &resp.Score); err != nil {
 		conn.logger.Error("failed to read response record",
 			zap.Strings("Response info:", []string{input.Username, input.QuizID.String()}), zap.Error(err))
 		return nil, NewError("score card not found").notFoundError()
@@ -301,7 +301,7 @@ func ReadResponseStatisticsQuery(c Cassandra, params any) (response any, err err
 	scanRows := iter.Scanner()
 	for scanRows.Next() {
 		row := model_cassandra.Response{QuizResponse: &model_cassandra.QuizResponse{}}
-		if err = scanRows.Scan(&row.Username, &row.QuizID, &row.Responses, &row.Score); err != nil {
+		if err = scanRows.Scan(&row.Username, &row.QuizID, &row.Author, &row.Responses, &row.Score); err != nil {
 			conn.logger.Error("failed to read row in response statistics",
 				zap.String("quiz_id", input.String()), zap.Error(err))
 			return nil, NewError(err.Error()).internalError()
@@ -340,7 +340,7 @@ func ReadResponseStatisticsPageQuery(c Cassandra, params any) (response any, err
 	scanRows := iter.Scanner()
 	for scanRows.Next() {
 		row := model_cassandra.Response{QuizResponse: &model_cassandra.QuizResponse{}}
-		if err = scanRows.Scan(&row.Username, &row.QuizID, &row.Responses, &row.Score); err != nil {
+		if err = scanRows.Scan(&row.Username, &row.QuizID, &row.Author, &row.Responses, &row.Score); err != nil {
 			conn.logger.Error("failed to read row in response statistics page",
 				zap.String("quiz_id", input.QuizID.String()), zap.Error(err))
 			return nil, NewError(err.Error()).internalError()
