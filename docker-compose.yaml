@@ -20,7 +20,23 @@ services:
       - CASSANDRA_PASSWORD_SEEDER=yes
       - CASSANDRA_USER=admin
       - CASSANDRA_PASSWORD=root
+  redis:
+    image: bitnami/redis:latest
+    ports:
+      - '6379:6379'
+    volumes:
+      - 'redis_data:/redis_data'
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+    environment:
+      - REDIS_REPLICATION_MODE=master
+      - REDIS_PASSWORD=root
 volumes:
   cassandra_data:
+    driver: local
+  redis_data:
     driver: local
 
