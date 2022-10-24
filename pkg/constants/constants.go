@@ -11,6 +11,7 @@ const (
 	loggerConfigFileName    = "LoggerConfig.yaml"
 	authConfigFileName      = "AuthConfig.yaml"
 	restConfigFileName      = "HTTPRESTConfig.yaml"
+	redisConfigFileName     = "RedisConfig.yaml"
 
 	// Environment variables
 	cassandraPrefix = "CASSANDRA"
@@ -18,6 +19,7 @@ const (
 	githubCIKey     = "GITHUB_ACTIONS_CI"
 	authPrefix      = "AUTH"
 	restPrefix      = "REST"
+	redisPrefix     = "REDIS"
 
 	// Misc.
 	integrationTestKeyspaceSuffix = "_integration_testing"
@@ -60,6 +62,11 @@ func GetHTTPRESTFileName() string {
 	return restConfigFileName
 }
 
+// GetRedisFileName returns the Redis cluster configuration file name.
+func GetRedisFileName() string {
+	return redisConfigFileName
+}
+
 // GetCassandraPrefix returns the environment variable prefix for Cassandra.
 func GetCassandraPrefix() string {
 	return cassandraPrefix
@@ -78,6 +85,11 @@ func GetAuthPrefix() string {
 // GetHTTPRESTPrefix returns the environment variable prefix for the HTTP REST endpoint.
 func GetHTTPRESTPrefix() string {
 	return restPrefix
+}
+
+// GetRedisPrefix returns the environment variable prefix for the Redis cluster.
+func GetRedisPrefix() string {
+	return redisPrefix
 }
 
 // GetIntegrationTestKeyspaceSuffix is the suffix attached to the clusters keyspace and is used for integration tests.

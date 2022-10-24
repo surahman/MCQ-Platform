@@ -65,3 +65,11 @@ func TestGetHTTPRESTPrefix(t *testing.T) {
 func TestGetDeleteUserAccountConfirmation(t *testing.T) {
 	require.Equal(t, deleteUserAccountConfirmation, GetDeleteUserAccountConfirmation(), "Incorrect user account deletion confirmation message.")
 }
+
+func TestGetRedisFileName(t *testing.T) {
+	require.Equal(t, redisConfigFileName, GetRedisFileName(), "Incorrect Redis filename")
+}
+
+func TestGetRedisPrefix(t *testing.T) {
+	require.Equal(t, redisPrefix, GetRedisPrefix(), "Incorrect Redis environment prefix")
+}
