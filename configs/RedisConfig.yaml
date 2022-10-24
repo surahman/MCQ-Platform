@@ -1,0 +1,10 @@
+authentication:
+  password: root
+connection:
+  addrs: [127.0.0.1:6379]
+  max_redirects: 8
+  max_retries: 8
+  pool_size: 4
+  min_idle_conns: 1
+  read_only: false
+  route_by_latency: false

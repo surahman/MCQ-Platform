@@ -7,26 +7,23 @@ import (
 	"github.com/surahman/mcq-platform/pkg/validator"
 )
 
-// config is the configuration container for connecting to the Cassandra cluster
+// config is the configuration container for connecting to the Redis cluster
 type config struct {
 	Authentication struct {
-		Username string `json:"username,omitempty" yaml:"username,omitempty" mapstructure:"username" validate:"required"`
 		Password string `json:"password,omitempty" yaml:"password,omitempty" mapstructure:"password" validate:"required"`
 	} `json:"authentication,omitempty" yaml:"authentication,omitempty" mapstructure:"authentication"`
-	Keyspace struct {
-		Name              string `json:"name,omitempty" yaml:"name,omitempty" mapstructure:"name" validate:"required"`
-		ReplicationClass  string `json:"replication_class,omitempty" yaml:"replication_class,omitempty" mapstructure:"replication_class" validate:"required"`
-		ReplicationFactor int    `json:"replication_factor,omitempty" yaml:"replication_factor,omitempty" mapstructure:"replication_factor" validate:"required,numeric,min=1"`
-	} `json:"keyspace,omitempty" yaml:"keyspace,omitempty" mapstructure:"keyspace"`
 	Connection struct {
-		Consistency  string   `json:"consistency,omitempty" yaml:"consistency,omitempty" mapstructure:"consistency" validate:"required"`
-		ClusterIP    []string `json:"cluster_ip,omitempty" yaml:"cluster_ip,omitempty" mapstructure:"cluster_ip" validate:"required,min=1"`
-		ProtoVersion int      `json:"proto_version,omitempty" yaml:"proto_version,omitempty" mapstructure:"proto_version" validate:"required,numeric,min=4"`
-		Timeout      int      `json:"timeout,omitempty" yaml:"timeout,omitempty" mapstructure:"timeout" validate:"required,numeric,min=1"`
+		Addrs          []string `json:"addrs,omitempty" yaml:"addrs,omitempty" mapstructure:"addrs" validate:"required,min=1"`
+		MaxRedirects   int      `json:"max_redirects,omitempty" yaml:"max_redirects,omitempty" mapstructure:"max_redirects" validate:"required,min=1"`
+		MaxRetries     int      `json:"max_retries,omitempty" yaml:"max_retries,omitempty" mapstructure:"max_retries" validate:"required,min=1"`
+		PoolSize       int      `json:"pool_size,omitempty" yaml:"pool_size,omitempty" mapstructure:"pool_size" validate:"required,min=1"`
+		MinIdleConns   int      `json:"min_idle_conns,omitempty" yaml:"min_idle_conns,omitempty" mapstructure:"min_idle_conns" validate:"required,min=1"`
+		ReadOnly       bool     `json:"read_only,omitempty" yaml:"read_only,omitempty" mapstructure:"read_only"`
+		RouteByLatency bool     `json:"route_by_latency,omitempty" yaml:"route_by_latency,omitempty" mapstructure:"route_by_latency"`
 	} `json:"connection,omitempty" yaml:"connection,omitempty" mapstructure:"connection"`
 }
 
-// newConfig creates a blank configuration struct for Cassandra.
+// newConfig creates a blank configuration struct for Redis.
 func newConfig() *config {
 	return &config{}
 }
