@@ -4,6 +4,7 @@ services:
   cassandra:
     container_name: cassandra
     image: docker.io/bitnami/cassandra:latest
+    restart: always
     ports:
       - '7000:7000'
       - '9042:9042'
@@ -21,7 +22,9 @@ services:
       - CASSANDRA_USER=admin
       - CASSANDRA_PASSWORD=root
   redis:
+    container_name: redis
     image: bitnami/redis:latest
+    restart: always
     ports:
       - '6379:6379'
     volumes:
