@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -35,7 +36,7 @@ type redisImpl struct {
 // NewRedis will create a new Redis configuration by loading it.
 func NewRedis(fs *afero.Fs, logger *logger.Logger) (Redis, error) {
 	if fs == nil || logger == nil {
-		return nil, errors.New("nil file system of logger supplied")
+		return nil, errors.New("nil file system or logger supplied")
 	}
 	return newRedisImpl(fs, logger)
 }
@@ -48,6 +49,14 @@ func newRedisImpl(fs *afero.Fs, logger *logger.Logger) (c *redisImpl, err error)
 		return nil, err
 	}
 	return
+}
+
+// verifySession will check to see if a session is established.
+func (r *redisImpl) verifySession() error {
+	if r.redisDb == nil || r.redisDb.Ping(context.TODO()) != nil {
+		return errors.New("no session established")
+	}
+	return nil
 }
 
 // Open will establish a connection to the Redis cache backend.

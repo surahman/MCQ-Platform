@@ -3,6 +3,7 @@ package redis
 import (
 	"testing"
 
+	"github.com/go-redis/redis/v9"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 	"github.com/surahman/mcq-platform/pkg/constants"
@@ -96,4 +97,12 @@ func TestNewRedis(t *testing.T) {
 			testCase.expectNil(t, cassandra)
 		})
 	}
+}
+
+func TestVerifySession(t *testing.T) {
+	nilConnection := redisImpl{redisDb: nil}
+	require.Error(t, nilConnection.verifySession(), "nil connection should return an error")
+
+	badConnection := redisImpl{redisDb: redis.NewClusterClient(&redis.ClusterOptions{})}
+	require.Error(t, badConnection.verifySession(), "verifying a not open connection should return an error")
 }
