@@ -21,6 +21,9 @@ type config struct {
 		ReadOnly       bool     `json:"read_only,omitempty" yaml:"read_only,omitempty" mapstructure:"read_only"`
 		RouteByLatency bool     `json:"route_by_latency,omitempty" yaml:"route_by_latency,omitempty" mapstructure:"route_by_latency"`
 	} `json:"connection,omitempty" yaml:"connection,omitempty" mapstructure:"connection"`
+	Data struct {
+		TTL int64 `json:"ttl,omitempty" yaml:"ttl,omitempty" mapstructure:"ttl" validate:"omitempty,min=60"`
+	} `json:"data,omitempty" yaml:"data,omitempty" mapstructure:"data"`
 }
 
 // newConfig creates a blank configuration struct for Redis.

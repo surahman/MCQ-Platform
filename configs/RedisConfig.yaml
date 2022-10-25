@@ -8,3 +8,5 @@ connection:
   min_idle_conns: 1
   read_only: false
   route_by_latency: false
+data:
+  ttl: 3600

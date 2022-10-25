@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 	"github.com/surahman/mcq-platform/pkg/constants"
+	"github.com/surahman/mcq-platform/pkg/validator"
 	"gopkg.in/yaml.v3"
 )
 
@@ -16,52 +17,67 @@ func TestRedisConfigs_Load(t *testing.T) {
 	keyspaceKey := fmt.Sprintf("%s_AUTHENTICATION.PASSWORD", constants.GetRedisPrefix())
 
 	testCases := []struct {
-		name      string
-		input     string
-		envValue  string
-		expectErr require.ErrorAssertionFunc
+		name         string
+		input        string
+		envValue     string
+		expectErrCnt int
+		expectErr    require.ErrorAssertionFunc
 	}{
 		// ----- test cases start ----- //
 		{
-			"empty - etc dir",
-			redisConfigTestData["empty"],
-			xid.New().String(),
-			require.Error,
+			name:         "empty - etc dir",
+			input:        redisConfigTestData["empty"],
+			envValue:     xid.New().String(),
+			expectErrCnt: 6,
+			expectErr:    require.Error,
 		}, {
-			"valid - etc dir",
-			redisConfigTestData["valid"],
-			xid.New().String(),
-			require.NoError,
+			name:         "valid - etc dir",
+			input:        redisConfigTestData["valid"],
+			envValue:     xid.New().String(),
+			expectErrCnt: 0,
+			expectErr:    require.NoError,
 		}, {
-			"no password - etc dir",
-			redisConfigTestData["password_empty"],
-			xid.New().String(),
-			require.Error,
+			name:         "no password - etc dir",
+			input:        redisConfigTestData["password_empty"],
+			envValue:     xid.New().String(),
+			expectErrCnt: 1,
+			expectErr:    require.Error,
 		}, {
-			"no addrs - etc dir",
-			redisConfigTestData["no_addrs"],
-			xid.New().String(),
-			require.Error,
+			name:         "no addrs - etc dir",
+			input:        redisConfigTestData["no_addrs"],
+			envValue:     xid.New().String(),
+			expectErrCnt: 1,
+			expectErr:    require.Error,
 		}, {
-			"invalid max redirects - etc dir",
-			redisConfigTestData["invalid_max_redirects"],
-			xid.New().String(),
-			require.Error,
+			name:         "invalid max redirects - etc dir",
+			input:        redisConfigTestData["invalid_max_redirects"],
+			envValue:     xid.New().String(),
+			expectErrCnt: 1,
+			expectErr:    require.Error,
 		}, {
-			"invalid max retries - etc dir",
-			redisConfigTestData["invalid_max_retries"],
-			xid.New().String(),
-			require.Error,
+			name:         "invalid max retries - etc dir",
+			input:        redisConfigTestData["invalid_max_retries"],
+			envValue:     xid.New().String(),
+			expectErrCnt: 1,
+			expectErr:    require.Error,
 		}, {
-			"invalid pool size - etc dir",
-			redisConfigTestData["invalid_pool_size"],
-			xid.New().String(),
-			require.Error,
+			name:         "invalid pool size - etc dir",
+			input:        redisConfigTestData["invalid_pool_size"],
+			envValue:     xid.New().String(),
+			expectErrCnt: 1,
+			expectErr:    require.Error,
 		}, {
-			"invalid min idle conns - etc dir",
-			redisConfigTestData["invalid_min_idle_conns"],
-			xid.New().String(),
-			require.Error,
+			name:         "invalid min idle conns - etc dir",
+			input:        redisConfigTestData["invalid_min_idle_conns"],
+			envValue:     xid.New().String(),
+			expectErrCnt: 1,
+			expectErr:    require.Error,
+		}, {
+			name:         "invalid min TTL - etc dir",
+			input:        redisConfigTestData["invalid_min_ttl"],
+			envValue:     xid.New().String(),
+			expectErrCnt: 1,
+			expectErr:    require.Error,
 		},
 		// ----- test cases end ----- //
 	}
@@ -78,6 +94,8 @@ func TestRedisConfigs_Load(t *testing.T) {
 			testCase.expectErr(t, err)
 
 			if err != nil {
+				errorList := err.(*validator.ErrorValidation).Errors
+				require.Equalf(t, testCase.expectErrCnt, len(errorList), "expected error count does not match: %v", errorList)
 				return
 			}
 

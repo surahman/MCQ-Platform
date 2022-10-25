@@ -15,7 +15,9 @@ connection:
   pool_size: 4
   min_idle_conns: 1
   read_only: false
-  route_by_latency: false`,
+  route_by_latency: false
+data:
+  ttl: 3600`,
 
 		"password_empty": `
 authentication:
@@ -27,7 +29,9 @@ connection:
   pool_size: 4
   min_idle_conns: 1
   read_only: false
-  route_by_latency: false`,
+  route_by_latency: false
+data:
+  ttl: 3600`,
 
 		"no_addrs": `
 authentication:
@@ -39,7 +43,9 @@ connection:
   pool_size: 4
   min_idle_conns: 1
   read_only: false
-  route_by_latency: false`,
+  route_by_latency: false
+data:
+  ttl: 3600`,
 
 		"invalid_max_redirects": `
 authentication:
@@ -51,7 +57,9 @@ connection:
   pool_size: 4
   min_idle_conns: 1
   read_only: false
-  route_by_latency: false`,
+  route_by_latency: false
+data:
+  ttl: 3600`,
 
 		"invalid_max_retries": `
 authentication:
@@ -63,7 +71,9 @@ connection:
   pool_size: 4
   min_idle_conns: 1
   read_only: false
-  route_by_latency: false`,
+  route_by_latency: false
+data:
+  ttl: 3600`,
 
 		"invalid_pool_size": `
 authentication:
@@ -75,7 +85,9 @@ connection:
   pool_size: 0
   min_idle_conns: 1
   read_only: false
-  route_by_latency: false`,
+  route_by_latency: false
+data:
+  ttl: 3600`,
 
 		"invalid_min_idle_conns": `
 authentication:
@@ -87,6 +99,22 @@ connection:
   pool_size: 4
   min_idle_conns: 0
   read_only: false
-  route_by_latency: false`,
+  route_by_latency: false
+data:
+  ttl: 3600`,
+
+		"invalid_min_ttl": `
+authentication:
+  password: root
+connection:
+  addrs: [127.0.0.1:6379]
+  max_redirects: 8
+  max_retries: 8
+  pool_size: 4
+  min_idle_conns: 1
+  read_only: false
+  route_by_latency: false
+data:
+  ttl: 59`,
 	}
 }
