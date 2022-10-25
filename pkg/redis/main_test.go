@@ -13,7 +13,7 @@ import (
 
 // testConnection is the connection pool to the Redis cluster. The mutex is used for sequential test execution.
 type testConnection struct {
-	// db Redis        // Test database connection.
+	db Redis        // Test database connection.
 	mu sync.RWMutex // Mutex to enforce sequential test execution.
 }
 
