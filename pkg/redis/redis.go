@@ -3,7 +3,6 @@ package redis
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/go-redis/redis/v9"
 	"github.com/spf13/afero"
@@ -16,10 +15,10 @@ import (
 
 // Redis is the interface through which the cluster can be accessed. Created to support mock testing.
 type Redis interface {
-	// Open will create a connection pool and establish a connection to the cache backend.
+	// Open will create a connection pool and establish a connection to the cache cluster.
 	Open() error
 
-	// Close will shut down the connection pool and ensure that the connection to the database backend is terminated correctly.
+	// Close will shut down the connection pool and ensure that the connection to the cache cluster is terminated correctly.
 	Close() error
 }
 
@@ -59,12 +58,34 @@ func (r *redisImpl) verifySession() error {
 	return nil
 }
 
-// Open will establish a connection to the Redis cache backend.
+// Open will establish a connection to the Redis cache cluster.
 func (r *redisImpl) Open() (err error) {
-	return fmt.Errorf("not implemented")
+	// Stop connection leaks.
+	if err = r.verifySession(); err == nil {
+		r.logger.Warn("session to cluster is already established")
+		return errors.New("session to cluster is already established")
+	}
+
+	r.redisDb = redis.NewClusterClient(&redis.ClusterOptions{
+		Addrs:          r.conf.Connection.Addrs,
+		MaxRedirects:   r.conf.Connection.MaxRedirects,
+		ReadOnly:       r.conf.Connection.ReadOnly,
+		RouteByLatency: r.conf.Connection.RouteByLatency,
+		Password:       r.conf.Authentication.Password,
+		MaxRetries:     r.conf.Connection.MaxRetries,
+		PoolSize:       r.conf.Connection.PoolSize,
+		MinIdleConns:   r.conf.Connection.MinIdleConns,
+	})
+
+	if err = r.redisDb.Ping(context.TODO()).Err(); err != nil {
+		r.logger.Error("failed to establish redis cluster connection", zap.Error(err))
+		return
+	}
+
+	return nil
 }
 
-// Close will terminate a connection to the Redis cache backend.
+// Close will terminate a connection to the Redis cache cluster.
 func (r *redisImpl) Close() (err error) {
 	return r.redisDb.Close()
 }

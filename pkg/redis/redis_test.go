@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/surahman/mcq-platform/pkg/constants"
 	"github.com/surahman/mcq-platform/pkg/logger"
+	"gopkg.in/yaml.v3"
 )
 
 func TestNewRedisImpl(t *testing.T) {
@@ -89,7 +90,6 @@ func TestNewRedis(t *testing.T) {
 		},
 		// ----- test cases end ----- //
 	}
-
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			cassandra, err := NewRedis(testCase.fs, testCase.log)
@@ -105,4 +105,22 @@ func TestVerifySession(t *testing.T) {
 
 	badConnection := redisImpl{redisDb: redis.NewClusterClient(&redis.ClusterOptions{})}
 	require.Error(t, badConnection.verifySession(), "verifying a not open connection should return an error")
+}
+
+func TestRedisImpl_Open(t *testing.T) {
+	// Ping failure.
+	noNodes := redisImpl{conf: &config{}, logger: zapLogger}
+	err := noNodes.Open()
+	require.Error(t, err, "connection should fail to ping the cluster")
+	require.Contains(t, err.Error(), "no nodes", "error should contain information on no nodes")
+
+	// Connection success.
+	conf := config{}
+	require.NoError(t, yaml.Unmarshal([]byte(redisConfigTestData["valid"]), &conf), "failed to prepare test config")
+	testRedis := redisImpl{conf: &conf, logger: zapLogger}
+	require.NoError(t, testRedis.Open(), "failed to create new cluster connection")
+
+	// Leaked connection check.
+	require.Error(t, testRedis.Open(), "leaking a connection should raise an error")
+
 }

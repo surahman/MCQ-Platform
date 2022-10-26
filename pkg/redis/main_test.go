@@ -26,9 +26,6 @@ var connection testConnection
 // zapLogger is the Zap logger used strictly for the test suite in this package.
 var zapLogger *logger.Logger
 
-// integrationKeyspace is the name of the keyspace in which testing is conducted.
-var integrationKeyspace string
-
 func TestMain(m *testing.M) {
 	// Parse commandline flags to check for short tests.
 	flag.Parse()
