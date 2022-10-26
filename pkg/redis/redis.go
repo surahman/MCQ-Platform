@@ -52,7 +52,7 @@ func newRedisImpl(fs *afero.Fs, logger *logger.Logger) (c *redisImpl, err error)
 
 // verifySession will check to see if a session is established.
 func (r *redisImpl) verifySession() error {
-	if r.redisDb == nil || r.redisDb.Ping(context.TODO()) != nil {
+	if r.redisDb == nil || r.redisDb.Ping(context.TODO()).Err() != nil {
 		return errors.New("no session established")
 	}
 	return nil
