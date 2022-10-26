@@ -1,6 +1,8 @@
 package redis
 
 import (
+	"encoding/json"
+	"reflect"
 	"testing"
 
 	"github.com/go-redis/redis/v9"
@@ -8,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/surahman/mcq-platform/pkg/constants"
 	"github.com/surahman/mcq-platform/pkg/logger"
+	model_cassandra "github.com/surahman/mcq-platform/pkg/model/cassandra"
 	"gopkg.in/yaml.v3"
 )
 
@@ -155,7 +158,48 @@ func TestRedisImpl_Healthcheck(t *testing.T) {
 }
 
 func TestRedisImpl_Set(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		t.Skip()
+	}
+	// Lock connection to Redis cluster.
+	connection.mu.Lock()
+	defer connection.mu.Unlock()
 
+	testCases := []struct {
+		name string
+		quiz *model_cassandra.Quiz
+	}{
+		// ----- test cases start ----- //
+		{
+			name: "myPubQuiz",
+			quiz: quizzesTestData["myPubQuiz"],
+		}, {
+			name: "providedPubQuiz",
+			quiz: quizzesTestData["providedPubQuiz"],
+		},
+		// ----- test cases end ----- //
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			// Convert to bytes and write to Redis.
+			bytes, err := json.Marshal(testCase.quiz)
+			require.NoError(t, err, "failed to convert quiz data to bytes")
+			require.NoError(t, connection.db.Set(testCase.quiz.QuizID.String()+constants.GetIntegrationTestKeyspaceSuffix(), bytes), "failed to write to Redis")
+
+			// Get data and validate it.
+			data, err := connection.db.Get(testCase.quiz.QuizID.String() + constants.GetIntegrationTestKeyspaceSuffix())
+			require.NoError(t, err, "failed to retrieve data from Redis")
+			retrievedQuiz := model_cassandra.Quiz{}
+			require.NoError(t, json.Unmarshal(data, &retrievedQuiz), "failed to convert retrieved data to quiz")
+			require.Equal(t, reflect.DeepEqual(testCase.quiz, retrievedQuiz), "retrieved quiz does not match expected")
+
+			// Remove data from cluster.
+
+			// Check to see if data has been removed.
+
+		})
+	}
 }
 
 func TestRedisImpl_Get(t *testing.T) {
