@@ -10,8 +10,8 @@ authentication:
   password: root
 connection:
   addrs: [127.0.0.1:6379, 127.0.0.1:6380]
-  max_redirects: 8
-  max_retries: 8
+  max_redirects: 3
+  max_retries: 3
   pool_size: 4
   min_idle_conns: 1
   read_only: false
@@ -24,8 +24,8 @@ authentication:
   password:
 connection:
   addrs: [127.0.0.1:6379, 127.0.0.1:6380]
-  max_redirects: 8
-  max_retries: 8
+  max_redirects: 3
+  max_retries: 3
   pool_size: 4
   min_idle_conns: 1
   read_only: false
@@ -38,8 +38,8 @@ authentication:
   password: root
 connection:
   addrs: []
-  max_redirects: 8
-  max_retries: 8
+  max_redirects: 3
+  max_retries: 3
   pool_size: 4
   min_idle_conns: 1
   read_only: false
@@ -53,7 +53,7 @@ authentication:
 connection:
   addrs: [127.0.0.1:6379, 127.0.0.1:6380]
   max_redirects: 0
-  max_retries: 8
+  max_retries: 3
   pool_size: 4
   min_idle_conns: 1
   read_only: false
@@ -66,7 +66,7 @@ authentication:
   password: root
 connection:
   addrs: [127.0.0.1:6379, 127.0.0.1:6380]
-  max_redirects: 8
+  max_redirects: 3
   max_retries: 0
   pool_size: 4
   min_idle_conns: 1
@@ -80,8 +80,8 @@ authentication:
   password: root
 connection:
   addrs: [127.0.0.1:6379, 127.0.0.1:6380]
-  max_redirects: 8
-  max_retries: 8
+  max_redirects: 3
+  max_retries: 3
   pool_size: 0
   min_idle_conns: 1
   read_only: false
@@ -94,8 +94,8 @@ authentication:
   password: root
 connection:
   addrs: [127.0.0.1:6379, 127.0.0.1:6380]
-  max_redirects: 8
-  max_retries: 8
+  max_redirects: 3
+  max_retries: 3
   pool_size: 4
   min_idle_conns: 0
   read_only: false
@@ -108,8 +108,8 @@ authentication:
   password: root
 connection:
   addrs: [127.0.0.1:6379, 127.0.0.1:6380]
-  max_redirects: 8
-  max_retries: 8
+  max_redirects: 3
+  max_retries: 3
   pool_size: 4
   min_idle_conns: 1
   read_only: false
