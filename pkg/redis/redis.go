@@ -3,6 +3,7 @@ package redis
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/go-redis/redis/v9"
 	"github.com/spf13/afero"
@@ -23,6 +24,15 @@ type Redis interface {
 
 	// Healthcheck will ping all the nodes in the cluster to see if all the shards are reachable.
 	Healthcheck() error
+
+	// Set will place a key with a given value in the cluster with a TTL, if specified in the configurations.
+	Set(string, any) error
+
+	// Get will retrieve a value associated with a provided key.
+	Get(string) ([]byte, error)
+
+	// Del will remove all keys provided as a set of keys.
+	Del(...string) error
 }
 
 // Check to ensure the Redis interface has been implemented.
@@ -99,4 +109,33 @@ func (r *redisImpl) Healthcheck() (err error) {
 		return shard.Ping(ctx).Err()
 	})
 	return
+}
+
+// Set will place a key with a given value in the cluster with a TTL, if specified in the configurations.
+func (r *redisImpl) Set(key string, value any) (err error) {
+	if err = r.redisDb.Set(context.Background(), key, value, time.Duration(r.conf.Data.TTL)).Err(); err != nil {
+		r.logger.Error("failed to place item in Redis cache", zap.String("key", key), zap.Error(err))
+		return
+	}
+	return
+}
+
+// Get will retrieve a value associated with a provided key.
+func (r *redisImpl) Get(key string) (val []byte, err error) {
+	result := r.redisDb.Get(context.Background(), key)
+	if result.Err() != nil {
+		return nil, result.Err()
+	}
+	return result.Bytes()
+}
+
+// Del will remove all keys provided as a set of keys.
+func (r *redisImpl) Del(keys ...string) (err error) {
+	for _, key := range keys {
+		if err = r.redisDb.Del(context.Background(), key).Err(); err != nil {
+			r.logger.Error("failed to evict item from Redis cache", zap.String("key", key), zap.Error(err))
+			return
+		}
+	}
+	return nil
 }

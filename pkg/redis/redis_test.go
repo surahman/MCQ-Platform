@@ -153,3 +153,15 @@ func TestRedisImpl_Healthcheck(t *testing.T) {
 	err = healthy.Healthcheck()
 	require.NoError(t, err, "healthy healthcheck failed")
 }
+
+func TestRedisImpl_Set(t *testing.T) {
+
+}
+
+func TestRedisImpl_Get(t *testing.T) {
+
+}
+
+func TestRedisImpl_Del(t *testing.T) {
+
+}
