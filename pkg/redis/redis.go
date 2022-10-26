@@ -55,7 +55,7 @@ func newRedisImpl(fs *afero.Fs, logger *logger.Logger) (c *redisImpl, err error)
 
 // verifySession will check to see if a session is established.
 func (r *redisImpl) verifySession() error {
-	if r.redisDb == nil || r.redisDb.Ping(context.TODO()).Err() != nil {
+	if r.redisDb == nil || r.redisDb.Ping(context.Background()).Err() != nil {
 		return errors.New("no session established")
 	}
 	return nil
@@ -80,7 +80,7 @@ func (r *redisImpl) Open() (err error) {
 		MinIdleConns:   r.conf.Connection.MinIdleConns,
 	})
 
-	if err = r.redisDb.Ping(context.TODO()).Err(); err != nil {
+	if err = r.redisDb.Ping(context.Background()).Err(); err != nil {
 		r.logger.Error("failed to establish redis cluster connection", zap.Error(err))
 		return
 	}
@@ -95,7 +95,7 @@ func (r *redisImpl) Close() (err error) {
 
 // HealthCheck will iterate through all the data shards and attempt to ping them to ensure they are all reachable.
 func (r *redisImpl) HealthCheck() (err error) {
-	err = r.redisDb.ForEachShard(context.TODO(), func(ctx context.Context, shard *redis.Client) error {
+	err = r.redisDb.ForEachShard(context.Background(), func(ctx context.Context, shard *redis.Client) error {
 		return shard.Ping(ctx).Err()
 	})
 	return
