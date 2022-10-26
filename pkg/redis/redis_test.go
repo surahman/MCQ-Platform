@@ -108,6 +108,11 @@ func TestVerifySession(t *testing.T) {
 }
 
 func TestRedisImpl_Open(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		t.Skip()
+	}
+
 	// Ping failure.
 	noNodes := redisImpl{conf: &config{}, logger: zapLogger}
 	err := noNodes.Open()

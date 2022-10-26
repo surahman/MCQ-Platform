@@ -1,7 +1,7 @@
 authentication:
   password: root
 connection:
-  addrs: [127.0.0.1:6379]
+  addrs: [127.0.0.1:6379, 127.0.0.1:6380]
   max_redirects: 8
   max_retries: 8
   pool_size: 4
