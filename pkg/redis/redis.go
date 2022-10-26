@@ -20,6 +20,9 @@ type Redis interface {
 
 	// Close will shut down the connection pool and ensure that the connection to the cache cluster is terminated correctly.
 	Close() error
+
+	// HealthCheck will ping all the nodes in the cluster to see if all the shards are reachable.
+	HealthCheck() error
 }
 
 // Check to ensure the Redis interface has been implemented.
@@ -88,4 +91,12 @@ func (r *redisImpl) Open() (err error) {
 // Close will terminate a connection to the Redis cache cluster.
 func (r *redisImpl) Close() (err error) {
 	return r.redisDb.Close()
+}
+
+// HealthCheck will iterate through all the data shards and attempt to ping them to ensure they are all reachable.
+func (r *redisImpl) HealthCheck() (err error) {
+	err = r.redisDb.ForEachShard(context.TODO(), func(ctx context.Context, shard *redis.Client) error {
+		return shard.Ping(ctx).Err()
+	})
+	return
 }

@@ -127,5 +127,29 @@ func TestRedisImpl_Open(t *testing.T) {
 
 	// Leaked connection check.
 	require.Error(t, testRedis.Open(), "leaking a connection should raise an error")
+}
 
+func TestRedisImpl_HealthCheck(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		t.Skip()
+	}
+
+	// Open unhealthy connection, ignore error, and run check.
+	unhealthyConf := config{}
+	require.NoError(t, yaml.Unmarshal([]byte(redisConfigTestData["valid"]), &unhealthyConf), "failed to prepare unhealthy config")
+	unhealthyConf.Connection.Addrs = []string{"127.0.0.1:8000", "127.0.0.1:8001"}
+	unhealthy := redisImpl{conf: &unhealthyConf, logger: zapLogger}
+	require.Error(t, unhealthy.Open(), "opening a connection to bad endpoints should fail")
+	err := unhealthy.HealthCheck()
+	require.Error(t, err, "unhealthy healthcheck failed")
+	require.Contains(t, err.Error(), "connection refused", "error is not about a bad connection")
+
+	// Open healthy connection, ignore error, and run check.
+	healthyConf := config{}
+	require.NoError(t, yaml.Unmarshal([]byte(redisConfigTestData["valid"]), &healthyConf), "failed to prepare healthy config")
+	healthy := redisImpl{conf: &healthyConf, logger: zapLogger}
+	require.NoError(t, healthy.Open(), "opening a connection to good endpoints should not fail")
+	err = healthy.HealthCheck()
+	require.NoError(t, err, "healthy healthcheck failed")
 }
