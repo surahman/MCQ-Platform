@@ -7,8 +7,10 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/surahman/mcq-platform/pkg/cassandra"
 	"github.com/surahman/mcq-platform/pkg/logger"
 	"go.uber.org/zap"
+	"gopkg.in/yaml.v3"
 )
 
 // testConnection is the connection pool to the Redis cluster. The mutex is used for sequential test execution.
@@ -20,7 +22,10 @@ type testConnection struct {
 // redisConfigTestData is a map of Redis configuration test data.
 var redisConfigTestData = configTestData()
 
-// connection pool to Cassandra cluster.
+// quizzesTestData is a map of Quiz data to be used with the Redis cluster.
+var quizzesTestData = cassandra.GetTestQuizzes()
+
+// connection pool to Redis cluster.
 var connection testConnection
 
 // zapLogger is the Zap logger used strictly for the test suite in this package.
@@ -57,7 +62,16 @@ func TestMain(m *testing.M) {
 // setup will configure the connection to the test clusters keyspace.
 func setup() (err error) {
 	if testing.Short() {
-		zapLogger.Warn("Short test: Skipping Cassandra integration tests")
+		zapLogger.Warn("Short test: Skipping Redis integration tests")
+		return
+	}
+
+	conf := config{}
+	if err = yaml.Unmarshal([]byte(redisConfigTestData["valid"]), &conf); err != nil {
+		return
+	}
+	connection.db = &redisImpl{conf: &conf, logger: zapLogger}
+	if err = connection.db.Open(); err != nil {
 		return
 	}
 

@@ -129,7 +129,7 @@ func (r *redisImpl) Get(key string) (val []byte, err error) {
 	return result.Bytes()
 }
 
-// Del will remove all keys provided as a set of keys.
+// Del will remove all keys provided as a list of keys.
 func (r *redisImpl) Del(keys ...string) (err error) {
 	for _, key := range keys {
 		if err = r.redisDb.Del(context.Background(), key).Err(); err != nil {
