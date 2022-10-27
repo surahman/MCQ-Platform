@@ -132,6 +132,29 @@ func TestRedisImpl_Open(t *testing.T) {
 	require.Error(t, testRedis.Open(), "leaking a connection should raise an error")
 }
 
+func TestRedisImpl_Close(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		t.Skip()
+	}
+
+	// Ping failure.
+	noNodes := redisImpl{conf: &config{}, logger: zapLogger}
+	err := noNodes.Close()
+	require.Error(t, err, "connection should fail to ping the cluster")
+	require.Contains(t, err.Error(), "no session", "error should contain information on no nodes")
+
+	// Connection success.
+	conf := config{}
+	require.NoError(t, yaml.Unmarshal([]byte(redisConfigTestData["valid"]), &conf), "failed to prepare test config")
+	testRedis := redisImpl{conf: &conf, logger: zapLogger}
+	require.NoError(t, testRedis.Open(), "failed to open cluster connection for test")
+	require.NoError(t, testRedis.Close(), "failed to close cluster connection")
+
+	// Leaked connection check.
+	require.Error(t, testRedis.Close(), "closing a closed cluster connection should raise an error")
+}
+
 func TestRedisImpl_Healthcheck(t *testing.T) {
 	// Skip integration tests for short test runs.
 	if testing.Short() {

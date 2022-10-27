@@ -100,6 +100,12 @@ func (r *redisImpl) Open() (err error) {
 
 // Close will terminate a connection to the Redis cache cluster.
 func (r *redisImpl) Close() (err error) {
+	// Check for an open connection.
+	if err = r.verifySession(); err != nil {
+		msg := "no session to cluster established to close"
+		r.logger.Warn(msg)
+		return errors.New(msg)
+	}
 	return r.redisDb.Close()
 }
 
@@ -123,8 +129,7 @@ func (r *redisImpl) Set(key string, value any) (err error) {
 // Get will retrieve a value associated with a provided key.
 func (r *redisImpl) Get(key string) (val []byte, err error) {
 	var response string
-	response, err = r.redisDb.Get(context.Background(), key).Result()
-	if err != nil {
+	if response, err = r.redisDb.Get(context.Background(), key).Result(); err != nil {
 		return
 	}
 	return []byte(response), err
@@ -145,5 +150,5 @@ func (r *redisImpl) Del(keys ...string) (err error) {
 			return
 		}
 	}
-	return nil
+	return
 }
