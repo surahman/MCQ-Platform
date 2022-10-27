@@ -9,7 +9,7 @@ func configTestData() map[string]string {
 authentication:
   password: root
 connection:
-  addrs: [127.0.0.1:6379, 127.0.0.1:6380]
+  addrs: [127.0.0.1:6379, 127.0.0.1:6380, 127.0.0.1:6381, 127.0.0.1:6382, 127.0.0.1:6383, 127.0.0.1:6384]
   max_redirects: 3
   max_retries: 3
   pool_size: 4
@@ -23,7 +23,7 @@ data:
 authentication:
   password:
 connection:
-  addrs: [127.0.0.1:6379, 127.0.0.1:6380]
+  addrs: [127.0.0.1:6379, 127.0.0.1:6380, 127.0.0.1:6381, 127.0.0.1:6382, 127.0.0.1:6383, 127.0.0.1:6384]
   max_redirects: 3
   max_retries: 3
   pool_size: 4
@@ -51,7 +51,7 @@ data:
 authentication:
   password: root
 connection:
-  addrs: [127.0.0.1:6379, 127.0.0.1:6380]
+  addrs: [127.0.0.1:6379, 127.0.0.1:6380, 127.0.0.1:6381, 127.0.0.1:6382, 127.0.0.1:6383, 127.0.0.1:6384]
   max_redirects: 0
   max_retries: 3
   pool_size: 4
@@ -65,7 +65,7 @@ data:
 authentication:
   password: root
 connection:
-  addrs: [127.0.0.1:6379, 127.0.0.1:6380]
+  addrs: [127.0.0.1:6379, 127.0.0.1:6380, 127.0.0.1:6381, 127.0.0.1:6382, 127.0.0.1:6383, 127.0.0.1:6384]
   max_redirects: 3
   max_retries: 0
   pool_size: 4
@@ -79,7 +79,7 @@ data:
 authentication:
   password: root
 connection:
-  addrs: [127.0.0.1:6379, 127.0.0.1:6380]
+  addrs: [127.0.0.1:6379, 127.0.0.1:6380, 127.0.0.1:6381, 127.0.0.1:6382, 127.0.0.1:6383, 127.0.0.1:6384]
   max_redirects: 3
   max_retries: 3
   pool_size: 0
@@ -93,7 +93,7 @@ data:
 authentication:
   password: root
 connection:
-  addrs: [127.0.0.1:6379, 127.0.0.1:6380]
+  addrs: [127.0.0.1:6379, 127.0.0.1:6380, 127.0.0.1:6381, 127.0.0.1:6382, 127.0.0.1:6383, 127.0.0.1:6384]
   max_redirects: 3
   max_retries: 3
   pool_size: 4
@@ -107,7 +107,7 @@ data:
 authentication:
   password: root
 connection:
-  addrs: [127.0.0.1:6379, 127.0.0.1:6380]
+  addrs: [127.0.0.1:6379, 127.0.0.1:6380, 127.0.0.1:6381, 127.0.0.1:6382, 127.0.0.1:6383, 127.0.0.1:6384]
   max_redirects: 3
   max_retries: 3
   pool_size: 4
