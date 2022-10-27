@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/surahman/mcq-platform/pkg/constants"
 	"github.com/surahman/mcq-platform/pkg/logger"
-	model_cassandra "github.com/surahman/mcq-platform/pkg/model/cassandra"
+	"github.com/surahman/mcq-platform/pkg/model/cassandra"
 	"gopkg.in/yaml.v3"
 )
 
@@ -224,7 +224,7 @@ func TestRedisImpl_Set_Get_Del(t *testing.T) {
 			require.Nil(t, deletedQuiz.QuizCore, "returned data from a deleted record should be nil")
 			require.Error(t, err, "deleted record should not be found on redis cluster")
 
-			// Remove data from cluster.
+			// Removing non-existent data.
 			require.Error(t, connection.db.Del(quizId), "removing a nonexistent quiz from Redis cluster should fail")
 		})
 	}
