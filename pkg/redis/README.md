@@ -25,6 +25,16 @@ Cache Policy:
 * Quizzes will be lazy-read into the cache upon a cache miss. Quizzes that are deleted or not published will not be
   placed into the cache.
 
+:warning: **_Consistency_** :warning:
+
+Redis running in cluster mode is eventually consistent by default for performance reasons. This means that reads, writes,
+and deletes might be inconsistent on the same record if executed back-to-back in rapid succession.
+
+Fortunately, in the use case here, records/items placed into the cache are immutable. However, there might be scenarios
+where the items placed or removed from the cache might not secure those changes across all the child nodes. In the case
+that this causes a cache miss, the data will still be accessible through the backend database. The application must be
+tolerant of serving items which are deleted in the backend database.
+
 <br/>
 
 ### File Location(s)
