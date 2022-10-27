@@ -1,7 +1,9 @@
 package redis
 
 import (
+	"bytes"
 	"context"
+	"encoding/gob"
 	"errors"
 	"time"
 
@@ -29,7 +31,7 @@ type Redis interface {
 	Set(string, any) error
 
 	// Get will retrieve a value associated with a provided key.
-	Get(string) ([]byte, error)
+	Get(string, any) error
 
 	// Del will remove all keys provided as a set of keys.
 	Del(...string) error
@@ -119,32 +121,45 @@ func (r *redisImpl) Healthcheck() (err error) {
 
 // Set will place a key with a given value in the cluster with a TTL, if specified in the configurations.
 func (r *redisImpl) Set(key string, value any) (err error) {
-	if err = r.redisDb.Set(context.Background(), key, value, time.Duration(r.conf.Data.TTL)).Err(); err != nil {
+	// Write value to byte array.
+	buffer := bytes.Buffer{}
+	encoder := gob.NewEncoder(&buffer)
+	if err = encoder.Encode(value); err != nil {
+		return
+	}
+
+	if err = r.redisDb.Set(context.Background(), key, buffer.Bytes(), time.Duration(r.conf.Data.TTL)).Err(); err != nil {
 		r.logger.Error("failed to place item in Redis cache", zap.String("key", key), zap.Error(err))
 		return
 	}
 	return
 }
 
-// Get will retrieve a value associated with a provided key.
-func (r *redisImpl) Get(key string) (val []byte, err error) {
-	var response string
-	if response, err = r.redisDb.Get(context.Background(), key).Result(); err != nil {
+// Get will retrieve a value associated with a provided key and write the result into the value parameter.
+func (r *redisImpl) Get(key string, value any) (err error) {
+	var rawData []byte
+	if rawData, err = r.redisDb.Get(context.Background(), key).Bytes(); err != nil {
 		return
 	}
-	return []byte(response), err
+
+	// Convert to struct.
+	decoder := gob.NewDecoder(bytes.NewBuffer(rawData))
+	if err = decoder.Decode(value); err != nil {
+		return
+	}
+
+	return
 }
 
 // Del will remove all keys provided as a list of keys.
 func (r *redisImpl) Del(keys ...string) (err error) {
 	for _, key := range keys {
-		var status int64
-		status, err = r.redisDb.Del(context.Background(), key).Result()
-		if err != nil {
+		intCmd := r.redisDb.Del(context.Background(), key)
+		if err = intCmd.Err(); err != nil {
 			r.logger.Error("failed to evict item from Redis cache", zap.String("key", key), zap.Error(err))
 			return
 		}
-		if status == 0 {
+		if intCmd.Val() == 0 {
 			err = errors.New("unable to locate key on Redis cluster")
 			r.logger.Warn("failed to evict item from Redis cache", zap.String("key", key), zap.Error(err))
 			return

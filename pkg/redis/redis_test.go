@@ -1,7 +1,6 @@
 package redis
 
 import (
-	"encoding/json"
 	"reflect"
 	"testing"
 
@@ -207,24 +206,22 @@ func TestRedisImpl_Set_Get_Del(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			quizId := testCase.quiz.QuizID.String() + constants.GetIntegrationTestKeyspaceSuffix()
 
-			// Convert to bytes and write to Redis.
-			bytes, err := json.Marshal(testCase.quiz)
-			require.NoError(t, err, "failed to convert quiz data to bytes")
-			require.NoError(t, connection.db.Set(quizId, bytes), "failed to write to Redis")
+			// Write to Redis.
+			require.NoError(t, connection.db.Set(quizId, testCase.quiz), "failed to write to Redis")
 
 			// Get data and validate it.
-			data, err := connection.db.Get(quizId)
-			require.NoError(t, err, "failed to retrieve data from Redis")
 			retrievedQuiz := model_cassandra.Quiz{}
-			require.NoError(t, json.Unmarshal(data, &retrievedQuiz), "failed to convert retrieved data to quiz")
+			err := connection.db.Get(quizId, &retrievedQuiz)
+			require.NoError(t, err, "failed to retrieve data from Redis")
 			require.True(t, reflect.DeepEqual(*testCase.quiz, retrievedQuiz), "retrieved quiz does not match expected")
 
 			// Remove data from cluster.
 			require.NoError(t, connection.db.Del(quizId), "failed to remove quiz from Redis cluster")
 
 			// Check to see if data has been removed.
-			data, err = connection.db.Get(quizId)
-			require.Nil(t, data, "returned data from a deleted record should be nil")
+			deletedQuiz := model_cassandra.Quiz{}
+			err = connection.db.Get(quizId, &deletedQuiz)
+			require.Nil(t, deletedQuiz.QuizCore, "returned data from a deleted record should be nil")
 			require.Error(t, err, "deleted record should not be found on redis cluster")
 
 			// Remove data from cluster.
