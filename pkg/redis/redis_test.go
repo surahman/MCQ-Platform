@@ -157,7 +157,7 @@ func TestRedisImpl_Healthcheck(t *testing.T) {
 	require.NoError(t, err, "healthy healthcheck failed")
 }
 
-func TestRedisImpl_Set(t *testing.T) {
+func TestRedisImpl_Set_Get_Del(t *testing.T) {
 	// Skip integration tests for short test runs.
 	if testing.Short() {
 		t.Skip()
@@ -182,30 +182,30 @@ func TestRedisImpl_Set(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
+			quizId := testCase.quiz.QuizID.String() + constants.GetIntegrationTestKeyspaceSuffix()
+
 			// Convert to bytes and write to Redis.
 			bytes, err := json.Marshal(testCase.quiz)
 			require.NoError(t, err, "failed to convert quiz data to bytes")
-			require.NoError(t, connection.db.Set(testCase.quiz.QuizID.String()+constants.GetIntegrationTestKeyspaceSuffix(), bytes), "failed to write to Redis")
+			require.NoError(t, connection.db.Set(quizId, bytes), "failed to write to Redis")
 
 			// Get data and validate it.
-			data, err := connection.db.Get(testCase.quiz.QuizID.String() + constants.GetIntegrationTestKeyspaceSuffix())
+			data, err := connection.db.Get(quizId)
 			require.NoError(t, err, "failed to retrieve data from Redis")
 			retrievedQuiz := model_cassandra.Quiz{}
 			require.NoError(t, json.Unmarshal(data, &retrievedQuiz), "failed to convert retrieved data to quiz")
-			require.Equal(t, reflect.DeepEqual(testCase.quiz, retrievedQuiz), "retrieved quiz does not match expected")
+			require.True(t, reflect.DeepEqual(*testCase.quiz, retrievedQuiz), "retrieved quiz does not match expected")
 
 			// Remove data from cluster.
+			require.NoError(t, connection.db.Del(quizId), "failed to remove quiz from Redis cluster")
 
 			// Check to see if data has been removed.
+			data, err = connection.db.Get(quizId)
+			require.Nil(t, data, "returned data from a deleted record should be nil")
+			require.Error(t, err, "deleted record should not be found on redis cluster")
 
+			// Remove data from cluster.
+			require.Error(t, connection.db.Del(quizId), "removing a nonexistent quiz from Redis cluster should fail")
 		})
 	}
-}
-
-func TestRedisImpl_Get(t *testing.T) {
-
-}
-
-func TestRedisImpl_Del(t *testing.T) {
-
 }

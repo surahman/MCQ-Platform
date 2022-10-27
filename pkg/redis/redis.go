@@ -122,18 +122,26 @@ func (r *redisImpl) Set(key string, value any) (err error) {
 
 // Get will retrieve a value associated with a provided key.
 func (r *redisImpl) Get(key string) (val []byte, err error) {
-	result := r.redisDb.Get(context.Background(), key)
-	if result.Err() != nil {
-		return nil, result.Err()
+	var response string
+	response, err = r.redisDb.Get(context.Background(), key).Result()
+	if err != nil {
+		return
 	}
-	return result.Bytes()
+	return []byte(response), err
 }
 
 // Del will remove all keys provided as a list of keys.
 func (r *redisImpl) Del(keys ...string) (err error) {
 	for _, key := range keys {
-		if err = r.redisDb.Del(context.Background(), key).Err(); err != nil {
+		var status int64
+		status, err = r.redisDb.Del(context.Background(), key).Result()
+		if err != nil {
 			r.logger.Error("failed to evict item from Redis cache", zap.String("key", key), zap.Error(err))
+			return
+		}
+		if status == 0 {
+			err = errors.New("unable to locate key on Redis cluster")
+			r.logger.Warn("failed to evict item from Redis cache", zap.String("key", key), zap.Error(err))
 			return
 		}
 	}
