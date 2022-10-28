@@ -97,7 +97,13 @@
 				
 				<option value="file20">github.com/surahman/mcq-platform/pkg/logger/testdata.go (100.0%)</option>
 				
-				<option value="file21">github.com/surahman/mcq-platform/pkg/validator/validator.go (72.0%)</option>
+				<option value="file21">github.com/surahman/mcq-platform/pkg/redis/config.go (93.8%)</option>
+				
+				<option value="file22">github.com/surahman/mcq-platform/pkg/redis/redis.go (88.5%)</option>
+				
+				<option value="file23">github.com/surahman/mcq-platform/pkg/redis/testdata.go (100.0%)</option>
+				
+				<option value="file24">github.com/surahman/mcq-platform/pkg/validator/validator.go (72.0%)</option>
 				
 				</select>
 			</div>
@@ -1487,6 +1493,7 @@ const (
         loggerConfigFileName    = "LoggerConfig.yaml"
         authConfigFileName      = "AuthConfig.yaml"
         restConfigFileName      = "HTTPRESTConfig.yaml"
+        redisConfigFileName     = "RedisConfig.yaml"
 
         // Environment variables
         cassandraPrefix = "CASSANDRA"
@@ -1494,6 +1501,7 @@ const (
         githubCIKey     = "GITHUB_ACTIONS_CI"
         authPrefix      = "AUTH"
         restPrefix      = "REST"
+        redisPrefix     = "REDIS"
 
         // Misc.
         integrationTestKeyspaceSuffix = "_integration_testing"
@@ -1536,6 +1544,11 @@ func GetHTTPRESTFileName() string <span class="cov8" title="1">{
         return restConfigFileName
 }</span>
 
+// GetRedisFileName returns the Redis cluster configuration file name.
+func GetRedisFileName() string <span class="cov8" title="1">{
+        return redisConfigFileName
+}</span>
+
 // GetCassandraPrefix returns the environment variable prefix for Cassandra.
 func GetCassandraPrefix() string <span class="cov8" title="1">{
         return cassandraPrefix
@@ -1554,6 +1567,11 @@ func GetAuthPrefix() string <span class="cov8" title="1">{
 // GetHTTPRESTPrefix returns the environment variable prefix for the HTTP REST endpoint.
 func GetHTTPRESTPrefix() string <span class="cov8" title="1">{
         return restPrefix
+}</span>
+
+// GetRedisPrefix returns the environment variable prefix for the Redis cluster.
+func GetRedisPrefix() string <span class="cov8" title="1">{
+        return redisPrefix
 }</span>
 
 // GetIntegrationTestKeyspaceSuffix is the suffix attached to the clusters keyspace and is used for integration tests.
@@ -3205,7 +3223,361 @@ encoder_config:
 }</span>
 </pre>
 		
-		<pre class="file" id="file21" style="display: none">package validator
+		<pre class="file" id="file21" style="display: none">package redis
+
+import (
+        "github.com/spf13/afero"
+        "github.com/spf13/viper"
+        "github.com/surahman/mcq-platform/pkg/constants"
+        "github.com/surahman/mcq-platform/pkg/validator"
+)
+
+// config is the configuration container for connecting to the Redis cluster
+type config struct {
+        Authentication struct {
+                Password string `json:"password,omitempty" yaml:"password,omitempty" mapstructure:"password" validate:"required"`
+        } `json:"authentication,omitempty" yaml:"authentication,omitempty" mapstructure:"authentication"`
+        Connection struct {
+                Addrs          []string `json:"addrs,omitempty" yaml:"addrs,omitempty" mapstructure:"addrs" validate:"required,min=1"`
+                MaxRedirects   int      `json:"max_redirects,omitempty" yaml:"max_redirects,omitempty" mapstructure:"max_redirects" validate:"required,min=1"`
+                MaxRetries     int      `json:"max_retries,omitempty" yaml:"max_retries,omitempty" mapstructure:"max_retries" validate:"required,min=1"`
+                PoolSize       int      `json:"pool_size,omitempty" yaml:"pool_size,omitempty" mapstructure:"pool_size" validate:"required,min=1"`
+                MinIdleConns   int      `json:"min_idle_conns,omitempty" yaml:"min_idle_conns,omitempty" mapstructure:"min_idle_conns" validate:"required,min=1"`
+                ReadOnly       bool     `json:"read_only,omitempty" yaml:"read_only,omitempty" mapstructure:"read_only"`
+                RouteByLatency bool     `json:"route_by_latency,omitempty" yaml:"route_by_latency,omitempty" mapstructure:"route_by_latency"`
+        } `json:"connection,omitempty" yaml:"connection,omitempty" mapstructure:"connection"`
+        Data struct {
+                TTL int64 `json:"ttl,omitempty" yaml:"ttl,omitempty" mapstructure:"ttl" validate:"omitempty,min=60"`
+        } `json:"data,omitempty" yaml:"data,omitempty" mapstructure:"data"`
+}
+
+// newConfig creates a blank configuration struct for Redis.
+func newConfig() *config <span class="cov4" title="3">{
+        return &amp;config{}
+}</span>
+
+// Load will attempt to load configurations from a file on a file system and then overwrite values using environment variables.
+func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="13">{
+        viper.SetFs(fs)
+        viper.SetConfigName(constants.GetRedisFileName())
+        viper.SetConfigType("yaml")
+        viper.AddConfigPath(constants.GetEtcDir())
+        viper.AddConfigPath(constants.GetHomeDir())
+        viper.AddConfigPath(constants.GetBaseDir())
+
+        viper.SetEnvPrefix(constants.GetRedisPrefix())
+        viper.AutomaticEnv()
+
+        if err = viper.ReadInConfig(); err != nil </span><span class="cov1" title="1">{
+                return
+        }</span>
+
+        <span class="cov9" title="12">if err = viper.Unmarshal(cfg); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov9" title="12">if err = validator.ValidateStruct(cfg); err != nil </span><span class="cov8" title="8">{
+                return
+        }</span>
+
+        <span class="cov5" title="4">return</span>
+}
+</pre>
+		
+		<pre class="file" id="file22" style="display: none">package redis
+
+import (
+        "bytes"
+        "context"
+        "encoding/gob"
+        "errors"
+        "time"
+
+        "github.com/go-redis/redis/v9"
+        "github.com/spf13/afero"
+        "github.com/surahman/mcq-platform/pkg/logger"
+        "go.uber.org/zap"
+)
+
+// Mock Redis interface stub generation.
+//go:generate mockgen -destination=../mocks/mock_redis.go -package=mocks github.com/surahman/mcq-platform/pkg/redis Redis
+
+// Redis is the interface through which the cluster can be accessed. Created to support mock testing.
+type Redis interface {
+        // Open will create a connection pool and establish a connection to the cache cluster.
+        Open() error
+
+        // Close will shut down the connection pool and ensure that the connection to the cache cluster is terminated correctly.
+        Close() error
+
+        // Healthcheck will ping all the nodes in the cluster to see if all the shards are reachable.
+        Healthcheck() error
+
+        // Set will place a key with a given value in the cluster with a TTL, if specified in the configurations.
+        Set(string, any) error
+
+        // Get will retrieve a value associated with a provided key.
+        Get(string, any) error
+
+        // Del will remove all keys provided as a set of keys.
+        Del(...string) error
+}
+
+// Check to ensure the Redis interface has been implemented.
+var _ Redis = &amp;redisImpl{}
+
+// redisImpl implements the Redis interface and contains the logic to interface with the cluster.
+type redisImpl struct {
+        conf    *config
+        redisDb *redis.ClusterClient
+        logger  *logger.Logger
+}
+
+// NewRedis will create a new Redis configuration by loading it.
+func NewRedis(fs *afero.Fs, logger *logger.Logger) (Redis, error) <span class="cov6" title="4">{
+        if fs == nil || logger == nil </span><span class="cov4" title="3">{
+                return nil, errors.New("nil file system or logger supplied")
+        }</span>
+        <span class="cov1" title="1">return newRedisImpl(fs, logger)</span>
+}
+
+// newRedisImpl will create a new redisImpl configuration and load it from disk.
+func newRedisImpl(fs *afero.Fs, logger *logger.Logger) (c *redisImpl, err error) <span class="cov4" title="3">{
+        c = &amp;redisImpl{conf: newConfig(), logger: logger}
+        if err = c.conf.Load(*fs); err != nil </span><span class="cov1" title="1">{
+                c.logger.Error("failed to load Redis configurations from disk", zap.Error(err))
+                return nil, err
+        }</span>
+        <span class="cov3" title="2">return</span>
+}
+
+// verifySession will check to see if a session is established.
+func (r *redisImpl) verifySession() error <span class="cov10" title="12">{
+        if r.redisDb == nil || r.redisDb.Ping(context.Background()).Err() != nil </span><span class="cov9" title="10">{
+                return errors.New("no session established")
+        }</span>
+        <span class="cov3" title="2">return nil</span>
+}
+
+// Open will establish a connection to the Redis cache cluster.
+func (r *redisImpl) Open() (err error) <span class="cov8" title="7">{
+        // Stop connection leaks.
+        if err = r.verifySession(); err == nil </span><span class="cov1" title="1">{
+                r.logger.Warn("session to cluster is already established")
+                return errors.New("session to cluster is already established")
+        }</span>
+
+        <span class="cov7" title="6">r.redisDb = redis.NewClusterClient(&amp;redis.ClusterOptions{
+                Addrs:          r.conf.Connection.Addrs,
+                MaxRedirects:   r.conf.Connection.MaxRedirects,
+                ReadOnly:       r.conf.Connection.ReadOnly,
+                RouteByLatency: r.conf.Connection.RouteByLatency,
+                Password:       r.conf.Authentication.Password,
+                MaxRetries:     r.conf.Connection.MaxRetries,
+                PoolSize:       r.conf.Connection.PoolSize,
+                MinIdleConns:   r.conf.Connection.MinIdleConns,
+        })
+
+        if err = r.redisDb.Ping(context.Background()).Err(); err != nil </span><span class="cov3" title="2">{
+                r.logger.Error("failed to establish redis cluster connection", zap.Error(err))
+                return
+        }</span>
+
+        <span class="cov6" title="4">return nil</span>
+}
+
+// Close will terminate a connection to the Redis cache cluster.
+func (r *redisImpl) Close() (err error) <span class="cov4" title="3">{
+        // Check for an open connection.
+        if err = r.verifySession(); err != nil </span><span class="cov3" title="2">{
+                msg := "no session to cluster established to close"
+                r.logger.Warn(msg)
+                return errors.New(msg)
+        }</span>
+        <span class="cov1" title="1">return r.redisDb.Close()</span>
+}
+
+// Healthcheck will iterate through all the data shards and attempt to ping them to ensure they are all reachable.
+func (r *redisImpl) Healthcheck() (err error) <span class="cov3" title="2">{
+        err = r.redisDb.ForEachShard(context.Background(), func(ctx context.Context, shard *redis.Client) error </span><span class="cov7" title="6">{
+                return shard.Ping(ctx).Err()
+        }</span>)
+        <span class="cov3" title="2">return</span>
+}
+
+// Set will place a key with a given value in the cluster with a TTL, if specified in the configurations.
+func (r *redisImpl) Set(key string, value any) (err error) <span class="cov3" title="2">{
+        // Write value to byte array.
+        buffer := bytes.Buffer{}
+        encoder := gob.NewEncoder(&amp;buffer)
+        if err = encoder.Encode(value); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov3" title="2">if err = r.redisDb.Set(context.Background(), key, buffer.Bytes(), time.Duration(r.conf.Data.TTL)*time.Second).Err(); err != nil </span><span class="cov0" title="0">{
+                r.logger.Error("failed to place item in Redis cache", zap.String("key", key), zap.Error(err))
+                return
+        }</span>
+        <span class="cov3" title="2">return</span>
+}
+
+// Get will retrieve a value associated with a provided key and write the result into the value parameter.
+func (r *redisImpl) Get(key string, value any) (err error) <span class="cov6" title="4">{
+        var rawData []byte
+        if rawData, err = r.redisDb.Get(context.Background(), key).Bytes(); err != nil </span><span class="cov3" title="2">{
+                return
+        }</span>
+
+        // Convert to struct.
+        <span class="cov3" title="2">decoder := gob.NewDecoder(bytes.NewBuffer(rawData))
+        if err = decoder.Decode(value); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov3" title="2">return</span>
+}
+
+// Del will remove all keys provided as a list of keys.
+func (r *redisImpl) Del(keys ...string) (err error) <span class="cov6" title="4">{
+        for _, key := range keys </span><span class="cov6" title="4">{
+                intCmd := r.redisDb.Del(context.Background(), key)
+                if err = intCmd.Err(); err != nil </span><span class="cov0" title="0">{
+                        r.logger.Error("failed to evict item from Redis cache", zap.String("key", key), zap.Error(err))
+                        return
+                }</span>
+                <span class="cov6" title="4">if intCmd.Val() == 0 </span><span class="cov3" title="2">{
+                        err = errors.New("unable to locate key on Redis cluster")
+                        r.logger.Warn("failed to evict item from Redis cache", zap.String("key", key), zap.Error(err))
+                        return
+                }</span>
+        }
+        <span class="cov3" title="2">return</span>
+}
+</pre>
+		
+		<pre class="file" id="file23" style="display: none">package redis
+
+// configTestData will return a map of test data containing valid and invalid Cassandra configs.
+func configTestData() map[string]string <span class="cov8" title="1">{
+        return map[string]string{
+                "empty": ``,
+
+                "valid": `
+authentication:
+  password: root
+connection:
+  addrs: [127.0.0.1:6379, 127.0.0.1:6380, 127.0.0.1:6381, 127.0.0.1:6382, 127.0.0.1:6383, 127.0.0.1:6384]
+  max_redirects: 3
+  max_retries: 3
+  pool_size: 4
+  min_idle_conns: 1
+  read_only: false
+  route_by_latency: false
+data:
+  ttl: 3600`,
+
+                "password_empty": `
+authentication:
+  password:
+connection:
+  addrs: [127.0.0.1:6379, 127.0.0.1:6380, 127.0.0.1:6381, 127.0.0.1:6382, 127.0.0.1:6383, 127.0.0.1:6384]
+  max_redirects: 3
+  max_retries: 3
+  pool_size: 4
+  min_idle_conns: 1
+  read_only: false
+  route_by_latency: false
+data:
+  ttl: 3600`,
+
+                "no_addrs": `
+authentication:
+  password: root
+connection:
+  addrs: []
+  max_redirects: 3
+  max_retries: 3
+  pool_size: 4
+  min_idle_conns: 1
+  read_only: false
+  route_by_latency: false
+data:
+  ttl: 3600`,
+
+                "invalid_max_redirects": `
+authentication:
+  password: root
+connection:
+  addrs: [127.0.0.1:6379, 127.0.0.1:6380, 127.0.0.1:6381, 127.0.0.1:6382, 127.0.0.1:6383, 127.0.0.1:6384]
+  max_redirects: 0
+  max_retries: 3
+  pool_size: 4
+  min_idle_conns: 1
+  read_only: false
+  route_by_latency: false
+data:
+  ttl: 3600`,
+
+                "invalid_max_retries": `
+authentication:
+  password: root
+connection:
+  addrs: [127.0.0.1:6379, 127.0.0.1:6380, 127.0.0.1:6381, 127.0.0.1:6382, 127.0.0.1:6383, 127.0.0.1:6384]
+  max_redirects: 3
+  max_retries: 0
+  pool_size: 4
+  min_idle_conns: 1
+  read_only: false
+  route_by_latency: false
+data:
+  ttl: 3600`,
+
+                "invalid_pool_size": `
+authentication:
+  password: root
+connection:
+  addrs: [127.0.0.1:6379, 127.0.0.1:6380, 127.0.0.1:6381, 127.0.0.1:6382, 127.0.0.1:6383, 127.0.0.1:6384]
+  max_redirects: 3
+  max_retries: 3
+  pool_size: 0
+  min_idle_conns: 1
+  read_only: false
+  route_by_latency: false
+data:
+  ttl: 3600`,
+
+                "invalid_min_idle_conns": `
+authentication:
+  password: root
+connection:
+  addrs: [127.0.0.1:6379, 127.0.0.1:6380, 127.0.0.1:6381, 127.0.0.1:6382, 127.0.0.1:6383, 127.0.0.1:6384]
+  max_redirects: 3
+  max_retries: 3
+  pool_size: 4
+  min_idle_conns: 0
+  read_only: false
+  route_by_latency: false
+data:
+  ttl: 3600`,
+
+                "invalid_min_ttl": `
+authentication:
+  password: root
+connection:
+  addrs: [127.0.0.1:6379, 127.0.0.1:6380, 127.0.0.1:6381, 127.0.0.1:6382, 127.0.0.1:6383, 127.0.0.1:6384]
+  max_redirects: 3
+  max_retries: 3
+  pool_size: 4
+  min_idle_conns: 1
+  read_only: false
+  route_by_latency: false
+data:
+  ttl: 59`,
+        }
+}</span>
+</pre>
+		
+		<pre class="file" id="file24" style="display: none">package validator
 
 import (
         "bytes"
