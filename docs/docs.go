@@ -123,9 +123,6 @@ const docTemplate = `{
                     }
                 ],
                 "description": "This endpoint will mark a quiz as delete if it was created by the requester. The provided Test ID is provided is a path parameter.",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],

@@ -81,7 +81,7 @@
 				
 				<option value="file12">github.com/surahman/mcq-platform/pkg/http/rest/handlers/healthcheck.go (100.0%)</option>
 				
-				<option value="file13">github.com/surahman/mcq-platform/pkg/http/rest/handlers/quiz.go (95.7%)</option>
+				<option value="file13">github.com/surahman/mcq-platform/pkg/http/rest/handlers/quiz.go (95.9%)</option>
 				
 				<option value="file14">github.com/surahman/mcq-platform/pkg/http/rest/handlers/score.go (98.0%)</option>
 				
@@ -1835,6 +1835,7 @@ import (
         "github.com/surahman/mcq-platform/pkg/cassandra"
         "github.com/surahman/mcq-platform/pkg/logger"
         "github.com/surahman/mcq-platform/pkg/model/http"
+        "github.com/surahman/mcq-platform/pkg/redis"
         "go.uber.org/zap"
 )
 
@@ -1843,17 +1844,25 @@ import (
 // @Description This endpoint is exposed to allow load balancers etc. to check the health of the service.
 // @Tags        health healthcheck liveness
 // @Id          healthcheck
-// @Accept      json
 // @Produce     json
 // @Success     200 {object} model_rest.Success "message: healthy"
 // @Failure     503 {object} model_rest.Error   "error message with any available details"
 // @Router      /health [get]
-func Healthcheck(logger *logger.Logger, db cassandra.Cassandra) gin.HandlerFunc <span class="cov10" title="2">{
-        return func(context *gin.Context) </span><span class="cov10" title="2">{
+func Healthcheck(logger *logger.Logger, db cassandra.Cassandra, cache redis.Redis) gin.HandlerFunc <span class="cov10" title="3">{
+        return func(context *gin.Context) </span><span class="cov10" title="3">{
                 var err error
 
+                // Database health.
                 if _, err = db.Execute(cassandra.HealthcheckQuery, nil); err != nil </span><span class="cov1" title="1">{
                         msg := "Cassandra healthcheck failed"
+                        logger.Warn(msg, zap.Error(err))
+                        context.AbortWithStatusJSON(http.StatusServiceUnavailable, &amp;model_rest.Error{Message: msg})
+                        return
+                }</span>
+
+                // Cache health.
+                <span class="cov6" title="2">if err = cache.Healthcheck(); err != nil </span><span class="cov1" title="1">{
+                        msg := "Redis healthcheck failed"
                         logger.Warn(msg, zap.Error(err))
                         context.AbortWithStatusJSON(http.StatusServiceUnavailable, &amp;model_rest.Error{Message: msg})
                         return
@@ -1868,6 +1877,7 @@ func Healthcheck(logger *logger.Logger, db cassandra.Cassandra) gin.HandlerFunc 
 
 import (
         "net/http"
+        "strings"
 
         "github.com/gin-gonic/gin"
         "github.com/gocql/gocql"
@@ -1877,6 +1887,7 @@ import (
         "github.com/surahman/mcq-platform/pkg/logger"
         "github.com/surahman/mcq-platform/pkg/model/cassandra"
         "github.com/surahman/mcq-platform/pkg/model/http"
+        "github.com/surahman/mcq-platform/pkg/redis"
         "github.com/surahman/mcq-platform/pkg/validator"
         "go.uber.org/zap"
 )
@@ -2068,7 +2079,6 @@ func UpdateQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) g
 // @Description This endpoint will mark a quiz as delete if it was created by the requester. The provided Test ID is provided is a path parameter.
 // @Tags        delete remove test quiz
 // @Id          deleteQuiz
-// @Accept      json
 // @Produce     json
 // @Security    ApiKeyAuth
 // @Param       quiz_id path     string             true "The Test ID for the quiz being deleted."
@@ -2076,8 +2086,8 @@ func UpdateQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) g
 // @Failure     403     {object} model_rest.Error   "Error message with any available details in payload"
 // @Failure     500     {object} model_rest.Error   "Error message with any available details in payload"
 // @Router      /quiz/delete/{quiz_id} [delete]
-func DeleteQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc <span class="cov7" title="5">{
-        return func(context *gin.Context) </span><span class="cov7" title="5">{
+func DeleteQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, cache redis.Redis) gin.HandlerFunc <span class="cov8" title="7">{
+        return func(context *gin.Context) </span><span class="cov8" title="7">{
                 var err error
                 var username string
                 var quizId gocql.UUID
@@ -2088,14 +2098,23 @@ func DeleteQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) g
                 }</span>
 
                 // Get username from JWT.
-                <span class="cov6" title="4">if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil </span><span class="cov1" title="1">{
+                <span class="cov7" title="6">if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil </span><span class="cov1" title="1">{
                         logger.Error("failed to validate JWT in create quiz handler", zap.Error(err))
                         context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "unable to verify username"})
                         return
                 }</span>
 
+                // Evict from cache, if present.
+                // This step must be executed before deletion to ensure the end user is able to reattempt the command in the event of failure.
+                // It must not be the case that data marked as deleted remains in the cache till LRU eviction or TTL expiration.
+                <span class="cov7" title="5">if err = cache.Del(quizId.String()); err != nil &amp;&amp; !strings.Contains(err.Error(), "unable to locate") </span><span class="cov1" title="1">{
+                        logger.Error("failed to evict data from cache", zap.Error(err))
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "please retry the command at a later time"})
+                        return
+                }</span>
+
                 // Delete quiz record from database.
-                <span class="cov5" title="3">request := model_cassandra.QuizMutateRequest{
+                <span class="cov6" title="4">request := model_cassandra.QuizMutateRequest{
                         Username: username,
                         QuizID:   quizId,
                 }
@@ -2105,7 +2124,7 @@ func DeleteQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) g
                         return
                 }</span>
 
-                <span class="cov1" title="1">context.JSON(http.StatusOK, &amp;model_rest.Success{Message: "deleted quiz with id", Payload: quizId.String()})</span>
+                <span class="cov3" title="2">context.JSON(http.StatusOK, &amp;model_rest.Success{Message: "deleted quiz with id", Payload: quizId.String()})</span>
         }
 }
 
@@ -2772,6 +2791,7 @@ import (
         "github.com/surahman/mcq-platform/pkg/grading"
         "github.com/surahman/mcq-platform/pkg/http/rest/handlers"
         "github.com/surahman/mcq-platform/pkg/logger"
+        "github.com/surahman/mcq-platform/pkg/redis"
         swaggerfiles "github.com/swaggo/files"
         ginSwagger "github.com/swaggo/gin-swagger"
         "go.uber.org/zap"
@@ -2780,6 +2800,7 @@ import (
 // HttpRest is the HTTP REST server.
 type HttpRest struct {
         auth    auth.Auth
+        cache   redis.Redis
         db      cassandra.Cassandra
         grading grading.Grading
         conf    *config
@@ -2788,8 +2809,8 @@ type HttpRest struct {
 }
 
 // NewRESTServer will create a new REST server instance in a non-running state.
-func NewRESTServer(fs *afero.Fs, auth auth.Auth, cassandra cassandra.Cassandra, grading grading.Grading,
-        logger *logger.Logger) (server *HttpRest, err error) <span class="cov8" title="1">{
+func NewRESTServer(fs *afero.Fs, auth auth.Auth, cassandra cassandra.Cassandra, redis redis.Redis,
+        grading grading.Grading, logger *logger.Logger) (server *HttpRest, err error) <span class="cov8" title="1">{
         // Load configurations.
         conf := newConfig()
         if err = conf.Load(*fs); err != nil </span><span class="cov0" title="0">{
@@ -2799,6 +2820,7 @@ func NewRESTServer(fs *afero.Fs, auth auth.Auth, cassandra cassandra.Cassandra, 
         <span class="cov8" title="1">return &amp;HttpRest{
                         conf:    conf,
                         auth:    auth,
+                        cache:   redis,
                         db:      cassandra,
                         grading: grading,
                         logger:  logger,
@@ -2876,7 +2898,7 @@ func (s *HttpRest) initialize() <span class="cov0" title="0">{
         authMiddleware := http_handlers.AuthMiddleware(s.auth)
         api := s.router.Group(s.conf.Server.BasePath)
 
-        api.GET("/health", http_handlers.Healthcheck(s.logger, s.db))
+        api.GET("/health", http_handlers.Healthcheck(s.logger, s.db, s.cache))
 
         userGroup := api.Group("/user")
         userGroup.POST("/register", http_handlers.RegisterUser(s.logger, s.auth, s.db))
@@ -2893,7 +2915,7 @@ func (s *HttpRest) initialize() <span class="cov0" title="0">{
         quizGroup.GET("/view/:quiz_id", http_handlers.ViewQuiz(s.logger, s.auth, s.db))
         quizGroup.POST("/create", http_handlers.CreateQuiz(s.logger, s.auth, s.db))
         quizGroup.PATCH("/update/:quiz_id", http_handlers.UpdateQuiz(s.logger, s.auth, s.db))
-        quizGroup.DELETE("/delete/:quiz_id", http_handlers.DeleteQuiz(s.logger, s.auth, s.db))
+        quizGroup.DELETE("/delete/:quiz_id", http_handlers.DeleteQuiz(s.logger, s.auth, s.db, s.cache))
         quizGroup.PATCH("/publish/:quiz_id", http_handlers.PublishQuiz(s.logger, s.auth, s.db))
         quizGroup.POST("/take/:quiz_id", http_handlers.TakeQuiz(s.logger, s.auth, s.db, s.grading))
 }</span>

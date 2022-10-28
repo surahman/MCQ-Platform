@@ -272,8 +272,6 @@ paths:
       - create test quiz
   /quiz/delete/{quiz_id}:
     delete:
-      consumes:
-      - application/json
       description: This endpoint will mark a quiz as delete if it was created by the
         requester. The provided Test ID is provided is a path parameter.
       operationId: deleteQuiz

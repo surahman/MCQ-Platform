@@ -141,7 +141,7 @@ func (s *HttpRest) initialize() {
 	quizGroup.GET("/view/:quiz_id", http_handlers.ViewQuiz(s.logger, s.auth, s.db))
 	quizGroup.POST("/create", http_handlers.CreateQuiz(s.logger, s.auth, s.db))
 	quizGroup.PATCH("/update/:quiz_id", http_handlers.UpdateQuiz(s.logger, s.auth, s.db))
-	quizGroup.DELETE("/delete/:quiz_id", http_handlers.DeleteQuiz(s.logger, s.auth, s.db))
+	quizGroup.DELETE("/delete/:quiz_id", http_handlers.DeleteQuiz(s.logger, s.auth, s.db, s.cache))
 	quizGroup.PATCH("/publish/:quiz_id", http_handlers.PublishQuiz(s.logger, s.auth, s.db))
 	quizGroup.POST("/take/:quiz_id", http_handlers.TakeQuiz(s.logger, s.auth, s.db, s.grading))
 }

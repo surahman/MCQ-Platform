@@ -2,6 +2,7 @@ package http_handlers
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gocql/gocql"
@@ -11,6 +12,7 @@ import (
 	"github.com/surahman/mcq-platform/pkg/logger"
 	"github.com/surahman/mcq-platform/pkg/model/cassandra"
 	"github.com/surahman/mcq-platform/pkg/model/http"
+	"github.com/surahman/mcq-platform/pkg/redis"
 	"github.com/surahman/mcq-platform/pkg/validator"
 	"go.uber.org/zap"
 )
@@ -202,7 +204,6 @@ func UpdateQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) g
 // @Description This endpoint will mark a quiz as delete if it was created by the requester. The provided Test ID is provided is a path parameter.
 // @Tags        delete remove test quiz
 // @Id          deleteQuiz
-// @Accept      json
 // @Produce     json
 // @Security    ApiKeyAuth
 // @Param       quiz_id path     string             true "The Test ID for the quiz being deleted."
@@ -210,7 +211,7 @@ func UpdateQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) g
 // @Failure     403     {object} model_rest.Error   "Error message with any available details in payload"
 // @Failure     500     {object} model_rest.Error   "Error message with any available details in payload"
 // @Router      /quiz/delete/{quiz_id} [delete]
-func DeleteQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc {
+func DeleteQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, cache redis.Redis) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		var err error
 		var username string
@@ -225,6 +226,15 @@ func DeleteQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) g
 		if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil {
 			logger.Error("failed to validate JWT in create quiz handler", zap.Error(err))
 			context.AbortWithStatusJSON(http.StatusInternalServerError, &model_rest.Error{Message: "unable to verify username"})
+			return
+		}
+
+		// Evict from cache, if present.
+		// This step must be executed before deletion to ensure the end user is able to reattempt the command in the event of failure.
+		// It must not be the case that data marked as deleted remains in the cache till LRU eviction or TTL expiration.
+		if err = cache.Del(quizId.String()); err != nil && !strings.Contains(err.Error(), "unable to locate") {
+			logger.Error("failed to evict data from cache", zap.Error(err))
+			context.AbortWithStatusJSON(http.StatusInternalServerError, &model_rest.Error{Message: "please retry the command at a later time"})
 			return
 		}
 
