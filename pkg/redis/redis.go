@@ -120,50 +120,51 @@ func (r *redisImpl) Healthcheck() (err error) {
 }
 
 // Set will place a key with a given value in the cluster with a TTL, if specified in the configurations.
-func (r *redisImpl) Set(key string, value any) (err error) {
+func (r *redisImpl) Set(key string, value any) error {
 	// Write value to byte array.
 	buffer := bytes.Buffer{}
 	encoder := gob.NewEncoder(&buffer)
-	if err = encoder.Encode(value); err != nil {
-		return
+	if err := encoder.Encode(value); err != nil {
+		return NewError(err.Error())
 	}
 
-	if err = r.redisDb.Set(context.Background(), key, buffer.Bytes(), time.Duration(r.conf.Data.TTL)*time.Second).Err(); err != nil {
+	if err := r.redisDb.Set(context.Background(), key, buffer.Bytes(), time.Duration(r.conf.Data.TTL)*time.Second).Err(); err != nil {
 		r.logger.Error("failed to place item in Redis cache", zap.String("key", key), zap.Error(err))
-		return
+		return NewError(err.Error()).errorCacheSet()
 	}
-	return
+	return nil
 }
 
 // Get will retrieve a value associated with a provided key and write the result into the value parameter.
-func (r *redisImpl) Get(key string, value any) (err error) {
+func (r *redisImpl) Get(key string, value any) error {
+	var err error
 	var rawData []byte
 	if rawData, err = r.redisDb.Get(context.Background(), key).Bytes(); err != nil {
-		return
+		return NewError(err.Error()).errorCacheMiss()
 	}
 
 	// Convert to struct.
 	decoder := gob.NewDecoder(bytes.NewBuffer(rawData))
 	if err = decoder.Decode(value); err != nil {
-		return
+		return NewError(err.Error())
 	}
 
-	return
+	return nil
 }
 
 // Del will remove all keys provided as a list of keys.
-func (r *redisImpl) Del(keys ...string) (err error) {
+func (r *redisImpl) Del(keys ...string) error {
 	for _, key := range keys {
 		intCmd := r.redisDb.Del(context.Background(), key)
-		if err = intCmd.Err(); err != nil {
+		if err := intCmd.Err(); err != nil {
 			r.logger.Error("failed to evict item from Redis cache", zap.String("key", key), zap.Error(err))
-			return
+			return NewError(err.Error()).errorCacheDel()
 		}
 		if intCmd.Val() == 0 {
-			err = errors.New("unable to locate key on Redis cluster")
+			err := NewError("unable to locate key on Redis cluster").errorCacheMiss()
 			r.logger.Warn("failed to evict item from Redis cache", zap.String("key", key), zap.Error(err))
-			return
+			return err
 		}
 	}
-	return
+	return nil
 }
