@@ -99,11 +99,13 @@
 				
 				<option value="file21">github.com/surahman/mcq-platform/pkg/redis/config.go (93.8%)</option>
 				
-				<option value="file22">github.com/surahman/mcq-platform/pkg/redis/redis.go (88.5%)</option>
+				<option value="file22">github.com/surahman/mcq-platform/pkg/redis/error.go (100.0%)</option>
 				
-				<option value="file23">github.com/surahman/mcq-platform/pkg/redis/testdata.go (100.0%)</option>
+				<option value="file23">github.com/surahman/mcq-platform/pkg/redis/redis.go (88.7%)</option>
 				
-				<option value="file24">github.com/surahman/mcq-platform/pkg/validator/validator.go (72.0%)</option>
+				<option value="file24">github.com/surahman/mcq-platform/pkg/redis/testdata.go (100.0%)</option>
+				
+				<option value="file25">github.com/surahman/mcq-platform/pkg/validator/validator.go (72.0%)</option>
 				
 				</select>
 			</div>
@@ -1877,7 +1879,6 @@ func Healthcheck(logger *logger.Logger, db cassandra.Cassandra, cache redis.Redi
 
 import (
         "net/http"
-        "strings"
 
         "github.com/gin-gonic/gin"
         "github.com/gocql/gocql"
@@ -2107,7 +2108,7 @@ func DeleteQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, c
                 // Evict from cache, if present.
                 // This step must be executed before deletion to ensure the end user is able to reattempt the command in the event of failure.
                 // It must not be the case that data marked as deleted remains in the cache till LRU eviction or TTL expiration.
-                <span class="cov7" title="5">if err = cache.Del(quizId.String()); err != nil &amp;&amp; !strings.Contains(err.Error(), "unable to locate") </span><span class="cov1" title="1">{
+                <span class="cov7" title="5">if err = cache.Del(quizId.String()); err != nil &amp;&amp; err.(*redis.Error).Code != redis.ErrorCacheMiss </span><span class="cov1" title="1">{
                         logger.Error("failed to evict data from cache", zap.Error(err))
                         context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "please retry the command at a later time"})
                         return
@@ -3308,6 +3309,54 @@ func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="13">
 		
 		<pre class="file" id="file22" style="display: none">package redis
 
+// Error codes.
+const (
+        ErrorUnknown = iota
+        ErrorCacheMiss
+        ErrorCacheSet
+        ErrorCacheDel
+)
+
+// Error is the base error type. The builder pattern is used to add specialization codes to the errors.
+type Error struct {
+        Message string
+        Code    int
+}
+
+// Check to ensure the error interface is implemented.
+var _ error = &amp;Error{}
+
+// Error get human readable error message.
+func (e *Error) Error() string <span class="cov4" title="2">{
+        return e.Message
+}</span>
+
+// NewError is a base error message with no special code.
+func NewError(message string) *Error <span class="cov10" title="8">{
+        return &amp;Error{Message: message, Code: ErrorUnknown}
+}</span>
+
+// errorCacheMiss will specialize the error as a cache miss.
+func (e *Error) errorCacheMiss() *Error <span class="cov7" title="5">{
+        e.Code = ErrorCacheMiss
+        return e
+}</span>
+
+// errorCacheSet will specialize the error as a cache set failure.
+func (e *Error) errorCacheSet() *Error <span class="cov1" title="1">{
+        e.Code = ErrorCacheSet
+        return e
+}</span>
+
+// errorCacheDel will specialize the error as a cache delete failure.
+func (e *Error) errorCacheDel() *Error <span class="cov1" title="1">{
+        e.Code = ErrorCacheDel
+        return e
+}</span>
+</pre>
+		
+		<pre class="file" id="file23" style="display: none">package redis
+
 import (
         "bytes"
         "context"
@@ -3428,56 +3477,57 @@ func (r *redisImpl) Healthcheck() (err error) <span class="cov3" title="2">{
 }
 
 // Set will place a key with a given value in the cluster with a TTL, if specified in the configurations.
-func (r *redisImpl) Set(key string, value any) (err error) <span class="cov3" title="2">{
+func (r *redisImpl) Set(key string, value any) error <span class="cov3" title="2">{
         // Write value to byte array.
         buffer := bytes.Buffer{}
         encoder := gob.NewEncoder(&amp;buffer)
-        if err = encoder.Encode(value); err != nil </span><span class="cov0" title="0">{
-                return
+        if err := encoder.Encode(value); err != nil </span><span class="cov0" title="0">{
+                return NewError(err.Error())
         }</span>
 
-        <span class="cov3" title="2">if err = r.redisDb.Set(context.Background(), key, buffer.Bytes(), time.Duration(r.conf.Data.TTL)*time.Second).Err(); err != nil </span><span class="cov0" title="0">{
+        <span class="cov3" title="2">if err := r.redisDb.Set(context.Background(), key, buffer.Bytes(), time.Duration(r.conf.Data.TTL)*time.Second).Err(); err != nil </span><span class="cov0" title="0">{
                 r.logger.Error("failed to place item in Redis cache", zap.String("key", key), zap.Error(err))
-                return
+                return NewError(err.Error()).errorCacheSet()
         }</span>
-        <span class="cov3" title="2">return</span>
+        <span class="cov3" title="2">return nil</span>
 }
 
 // Get will retrieve a value associated with a provided key and write the result into the value parameter.
-func (r *redisImpl) Get(key string, value any) (err error) <span class="cov6" title="4">{
+func (r *redisImpl) Get(key string, value any) error <span class="cov6" title="4">{
+        var err error
         var rawData []byte
         if rawData, err = r.redisDb.Get(context.Background(), key).Bytes(); err != nil </span><span class="cov3" title="2">{
-                return
+                return NewError(err.Error()).errorCacheMiss()
         }</span>
 
         // Convert to struct.
         <span class="cov3" title="2">decoder := gob.NewDecoder(bytes.NewBuffer(rawData))
         if err = decoder.Decode(value); err != nil </span><span class="cov0" title="0">{
-                return
+                return NewError(err.Error())
         }</span>
 
-        <span class="cov3" title="2">return</span>
+        <span class="cov3" title="2">return nil</span>
 }
 
 // Del will remove all keys provided as a list of keys.
-func (r *redisImpl) Del(keys ...string) (err error) <span class="cov6" title="4">{
+func (r *redisImpl) Del(keys ...string) error <span class="cov6" title="4">{
         for _, key := range keys </span><span class="cov6" title="4">{
                 intCmd := r.redisDb.Del(context.Background(), key)
-                if err = intCmd.Err(); err != nil </span><span class="cov0" title="0">{
+                if err := intCmd.Err(); err != nil </span><span class="cov0" title="0">{
                         r.logger.Error("failed to evict item from Redis cache", zap.String("key", key), zap.Error(err))
-                        return
+                        return NewError(err.Error()).errorCacheDel()
                 }</span>
                 <span class="cov6" title="4">if intCmd.Val() == 0 </span><span class="cov3" title="2">{
-                        err = errors.New("unable to locate key on Redis cluster")
+                        err := NewError("unable to locate key on Redis cluster").errorCacheMiss()
                         r.logger.Warn("failed to evict item from Redis cache", zap.String("key", key), zap.Error(err))
-                        return
+                        return err
                 }</span>
         }
-        <span class="cov3" title="2">return</span>
+        <span class="cov3" title="2">return nil</span>
 }
 </pre>
 		
-		<pre class="file" id="file23" style="display: none">package redis
+		<pre class="file" id="file24" style="display: none">package redis
 
 // configTestData will return a map of test data containing valid and invalid Cassandra configs.
 func configTestData() map[string]string <span class="cov8" title="1">{
@@ -3599,7 +3649,7 @@ data:
 }</span>
 </pre>
 		
-		<pre class="file" id="file24" style="display: none">package validator
+		<pre class="file" id="file25" style="display: none">package validator
 
 import (
         "bytes"

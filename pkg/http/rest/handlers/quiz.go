@@ -2,7 +2,6 @@ package http_handlers
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gocql/gocql"
@@ -232,7 +231,7 @@ func DeleteQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, c
 		// Evict from cache, if present.
 		// This step must be executed before deletion to ensure the end user is able to reattempt the command in the event of failure.
 		// It must not be the case that data marked as deleted remains in the cache till LRU eviction or TTL expiration.
-		if err = cache.Del(quizId.String()); err != nil && !strings.Contains(err.Error(), "unable to locate") {
+		if err = cache.Del(quizId.String()); err != nil && err.(*redis.Error).Code != redis.ErrorCacheMiss {
 			logger.Error("failed to evict data from cache", zap.Error(err))
 			context.AbortWithStatusJSON(http.StatusInternalServerError, &model_rest.Error{Message: "please retry the command at a later time"})
 			return

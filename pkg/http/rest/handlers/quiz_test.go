@@ -15,6 +15,7 @@ import (
 	"github.com/surahman/mcq-platform/pkg/mocks"
 	"github.com/surahman/mcq-platform/pkg/model/cassandra"
 	"github.com/surahman/mcq-platform/pkg/model/http"
+	"github.com/surahman/mcq-platform/pkg/redis"
 )
 
 func TestCreateQuiz(t *testing.T) {
@@ -408,7 +409,10 @@ func TestDeleteQuiz(t *testing.T) {
 				times:        1,
 			},
 			redisDeleteData: &mockRedisData{
-				err:   errors.New("some error not dealing with a cache miss"),
+				err: &redis.Error{
+					Message: "some error not dealing with a cache miss",
+					Code:    redis.ErrorUnknown,
+				},
 				times: 1,
 			},
 			cassandraDeleteData: &mockCassandraData{
@@ -478,7 +482,10 @@ func TestDeleteQuiz(t *testing.T) {
 				times:        1,
 			},
 			redisDeleteData: &mockRedisData{
-				err:   errors.New("unable to locate key on Redis cluster"),
+				err: &redis.Error{
+					Message: "unable to locate key on Redis cluster",
+					Code:    redis.ErrorCacheMiss,
+				},
 				times: 1,
 			},
 			cassandraDeleteData: &mockCassandraData{
