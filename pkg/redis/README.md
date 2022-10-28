@@ -65,4 +65,4 @@ The expected file name is `RedisConfig.yaml`. Unless otherwise specified, all th
 | ↳ read_only          | ↳ `.READ_ONLY`           | bool         | Enables read-only commands on slave nodes. _Optional_                                                                |
 | ↳ route_by_latency   | ↳ `.ROUTE_BY_LATENCY`    | bool         | Allows routing read-only commands to the closest master or slave node. It automatically enables ReadOnly. _Optional_ |
 | **_Data_**           | `REDIS_DATA`             |              | **_Parent key for data configuration._**                                                                             |
-| ↳ ttl                | ↳ `.TTL`                 | int          | The maximum time an item can remain in the cache before it is evicted. _Optional._                                   |
+| ↳ ttl                | ↳ `.TTL`                 | int          | The maximum time in seconds tha an item can remain in the cache before it is evicted. _Optional._                    |

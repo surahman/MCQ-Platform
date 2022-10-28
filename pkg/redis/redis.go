@@ -128,7 +128,7 @@ func (r *redisImpl) Set(key string, value any) (err error) {
 		return
 	}
 
-	if err = r.redisDb.Set(context.Background(), key, buffer.Bytes(), time.Duration(r.conf.Data.TTL)).Err(); err != nil {
+	if err = r.redisDb.Set(context.Background(), key, buffer.Bytes(), time.Duration(r.conf.Data.TTL)*time.Second).Err(); err != nil {
 		r.logger.Error("failed to place item in Redis cache", zap.String("key", key), zap.Error(err))
 		return
 	}

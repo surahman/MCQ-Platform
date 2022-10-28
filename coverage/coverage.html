@@ -3414,7 +3414,7 @@ func (r *redisImpl) Set(key string, value any) (err error) <span class="cov3" ti
                 return
         }</span>
 
-        <span class="cov3" title="2">if err = r.redisDb.Set(context.Background(), key, buffer.Bytes(), time.Duration(r.conf.Data.TTL)).Err(); err != nil </span><span class="cov0" title="0">{
+        <span class="cov3" title="2">if err = r.redisDb.Set(context.Background(), key, buffer.Bytes(), time.Duration(r.conf.Data.TTL)*time.Second).Err(); err != nil </span><span class="cov0" title="0">{
                 r.logger.Error("failed to place item in Redis cache", zap.String("key", key), zap.Error(err))
                 return
         }</span>

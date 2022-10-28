@@ -3,6 +3,7 @@ package redis
 import (
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/go-redis/redis/v9"
 	"github.com/spf13/afero"
@@ -208,6 +209,7 @@ func TestRedisImpl_Set_Get_Del(t *testing.T) {
 
 			// Write to Redis.
 			require.NoError(t, connection.db.Set(quizId, testCase.quiz), "failed to write to Redis")
+			time.Sleep(time.Second) // Allow cache propagation.
 
 			// Get data and validate it.
 			retrievedQuiz := model_cassandra.Quiz{}
@@ -217,6 +219,7 @@ func TestRedisImpl_Set_Get_Del(t *testing.T) {
 
 			// Remove data from cluster.
 			require.NoError(t, connection.db.Del(quizId), "failed to remove quiz from Redis cluster")
+			time.Sleep(time.Second) // Allow cache propagation.
 
 			// Check to see if data has been removed.
 			deletedQuiz := model_cassandra.Quiz{}
@@ -224,7 +227,7 @@ func TestRedisImpl_Set_Get_Del(t *testing.T) {
 			require.Nil(t, deletedQuiz.QuizCore, "returned data from a deleted record should be nil")
 			require.Error(t, err, "deleted record should not be found on redis cluster")
 
-			// Removing non-existent data.
+			// Double-delete data.
 			require.Error(t, connection.db.Del(quizId), "removing a nonexistent quiz from Redis cluster should fail")
 		})
 	}
