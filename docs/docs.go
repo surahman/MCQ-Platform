@@ -33,9 +33,6 @@ const docTemplate = `{
         "/health": {
             "get": {
                 "description": "This endpoint is exposed to allow load balancers etc. to check the health of the service.",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],

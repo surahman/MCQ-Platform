@@ -2,6 +2,7 @@ package http_handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -22,6 +23,7 @@ func TestHealthcheck(t *testing.T) {
 		expectedMsg         string
 		expectedStatus      int
 		cassandraHealthData *mockCassandraData
+		redisHealthData     *mockRedisData
 	}{
 		// ----- test cases start ----- //
 		{
@@ -36,14 +38,24 @@ func TestHealthcheck(t *testing.T) {
 				},
 				times: 1,
 			},
+			redisHealthData: &mockRedisData{times: 0},
 		}, {
-			name:           "success",
-			path:           "/healthcheck/success",
-			expectedMsg:    "healthy",
-			expectedStatus: http.StatusOK,
-			cassandraHealthData: &mockCassandraData{
+			name:                "redis failure",
+			path:                "/healthcheck/redis-failure",
+			expectedMsg:         "Redis",
+			expectedStatus:      http.StatusServiceUnavailable,
+			cassandraHealthData: &mockCassandraData{times: 1},
+			redisHealthData: &mockRedisData{
+				err:   errors.New("Redis failure"),
 				times: 1,
 			},
+		}, {
+			name:                "success",
+			path:                "/healthcheck/success",
+			expectedMsg:         "healthy",
+			expectedStatus:      http.StatusOK,
+			cassandraHealthData: &mockCassandraData{times: 1},
+			redisHealthData:     &mockRedisData{times: 1},
 		},
 		// ----- test cases end ----- //
 	}
@@ -53,14 +65,19 @@ func TestHealthcheck(t *testing.T) {
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
 			mockCassandra := mocks.NewMockCassandra(mockCtrl)
+			mockRedis := mocks.NewMockRedis(mockCtrl)
 
 			mockCassandra.EXPECT().Execute(gomock.Any(), gomock.Any()).Return(
 				testCase.cassandraHealthData.outputParam,
 				testCase.cassandraHealthData.outputErr,
 			).Times(testCase.cassandraHealthData.times)
 
+			mockRedis.EXPECT().Healthcheck().Return(
+				testCase.redisHealthData.err,
+			).Times(testCase.redisHealthData.times)
+
 			// Endpoint setup for test.
-			router.GET(testCase.path, Healthcheck(zapLogger, mockCassandra))
+			router.GET(testCase.path, Healthcheck(zapLogger, mockCassandra, mockRedis))
 			req, _ := http.NewRequest("GET", testCase.path, nil)
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)

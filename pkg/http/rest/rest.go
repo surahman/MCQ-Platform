@@ -124,7 +124,7 @@ func (s *HttpRest) initialize() {
 	authMiddleware := http_handlers.AuthMiddleware(s.auth)
 	api := s.router.Group(s.conf.Server.BasePath)
 
-	api.GET("/health", http_handlers.Healthcheck(s.logger, s.db))
+	api.GET("/health", http_handlers.Healthcheck(s.logger, s.db, s.cache))
 
 	userGroup := api.Group("/user")
 	userGroup.POST("/register", http_handlers.RegisterUser(s.logger, s.auth, s.db))

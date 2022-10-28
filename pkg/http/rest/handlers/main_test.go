@@ -89,3 +89,11 @@ type mockGraderData struct {
 	outputErr     error
 	times         int
 }
+
+// mockRedisData is the parameter data for Redis mocking that is used in the test grid.
+type mockRedisData struct {
+	param1 any
+	param2 any
+	err    error
+	times  int
+}
