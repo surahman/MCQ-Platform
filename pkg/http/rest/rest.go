@@ -17,6 +17,7 @@ import (
 	"github.com/surahman/mcq-platform/pkg/grading"
 	"github.com/surahman/mcq-platform/pkg/http/rest/handlers"
 	"github.com/surahman/mcq-platform/pkg/logger"
+	"github.com/surahman/mcq-platform/pkg/redis"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
@@ -25,6 +26,7 @@ import (
 // HttpRest is the HTTP REST server.
 type HttpRest struct {
 	auth    auth.Auth
+	cache   redis.Redis
 	db      cassandra.Cassandra
 	grading grading.Grading
 	conf    *config
@@ -33,8 +35,8 @@ type HttpRest struct {
 }
 
 // NewRESTServer will create a new REST server instance in a non-running state.
-func NewRESTServer(fs *afero.Fs, auth auth.Auth, cassandra cassandra.Cassandra, grading grading.Grading,
-	logger *logger.Logger) (server *HttpRest, err error) {
+func NewRESTServer(fs *afero.Fs, auth auth.Auth, cassandra cassandra.Cassandra, redis redis.Redis,
+	grading grading.Grading, logger *logger.Logger) (server *HttpRest, err error) {
 	// Load configurations.
 	conf := newConfig()
 	if err = conf.Load(*fs); err != nil {
@@ -44,6 +46,7 @@ func NewRESTServer(fs *afero.Fs, auth auth.Auth, cassandra cassandra.Cassandra, 
 	return &HttpRest{
 			conf:    conf,
 			auth:    auth,
+			cache:   redis,
 			db:      cassandra,
 			grading: grading,
 			logger:  logger,

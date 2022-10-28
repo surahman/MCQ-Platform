@@ -65,7 +65,7 @@ func main() {
 	}(cache)
 
 	// Setup REST server and start it.
-	if serverREST, err = rest.NewRESTServer(&fs, authorization, database, grader, logging); err != nil {
+	if serverREST, err = rest.NewRESTServer(&fs, authorization, database, cache, grader, logging); err != nil {
 		logging.Panic("failed to create the REST server", zap.Error(err))
 	}
 	serverREST.Run()
