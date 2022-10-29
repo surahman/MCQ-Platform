@@ -138,7 +138,7 @@ func (s *HttpRest) initialize() {
 	scoreGroup.GET("/stats-paged/:quiz_id", http_handlers.GetStatsPage(s.logger, s.auth, s.db))
 
 	quizGroup := api.Group("/quiz").Use(authMiddleware)
-	quizGroup.GET("/view/:quiz_id", http_handlers.ViewQuiz(s.logger, s.auth, s.db))
+	quizGroup.GET("/view/:quiz_id", http_handlers.ViewQuiz(s.logger, s.auth, s.db, s.cache))
 	quizGroup.POST("/create", http_handlers.CreateQuiz(s.logger, s.auth, s.db))
 	quizGroup.PATCH("/update/:quiz_id", http_handlers.UpdateQuiz(s.logger, s.auth, s.db))
 	quizGroup.DELETE("/delete/:quiz_id", http_handlers.DeleteQuiz(s.logger, s.auth, s.db, s.cache))

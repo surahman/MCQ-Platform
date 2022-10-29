@@ -21,7 +21,6 @@ import (
 // @Description This endpoint will retrieve a quiz with a provided quiz ID if it is published.
 // @Tags        view test quiz
 // @Id          viewQuiz
-// @Accept      json
 // @Produce     json
 // @Security    ApiKeyAuth
 // @Param       quiz_id path     string             true "The quiz ID for the quiz being requested."
@@ -30,11 +29,11 @@ import (
 // @Failure     404     {object} model_rest.Error   "Error message with any available details in payload"
 // @Failure     500     {object} model_rest.Error   "Error message with any available details in payload"
 // @Router      /quiz/view/{quiz_id} [get]
-func ViewQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc {
+func ViewQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, cache redis.Redis) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		var err error
 		var response any
-		var quiz *model_cassandra.Quiz
+		var quiz model_cassandra.Quiz
 		var username string
 		var quizId gocql.UUID
 
@@ -50,13 +49,26 @@ func ViewQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin
 			return
 		}
 
-		// Get quiz record from database.
-		if response, err = db.Execute(cassandra.ReadQuizQuery, quizId); err != nil {
-			cassandraError := err.(*cassandra.Error)
-			context.AbortWithStatusJSON(cassandraError.Status, &model_rest.Error{Message: "error retrieving quiz", Payload: cassandraError.Message})
-			return
+		// Cache call.
+		err = cache.Get(quizId.String(), &quiz)
+
+		// Cache miss:
+		// [1] Get quiz record from database.
+		// [2] Place quiz in cache. Log but do not propagate errors to user on cache set failures.
+		if err != nil {
+			// Get quiz record from database.
+			if response, err = db.Execute(cassandra.ReadQuizQuery, quizId); err != nil {
+				cassandraError := err.(*cassandra.Error)
+				context.AbortWithStatusJSON(cassandraError.Status, &model_rest.Error{Message: "error retrieving quiz", Payload: cassandraError.Message})
+				return
+			}
+			quiz = *response.(*model_cassandra.Quiz)
+
+			// Only place quiz in cache if it is published and not deleted. Set method will log errors.
+			if quiz.IsPublished && !quiz.IsDeleted {
+				_ = cache.Set(quizId.String(), &quiz)
+			}
 		}
-		quiz = response.(*model_cassandra.Quiz)
 
 		// Check to see if quiz can be set to requester.
 		// [1] Requested quiz is NOT published OR IS deleted

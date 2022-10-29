@@ -347,9 +347,6 @@ const docTemplate = `{
                     }
                 ],
                 "description": "This endpoint will retrieve a quiz with a provided quiz ID if it is published.",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
