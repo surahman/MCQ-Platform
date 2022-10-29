@@ -258,7 +258,6 @@ func DeleteQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, c
 // @Description This endpoint will publish a quiz with the provided Test ID if it was created by the requester.
 // @Tags        publish test quiz create
 // @Id          publishQuiz
-// @Accept      json
 // @Produce     json
 // @Security    ApiKeyAuth
 // @Param       quiz_id path     string             true "The Test ID for the quiz being published."
@@ -266,11 +265,13 @@ func DeleteQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, c
 // @Failure     403     {object} model_rest.Error   "Error message with any available details in payload"
 // @Failure     500     {object} model_rest.Error   "Error message with any available details in payload"
 // @Router      /quiz/publish/{quiz_id} [patch]
-func PublishQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc {
+func PublishQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, cache redis.Redis) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		var err error
 		var username string
 		var quizId gocql.UUID
+		var response any
+		var quiz *model_cassandra.Quiz
 
 		if quizId, err = gocql.ParseUUID(context.Param("quiz_id")); err != nil {
 			context.AbortWithStatusJSON(http.StatusBadRequest, &model_rest.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
@@ -295,7 +296,25 @@ func PublishQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) 
 			return
 		}
 
+		// HTTP OK status should be set here because publishing succeeded.
+		// Any failures below this point are cache related and should be logged but not propagated to the end user.
 		context.JSON(http.StatusOK, &model_rest.Success{Message: "published quiz with id", Payload: quizId.String()})
+
+		// Place quiz in cache.
+		// [1] Retrieve the quiz from Cassandra.
+		// [2] Place into Redis.
+
+		// Get quiz record from database.
+		if response, err = db.Execute(cassandra.ReadQuizQuery, quizId); err != nil {
+			logger.Error("error retrieving quiz from database to be placed in cache post publishing", zap.Error(err))
+			return
+		}
+		quiz = response.(*model_cassandra.Quiz)
+
+		if err = cache.Set(quizId.String(), quiz); err != nil {
+			logger.Error("error placing quiz in cache after publishing", zap.Error(err))
+			return
+		}
 	}
 }
 

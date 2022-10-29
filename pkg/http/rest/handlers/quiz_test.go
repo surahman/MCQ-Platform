@@ -550,6 +550,8 @@ func TestPublishQuiz(t *testing.T) {
 		expectedStatus       int
 		authValidateJWTData  *mockAuthData
 		cassandraPublishData *mockCassandraData
+		cassandraGetData     *mockCassandraData
+		redisSetData         *mockRedisData
 	}{
 		// ----- test cases start ----- //
 		{
@@ -566,6 +568,8 @@ func TestPublishQuiz(t *testing.T) {
 				outputErr: nil,
 				times:     0,
 			},
+			cassandraGetData: &mockCassandraData{times: 0},
+			redisSetData:     &mockRedisData{times: 0},
 		}, {
 			name:           "invalid quiz id",
 			path:           "/publish/invalid-quiz-id",
@@ -578,6 +582,8 @@ func TestPublishQuiz(t *testing.T) {
 			cassandraPublishData: &mockCassandraData{
 				times: 0,
 			},
+			cassandraGetData: &mockCassandraData{times: 0},
+			redisSetData:     &mockRedisData{times: 0},
 		}, {
 			name:           "db failure",
 			path:           "/publish/db-failure/",
@@ -594,6 +600,8 @@ func TestPublishQuiz(t *testing.T) {
 				},
 				times: 1,
 			},
+			cassandraGetData: &mockCassandraData{times: 0},
+			redisSetData:     &mockRedisData{times: 0},
 		}, {
 			name:           "db unauthorized",
 			path:           "/publish/db-unauthorized/",
@@ -610,6 +618,51 @@ func TestPublishQuiz(t *testing.T) {
 				},
 				times: 1,
 			},
+			cassandraGetData: &mockCassandraData{times: 0},
+			redisSetData:     &mockRedisData{times: 0},
+		}, {
+			name:           "success - db read failure",
+			path:           "/publish/success-db-read-failure/",
+			quizId:         gocql.TimeUUID().String(),
+			expectedStatus: http.StatusOK,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "",
+				times:        1,
+			},
+			cassandraPublishData: &mockCassandraData{
+				outputErr: nil,
+				times:     1,
+			},
+			cassandraGetData: &mockCassandraData{
+				outputParam: &model_cassandra.Quiz{},
+				outputErr: &cassandra.Error{
+					Message: "",
+					Status:  http.StatusInternalServerError,
+				},
+				times: 1,
+			},
+			redisSetData: &mockRedisData{times: 0},
+		}, {
+			name:           "success - cache set failure",
+			path:           "/publish/success-cache-set-failure/",
+			quizId:         gocql.TimeUUID().String(),
+			expectedStatus: http.StatusOK,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "",
+				times:        1,
+			},
+			cassandraPublishData: &mockCassandraData{
+				outputErr: nil,
+				times:     1,
+			},
+			cassandraGetData: &mockCassandraData{
+				outputParam: &model_cassandra.Quiz{},
+				times:       1,
+			},
+			redisSetData: &mockRedisData{
+				err:   redis.NewError("something bad happened!"),
+				times: 1,
+			},
 		}, {
 			name:           "success",
 			path:           "/publish/success/",
@@ -623,6 +676,11 @@ func TestPublishQuiz(t *testing.T) {
 				outputErr: nil,
 				times:     1,
 			},
+			cassandraGetData: &mockCassandraData{
+				outputParam: &model_cassandra.Quiz{},
+				times:       1,
+			},
+			redisSetData: &mockRedisData{times: 1},
 		},
 		// ----- test cases end ----- //
 	}
@@ -633,11 +691,7 @@ func TestPublishQuiz(t *testing.T) {
 			defer mockCtrl.Finish()
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockCassandra := mocks.NewMockCassandra(mockCtrl)
-
-			mockCassandra.EXPECT().Execute(gomock.Any(), gomock.Any()).Return(
-				testCase.cassandraPublishData.outputParam,
-				testCase.cassandraPublishData.outputErr,
-			).Times(testCase.cassandraPublishData.times)
+			mockRedis := mocks.NewMockRedis(mockCtrl)
 
 			mockAuth.EXPECT().ValidateJWT(gomock.Any()).Return(
 				testCase.authValidateJWTData.outputParam1,
@@ -645,8 +699,25 @@ func TestPublishQuiz(t *testing.T) {
 				testCase.authValidateJWTData.outputErr,
 			).Times(testCase.authValidateJWTData.times)
 
+			gomock.InOrder(
+				// Publish.
+				mockCassandra.EXPECT().Execute(gomock.Any(), gomock.Any()).Return(
+					testCase.cassandraPublishData.outputParam,
+					testCase.cassandraPublishData.outputErr,
+				).Times(testCase.cassandraPublishData.times),
+				// View.
+				mockCassandra.EXPECT().Execute(gomock.Any(), gomock.Any()).Return(
+					testCase.cassandraGetData.outputParam,
+					testCase.cassandraGetData.outputErr,
+				).Times(testCase.cassandraGetData.times),
+			)
+
+			mockRedis.EXPECT().Set(gomock.Any(), gomock.Any()).Return(
+				testCase.redisSetData.err,
+			).Times(testCase.redisSetData.times)
+
 			// Endpoint setup for test.
-			router.PATCH(testCase.path+":quiz_id", PublishQuiz(zapLogger, mockAuth, mockCassandra))
+			router.PATCH(testCase.path+":quiz_id", PublishQuiz(zapLogger, mockAuth, mockCassandra, mockRedis))
 			req, _ := http.NewRequest("PATCH", testCase.path+testCase.quizId, nil)
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)

@@ -170,9 +170,6 @@ const docTemplate = `{
                     }
                 ],
                 "description": "When a quiz is submitted it is not published by default and is thus unavailable to be taken.\nThis endpoint will publish a quiz with the provided Test ID if it was created by the requester.",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
