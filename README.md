@@ -16,7 +16,7 @@ below.
 - [x] Denormalize the `responses` table by adding the quiz `Author` with each `response` row. This will allow queries
       requesting statistics to merely make calls to the `response` table. It should then be possible to check
       authorization using the returned rows.
-- [ ] Redis Cache: To improve the performance of the API, published tests should be cached with an eager write to cache, 
+- [x] Redis Cache: To improve the performance of the API, published tests should be cached with an eager write to cache, 
       and lazy loading to the cache on misses.
 - [ ] GraphQL: Essential for performance on bandwidth restricted connections.
 
@@ -87,3 +87,8 @@ docker compose down
 - Username : `admin`
 - Password : `root`
 - Keyspace: `mcq_platform`
+- 
+**Redis:**
+- Password : `root`
+- Database: `0` the default database
+- Ports: 6379, 6380, 6381, 6382, 6383, 6384
