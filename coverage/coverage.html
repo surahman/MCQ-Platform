@@ -81,7 +81,7 @@
 				
 				<option value="file12">github.com/surahman/mcq-platform/pkg/http/rest/handlers/healthcheck.go (100.0%)</option>
 				
-				<option value="file13">github.com/surahman/mcq-platform/pkg/http/rest/handlers/quiz.go (96.1%)</option>
+				<option value="file13">github.com/surahman/mcq-platform/pkg/http/rest/handlers/quiz.go (96.2%)</option>
 				
 				<option value="file14">github.com/surahman/mcq-platform/pkg/http/rest/handlers/score.go (98.0%)</option>
 				
@@ -1898,7 +1898,6 @@ import (
 // @Description This endpoint will retrieve a quiz with a provided quiz ID if it is published.
 // @Tags        view test quiz
 // @Id          viewQuiz
-// @Accept      json
 // @Produce     json
 // @Security    ApiKeyAuth
 // @Param       quiz_id path     string             true "The quiz ID for the quiz being requested."
@@ -1907,11 +1906,11 @@ import (
 // @Failure     404     {object} model_rest.Error   "Error message with any available details in payload"
 // @Failure     500     {object} model_rest.Error   "Error message with any available details in payload"
 // @Router      /quiz/view/{quiz_id} [get]
-func ViewQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc <span class="cov9" title="9">{
-        return func(context *gin.Context) </span><span class="cov9" title="9">{
+func ViewQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, cache redis.Redis) gin.HandlerFunc <span class="cov10" title="11">{
+        return func(context *gin.Context) </span><span class="cov10" title="11">{
                 var err error
                 var response any
-                var quiz *model_cassandra.Quiz
+                var quiz model_cassandra.Quiz
                 var username string
                 var quizId gocql.UUID
 
@@ -1921,37 +1920,50 @@ func ViewQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin
                 }</span>
 
                 // Get username from JWT.
-                <span class="cov8" title="8">if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil </span><span class="cov1" title="1">{
+                <span class="cov9" title="10">if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil </span><span class="cov1" title="1">{
                         logger.Error("failed to validate JWT in create quiz handler", zap.Error(err))
                         context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "unable to verify username"})
                         return
                 }</span>
 
-                // Get quiz record from database.
-                <span class="cov8" title="7">if response, err = db.Execute(cassandra.ReadQuizQuery, quizId); err != nil </span><span class="cov1" title="1">{
-                        cassandraError := err.(*cassandra.Error)
-                        context.AbortWithStatusJSON(cassandraError.Status, &amp;model_rest.Error{Message: "error retrieving quiz", Payload: cassandraError.Message})
-                        return
-                }</span>
-                <span class="cov7" title="6">quiz = response.(*model_cassandra.Quiz)
+                // Cache call.
+                <span class="cov9" title="9">err = cache.Get(quizId.String(), &amp;quiz)
+
+                // Cache miss:
+                // [1] Get quiz record from database.
+                // [2] Place quiz in cache. Log but do not propagate errors to user on cache set failures.
+                if err != nil </span><span class="cov8" title="8">{
+                        // Get quiz record from database.
+                        if response, err = db.Execute(cassandra.ReadQuizQuery, quizId); err != nil </span><span class="cov1" title="1">{
+                                cassandraError := err.(*cassandra.Error)
+                                context.AbortWithStatusJSON(cassandraError.Status, &amp;model_rest.Error{Message: "error retrieving quiz", Payload: cassandraError.Message})
+                                return
+                        }</span>
+                        <span class="cov8" title="7">quiz = *response.(*model_cassandra.Quiz)
+
+                        // Only place quiz in cache if it is published and not deleted. Set method will log errors.
+                        if quiz.IsPublished &amp;&amp; !quiz.IsDeleted </span><span class="cov5" title="3">{
+                                _ = cache.Set(quizId.String(), &amp;quiz)
+                        }</span>
+                }
 
                 // Check to see if quiz can be set to requester.
                 // [1] Requested quiz is NOT published OR IS deleted
                 // [2] Requester is not the author
                 // FAIL
-                if (!quiz.IsPublished || quiz.IsDeleted) &amp;&amp; username != quiz.Author </span><span class="cov3" title="2">{
+                <span class="cov8" title="8">if (!quiz.IsPublished || quiz.IsDeleted) &amp;&amp; username != quiz.Author </span><span class="cov3" title="2">{
                         context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_rest.Error{Message: "quiz is not available"})
                         return
                 }</span>
 
                 // If the requester is not the author remove the answer key.
-                <span class="cov6" title="4">if username != quiz.Author </span><span class="cov1" title="1">{
+                <span class="cov7" title="6">if username != quiz.Author </span><span class="cov1" title="1">{
                         for idx := range quiz.Questions </span><span class="cov3" title="2">{
                                 quiz.Questions[idx].Answers = nil
                         }</span>
                 }
 
-                <span class="cov6" title="4">context.JSON(http.StatusOK, &amp;model_rest.Success{Message: quiz.QuizID.String(), Payload: &amp;quiz.QuizCore})</span>
+                <span class="cov7" title="6">context.JSON(http.StatusOK, &amp;model_rest.Success{Message: quiz.QuizID.String(), Payload: &amp;quiz.QuizCore})</span>
         }
 }
 
@@ -2932,7 +2944,7 @@ func (s *HttpRest) initialize() <span class="cov0" title="0">{
         scoreGroup.GET("/stats-paged/:quiz_id", http_handlers.GetStatsPage(s.logger, s.auth, s.db))
 
         quizGroup := api.Group("/quiz").Use(authMiddleware)
-        quizGroup.GET("/view/:quiz_id", http_handlers.ViewQuiz(s.logger, s.auth, s.db))
+        quizGroup.GET("/view/:quiz_id", http_handlers.ViewQuiz(s.logger, s.auth, s.db, s.cache))
         quizGroup.POST("/create", http_handlers.CreateQuiz(s.logger, s.auth, s.db))
         quizGroup.PATCH("/update/:quiz_id", http_handlers.UpdateQuiz(s.logger, s.auth, s.db))
         quizGroup.DELETE("/delete/:quiz_id", http_handlers.DeleteQuiz(s.logger, s.auth, s.db, s.cache))
