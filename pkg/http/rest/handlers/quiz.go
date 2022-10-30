@@ -11,6 +11,7 @@ import (
 	"github.com/surahman/mcq-platform/pkg/logger"
 	"github.com/surahman/mcq-platform/pkg/model/cassandra"
 	"github.com/surahman/mcq-platform/pkg/model/http"
+	"github.com/surahman/mcq-platform/pkg/redis"
 	"github.com/surahman/mcq-platform/pkg/validator"
 	"go.uber.org/zap"
 )
@@ -20,7 +21,6 @@ import (
 // @Description This endpoint will retrieve a quiz with a provided quiz ID if it is published.
 // @Tags        view test quiz
 // @Id          viewQuiz
-// @Accept      json
 // @Produce     json
 // @Security    ApiKeyAuth
 // @Param       quiz_id path     string             true "The quiz ID for the quiz being requested."
@@ -29,11 +29,11 @@ import (
 // @Failure     404     {object} model_rest.Error   "Error message with any available details in payload"
 // @Failure     500     {object} model_rest.Error   "Error message with any available details in payload"
 // @Router      /quiz/view/{quiz_id} [get]
-func ViewQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc {
+func ViewQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, cache redis.Redis) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		var err error
 		var response any
-		var quiz *model_cassandra.Quiz
+		var quiz model_cassandra.Quiz
 		var username string
 		var quizId gocql.UUID
 
@@ -49,13 +49,26 @@ func ViewQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin
 			return
 		}
 
-		// Get quiz record from database.
-		if response, err = db.Execute(cassandra.ReadQuizQuery, quizId); err != nil {
-			cassandraError := err.(*cassandra.Error)
-			context.AbortWithStatusJSON(cassandraError.Status, &model_rest.Error{Message: "error retrieving quiz", Payload: cassandraError.Message})
-			return
+		// Cache call.
+		err = cache.Get(quizId.String(), &quiz)
+
+		// Cache miss:
+		// [1] Get quiz record from database.
+		// [2] Place quiz in cache. Log but do not propagate errors to user on cache set failures.
+		if err != nil {
+			// Get quiz record from database.
+			if response, err = db.Execute(cassandra.ReadQuizQuery, quizId); err != nil {
+				cassandraError := err.(*cassandra.Error)
+				context.AbortWithStatusJSON(cassandraError.Status, &model_rest.Error{Message: "error retrieving quiz", Payload: cassandraError.Message})
+				return
+			}
+			quiz = *response.(*model_cassandra.Quiz)
+
+			// Only place quiz in cache if it is published and not deleted. Set method will log errors.
+			if quiz.IsPublished && !quiz.IsDeleted {
+				_ = cache.Set(quizId.String(), &quiz)
+			}
 		}
-		quiz = response.(*model_cassandra.Quiz)
 
 		// Check to see if quiz can be set to requester.
 		// [1] Requested quiz is NOT published OR IS deleted
@@ -202,7 +215,6 @@ func UpdateQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) g
 // @Description This endpoint will mark a quiz as delete if it was created by the requester. The provided Test ID is provided is a path parameter.
 // @Tags        delete remove test quiz
 // @Id          deleteQuiz
-// @Accept      json
 // @Produce     json
 // @Security    ApiKeyAuth
 // @Param       quiz_id path     string             true "The Test ID for the quiz being deleted."
@@ -210,7 +222,7 @@ func UpdateQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) g
 // @Failure     403     {object} model_rest.Error   "Error message with any available details in payload"
 // @Failure     500     {object} model_rest.Error   "Error message with any available details in payload"
 // @Router      /quiz/delete/{quiz_id} [delete]
-func DeleteQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc {
+func DeleteQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, cache redis.Redis) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		var err error
 		var username string
@@ -225,6 +237,15 @@ func DeleteQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) g
 		if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil {
 			logger.Error("failed to validate JWT in create quiz handler", zap.Error(err))
 			context.AbortWithStatusJSON(http.StatusInternalServerError, &model_rest.Error{Message: "unable to verify username"})
+			return
+		}
+
+		// Evict from cache, if present.
+		// This step must be executed before deletion to ensure the end user is able to reattempt the command in the event of failure.
+		// It must not be the case that data marked as deleted remains in the cache till LRU eviction or TTL expiration.
+		if err = cache.Del(quizId.String()); err != nil && err.(*redis.Error).Code != redis.ErrorCacheMiss {
+			logger.Error("failed to evict data from cache", zap.Error(err))
+			context.AbortWithStatusJSON(http.StatusInternalServerError, &model_rest.Error{Message: "please retry the command at a later time"})
 			return
 		}
 
@@ -249,7 +270,6 @@ func DeleteQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) g
 // @Description This endpoint will publish a quiz with the provided Test ID if it was created by the requester.
 // @Tags        publish test quiz create
 // @Id          publishQuiz
-// @Accept      json
 // @Produce     json
 // @Security    ApiKeyAuth
 // @Param       quiz_id path     string             true "The Test ID for the quiz being published."
@@ -257,11 +277,13 @@ func DeleteQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) g
 // @Failure     403     {object} model_rest.Error   "Error message with any available details in payload"
 // @Failure     500     {object} model_rest.Error   "Error message with any available details in payload"
 // @Router      /quiz/publish/{quiz_id} [patch]
-func PublishQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc {
+func PublishQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, cache redis.Redis) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		var err error
 		var username string
 		var quizId gocql.UUID
+		var response any
+		var quiz *model_cassandra.Quiz
 
 		if quizId, err = gocql.ParseUUID(context.Param("quiz_id")); err != nil {
 			context.AbortWithStatusJSON(http.StatusBadRequest, &model_rest.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
@@ -286,7 +308,25 @@ func PublishQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) 
 			return
 		}
 
+		// HTTP OK status should be set here because publishing succeeded.
+		// Any failures below this point are cache related and should be logged but not propagated to the end user.
 		context.JSON(http.StatusOK, &model_rest.Success{Message: "published quiz with id", Payload: quizId.String()})
+
+		// Place quiz in cache.
+		// [1] Retrieve the quiz from Cassandra.
+		// [2] Place into Redis.
+
+		// Get quiz record from database.
+		if response, err = db.Execute(cassandra.ReadQuizQuery, quizId); err != nil {
+			logger.Error("error retrieving quiz from database to be placed in cache post publishing", zap.Error(err))
+			return
+		}
+		quiz = response.(*model_cassandra.Quiz)
+
+		if err = cache.Set(quizId.String(), quiz); err != nil {
+			logger.Error("error placing quiz in cache after publishing", zap.Error(err))
+			return
+		}
 	}
 }
 

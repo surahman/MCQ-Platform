@@ -33,9 +33,6 @@ const docTemplate = `{
         "/health": {
             "get": {
                 "description": "This endpoint is exposed to allow load balancers etc. to check the health of the service.",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -126,9 +123,6 @@ const docTemplate = `{
                     }
                 ],
                 "description": "This endpoint will mark a quiz as delete if it was created by the requester. The provided Test ID is provided is a path parameter.",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -176,9 +170,6 @@ const docTemplate = `{
                     }
                 ],
                 "description": "When a quiz is submitted it is not published by default and is thus unavailable to be taken.\nThis endpoint will publish a quiz with the provided Test ID if it was created by the requester.",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -356,9 +347,6 @@ const docTemplate = `{
                     }
                 ],
                 "description": "This endpoint will retrieve a quiz with a provided quiz ID if it is published.",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],

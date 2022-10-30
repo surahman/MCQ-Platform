@@ -17,6 +17,7 @@ import (
 	"github.com/surahman/mcq-platform/pkg/grading"
 	"github.com/surahman/mcq-platform/pkg/http/rest/handlers"
 	"github.com/surahman/mcq-platform/pkg/logger"
+	"github.com/surahman/mcq-platform/pkg/redis"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
@@ -25,6 +26,7 @@ import (
 // HttpRest is the HTTP REST server.
 type HttpRest struct {
 	auth    auth.Auth
+	cache   redis.Redis
 	db      cassandra.Cassandra
 	grading grading.Grading
 	conf    *config
@@ -33,8 +35,8 @@ type HttpRest struct {
 }
 
 // NewRESTServer will create a new REST server instance in a non-running state.
-func NewRESTServer(fs *afero.Fs, auth auth.Auth, cassandra cassandra.Cassandra, grading grading.Grading,
-	logger *logger.Logger) (server *HttpRest, err error) {
+func NewRESTServer(fs *afero.Fs, auth auth.Auth, cassandra cassandra.Cassandra, redis redis.Redis,
+	grading grading.Grading, logger *logger.Logger) (server *HttpRest, err error) {
 	// Load configurations.
 	conf := newConfig()
 	if err = conf.Load(*fs); err != nil {
@@ -44,6 +46,7 @@ func NewRESTServer(fs *afero.Fs, auth auth.Auth, cassandra cassandra.Cassandra, 
 	return &HttpRest{
 			conf:    conf,
 			auth:    auth,
+			cache:   redis,
 			db:      cassandra,
 			grading: grading,
 			logger:  logger,
@@ -121,7 +124,7 @@ func (s *HttpRest) initialize() {
 	authMiddleware := http_handlers.AuthMiddleware(s.auth)
 	api := s.router.Group(s.conf.Server.BasePath)
 
-	api.GET("/health", http_handlers.Healthcheck(s.logger, s.db))
+	api.GET("/health", http_handlers.Healthcheck(s.logger, s.db, s.cache))
 
 	userGroup := api.Group("/user")
 	userGroup.POST("/register", http_handlers.RegisterUser(s.logger, s.auth, s.db))
@@ -135,10 +138,10 @@ func (s *HttpRest) initialize() {
 	scoreGroup.GET("/stats-paged/:quiz_id", http_handlers.GetStatsPage(s.logger, s.auth, s.db))
 
 	quizGroup := api.Group("/quiz").Use(authMiddleware)
-	quizGroup.GET("/view/:quiz_id", http_handlers.ViewQuiz(s.logger, s.auth, s.db))
+	quizGroup.GET("/view/:quiz_id", http_handlers.ViewQuiz(s.logger, s.auth, s.db, s.cache))
 	quizGroup.POST("/create", http_handlers.CreateQuiz(s.logger, s.auth, s.db))
 	quizGroup.PATCH("/update/:quiz_id", http_handlers.UpdateQuiz(s.logger, s.auth, s.db))
-	quizGroup.DELETE("/delete/:quiz_id", http_handlers.DeleteQuiz(s.logger, s.auth, s.db))
-	quizGroup.PATCH("/publish/:quiz_id", http_handlers.PublishQuiz(s.logger, s.auth, s.db))
+	quizGroup.DELETE("/delete/:quiz_id", http_handlers.DeleteQuiz(s.logger, s.auth, s.db, s.cache))
+	quizGroup.PATCH("/publish/:quiz_id", http_handlers.PublishQuiz(s.logger, s.auth, s.db, s.cache))
 	quizGroup.POST("/take/:quiz_id", http_handlers.TakeQuiz(s.logger, s.auth, s.db, s.grading))
 }

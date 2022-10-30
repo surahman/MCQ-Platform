@@ -9,6 +9,7 @@ import (
 	"github.com/surahman/mcq-platform/pkg/grading"
 	"github.com/surahman/mcq-platform/pkg/http/rest"
 	"github.com/surahman/mcq-platform/pkg/logger"
+	"github.com/surahman/mcq-platform/pkg/redis"
 	"go.uber.org/zap"
 )
 
@@ -19,6 +20,7 @@ func main() {
 		logging       *logger.Logger
 		authorization auth.Auth
 		database      cassandra.Cassandra
+		cache         redis.Redis
 		grader        = grading.NewGrading()
 	)
 
@@ -49,8 +51,21 @@ func main() {
 		}
 	}(database)
 
+	// Cache setup
+	if cache, err = redis.NewRedis(&fs, logging); err != nil {
+		logging.Panic("failed to configure Redis module", zap.Error(err))
+	}
+	if err = cache.Open(); err != nil {
+		logging.Panic("failed open a connection to the Redis cluster", zap.Error(err))
+	}
+	defer func(cache redis.Redis) {
+		if err = cache.Close(); err != nil {
+			logging.Panic("failed close the connection to the Redis cluster", zap.Error(err))
+		}
+	}(cache)
+
 	// Setup REST server and start it.
-	if serverREST, err = rest.NewRESTServer(&fs, authorization, database, grader, logging); err != nil {
+	if serverREST, err = rest.NewRESTServer(&fs, authorization, database, cache, grader, logging); err != nil {
 		logging.Panic("failed to create the REST server", zap.Error(err))
 	}
 	serverREST.Run()
