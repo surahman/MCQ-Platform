@@ -16,6 +16,35 @@ import (
 	"go.uber.org/zap"
 )
 
+// getQuiz will make a cache call for the quiz. Upon a cache miss it will call the database for the quiz and then load it into
+// the cache.
+func getQuiz(quizId string, db cassandra.Cassandra, cache redis.Redis) (*model_cassandra.Quiz, error) {
+	var err error
+	var quiz model_cassandra.Quiz
+	var response any
+
+	// Cache call.
+	err = cache.Get(quizId, &quiz)
+
+	// Cache miss:
+	// [1] Get quiz record from database.
+	// [2] Place quiz in cache. Log but do not propagate errors to user on cache set failures.
+	if err != nil {
+		// Get quiz record from database.
+		if response, err = db.Execute(cassandra.ReadQuizQuery, quizId); err != nil {
+			return nil, err
+		}
+		quiz = *response.(*model_cassandra.Quiz)
+
+		// Only place quiz in cache if it is published and not deleted. Set method will log errors.
+		if quiz.IsPublished && !quiz.IsDeleted {
+			_ = cache.Set(quizId, &quiz)
+		}
+	}
+
+	return &quiz, nil
+}
+
 // ViewQuiz will retrieve a test using a variable in the URL.
 // @Summary     View a quiz.
 // @Description This endpoint will retrieve a quiz with a provided quiz ID if it is published.

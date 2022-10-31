@@ -81,7 +81,7 @@
 				
 				<option value="file12">github.com/surahman/mcq-platform/pkg/http/rest/handlers/healthcheck.go (100.0%)</option>
 				
-				<option value="file13">github.com/surahman/mcq-platform/pkg/http/rest/handlers/quiz.go (96.2%)</option>
+				<option value="file13">github.com/surahman/mcq-platform/pkg/http/rest/handlers/quiz.go (96.4%)</option>
 				
 				<option value="file14">github.com/surahman/mcq-platform/pkg/http/rest/handlers/score.go (98.0%)</option>
 				
@@ -1892,6 +1892,35 @@ import (
         "github.com/surahman/mcq-platform/pkg/validator"
         "go.uber.org/zap"
 )
+
+// getQuiz will make a cache call for the quiz. Upon a cache miss it will call the database for the quiz and then load it into
+// the cache.
+func getQuiz(quizId string, db cassandra.Cassandra, cache redis.Redis) (*model_cassandra.Quiz, error) <span class="cov7" title="5">{
+        var err error
+        var quiz model_cassandra.Quiz
+        var response any
+
+        // Cache call.
+        err = cache.Get(quizId, &amp;quiz)
+
+        // Cache miss:
+        // [1] Get quiz record from database.
+        // [2] Place quiz in cache. Log but do not propagate errors to user on cache set failures.
+        if err != nil </span><span class="cov6" title="4">{
+                // Get quiz record from database.
+                if response, err = db.Execute(cassandra.ReadQuizQuery, quizId); err != nil </span><span class="cov1" title="1">{
+                        return nil, err
+                }</span>
+                <span class="cov5" title="3">quiz = *response.(*model_cassandra.Quiz)
+
+                // Only place quiz in cache if it is published and not deleted. Set method will log errors.
+                if quiz.IsPublished &amp;&amp; !quiz.IsDeleted </span><span class="cov3" title="2">{
+                        _ = cache.Set(quizId, &amp;quiz)
+                }</span>
+        }
+
+        <span class="cov6" title="4">return &amp;quiz, nil</span>
+}
 
 // ViewQuiz will retrieve a test using a variable in the URL.
 // @Summary     View a quiz.
