@@ -1,0 +1,3791 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>auth: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/surahman/mcq-platform/pkg/auth/auth.go (82.9%)</option>
+				
+				<option value="file1">github.com/surahman/mcq-platform/pkg/auth/config.go (93.8%)</option>
+				
+				<option value="file2">github.com/surahman/mcq-platform/pkg/auth/testdata.go (100.0%)</option>
+				
+				<option value="file3">github.com/surahman/mcq-platform/pkg/cassandra/cassandra.go (87.8%)</option>
+				
+				<option value="file4">github.com/surahman/mcq-platform/pkg/cassandra/cassandra_queries.go (85.2%)</option>
+				
+				<option value="file5">github.com/surahman/mcq-platform/pkg/cassandra/config.go (93.8%)</option>
+				
+				<option value="file6">github.com/surahman/mcq-platform/pkg/cassandra/error.go (91.7%)</option>
+				
+				<option value="file7">github.com/surahman/mcq-platform/pkg/cassandra/testdata.go (86.8%)</option>
+				
+				<option value="file8">github.com/surahman/mcq-platform/pkg/constants/constants.go (100.0%)</option>
+				
+				<option value="file9">github.com/surahman/mcq-platform/pkg/grading/grading.go (100.0%)</option>
+				
+				<option value="file10">github.com/surahman/mcq-platform/pkg/http/rest/config.go (87.5%)</option>
+				
+				<option value="file11">github.com/surahman/mcq-platform/pkg/http/rest/handlers/authorization.go (100.0%)</option>
+				
+				<option value="file12">github.com/surahman/mcq-platform/pkg/http/rest/handlers/healthcheck.go (100.0%)</option>
+				
+				<option value="file13">github.com/surahman/mcq-platform/pkg/http/rest/handlers/quiz.go (96.2%)</option>
+				
+				<option value="file14">github.com/surahman/mcq-platform/pkg/http/rest/handlers/score.go (98.0%)</option>
+				
+				<option value="file15">github.com/surahman/mcq-platform/pkg/http/rest/handlers/users.go (92.7%)</option>
+				
+				<option value="file16">github.com/surahman/mcq-platform/pkg/http/rest/rest.go (7.5%)</option>
+				
+				<option value="file17">github.com/surahman/mcq-platform/pkg/http/rest/testdata.go (100.0%)</option>
+				
+				<option value="file18">github.com/surahman/mcq-platform/pkg/logger/config.go (78.9%)</option>
+				
+				<option value="file19">github.com/surahman/mcq-platform/pkg/logger/logger.go (73.6%)</option>
+				
+				<option value="file20">github.com/surahman/mcq-platform/pkg/logger/testdata.go (100.0%)</option>
+				
+				<option value="file21">github.com/surahman/mcq-platform/pkg/redis/config.go (93.8%)</option>
+				
+				<option value="file22">github.com/surahman/mcq-platform/pkg/redis/error.go (100.0%)</option>
+				
+				<option value="file23">github.com/surahman/mcq-platform/pkg/redis/redis.go (88.7%)</option>
+				
+				<option value="file24">github.com/surahman/mcq-platform/pkg/redis/testdata.go (100.0%)</option>
+				
+				<option value="file25">github.com/surahman/mcq-platform/pkg/validator/validator.go (72.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">no coverage</span>
+				<span class="cov1">low coverage</span>
+				<span class="cov2">*</span>
+				<span class="cov3">*</span>
+				<span class="cov4">*</span>
+				<span class="cov5">*</span>
+				<span class="cov6">*</span>
+				<span class="cov7">*</span>
+				<span class="cov8">*</span>
+				<span class="cov9">*</span>
+				<span class="cov10">high coverage</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package auth
+
+import (
+        "crypto/aes"
+        "crypto/cipher"
+        "crypto/rand"
+        "encoding/base64"
+        "errors"
+        "io"
+        "time"
+
+        "github.com/golang-jwt/jwt/v4"
+        "github.com/spf13/afero"
+        "github.com/surahman/mcq-platform/pkg/logger"
+        "github.com/surahman/mcq-platform/pkg/model/http"
+        "go.uber.org/zap"
+        "golang.org/x/crypto/bcrypt"
+)
+
+// Mock Auth interface stub generation.
+//go:generate mockgen -destination=../mocks/mock_auth.go -package=mocks github.com/surahman/mcq-platform/pkg/auth Auth
+
+// Auth is the interface through which the authorization operations can be accessed. Created to support mock testing.
+type Auth interface {
+        // HashPassword will take a plaintext string and generate a hashed representation of it.
+        HashPassword(string) (string, error)
+
+        // CheckPassword will take the plaintext and hashed passwords as input, in that order, and verify if they match.
+        CheckPassword(string, string) error
+
+        // GenerateJWT will create a valid JSON Web Token and return it in a JWT Authorization Response structure.
+        GenerateJWT(string) (*model_rest.JWTAuthResponse, error)
+
+        // ValidateJWT will take the JSON Web Token and validate it. It will extract and return the username and expiration
+        // time (Unix timestamp) or an error if validation fails.
+        ValidateJWT(string) (string, int64, error)
+
+        // RefreshJWT will take a valid JSON Web Token, and if valid and expiring soon, issue a fresh valid JWT with the time
+        // extended in JWT Authorization Response structure.
+        RefreshJWT(string) (*model_rest.JWTAuthResponse, error)
+
+        // RefreshThreshold returns the time before the end of the JSON Web Tokens validity interval that a JWT can be
+        // refreshed in.
+        RefreshThreshold() int64
+
+        // EncryptToString will generate an encrypted base64 encoded character from the plaintext.
+        EncryptToString([]byte) (string, error)
+
+        // DecryptFromString will decrypt an encrypted base64 encoded character from the ciphertext.
+        DecryptFromString(string) ([]byte, error)
+}
+
+// Check to ensure the Auth interface has been implemented.
+var _ Auth = &amp;authImpl{}
+
+// authImpl implements the Auth interface and contains the logic for authorization functionality.
+type authImpl struct {
+        cryptoSecret []byte
+        conf         *config
+        logger       *logger.Logger
+}
+
+// NewAuth will create a new Authorization configuration by loading it.
+func NewAuth(fs *afero.Fs, logger *logger.Logger) (Auth, error) <span class="cov7" title="6">{
+        if fs == nil || logger == nil </span><span class="cov5" title="3">{
+                return nil, errors.New("nil file system of logger supplied")
+        }</span>
+        <span class="cov5" title="3">return newAuthImpl(fs, logger)</span>
+}
+
+// newAuthImpl will create a new authImpl configuration and load it from disk.
+func newAuthImpl(fs *afero.Fs, logger *logger.Logger) (a *authImpl, err error) <span class="cov5" title="3">{
+        a = &amp;authImpl{conf: newConfig(), logger: logger}
+        if err = a.conf.Load(*fs); err != nil </span><span class="cov1" title="1">{
+                a.logger.Error("failed to load Authorization configurations from disk", zap.Error(err))
+                return nil, err
+        }</span>
+        <span class="cov3" title="2">a.cryptoSecret = []byte(a.conf.General.CryptoSecret)
+
+        return</span>
+}
+
+// HashPassword hashes a password using the Bcrypt algorithm to avoid plaintext storage.
+func (a *authImpl) HashPassword(plaintext string) (hashed string, err error) <span class="cov3" title="2">{
+        var bytes []byte
+        if bytes, err = bcrypt.GenerateFromPassword([]byte(plaintext), a.conf.General.BcryptCost); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+        <span class="cov3" title="2">hashed = string(bytes)
+        return</span>
+}
+
+// CheckPassword checks a hashed password against a plaintext password using the Bcrypt algorithm.
+func (a *authImpl) CheckPassword(hashed, plaintext string) (err error) <span class="cov5" title="3">{
+        if err = bcrypt.CompareHashAndPassword([]byte(hashed), []byte(plaintext)); err != nil </span><span class="cov1" title="1">{
+                return
+        }</span>
+        <span class="cov3" title="2">return</span>
+}
+
+// jwtClaim is used internally by the JWT generation and validation routines.
+type jwtClaim struct {
+        Username string `json:"username" yaml:"username"`
+        jwt.RegisteredClaims
+}
+
+// GenerateJWT creates a payload consisting of the JWT with the username as well as expiration time.
+func (a *authImpl) GenerateJWT(username string) (*model_rest.JWTAuthResponse, error) <span class="cov8" title="7">{
+        claims := &amp;jwtClaim{
+                Username: username,
+                RegisteredClaims: jwt.RegisteredClaims{
+                        Issuer:    a.conf.JWTConfig.Issuer,
+                        ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(a.conf.JWTConfig.ExpirationDuration) * time.Second).UTC()),
+                },
+        }
+        token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+        tokenString, err := token.SignedString([]byte(a.conf.JWTConfig.Key))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="7">authResponse := &amp;model_rest.JWTAuthResponse{
+                Token:     tokenString,
+                Expires:   claims.ExpiresAt.Time.Unix(),
+                Threshold: a.conf.JWTConfig.RefreshThreshold,
+        }
+
+        return authResponse, err</span>
+}
+
+// ValidateJWT will validate a signed JWT and extracts the username from it.
+func (a *authImpl) ValidateJWT(signedToken string) (string, int64, error) <span class="cov10" title="11">{
+        claims := jwt.MapClaims{}
+        if _, err := jwt.ParseWithClaims(signedToken, &amp;claims, func(token *jwt.Token) (interface{}, error) </span><span class="cov9" title="9">{
+                return []byte(a.conf.JWTConfig.Key), nil
+        }</span>); err != nil <span class="cov6" title="4">{
+                return "", -1, err
+        }</span>
+
+        <span class="cov8" title="7">if !claims.VerifyExpiresAt(time.Now().Unix(), true) </span><span class="cov0" title="0">{
+                return "", -1, errors.New("token has expired")
+        }</span>
+        <span class="cov8" title="7">if !claims.VerifyIssuer(a.conf.JWTConfig.Issuer, true) </span><span class="cov1" title="1">{
+                return "", -1, errors.New("unauthorized issuer")
+        }</span>
+
+        <span class="cov7" title="6">username, ok := claims["username"]
+        if !ok </span><span class="cov0" title="0">{
+                return "", -1, errors.New("username not found")
+        }</span>
+
+        <span class="cov7" title="6">expiresAt, ok := claims["exp"]
+        if !ok </span><span class="cov0" title="0">{
+                return "", -1, errors.New("expiration time not found")
+        }</span>
+
+        <span class="cov7" title="6">return username.(string), int64(expiresAt.(float64)), nil</span>
+}
+
+// RefreshJWT will extend a valid JWT's lease by generating a fresh valid JWT.
+func (a *authImpl) RefreshJWT(token string) (authResponse *model_rest.JWTAuthResponse, err error) <span class="cov3" title="2">{
+        var username string
+        if username, _, err = a.ValidateJWT(token); err != nil </span><span class="cov1" title="1">{
+                return
+        }</span>
+        <span class="cov1" title="1">if authResponse, err = a.GenerateJWT(username); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov1" title="1">return</span>
+}
+
+// RefreshThreshold is the seconds before expiration that a JWT can be refreshed in.
+func (a *authImpl) RefreshThreshold() int64 <span class="cov1" title="1">{
+        return a.conf.JWTConfig.RefreshThreshold
+}</span>
+
+// encryptAES256 employs Authenticated Encryption with Associated Data using Galois/Counter mode and returns the cipher
+// as a Base64 encoded string to be used in URIs.
+func (a *authImpl) encryptAES256(data []byte) (cipherStr string, cipherBytes []byte, err error) <span class="cov3" title="2">{
+        var cipherBlock cipher.Block
+        var gcm cipher.AEAD
+
+        if cipherBlock, err = aes.NewCipher(a.cryptoSecret); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov3" title="2">if gcm, err = cipher.NewGCM(cipherBlock); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov3" title="2">nonce := make([]byte, gcm.NonceSize())
+        if _, err = io.ReadFull(rand.Reader, nonce); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        // Encrypt to cipher text.
+        <span class="cov3" title="2">cipherBytes = gcm.Seal(nonce, nonce, data, nil)
+
+        // Convert to Base64 URL encoded string for use in URLs.
+        cipherStr = base64.URLEncoding.EncodeToString(cipherBytes)
+
+        return</span>
+}
+
+// decryptAES256 employs Authenticated Encryption with Associated Data using Galois/Counter mode and returns the
+// decrypted plaintext bytes.
+func (a *authImpl) decryptAES256(data []byte) (cipherBytes []byte, err error) <span class="cov3" title="2">{
+        var cipherBlock cipher.Block
+        var gcm cipher.AEAD
+        var nonceSize int
+
+        if cipherBlock, err = aes.NewCipher(a.cryptoSecret); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov3" title="2">if gcm, err = cipher.NewGCM(cipherBlock); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov3" title="2">if nonceSize = gcm.NonceSize(); nonceSize &lt; 0 </span><span class="cov0" title="0">{
+                return nil, errors.New("bad nonce size")
+        }</span>
+
+        // Extract the nonce and cipher blocks from the data.
+        <span class="cov3" title="2">nonce, cipherText := data[:nonceSize], data[nonceSize:]
+
+        // Decrypt cipher text.
+        cipherBytes, err = gcm.Open(nil, nonce, cipherText, nil)
+
+        return</span>
+}
+
+// EncryptToString will generate an encrypted base64 encoded character from the plaintext.
+func (a *authImpl) EncryptToString(plaintext []byte) (ciphertext string, err error) <span class="cov1" title="1">{
+        ciphertext, _, err = a.encryptAES256(plaintext)
+        return
+}</span>
+
+// DecryptFromString will decrypt an encrypted base64 encoded character from the ciphertext.
+func (a *authImpl) DecryptFromString(ciphertext string) (plaintext []byte, err error) <span class="cov1" title="1">{
+        var bytes []byte
+        if bytes, err = base64.URLEncoding.DecodeString(ciphertext); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+        <span class="cov1" title="1">return a.decryptAES256(bytes)</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package auth
+
+import (
+        "github.com/spf13/afero"
+        "github.com/spf13/viper"
+        "github.com/surahman/mcq-platform/pkg/constants"
+        "github.com/surahman/mcq-platform/pkg/validator"
+)
+
+// Config contains all the configurations for authentication.
+type config struct {
+        JWTConfig struct {
+                Key                string `json:"key,omitempty" yaml:"key,omitempty" mapstructure:"key" validate:"required,min=8,max=256"`
+                Issuer             string `json:"issuer,omitempty" yaml:"issuer,omitempty" mapstructure:"issuer" validate:"required"`
+                ExpirationDuration int64  `json:"expiration_duration,omitempty" yaml:"expiration_duration,omitempty" mapstructure:"expiration_duration" validate:"required,min=60,gtefield=RefreshThreshold"`
+                RefreshThreshold   int64  `json:"refresh_threshold,omitempty" yaml:"refresh_threshold,omitempty" mapstructure:"refresh_threshold" validate:"required,min=1,ltefield=ExpirationDuration"`
+        } `json:"jwt,omitempty" yaml:"jwt,omitempty" mapstructure:"jwt" validate:"required"`
+        General struct {
+                BcryptCost   int    `json:"bcrypt_cost,omitempty" yaml:"bcrypt_cost,omitempty" mapstructure:"bcrypt_cost" validate:"required,min=4,max=31"`
+                CryptoSecret string `json:"crypto_secret,omitempty" yaml:"crypto_secret,omitempty" mapstructure:"crypto_secret" validate:"required,len=32"`
+        } `json:"general,omitempty" yaml:"general,omitempty" mapstructure:"general" validate:"required"`
+}
+
+// newConfig creates a blank configuration struct for authorization.
+func newConfig() *config <span class="cov4" title="3">{
+        return &amp;config{}
+}</span>
+
+// Load will attempt to load configurations from a file on a file system and then overwrite values using environment variables.
+func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="16">{
+        viper.SetFs(fs)
+        viper.SetConfigName(constants.GetAuthFileName())
+        viper.SetConfigType("yaml")
+        viper.AddConfigPath(constants.GetEtcDir())
+        viper.AddConfigPath(constants.GetHomeDir())
+        viper.AddConfigPath(constants.GetBaseDir())
+
+        viper.SetEnvPrefix(constants.GetAuthPrefix())
+        viper.AutomaticEnv()
+
+        if err = viper.ReadInConfig(); err != nil </span><span class="cov1" title="1">{
+                return
+        }</span>
+
+        <span class="cov9" title="15">if err = viper.Unmarshal(cfg); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov9" title="15">if err = validator.ValidateStruct(cfg); err != nil </span><span class="cov8" title="11">{
+                return
+        }</span>
+
+        <span class="cov5" title="4">return</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package auth
+
+// configTestData will return a map of test data containing valid and invalid Authorization configs.
+func configTestData() map[string]string <span class="cov8" title="1">{
+        return map[string]string{
+
+                "empty": ``,
+
+                "valid": `
+jwt:
+  key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
+  issuer: MCQ Platform
+  expiration_duration: 600
+  refresh_threshold: 60
+general:
+  bcrypt_cost: 8
+  crypto_secret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z$`,
+
+                "no_issuer": `
+jwt:
+  key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
+  expiration_duration: 600
+  refresh_threshold: 60
+general:
+  bcrypt_cost: 8
+  crypto_secret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z$`,
+
+                "bcrypt_cost_below_4": `
+jwt:
+  key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
+  issuer: MCQ Platform
+  expiration_duration: 600
+  refresh_threshold: 60
+general:
+  bcrypt_cost: 2
+  crypto_secret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z$`,
+
+                "bcrypt_cost_above_31": `
+jwt:
+  key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
+  issuer: MCQ Platform
+  expiration_duration: 600
+  refresh_threshold: 60
+general:
+  bcrypt_cost: 32
+  crypto_secret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z$`,
+
+                "jwt_expiration_below_60s": `
+jwt:
+  key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
+  issuer: MCQ Platform
+  expiration_duration: 59
+  refresh_threshold: 40
+general:
+  bcrypt_cost: 8
+  crypto_secret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z$`,
+
+                "jwt_key_below_8": `
+jwt:
+  key: kYzJdnp
+  issuer: MCQ Platform
+  expiration_duration: 600
+  refresh_threshold: 60
+general:
+  bcrypt_cost: 8
+  crypto_secret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z$`,
+
+                "jwt_key_above_256": `
+jwt:
+  key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9UkYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9UkYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9UkYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9UkYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5
+  issuer: MCQ Platform
+  expiration_duration: 600
+  refresh_threshold: 60
+general:
+  bcrypt_cost: 8
+  crypto_secret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z$`,
+
+                "low_refresh_threshold": `
+jwt:
+  key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
+  issuer: MCQ Platform
+  expiration_duration: 600
+  refresh_threshold: 0
+general:
+  bcrypt_cost: 8
+  crypto_secret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z$`,
+
+                "refresh_threshold_gt_expiration": `
+jwt:
+  key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
+  issuer: MCQ Platform
+  expiration_duration: 600
+  refresh_threshold: 601
+general:
+  bcrypt_cost: 8
+  crypto_secret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z$`,
+
+                "crypto_key_too_short": `
+jwt:
+  key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
+  issuer: MCQ Platform
+  expiration_duration: 600
+  refresh_threshold: 60
+general:
+  bcrypt_cost: 8
+  crypto_secret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z`,
+
+                "crypto_key_too_long": `
+jwt:
+  key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
+  issuer: MCQ Platform
+  expiration_duration: 600
+  refresh_threshold: 60
+general:
+  bcrypt_cost: 8
+  crypto_secret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z$*`,
+        }
+}</span>
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package cassandra
+
+import (
+        "encoding/base64"
+        "errors"
+        "fmt"
+        "math"
+        "strconv"
+        "time"
+
+        "github.com/gocql/gocql"
+        "github.com/spf13/afero"
+        "github.com/surahman/mcq-platform/pkg/constants"
+        "github.com/surahman/mcq-platform/pkg/logger"
+        "go.uber.org/zap"
+        "golang.org/x/crypto/blake2b"
+)
+
+// Mock Cassandra interface stub generation.
+//go:generate mockgen -destination=../mocks/mock_cassandra.go -package=mocks github.com/surahman/mcq-platform/pkg/cassandra Cassandra
+
+// Cassandra is the interface through which the cluster can be accessed. Created to support mock testing.
+type Cassandra interface {
+        // Open will create a connection pool and establish a connection to the database backend.
+        Open() error
+
+        // Close will shut down the connection pool and ensure that the connection to the database backend is terminated correctly.
+        Close() error
+
+        // Execute will execute statements or run a lightweight transaction on the database backend, leveraging the connection pool.
+        Execute(func(Cassandra, any) (any, error), any) (any, error)
+}
+
+// Check to ensure the Cassandra interface has been implemented.
+var _ Cassandra = &amp;cassandraImpl{}
+
+// CassandraImpl implements the Cassandra interface and contains the logic to interface with the cluster.
+type cassandraImpl struct {
+        conf    *config
+        session *gocql.Session
+        logger  *logger.Logger
+}
+
+// NewCassandra will create a new Cassandra configuration by loading it.
+func NewCassandra(fs *afero.Fs, logger *logger.Logger) (Cassandra, error) <span class="cov4" title="7">{
+        if fs == nil || logger == nil </span><span class="cov3" title="3">{
+                return nil, errors.New("nil file system of logger supplied")
+        }</span>
+        <span class="cov3" title="4">return newCassandraImpl(fs, logger)</span>
+}
+
+// newCassandraImpl will create a new CassandraImpl configuration and load it from disk.
+func newCassandraImpl(fs *afero.Fs, logger *logger.Logger) (c *cassandraImpl, err error) <span class="cov4" title="7">{
+        c = &amp;cassandraImpl{conf: newConfig(), logger: logger}
+        if err = c.conf.Load(*fs); err != nil </span><span class="cov1" title="1">{
+                c.logger.Error("failed to load Cassandra configurations from disk", zap.Error(err))
+                return nil, err
+        }</span>
+        <span class="cov4" title="6">return</span>
+}
+
+// Open will start a database connection pool and establish a connection.
+func (c *cassandraImpl) Open() (err error) <span class="cov3" title="3">{
+        // Stop connection leaks.
+        if err = c.verifySession(); err == nil </span><span class="cov1" title="1">{
+                c.logger.Warn("session to cluster is already established")
+                return errors.New("session to cluster is already established")
+        }</span>
+
+        // Configure connection.
+        <span class="cov2" title="2">var cluster *gocql.ClusterConfig
+        cluster, err = c.configureCluster()
+        if err != nil </span><span class="cov0" title="0">{
+                c.logger.Error("failed to configure connection to Cassandra cluster", zap.Error(err))
+                return
+        }</span>
+
+        // Session connection pool.
+        <span class="cov2" title="2">if err = c.createSessionRetry(cluster); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov2" title="2">return</span>
+}
+
+// Close the CassandraImpl cluster connection.
+func (c *cassandraImpl) Close() error <span class="cov3" title="4">{
+        if err := c.verifySession(); err != nil </span><span class="cov2" title="2">{
+                return err
+        }</span>
+        <span class="cov2" title="2">c.session.Close()
+        return nil</span>
+}
+
+// Execute wraps the methods that create, read, update, and delete records from tables on the Cassandra cluster.
+func (c *cassandraImpl) Execute(request func(Cassandra, any) (any, error), params any) (any, error) <span class="cov10" title="117">{
+        return request(c, params)
+}</span>
+
+// configureCluster will configure the settings for the Cassandra cluster.
+func (c *cassandraImpl) configureCluster() (cluster *gocql.ClusterConfig, err error) <span class="cov3" title="3">{
+        cluster = gocql.NewCluster(c.conf.Connection.ClusterIP...)
+        cluster.ProtoVersion = c.conf.Connection.ProtoVersion
+        cluster.ConnectTimeout = time.Duration(c.conf.Connection.Timeout) * time.Second
+        cluster.Timeout = time.Duration(c.conf.Connection.Timeout) * time.Second
+        if cluster.Consistency, err = gocql.ParseConsistencyWrapper(c.conf.Connection.Consistency); err != nil </span><span class="cov0" title="0">{
+                c.logger.Error("failed to parse Cassandra consistency level provided in user configs", zap.Error(err))
+                return nil, err
+        }</span>
+        <span class="cov3" title="3">cluster.Keyspace = c.conf.Keyspace.Name
+
+        // Configure authentication.
+        cluster.Authenticator = gocql.PasswordAuthenticator{Username: c.conf.Authentication.Username, Password: c.conf.Authentication.Password}
+
+        return</span>
+}
+
+// verifySession will check to see if a session is established.
+func (c *cassandraImpl) verifySession() error <span class="cov4" title="8">{
+        if c.session == nil || c.session.Closed() </span><span class="cov4" title="5">{
+                return errors.New("no session established")
+        }</span>
+        <span class="cov3" title="3">return nil</span>
+}
+
+// createSessionRetry will attempt to open the connection using binary exponential back-off and stop on the first success or fail after the last one.
+func (c *cassandraImpl) createSessionRetry(cluster *gocql.ClusterConfig) (err error) <span class="cov3" title="4">{
+        maxAttempts := constants.GetCassandraMaxConnectRetries()
+        for attempt := 1; attempt &lt;= maxAttempts; attempt++ </span><span class="cov3" title="4">{
+                waitTime := time.Duration(math.Pow(2, float64(attempt))) * time.Second
+                c.logger.Info(fmt.Sprintf("Attempting connection to Cassandra cluster in %s...", waitTime), zap.String("attempt", strconv.Itoa(attempt)))
+                time.Sleep(waitTime)
+                if c.session, err = cluster.CreateSession(); err == nil </span><span class="cov3" title="4">{
+                        break</span>
+                }
+        }
+        <span class="cov3" title="4">if err != nil </span><span class="cov0" title="0">{
+                c.logger.Error("unable to establish connection to Cassandra cluster", zap.Error(err))
+        }</span>
+        <span class="cov3" title="4">return</span>
+}
+
+// blake2b256 will create a hash from an input string. This hash is used to create the Account ID for a user.
+func blake2b256(data string) string <span class="cov7" title="35">{
+        hash := blake2b.Sum256([]byte(data))
+        return base64.URLEncoding.EncodeToString(hash[:])
+}</span>
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package cassandra
+
+import (
+        "errors"
+        "fmt"
+
+        "github.com/gocql/gocql"
+        "github.com/surahman/mcq-platform/pkg/model/cassandra"
+        "go.uber.org/zap"
+)
+
+// truncateTableQuery will empty a table.
+// param: name of the table
+func truncateTableQuery(c Cassandra, params any) (response any, err error) <span class="cov6" title="12">{
+        conn := c.(*cassandraImpl)
+        tableName := params.(string)
+        if err = conn.session.Query(fmt.Sprintf("TRUNCATE TABLE %s;", tableName)).Exec(); err != nil </span><span class="cov0" title="0">{
+                conn.logger.Error("failed to truncate table", zap.String("table name", tableName), zap.Error(err))
+        }</span>
+
+        <span class="cov6" title="12">return</span>
+}
+
+// HealthcheckQuery will run a query on the cluster to check if it responds.
+// Return: release version string
+func HealthcheckQuery(c Cassandra, params any) (response any, err error) <span class="cov1" title="1">{
+        conn := c.(*cassandraImpl)
+        resp := ""
+
+        if err = conn.session.Query(model_cassandra.HealthCheck).Scan(&amp;resp); err != nil </span><span class="cov0" title="0">{
+                conn.logger.Error("Cassandra healthcheck query failed", zap.Error(err))
+                return nil, NewError("healthcheck failed").internalError()
+        }</span>
+
+        <span class="cov1" title="1">return resp, nil</span>
+}
+
+// -----   Users Table Queries   -----
+
+// CreateUserQuery will insert a user record into the users table.
+// Param: pointer to the user struct containing the query parameters
+func CreateUserQuery(c Cassandra, params any) (response any, err error) <span class="cov7" title="17">{
+        conn := c.(*cassandraImpl)
+        input := params.(*model_cassandra.User)
+
+        // Create hash of username using Blake2b 256 hashing algorithm.
+        input.AccountID = blake2b256(input.Username)
+
+        resp := model_cassandra.User{UserAccount: &amp;model_cassandra.UserAccount{}} // Discarded, only used as container for Cassandra response.
+        applied := false
+        if applied, err = conn.session.Query(model_cassandra.CreateUser,
+                input.Username, input.AccountID, input.Password, input.FirstName, input.LastName, input.Email).ScanCAS(
+                &amp;resp.Username, &amp;resp.AccountID, &amp;resp.Email, &amp;resp.FirstName, &amp;resp.IsDeleted, &amp;resp.LastName, &amp;resp.Password); err != nil </span><span class="cov0" title="0">{
+                conn.logger.Error("failed to create input record",
+                        zap.Strings("Account info:", []string{input.Username, input.AccountID}), zap.Error(err))
+                return nil, NewError(err.Error()).internalError()
+        }</span>
+
+        <span class="cov7" title="17">if !applied </span><span class="cov4" title="4">{
+                msg := "failed to create user record it already exists"
+                conn.logger.Error(msg, zap.Strings("Account info:", []string{input.Username, input.AccountID}), zap.Error(err))
+                return nil, NewError(msg).conflictError()
+        }</span>
+
+        <span class="cov7" title="13">return nil, nil</span>
+}
+
+// ReadUserQuery will read a user record from the users table.
+// Param: username string to lookup
+// Return: address to a user record
+func ReadUserQuery(c Cassandra, params any) (response any, err error) <span class="cov4" title="5">{
+        conn := c.(*cassandraImpl)
+        resp := model_cassandra.User{UserAccount: &amp;model_cassandra.UserAccount{}}
+        username := params.(string)
+
+        // Create hash of username using Blake2b 256 hashing algorithm.
+        accountID := blake2b256(username)
+
+        if err = conn.session.Query(model_cassandra.ReadUser, username, accountID).Scan(
+                &amp;resp.Username, &amp;resp.AccountID, &amp;resp.Email, &amp;resp.FirstName, &amp;resp.IsDeleted, &amp;resp.LastName, &amp;resp.Password); err != nil </span><span class="cov1" title="1">{
+                conn.logger.Error("failed to read user record",
+                        zap.String("username", username), zap.String("account_id", accountID), zap.Error(err))
+                return nil, NewError("user not found").notFoundError()
+        }</span>
+
+        <span class="cov4" title="4">return &amp;resp, err</span>
+}
+
+// DeleteUserQuery will mark a user record as deleted in the users table.
+// Param: pointer to the user struct containing the query parameters
+func DeleteUserQuery(c Cassandra, params any) (response any, err error) <span class="cov4" title="5">{
+        conn := c.(*cassandraImpl)
+        username := params.(string)
+
+        // Create hash of username using Blake2b 256 hashing algorithm.
+        accountID := blake2b256(username)
+
+        resp := model_cassandra.User{UserAccount: &amp;model_cassandra.UserAccount{}} // Discarded, only used as container for Cassandra response.
+        applied := false
+        if applied, err = conn.session.Query(model_cassandra.DeleteUser, username, accountID).ScanCAS(
+                &amp;resp.Username, &amp;resp.AccountID, &amp;resp.Email, &amp;resp.FirstName, &amp;resp.IsDeleted, &amp;resp.LastName, &amp;resp.Password); err != nil </span><span class="cov0" title="0">{
+                conn.logger.Error("failed to create user record",
+                        zap.Strings("Account info:", []string{username, accountID}), zap.Error(err))
+                return nil, NewError(err.Error()).internalError()
+        }</span>
+
+        <span class="cov4" title="5">if !applied </span><span class="cov1" title="1">{
+                msg := "failed to mark user record as deleted"
+                conn.logger.Error(msg, zap.Strings("Account info:", []string{username, accountID}), zap.Error(err))
+                return nil, NewError("user not found").notFoundError()
+        }</span>
+
+        <span class="cov4" title="4">return nil, err</span>
+}
+
+// -----   Quizzes Table Queries   -----
+
+// CreateQuizQuery will create a quiz record in the quizzes table.
+// Param: pointer to the quiz struct containing the query parameters
+func CreateQuizQuery(c Cassandra, params any) (response any, err error) <span class="cov10" title="42">{
+        conn := c.(*cassandraImpl)
+        input := params.(*model_cassandra.Quiz)
+        resp := model_cassandra.Quiz{QuizCore: &amp;model_cassandra.QuizCore{}}
+
+        applied := false
+        if applied, err = conn.session.Query(model_cassandra.CreateQuiz,
+                input.QuizID, input.Author, input.Title, input.Questions, input.MarkingType, input.IsPublished, input.IsDeleted).ScanCAS(
+                &amp;resp.QuizID, &amp;resp.Author, &amp;resp.IsDeleted, &amp;resp.IsPublished, &amp;resp.MarkingType, &amp;resp.Questions, &amp;resp.Title); err != nil </span><span class="cov0" title="0">{
+                conn.logger.Error("failed to create quiz record",
+                        zap.Strings("Quiz info:", []string{input.QuizID.String(), input.Author}), zap.Error(err))
+                return nil, err
+        }</span>
+
+        <span class="cov10" title="42">if !applied </span><span class="cov5" title="7">{
+                msg := "failed to create quiz with id, it already exists"
+                conn.logger.Error(msg, zap.Strings("Quiz info:", []string{input.QuizID.String(), input.Author}), zap.Error(err))
+                return nil, errors.New(msg)
+        }</span>
+
+        <span class="cov9" title="35">return nil, nil</span>
+}
+
+// ReadQuizQuery will read a quiz record from the quizzes table.
+// Param: quiz id
+// Return: address to a quiz record
+func ReadQuizQuery(c Cassandra, params any) (response any, err error) <span class="cov8" title="23">{
+        conn := c.(*cassandraImpl)
+        input := params.(gocql.UUID)
+        resp := model_cassandra.Quiz{QuizCore: &amp;model_cassandra.QuizCore{}}
+
+        if err = conn.session.Query(model_cassandra.ReadQuiz, input).Scan(
+                &amp;resp.QuizID, &amp;resp.Author, &amp;resp.IsDeleted, &amp;resp.IsPublished, &amp;resp.MarkingType, &amp;resp.Questions, &amp;resp.Title); err != nil </span><span class="cov1" title="1">{
+                conn.logger.Error("failed to read quiz record", zap.String("Quiz info:", input.String()), zap.Error(err))
+                return nil, NewError("quiz not found").notFoundError()
+        }</span>
+
+        <span class="cov8" title="22">return &amp;resp, nil</span>
+}
+
+// UpdateQuizQuery will update a quiz record in the quizzes table.
+// Param: pointer to the quiz struct containing the query parameters
+func UpdateQuizQuery(c Cassandra, params any) (response any, err error) <span class="cov6" title="8">{
+        conn := c.(*cassandraImpl)
+        input := params.(*model_cassandra.QuizMutateRequest)
+        resp := struct {
+                author      string
+                isDeleted   bool
+                isPublished bool
+        }{}
+
+        applied := false
+        if applied, err = conn.session.Query(model_cassandra.UpdateQuiz, input.Quiz.Title, input.Quiz.Questions, input.Quiz.MarkingType, input.QuizID, input.Username).ScanCAS(
+                &amp;resp.author, &amp;resp.isDeleted, &amp;resp.isPublished); err != nil </span><span class="cov0" title="0">{
+                conn.logger.Error("failed to update quiz record", zap.Strings("Quiz info:", []string{input.QuizID.String(), input.Username, input.Quiz.Author}), zap.Error(err))
+                return nil, NewError("failed to update quiz").internalError()
+        }</span>
+
+        <span class="cov6" title="8">if !applied </span><span class="cov4" title="5">{
+                msg := "failed to update quiz. Either it does not exist, is already published, or the requester is not the author"
+                conn.logger.Error(msg, zap.Strings("Quiz info:", []string{input.QuizID.String(), input.Username, input.Quiz.Author}), zap.Error(err))
+                return nil, NewError(msg).forbiddenError()
+        }</span>
+
+        <span class="cov3" title="3">return nil, err</span>
+}
+
+// DeleteQuizQuery will mark a quiz record as deleted in the quizzes table.
+// Param: quiz id
+func DeleteQuizQuery(c Cassandra, params any) (response any, err error) <span class="cov7" title="15">{
+        conn := c.(*cassandraImpl)
+        input := params.(*model_cassandra.QuizMutateRequest)
+        resp := struct {
+                author string
+        }{}
+
+        applied := false
+        if applied, err = conn.session.Query(model_cassandra.DeleteQuiz, input.QuizID, input.Username).ScanCAS(&amp;resp.author); err != nil </span><span class="cov0" title="0">{
+                conn.logger.Error("failed to delete quiz record", zap.Strings("Quiz info:", []string{input.QuizID.String(), input.Username}), zap.Error(err))
+                return nil, NewError(err.Error()).internalError()
+        }</span>
+
+        <span class="cov7" title="15">if !applied </span><span class="cov6" title="8">{
+                msg := "failed to delete quiz record"
+                conn.logger.Error(msg, zap.Strings("Quiz info:", []string{input.QuizID.String(), input.Username}), zap.Error(err))
+                return nil, NewError(msg).forbiddenError()
+        }</span>
+
+        <span class="cov5" title="7">return nil, err</span>
+}
+
+// PublishQuizQuery will mark a quiz record as published in the quizzes table.
+// Param: quiz id
+func PublishQuizQuery(c Cassandra, params any) (response any, err error) <span class="cov7" title="15">{
+        conn := c.(*cassandraImpl)
+        input := params.(*model_cassandra.QuizMutateRequest)
+        resp := struct {
+                author    string
+                isDeleted bool
+        }{}
+
+        applied := false
+        if applied, err = conn.session.Query(model_cassandra.PublishQuiz, input.QuizID, input.Username).ScanCAS(&amp;resp.author, &amp;resp.isDeleted); err != nil </span><span class="cov0" title="0">{
+                conn.logger.Error("failed to publish quiz record", zap.Strings("Quiz info:", []string{input.QuizID.String(), input.Username}), zap.Error(err))
+                return nil, NewError("unable to publish quiz").internalError()
+        }</span>
+
+        <span class="cov7" title="15">if !applied </span><span class="cov6" title="10">{
+                msg := "failed to publish quiz record"
+                conn.logger.Error(msg, zap.Strings("Quiz info:", []string{input.QuizID.String(), input.Username}), zap.Error(err))
+                return nil, NewError(msg).forbiddenError()
+        }</span>
+
+        <span class="cov4" title="5">return nil, err</span>
+}
+
+// -----   Responses Table Queries   -----
+
+// CreateResponseQuery will insert a response record into the responses table.
+// Param: pointer to the user struct containing the response parameters
+func CreateResponseQuery(c Cassandra, params any) (response any, err error) <span class="cov9" title="35">{
+        conn := c.(*cassandraImpl)
+        input := params.(*model_cassandra.Response)
+        resp := model_cassandra.Response{QuizResponse: &amp;model_cassandra.QuizResponse{}}
+
+        applied := false
+        if applied, err = conn.session.Query(model_cassandra.CreateResponse,
+                input.Username, input.QuizID, input.Author, input.Responses, input.Score).ScanCAS(
+                &amp;resp.Username, &amp;resp.QuizID, &amp;resp.Author, &amp;resp.Responses, &amp;resp.Score); err != nil </span><span class="cov0" title="0">{
+                conn.logger.Error("failed to create response record",
+                        zap.Strings("Response info:", []string{input.Username, input.QuizID.String()}), zap.Error(err))
+                return nil, NewError(err.Error()).internalError()
+        }</span>
+
+        <span class="cov9" title="35">if !applied </span><span class="cov5" title="7">{
+                msg := "failed to record response, user has already taken this quiz"
+                conn.logger.Error(msg, zap.Strings("Response info:", []string{input.Username, input.QuizID.String()}), zap.Error(err))
+                return nil, NewError(msg).conflictError()
+        }</span>
+
+        <span class="cov9" title="28">return nil, nil</span>
+}
+
+// ReadResponseQuery will read a response record from the responses table.
+// Param: pointer to the response struct containing the query parameters
+// Return: address to a response record
+func ReadResponseQuery(c Cassandra, params any) (response any, err error) <span class="cov6" title="8">{
+        conn := c.(*cassandraImpl)
+        input := params.(*model_cassandra.QuizMutateRequest)
+        resp := model_cassandra.Response{QuizResponse: &amp;model_cassandra.QuizResponse{}}
+
+        if err = conn.session.Query(model_cassandra.ReadResponse, input.Username, input.QuizID).Scan(
+                &amp;resp.Username, &amp;resp.QuizID, &amp;resp.Author, &amp;resp.Responses, &amp;resp.Score); err != nil </span><span class="cov1" title="1">{
+                conn.logger.Error("failed to read response record",
+                        zap.Strings("Response info:", []string{input.Username, input.QuizID.String()}), zap.Error(err))
+                return nil, NewError("score card not found").notFoundError()
+        }</span>
+
+        <span class="cov5" title="7">return &amp;resp, nil</span>
+}
+
+// ReadResponseStatisticsQuery will read all response records from the responses table corresponding to a Quiz ID.
+// Param: QuizID gocql UUID
+// Return: address to slice of responses
+func ReadResponseStatisticsQuery(c Cassandra, params any) (response any, err error) <span class="cov4" title="5">{
+        conn := c.(*cassandraImpl)
+        input := params.(gocql.UUID)
+        var results []*model_cassandra.Response
+
+        iter := conn.session.Query(model_cassandra.ReadResponseStatistics, input).Iter()
+        defer func(iter *gocql.Iter) </span><span class="cov4" title="5">{
+                if err := iter.Close(); err != nil </span><span class="cov0" title="0">{
+                        conn.logger.Error("failed to close iterator whilst reading response statistics",
+                                zap.String("quiz_id", input.String()), zap.Error(err))
+                }</span>
+        }(iter)
+
+        <span class="cov4" title="5">if numRows := iter.NumRows(); numRows &gt; 0 </span><span class="cov2" title="2">{
+                results = make([]*model_cassandra.Response, 0, numRows)
+        }</span>
+
+        <span class="cov4" title="5">scanRows := iter.Scanner()
+        for scanRows.Next() </span><span class="cov5" title="7">{
+                row := model_cassandra.Response{QuizResponse: &amp;model_cassandra.QuizResponse{}}
+                if err = scanRows.Scan(&amp;row.Username, &amp;row.QuizID, &amp;row.Author, &amp;row.Responses, &amp;row.Score); err != nil </span><span class="cov0" title="0">{
+                        conn.logger.Error("failed to read row in response statistics",
+                                zap.String("quiz_id", input.String()), zap.Error(err))
+                        return nil, NewError(err.Error()).internalError()
+                }</span>
+                <span class="cov5" title="7">results = append(results, &amp;row)</span>
+        }
+
+        <span class="cov4" title="5">return results, err</span>
+}
+
+// ReadResponseStatisticsPageQuery will read response records pages from the responses table corresponding to a Quiz ID.
+// Param: StatsRequest containing the page size and state to the page to be read
+// Return: address to slice of responses of a page size specified in the request
+func ReadResponseStatisticsPageQuery(c Cassandra, params any) (response any, err error) <span class="cov7" title="13">{
+        conn := c.(*cassandraImpl)
+        input := params.(*model_cassandra.StatsRequest)
+        var results model_cassandra.StatsResponse
+
+        // Get page of response records.
+        iter := conn.session.Query(model_cassandra.ReadResponseStatistics, input.QuizID).PageSize(input.PageSize).PageState(input.PageCursor).Iter()
+        defer func(iter *gocql.Iter) </span><span class="cov7" title="13">{
+                if err := iter.Close(); err != nil </span><span class="cov0" title="0">{
+                        conn.logger.Error("failed to close iterator whilst reading response statistics page",
+                                zap.String("quiz_id", input.QuizID.String()), zap.Error(err))
+                }</span>
+        }(iter)
+
+        // Configure results with next pages cursor, current results per page, and current pages data container.
+        <span class="cov7" title="13">results.PageSize = input.PageSize
+        results.PageCursor = iter.PageState()
+        if numRows := iter.NumRows(); numRows &gt; 0 </span><span class="cov6" title="10">{
+                results.Records = make([]*model_cassandra.Response, 0, numRows)
+        }</span>
+
+        // Read-in rows from the database.
+        <span class="cov7" title="13">scanRows := iter.Scanner()
+        for scanRows.Next() </span><span class="cov8" title="20">{
+                row := model_cassandra.Response{QuizResponse: &amp;model_cassandra.QuizResponse{}}
+                if err = scanRows.Scan(&amp;row.Username, &amp;row.QuizID, &amp;row.Author, &amp;row.Responses, &amp;row.Score); err != nil </span><span class="cov0" title="0">{
+                        conn.logger.Error("failed to read row in response statistics page",
+                                zap.String("quiz_id", input.QuizID.String()), zap.Error(err))
+                        return nil, NewError(err.Error()).internalError()
+                }</span>
+                <span class="cov8" title="20">results.Records = append(results.Records, &amp;row)</span>
+        }
+
+        <span class="cov7" title="13">return &amp;results, err</span>
+}
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package cassandra
+
+import (
+        "github.com/spf13/afero"
+        "github.com/spf13/viper"
+        "github.com/surahman/mcq-platform/pkg/constants"
+        "github.com/surahman/mcq-platform/pkg/validator"
+)
+
+// config is the configuration container for connecting to the Cassandra cluster
+type config struct {
+        Authentication struct {
+                Username string `json:"username,omitempty" yaml:"username,omitempty" mapstructure:"username" validate:"required"`
+                Password string `json:"password,omitempty" yaml:"password,omitempty" mapstructure:"password" validate:"required"`
+        } `json:"authentication,omitempty" yaml:"authentication,omitempty" mapstructure:"authentication"`
+        Keyspace struct {
+                Name              string `json:"name,omitempty" yaml:"name,omitempty" mapstructure:"name" validate:"required"`
+                ReplicationClass  string `json:"replication_class,omitempty" yaml:"replication_class,omitempty" mapstructure:"replication_class" validate:"required"`
+                ReplicationFactor int    `json:"replication_factor,omitempty" yaml:"replication_factor,omitempty" mapstructure:"replication_factor" validate:"required,numeric,min=1"`
+        } `json:"keyspace,omitempty" yaml:"keyspace,omitempty" mapstructure:"keyspace"`
+        Connection struct {
+                Consistency  string   `json:"consistency,omitempty" yaml:"consistency,omitempty" mapstructure:"consistency" validate:"required"`
+                ClusterIP    []string `json:"cluster_ip,omitempty" yaml:"cluster_ip,omitempty" mapstructure:"cluster_ip" validate:"required,min=1"`
+                ProtoVersion int      `json:"proto_version,omitempty" yaml:"proto_version,omitempty" mapstructure:"proto_version" validate:"required,numeric,min=4"`
+                Timeout      int      `json:"timeout,omitempty" yaml:"timeout,omitempty" mapstructure:"timeout" validate:"required,numeric,min=1"`
+        } `json:"connection,omitempty" yaml:"connection,omitempty" mapstructure:"connection"`
+}
+
+// newConfig creates a blank configuration struct for Cassandra.
+func newConfig() *config <span class="cov7" title="7">{
+        return &amp;config{}
+}</span>
+
+// Load will attempt to load configurations from a file on a file system and then overwrite values using environment variables.
+func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="16">{
+        viper.SetFs(fs)
+        viper.SetConfigName(constants.GetCassandraFileName())
+        viper.SetConfigType("yaml")
+        viper.AddConfigPath(constants.GetEtcDir())
+        viper.AddConfigPath(constants.GetHomeDir())
+        viper.AddConfigPath(constants.GetBaseDir())
+
+        viper.SetEnvPrefix(constants.GetCassandraPrefix())
+        viper.AutomaticEnv()
+
+        if err = viper.ReadInConfig(); err != nil </span><span class="cov1" title="1">{
+                return
+        }</span>
+
+        <span class="cov9" title="15">if err = viper.Unmarshal(cfg); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov9" title="15">if err = validator.ValidateStruct(cfg); err != nil </span><span class="cov7" title="7">{
+                return
+        }</span>
+
+        <span class="cov7" title="8">return</span>
+}
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package cassandra
+
+import "net/http"
+
+// Error is the internal Cassandra error that uses the builder pattern to assign error codes.
+type Error struct {
+        Message string
+        Status  int
+}
+
+// Check to ensure the error interface is implemented.
+var _ error = &amp;Error{}
+
+// NewError will generate a new Cassandra error.
+func NewError(message string) *Error <span class="cov10" title="43">{
+        return &amp;Error{Message: message}
+}</span>
+
+// Error returns the message.
+func (err *Error) Error() string <span class="cov0" title="0">{
+        return err.Message
+}</span>
+
+// OK sets the HTTP OK status code.
+func (err *Error) OK() *Error <span class="cov1" title="1">{
+        err.Status = http.StatusOK
+        return err
+}</span>
+
+// internalError sets the HTTP Internal Server status code.
+func (err *Error) internalError() *Error <span class="cov1" title="1">{
+        err.Status = http.StatusInternalServerError
+        return err
+}</span>
+
+// notFoundError sets the HTTP Not Found status code.
+func (err *Error) notFoundError() *Error <span class="cov4" title="5">{
+        err.Status = http.StatusNotFound
+        return err
+}</span>
+
+// conflictError sets the HTTP Conflict status code.
+func (err *Error) conflictError() *Error <span class="cov6" title="12">{
+        err.Status = http.StatusConflict
+        return err
+}</span>
+
+// forbiddenError sets the HTTP Forbidden status code.
+func (err *Error) forbiddenError() *Error <span class="cov8" title="24">{
+        err.Status = http.StatusForbidden
+        return err
+}</span>
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package cassandra
+
+import (
+        "fmt"
+        "log"
+
+        "github.com/gocql/gocql"
+        "github.com/surahman/mcq-platform/pkg/model/cassandra"
+)
+
+var quizzesUUIDMapping = GetQuizzedUUIDMapping()
+
+// configTestData will return a map of test data containing valid and invalid Cassandra configs.
+func configTestData() map[string]string <span class="cov1" title="1">{
+        testData := make(map[string]string)
+
+        testData["empty"] = ``
+
+        testData["valid"] = `
+authentication:
+  username: admin
+  password: root
+keyspace:
+  name: mcq_platform
+  replication_class: SimpleStrategy
+  replication_factor: 3
+connection:
+  consistency: quorum
+  cluster_ip: [127.0.0.1]
+  proto_version: 4
+  timeout: 10`
+
+        testData["valid-ci"] = `
+authentication:
+  username: cassandra
+  password: cassandra
+keyspace:
+  name: mcq_platform
+  replication_class: SimpleStrategy
+  replication_factor: 3
+connection:
+  consistency: quorum
+  cluster_ip: [localhost]
+  proto_version: 4
+  timeout: 10`
+
+        testData["password_empty"] = `
+authentication:
+  username: admin
+  password:
+keyspace:
+  name: mcq_platform
+  replication_class: SimpleStrategy
+  replication_factor: 3
+connection:
+  consistency: quorum
+  cluster_ip: [127.0.0.1]
+  proto_version: 4
+  timeout: 10`
+
+        testData["username_empty"] = `
+authentication:
+  username:
+  password: root
+keyspace:
+  name: mcq_platform
+  replication_class: SimpleStrategy
+  replication_factor: 3
+connection:
+  consistency: quorum
+  cluster_ip: [127.0.0.1]
+  proto_version: 4
+  timeout: 10`
+
+        testData["keyspace_empty"] = `
+authentication:
+  username: admin
+  password: root
+keyspace:
+  name:
+  replication_class: SimpleStrategy
+  replication_factor: 3
+connection:
+  consistency: quorum
+  cluster_ip: [127.0.0.1]
+  proto_version: 4
+  timeout: 10`
+
+        testData["consistency_missing"] = `
+authentication:
+  username: admin
+  password: root
+keyspace:
+  name: mcq_platform
+  replication_class: SimpleStrategy
+  replication_factor: 3
+connection:
+  cluster_ip: [127.0.0.1]
+  proto_version: 4
+  timeout: 10`
+
+        testData["ip_empty"] = `
+authentication:
+  username: admin
+  password: root
+keyspace:
+  name: mcq_platform
+  replication_class: SimpleStrategy
+  replication_factor: 3
+connection:
+  consistency: quorum
+  cluster_ip: []
+  proto_version: 4
+  timeout: 10`
+
+        testData["timeout_zero"] = `
+authentication:
+  username: admin
+  password: root
+keyspace:
+  name: mcq_platform
+  replication_class: SimpleStrategy
+  replication_factor: 3
+connection:
+  consistency: quorum
+  cluster_ip: [127.0.0.1]
+  proto_version: 4
+  timeout: 0`
+
+        return testData
+}</span>
+
+// GetQuizzedUUIDMapping returns a map containing a Quiz title to UUID mapping.
+func GetQuizzedUUIDMapping() map[string]gocql.UUID <span class="cov1" title="1">{
+        data := make(map[string]gocql.UUID)
+        var err error
+
+        if data["providedPubQuiz"], err = gocql.ParseUUID("729c6e51-b8ae-4f23-9419-9401a51968c1"); err != nil </span><span class="cov0" title="0">{
+                log.Fatalln("Failed to parse UUID")
+        }</span>
+        <span class="cov1" title="1">if data["providedNoPubQuiz"], err = gocql.ParseUUID("f37a7ba3-1541-4d8a-95af-03689a91d39c"); err != nil </span><span class="cov0" title="0">{
+                log.Fatalln("Failed to parse UUID")
+        }</span>
+        <span class="cov1" title="1">if data["myPubQuiz"], err = gocql.ParseUUID("d1aec072-201e-4c91-89c8-d2cc402e2cd9"); err != nil </span><span class="cov0" title="0">{
+                log.Fatalln("Failed to parse UUID")
+        }</span>
+        <span class="cov1" title="1">if data["myNoPubQuiz"], err = gocql.ParseUUID("320b5b74-ebcd-40c1-91bd-da28b8b3293a"); err != nil </span><span class="cov0" title="0">{
+                log.Fatalln("Failed to parse UUID")
+        }</span>
+        <span class="cov1" title="1">if data["invalidOptionsNoPubQuiz"], err = gocql.ParseUUID("45ba24bf-8bd9-4b20-af7a-4dddbf2428b9"); err != nil </span><span class="cov0" title="0">{
+                log.Fatalln("Failed to parse UUID")
+        }</span>
+        <span class="cov1" title="1">if data["myPubQuizDeleted"], err = gocql.ParseUUID("17166e35-1a70-47da-8779-21460e0d52f5"); err != nil </span><span class="cov0" title="0">{
+                log.Fatalln("Failed to parse UUID")
+        }</span>
+        <span class="cov1" title="1">if data["myNoPubQuizDeleted"], err = gocql.ParseUUID("166bdda4-9d9d-406f-a3a7-9eb67b5311ad"); err != nil </span><span class="cov0" title="0">{
+                log.Fatalln("Failed to parse UUID")
+        }</span>
+
+        <span class="cov1" title="1">return data</span>
+}
+
+// GetTestUsers will generate a number of dummy users for testing.
+func GetTestUsers() map[string]*model_cassandra.User <span class="cov1" title="1">{
+        users := make(map[string]*model_cassandra.User)
+        username := "username%d"
+        password := "user-password-%d"
+        firstname := "firstname-%d"
+        lastname := "lastname-%d"
+        email := "user%d@email-address.com"
+
+        for idx := 1; idx &lt; 5; idx++ </span><span class="cov10" title="4">{
+                uname := fmt.Sprintf(username, idx)
+                users[uname] = &amp;model_cassandra.User{
+                        UserAccount: &amp;model_cassandra.UserAccount{
+                                UserLoginCredentials: model_cassandra.UserLoginCredentials{
+                                        Username: uname,
+                                        Password: fmt.Sprintf(password, idx),
+                                },
+                                FirstName: fmt.Sprintf(firstname, idx),
+                                LastName:  fmt.Sprintf(lastname, idx),
+                                Email:     fmt.Sprintf(email, idx),
+                        },
+                        AccountID: blake2b256(uname),
+                        IsDeleted: false,
+                }
+        }</span>
+
+        <span class="cov1" title="1">return users</span>
+}
+
+// GetTestQuizzes is a map of test quiz data.
+func GetTestQuizzes() map[string]*model_cassandra.Quiz <span class="cov5" title="2">{
+        data := make(map[string]*model_cassandra.Quiz)
+        temperatureQuestion := model_cassandra.Question{Description: "Temperature can be measured in",
+                Options: []string{"Kelvin", "Fahrenheit", "Gram", "Celsius", "Liters"},
+                Answers: []int32{0, 1, 3}}
+        moonQuestion := model_cassandra.Question{Description: "Moon is a star",
+                Options: []string{"Yes", "No"},
+                Answers: []int32{1}}
+        weightQuestion := model_cassandra.Question{Description: "Weight can be measured in",
+                Options: []string{"Kelvin", "Fahrenheit", "Gram", "Celsius", "Liters"},
+                Answers: []int32{2}}
+        booleanQuestion := model_cassandra.Question{Description: "Boolean can be true or false",
+                Options: []string{"Yes", "No"},
+                Answers: []int32{0}}
+        invalidQuestion := model_cassandra.Question{Description: "This question only has one option and is invalid",
+                Options: []string{"Yes"},
+                Answers: []int32{0}}
+
+        data["providedPubQuiz"] = &amp;model_cassandra.Quiz{QuizID: quizzesUUIDMapping["providedPubQuiz"], Author: "user-1", IsPublished: true,
+                QuizCore: &amp;model_cassandra.QuizCore{
+                        Title:       "Sample quiz published",
+                        MarkingType: "Negative",
+                        Questions:   []*model_cassandra.Question{&amp;temperatureQuestion, &amp;moonQuestion},
+                }}
+        data["providedNoPubQuiz"] = &amp;model_cassandra.Quiz{QuizID: quizzesUUIDMapping["providedNoPubQuiz"], Author: "user-1",
+                QuizCore: &amp;model_cassandra.QuizCore{
+                        Title:       "Sample quiz not published",
+                        MarkingType: "Negative",
+                        Questions:   []*model_cassandra.Question{&amp;temperatureQuestion, &amp;moonQuestion},
+                }}
+        data["myPubQuiz"] = &amp;model_cassandra.Quiz{QuizID: quizzesUUIDMapping["myPubQuiz"], Author: "user-2", IsPublished: true,
+                QuizCore: &amp;model_cassandra.QuizCore{
+                        Title:       "My sample quiz published",
+                        MarkingType: "Negative",
+                        Questions:   []*model_cassandra.Question{&amp;weightQuestion, &amp;booleanQuestion},
+                }}
+        data["myNoPubQuiz"] = &amp;model_cassandra.Quiz{QuizID: quizzesUUIDMapping["myNoPubQuiz"], Author: "user-3",
+                QuizCore: &amp;model_cassandra.QuizCore{
+                        Title:       "My sample quiz not published",
+                        MarkingType: "Negative",
+                        Questions:   []*model_cassandra.Question{&amp;weightQuestion, &amp;booleanQuestion},
+                }}
+        data["invalidOptionsNoPubQuiz"] = &amp;model_cassandra.Quiz{QuizID: quizzesUUIDMapping["invalidOptionsNoPubQuiz"], Author: "user-4", QuizCore: &amp;model_cassandra.QuizCore{
+                Title:       "Invalid Options (1 options) unpublished",
+                MarkingType: "Negative",
+                Questions:   []*model_cassandra.Question{&amp;invalidQuestion},
+        }}
+        data["myPubQuizDeleted"] = &amp;model_cassandra.Quiz{QuizID: quizzesUUIDMapping["myPubQuizDeleted"], Author: "user-2", IsPublished: true, IsDeleted: true,
+                QuizCore: &amp;model_cassandra.QuizCore{
+                        Title:       "My sample quiz published",
+                        MarkingType: "Negative",
+                        Questions:   []*model_cassandra.Question{&amp;weightQuestion, &amp;booleanQuestion},
+                }}
+        data["myNoPubQuizDeleted"] = &amp;model_cassandra.Quiz{QuizID: quizzesUUIDMapping["myNoPubQuizDeleted"], Author: "user-3", IsDeleted: true,
+                QuizCore: &amp;model_cassandra.QuizCore{
+                        Title:       "My sample quiz not published",
+                        MarkingType: "Negative",
+                        Questions:   []*model_cassandra.Question{&amp;weightQuestion, &amp;booleanQuestion},
+                }}
+
+        return data
+}</span>
+
+// GetTestResponses is a map of test response data.
+func GetTestResponses() map[string]*model_cassandra.Response <span class="cov1" title="1">{
+        return map[string]*model_cassandra.Response{
+                "user-1_myPubQuiz": {
+                        Username:     "user-1",
+                        Author:       "user-2",
+                        Score:        1.0,
+                        QuizResponse: &amp;model_cassandra.QuizResponse{Responses: [][]int32{{3}, {0}}},
+                        QuizID:       quizzesUUIDMapping["myPubQuiz"],
+                },
+                "user-2_myPubQuiz": {
+                        Username:     "user-2",
+                        Author:       "user-2",
+                        Score:        0.5,
+                        QuizResponse: &amp;model_cassandra.QuizResponse{Responses: [][]int32{{3}, {1}}},
+                        QuizID:       quizzesUUIDMapping["myPubQuiz"],
+                },
+                "user-3_providedPubQuiz": {
+                        Username:     "user-3",
+                        Author:       "user-1",
+                        Score:        0.5,
+                        QuizResponse: &amp;model_cassandra.QuizResponse{Responses: [][]int32{{0, 1, 2}, {1}}},
+                        QuizID:       quizzesUUIDMapping["providedPubQuiz"],
+                },
+                "user-2_providedPubQuiz": {
+                        Username:     "user-2",
+                        Author:       "user-1",
+                        Score:        2,
+                        QuizResponse: &amp;model_cassandra.QuizResponse{Responses: [][]int32{{0, 1, 2}, {0}}},
+                        QuizID:       quizzesUUIDMapping["providedPubQuiz"],
+                },
+                "user-4_myPubQuiz": {
+                        Username:     "user-4",
+                        Author:       "user-2",
+                        Score:        4.4,
+                        QuizResponse: &amp;model_cassandra.QuizResponse{Responses: [][]int32{{3, 4}, {0, 4}}},
+                        QuizID:       quizzesUUIDMapping["myPubQuiz"],
+                },
+                "user-5_myPubQuiz": {
+                        Username:     "user-5",
+                        Author:       "user-2",
+                        Score:        5.5,
+                        QuizResponse: &amp;model_cassandra.QuizResponse{Responses: [][]int32{{4, 5}, {1, 5}}},
+                        QuizID:       quizzesUUIDMapping["myPubQuiz"],
+                },
+                "user-6_myPubQuiz": {
+                        Username:     "user-6",
+                        Author:       "user-2",
+                        Score:        6.6,
+                        QuizResponse: &amp;model_cassandra.QuizResponse{Responses: [][]int32{{5, 6}, {2, 6}}},
+                        QuizID:       quizzesUUIDMapping["myPubQuiz"],
+                },
+        }
+}</span>
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">package constants
+
+const (
+        // Configuration file directories
+        configEtcDir  = "/etc/MCQ_Platform.conf/"
+        configHomeDir = "$HOME/.MCQ_Platform/"
+        configBaseDir = "./configs/"
+
+        // Configuration file names
+        cassandraConfigFileName = "CassandraConfig.yaml"
+        loggerConfigFileName    = "LoggerConfig.yaml"
+        authConfigFileName      = "AuthConfig.yaml"
+        restConfigFileName      = "HTTPRESTConfig.yaml"
+        redisConfigFileName     = "RedisConfig.yaml"
+
+        // Environment variables
+        cassandraPrefix = "CASSANDRA"
+        loggerPrefix    = "LOGGER"
+        githubCIKey     = "GITHUB_ACTIONS_CI"
+        authPrefix      = "AUTH"
+        restPrefix      = "REST"
+        redisPrefix     = "REDIS"
+
+        // Misc.
+        integrationTestKeyspaceSuffix = "_integration_testing"
+        cassandraMaxConnectRetries    = 5
+        deleteUserAccountConfirmation = "I understand the consequences, delete my user account %s"
+)
+
+// GetEtcDir returns the configuration directory in Etc.
+func GetEtcDir() string <span class="cov8" title="1">{
+        return configEtcDir
+}</span>
+
+// GetHomeDir returns the configuration directory in users home.
+func GetHomeDir() string <span class="cov8" title="1">{
+        return configHomeDir
+}</span>
+
+// GetBaseDir returns the configuration base directory in the root of the application.
+func GetBaseDir() string <span class="cov8" title="1">{
+        return configBaseDir
+}</span>
+
+// GetCassandraFileName returns the Cassandra configuration file name.
+func GetCassandraFileName() string <span class="cov8" title="1">{
+        return cassandraConfigFileName
+}</span>
+
+// GetLoggerFileName returns the Zap logger configuration file name.
+func GetLoggerFileName() string <span class="cov8" title="1">{
+        return loggerConfigFileName
+}</span>
+
+// GetAuthFileName returns the authentication configuration file name.
+func GetAuthFileName() string <span class="cov8" title="1">{
+        return authConfigFileName
+}</span>
+
+// GetHTTPRESTFileName returns the HTTP REST endpoint configuration file name.
+func GetHTTPRESTFileName() string <span class="cov8" title="1">{
+        return restConfigFileName
+}</span>
+
+// GetRedisFileName returns the Redis cluster configuration file name.
+func GetRedisFileName() string <span class="cov8" title="1">{
+        return redisConfigFileName
+}</span>
+
+// GetCassandraPrefix returns the environment variable prefix for Cassandra.
+func GetCassandraPrefix() string <span class="cov8" title="1">{
+        return cassandraPrefix
+}</span>
+
+// GetLoggerPrefix returns the environment variable prefix for the Zap logger.
+func GetLoggerPrefix() string <span class="cov8" title="1">{
+        return loggerPrefix
+}</span>
+
+// GetAuthPrefix returns the environment variable prefix for authentication.
+func GetAuthPrefix() string <span class="cov8" title="1">{
+        return authPrefix
+}</span>
+
+// GetHTTPRESTPrefix returns the environment variable prefix for the HTTP REST endpoint.
+func GetHTTPRESTPrefix() string <span class="cov8" title="1">{
+        return restPrefix
+}</span>
+
+// GetRedisPrefix returns the environment variable prefix for the Redis cluster.
+func GetRedisPrefix() string <span class="cov8" title="1">{
+        return redisPrefix
+}</span>
+
+// GetIntegrationTestKeyspaceSuffix is the suffix attached to the clusters keyspace and is used for integration tests.
+func GetIntegrationTestKeyspaceSuffix() string <span class="cov8" title="1">{
+        return integrationTestKeyspaceSuffix
+}</span>
+
+// GetCassandraMaxConnectRetries is the maximum number of attempts to retry connecting to the Cassandra cluster.
+func GetCassandraMaxConnectRetries() int <span class="cov8" title="1">{
+        return cassandraMaxConnectRetries
+}</span>
+
+// GetGithubCIKey is the key for the environment variable expected to be present in the GH CI runner.
+func GetGithubCIKey() string <span class="cov8" title="1">{
+        return githubCIKey
+}</span>
+
+// GetDeleteUserAccountConfirmation is the format string template confirmation message used to delete a user account.
+func GetDeleteUserAccountConfirmation() string <span class="cov8" title="1">{
+        return deleteUserAccountConfirmation
+}</span>
+</pre>
+		
+		<pre class="file" id="file9" style="display: none">package grading
+
+import (
+        "errors"
+        "fmt"
+        "math"
+        "strings"
+
+        "github.com/surahman/mcq-platform/pkg/model/cassandra"
+)
+
+// Mock Grading interface stub generation.
+//go:generate mockgen -destination=../mocks/mock_grading.go -package=mocks github.com/surahman/mcq-platform/pkg/grading Grading
+
+// Grading is the interface through which the test grading is facilitated. Created to support mock testing.
+type Grading interface {
+        // Grade will take grade or mark a quiz response using the answer key provided by the actual quiz.
+        Grade(*model_cassandra.QuizResponse, *model_cassandra.QuizCore) (float64, error)
+}
+
+// Check to ensure the Cassandra interface has been implemented.
+var _ Grading = &amp;gradingImpl{}
+
+// gradingImpl implements the Grading interface and contains the logic for marking functionality.
+type gradingImpl struct {
+}
+
+// NewGrading creates a new grading instance.
+func NewGrading() Grading <span class="cov1" title="1">{
+        return newGradingImpl()
+}</span>
+
+// newGradingImpl creates a new grading implementation instance.
+func newGradingImpl() *gradingImpl <span class="cov2" title="2">{
+        return &amp;gradingImpl{}
+}</span>
+
+// Grade will mark a quiz response based on the marking type and answer key in the question.
+func (g *gradingImpl) Grade(response *model_cassandra.QuizResponse, quiz *model_cassandra.QuizCore) (float64, error) <span class="cov6" title="12">{
+        total := 0.0
+
+        // Configure the grading function.
+        var gradingFunc func([]int32, map[int32]any, int) float64
+        switch strings.ToLower(quiz.MarkingType) </span>{
+        case "negative":<span class="cov3" title="3">
+                gradingFunc = negativeMarking</span>
+        case "non-negative":<span class="cov3" title="3">
+                gradingFunc = nonNegativeMarking</span>
+        case "binary":<span class="cov4" title="4">
+                gradingFunc = binaryMarking</span>
+        case "none":<span class="cov1" title="1">
+                return math.NaN(), nil</span>
+        default:<span class="cov1" title="1">
+                return math.NaN(), errors.New("invalid marking type")</span>
+        }
+
+        <span class="cov6" title="10">for idx, responses := range response.Responses </span><span class="cov7" title="20">{
+                answerKey := make(map[int32]any)
+                for _, val := range quiz.Questions[idx].Answers </span><span class="cov9" title="40">{
+                        answerKey[val] = nil
+                }</span>
+
+                // Only one answer permitted but multiple provided.
+                <span class="cov7" title="20">if len(answerKey) == 1 &amp;&amp; len(responses) &gt; 1 </span><span class="cov1" title="1">{
+                        errMsg := fmt.Sprintf("only one answer is permitted for: %v", quiz.Questions[idx].Description)
+                        return math.NaN(), errors.New(errMsg)
+                }</span>
+
+                // Grade question.
+                <span class="cov7" title="19">total += gradingFunc(responses, answerKey, len(quiz.Questions[idx].Options))</span>
+        }
+
+        <span class="cov5" title="9">return total, nil</span>
+}
+
+// negativeMarking will grade a question by employing negative marking.
+// Marking scheme:
+// [Correct] +1 / correct options
+// [Wrong] -1 / incorrect options
+func negativeMarking(responses []int32, answerKey map[int32]any, numOptions int) float64 <span class="cov6" title="14">{
+        totalOptions := numOptions
+        correctWeight := float64(len(answerKey))
+        incorrectWeight := math.Max(float64(totalOptions)-correctWeight, 1.0) // Division by zero: 1 option for a question results in 0 incorrectResponses.
+        correctResponses := 0.0
+        incorrectResponses := 0.0
+
+        // Loop over answers and check if they exist.
+        for _, val := range responses </span><span class="cov9" title="51">{
+                if _, ok := answerKey[val]; ok </span><span class="cov8" title="26">{
+                        correctResponses++
+                }</span> else<span class="cov8" title="25"> {
+                        incorrectResponses++
+                }</span>
+        }
+
+        <span class="cov6" title="14">correctScore := (1.0 / correctWeight) * correctResponses
+        incorrectScore := (1.0 / incorrectWeight) * incorrectResponses
+        return correctScore - incorrectScore</span>
+}
+
+// nonNegativeMarking will grade a question by employing non-negative marking and award partial grades.
+// Marking scheme:
+// [Correct] +1 / correct options
+// [Incorrect] 0 on whole question
+func nonNegativeMarking(responses []int32, answerKey map[int32]any, _ int) float64 <span class="cov6" title="14">{
+        correctWeight := float64(len(answerKey))
+        correctResponses := 0.0
+        incorrectResponses := 0.0
+
+        // Loop over answers and check if they exist.
+        for _, val := range responses </span><span class="cov9" title="51">{
+                if _, ok := answerKey[val]; ok </span><span class="cov8" title="26">{
+                        correctResponses++
+                }</span> else<span class="cov8" title="25"> {
+                        incorrectResponses++
+                }</span>
+        }
+        <span class="cov6" title="14">if incorrectResponses == 0 </span><span class="cov5" title="6">{
+                return (1.0 / correctWeight) * correctResponses
+        }</span>
+        <span class="cov5" title="8">return 0</span>
+}
+
+// binaryMarking will validate a result and employ all-or-nothing marking.
+// Marking scheme:
+// [Correct] +1 if all required answers selected
+// [Incorrect] 0 on whole question
+func binaryMarking(responses []int32, answerKey map[int32]any, _ int) float64 <span class="cov7" title="15">{
+        correctResponses := 0
+        incorrectResponses := 0
+
+        // Loop over answers and check if they exist.
+        for _, val := range responses </span><span class="cov10" title="54">{
+                if _, ok := answerKey[val]; ok </span><span class="cov8" title="29">{
+                        correctResponses++
+                }</span> else<span class="cov8" title="25"> {
+                        incorrectResponses++
+                }</span>
+        }
+
+        <span class="cov7" title="15">if correctResponses == len(answerKey) &amp;&amp; incorrectResponses == 0 </span><span class="cov4" title="5">{
+                return 1
+        }</span>
+        <span class="cov6" title="10">return 0</span>
+}
+</pre>
+		
+		<pre class="file" id="file10" style="display: none">package rest
+
+import (
+        "github.com/spf13/afero"
+        "github.com/spf13/viper"
+        "github.com/surahman/mcq-platform/pkg/constants"
+        "github.com/surahman/mcq-platform/pkg/validator"
+)
+
+// config is the configuration container for the HTTP REST endpoint.
+type config struct {
+        Server struct {
+                BasePath      string `json:"base_path,omitempty" yaml:"base_path,omitempty" mapstructure:"base_path" validate:"required"`
+                SwaggerPath   string `json:"swagger_path,omitempty" yaml:"swagger_path,omitempty" mapstructure:"swagger_path" validate:"required"`
+                PortNumber    int    `json:"port_number,omitempty" yaml:"port_number,omitempty" mapstructure:"port_number" validate:"required,min=1000"`
+                ShutdownDelay int    `json:"shutdown_delay,omitempty" yaml:"shutdown_delay,omitempty" mapstructure:"shutdown_delay" validate:"required,min=0"`
+        } `json:"server,omitempty" yaml:"server,omitempty" mapstructure:"server" validate:"required"`
+        Authorization struct {
+                HeaderKey string `json:"header_key,omitempty" yaml:"header_key,omitempty" mapstructure:"header_key" validate:"required"`
+        } `json:"authorization,omitempty" yaml:"authorization,omitempty" mapstructure:"authorization" validate:"required"`
+}
+
+// newConfig creates a blank configuration struct for Cassandra.
+func newConfig() *config <span class="cov1" title="1">{
+        return &amp;config{}
+}</span>
+
+// Load will attempt to load configurations from a file on a file system and then overwrite values using environment variables.
+func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="8">{
+        viper.SetFs(fs)
+        viper.SetConfigName(constants.GetHTTPRESTFileName())
+        viper.SetConfigType("yaml")
+        viper.AddConfigPath(constants.GetEtcDir())
+        viper.AddConfigPath(constants.GetHomeDir())
+        viper.AddConfigPath(constants.GetBaseDir())
+
+        viper.SetEnvPrefix(constants.GetHTTPRESTPrefix())
+        viper.AutomaticEnv()
+
+        if err = viper.ReadInConfig(); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov10" title="8">if err = viper.Unmarshal(cfg); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov10" title="8">if err = validator.ValidateStruct(cfg); err != nil </span><span class="cov7" title="5">{
+                return
+        }</span>
+
+        <span class="cov5" title="3">return</span>
+}
+</pre>
+		
+		<pre class="file" id="file11" style="display: none">package http_handlers
+
+import (
+        "net/http"
+
+        "github.com/gin-gonic/gin"
+        "github.com/surahman/mcq-platform/pkg/auth"
+)
+
+// AuthMiddleware is the middleware that checks whether a JWT is valid and can access an endpoint.
+func AuthMiddleware(auth auth.Auth) gin.HandlerFunc <span class="cov10" title="4">{
+        handler := func(context *gin.Context) </span><span class="cov8" title="3">{
+                tokenString := context.GetHeader("Authorization")
+                if tokenString == "" </span><span class="cov1" title="1">{
+                        context.JSON(http.StatusUnauthorized, "request does not contain an access token")
+                        context.Abort()
+                        return
+                }</span>
+                <span class="cov5" title="2">if _, _, err := auth.ValidateJWT(tokenString); err != nil </span><span class="cov1" title="1">{
+                        context.JSON(http.StatusForbidden, err.Error())
+                        context.Abort()
+                        return
+                }</span>
+                <span class="cov1" title="1">context.Next()</span>
+        }
+        <span class="cov10" title="4">return handler</span>
+}
+</pre>
+		
+		<pre class="file" id="file12" style="display: none">package http_handlers
+
+import (
+        "net/http"
+
+        "github.com/gin-gonic/gin"
+        "github.com/surahman/mcq-platform/pkg/cassandra"
+        "github.com/surahman/mcq-platform/pkg/logger"
+        "github.com/surahman/mcq-platform/pkg/model/http"
+        "github.com/surahman/mcq-platform/pkg/redis"
+        "go.uber.org/zap"
+)
+
+// Healthcheck checks if the service is healthy.
+// @Summary     Healthcheck for service liveness.
+// @Description This endpoint is exposed to allow load balancers etc. to check the health of the service.
+// @Tags        health healthcheck liveness
+// @Id          healthcheck
+// @Produce     json
+// @Success     200 {object} model_rest.Success "message: healthy"
+// @Failure     503 {object} model_rest.Error   "error message with any available details"
+// @Router      /health [get]
+func Healthcheck(logger *logger.Logger, db cassandra.Cassandra, cache redis.Redis) gin.HandlerFunc <span class="cov10" title="3">{
+        return func(context *gin.Context) </span><span class="cov10" title="3">{
+                var err error
+
+                // Database health.
+                if _, err = db.Execute(cassandra.HealthcheckQuery, nil); err != nil </span><span class="cov1" title="1">{
+                        msg := "Cassandra healthcheck failed"
+                        logger.Warn(msg, zap.Error(err))
+                        context.AbortWithStatusJSON(http.StatusServiceUnavailable, &amp;model_rest.Error{Message: msg})
+                        return
+                }</span>
+
+                // Cache health.
+                <span class="cov6" title="2">if err = cache.Healthcheck(); err != nil </span><span class="cov1" title="1">{
+                        msg := "Redis healthcheck failed"
+                        logger.Warn(msg, zap.Error(err))
+                        context.AbortWithStatusJSON(http.StatusServiceUnavailable, &amp;model_rest.Error{Message: msg})
+                        return
+                }</span>
+
+                <span class="cov1" title="1">context.JSON(http.StatusOK, &amp;model_rest.Success{Message: "healthy"})</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file13" style="display: none">package http_handlers
+
+import (
+        "net/http"
+
+        "github.com/gin-gonic/gin"
+        "github.com/gocql/gocql"
+        "github.com/surahman/mcq-platform/pkg/auth"
+        "github.com/surahman/mcq-platform/pkg/cassandra"
+        "github.com/surahman/mcq-platform/pkg/grading"
+        "github.com/surahman/mcq-platform/pkg/logger"
+        "github.com/surahman/mcq-platform/pkg/model/cassandra"
+        "github.com/surahman/mcq-platform/pkg/model/http"
+        "github.com/surahman/mcq-platform/pkg/redis"
+        "github.com/surahman/mcq-platform/pkg/validator"
+        "go.uber.org/zap"
+)
+
+// ViewQuiz will retrieve a test using a variable in the URL.
+// @Summary     View a quiz.
+// @Description This endpoint will retrieve a quiz with a provided quiz ID if it is published.
+// @Tags        view test quiz
+// @Id          viewQuiz
+// @Produce     json
+// @Security    ApiKeyAuth
+// @Param       quiz_id path     string             true "The quiz ID for the quiz being requested."
+// @Success     200     {object} model_rest.Success "The message will contain the quiz ID and the payload will contain the quiz"
+// @Failure     403     {object} model_rest.Error   "Error message with any available details in payload"
+// @Failure     404     {object} model_rest.Error   "Error message with any available details in payload"
+// @Failure     500     {object} model_rest.Error   "Error message with any available details in payload"
+// @Router      /quiz/view/{quiz_id} [get]
+func ViewQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, cache redis.Redis) gin.HandlerFunc <span class="cov10" title="11">{
+        return func(context *gin.Context) </span><span class="cov10" title="11">{
+                var err error
+                var response any
+                var quiz model_cassandra.Quiz
+                var username string
+                var quizId gocql.UUID
+
+                if quizId, err = gocql.ParseUUID(context.Param("quiz_id")); err != nil </span><span class="cov1" title="1">{
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
+                        return
+                }</span>
+
+                // Get username from JWT.
+                <span class="cov9" title="10">if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil </span><span class="cov1" title="1">{
+                        logger.Error("failed to validate JWT in create quiz handler", zap.Error(err))
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "unable to verify username"})
+                        return
+                }</span>
+
+                // Cache call.
+                <span class="cov9" title="9">err = cache.Get(quizId.String(), &amp;quiz)
+
+                // Cache miss:
+                // [1] Get quiz record from database.
+                // [2] Place quiz in cache. Log but do not propagate errors to user on cache set failures.
+                if err != nil </span><span class="cov8" title="8">{
+                        // Get quiz record from database.
+                        if response, err = db.Execute(cassandra.ReadQuizQuery, quizId); err != nil </span><span class="cov1" title="1">{
+                                cassandraError := err.(*cassandra.Error)
+                                context.AbortWithStatusJSON(cassandraError.Status, &amp;model_rest.Error{Message: "error retrieving quiz", Payload: cassandraError.Message})
+                                return
+                        }</span>
+                        <span class="cov8" title="7">quiz = *response.(*model_cassandra.Quiz)
+
+                        // Only place quiz in cache if it is published and not deleted. Set method will log errors.
+                        if quiz.IsPublished &amp;&amp; !quiz.IsDeleted </span><span class="cov5" title="3">{
+                                _ = cache.Set(quizId.String(), &amp;quiz)
+                        }</span>
+                }
+
+                // Check to see if quiz can be set to requester.
+                // [1] Requested quiz is NOT published OR IS deleted
+                // [2] Requester is not the author
+                // FAIL
+                <span class="cov8" title="8">if (!quiz.IsPublished || quiz.IsDeleted) &amp;&amp; username != quiz.Author </span><span class="cov3" title="2">{
+                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_rest.Error{Message: "quiz is not available"})
+                        return
+                }</span>
+
+                // If the requester is not the author remove the answer key.
+                <span class="cov7" title="6">if username != quiz.Author </span><span class="cov1" title="1">{
+                        for idx := range quiz.Questions </span><span class="cov3" title="2">{
+                                quiz.Questions[idx].Answers = nil
+                        }</span>
+                }
+
+                <span class="cov7" title="6">context.JSON(http.StatusOK, &amp;model_rest.Success{Message: quiz.QuizID.String(), Payload: &amp;quiz.QuizCore})</span>
+        }
+}
+
+// CreateQuiz will submit a quiz and write back the GetScore ID.
+// @Summary     Create a quiz.
+// @Description This endpoint will create a quiz with randomly generated Test ID and associate it with the requester.
+// @Description The username will be extracted from the JWT and associated with the Test ID.
+// @Tags        create test quiz
+// @Id          createQuiz
+// @Accept      json
+// @Produce     json
+// @Security    ApiKeyAuth
+// @Param       quiz body     model_cassandra.QuizCore true "The Quiz to be created as unpublished"
+// @Success     200  {object} model_rest.Success       "The message will contain the Quiz ID of the newly generated quiz"
+// @Failure     400  {object} model_rest.Error         "Error message with any available details in payload"
+// @Failure     409  {object} model_rest.Error         "Error message with any available details in payload"
+// @Failure     500  {object} model_rest.Error         "Error message with any available details in payload"
+// @Router      /quiz/create/ [post]
+func CreateQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc <span class="cov7" title="6">{
+        return func(context *gin.Context) </span><span class="cov7" title="6">{
+                var err error
+                var username string
+                var request model_cassandra.QuizCore
+
+                // Get username from JWT.
+                if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil </span><span class="cov1" title="1">{
+                        logger.Error("failed to validate JWT in create quiz handler", zap.Error(err))
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "unable to verify username"})
+                        return
+                }</span>
+
+                // Get quiz core from request and validate.
+                <span class="cov7" title="5">if err = context.ShouldBindJSON(&amp;request); err != nil </span><span class="cov0" title="0">{
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: err.Error()})
+                        return
+                }</span>
+
+                <span class="cov7" title="5">if err = validator.ValidateStruct(&amp;request); err != nil </span><span class="cov3" title="2">{
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "validation", Payload: err})
+                        return
+                }</span>
+
+                // Prepare quiz by adding username and generating quiz id, then insert record.
+                <span class="cov5" title="3">quiz := model_cassandra.Quiz{
+                        QuizCore:    &amp;request,
+                        QuizID:      gocql.TimeUUID(),
+                        Author:      username,
+                        IsPublished: false,
+                        IsDeleted:   false,
+                }
+                if _, err = db.Execute(cassandra.CreateQuizQuery, &amp;quiz); err != nil </span><span class="cov3" title="2">{
+                        cassandraError := err.(*cassandra.Error)
+                        context.AbortWithStatusJSON(cassandraError.Status, &amp;model_rest.Error{Message: "error creating quiz", Payload: cassandraError.Message})
+                        return
+                }</span>
+
+                <span class="cov1" title="1">context.JSON(http.StatusOK, &amp;model_rest.Success{Message: "created quiz with id", Payload: quiz.QuizID.String()})</span>
+        }
+}
+
+// UpdateQuiz will update a quiz.
+// @Summary     Update a quiz.
+// @Description This endpoint will update a quiz with the provided Test ID if it was created by the requester and is not published.
+// @Tags        update modify test quiz
+// @Id          updateQuiz
+// @Accept      json
+// @Produce     json
+// @Security    ApiKeyAuth
+// @Param       quiz_id path     string                   true "The Test ID for the quiz being updated."
+// @Param       quiz    body     model_cassandra.QuizCore true "The Quiz to replace the one already submitted"
+// @Success     200     {object} model_rest.Success       "The message will contain a confirmation of the update"
+// @Failure     400     {object} model_rest.Error         "Error message with any available details in payload"
+// @Failure     403     {object} model_rest.Error         "Error message with any available details in payload"
+// @Failure     500     {object} model_rest.Error         "Error message with any available details in payload"
+// @Router      /quiz/update/{quiz_id} [patch]
+func UpdateQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc <span class="cov7" title="6">{
+        return func(context *gin.Context) </span><span class="cov7" title="6">{
+                var err error
+                var username string
+                var request model_cassandra.QuizCore
+                var quizId gocql.UUID
+
+                if quizId, err = gocql.ParseUUID(context.Param("quiz_id")); err != nil </span><span class="cov1" title="1">{
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
+                        return
+                }</span>
+
+                // Get username from JWT.
+                <span class="cov7" title="5">if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil </span><span class="cov1" title="1">{
+                        logger.Error("failed to validate JWT in update quiz handler", zap.Error(err))
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "unable to verify username"})
+                        return
+                }</span>
+
+                // Get quiz core from request and validate.
+                <span class="cov6" title="4">if err = context.ShouldBindJSON(&amp;request); err != nil </span><span class="cov0" title="0">{
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: err.Error()})
+                        return
+                }</span>
+
+                <span class="cov6" title="4">if err = validator.ValidateStruct(&amp;request); err != nil </span><span class="cov1" title="1">{
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "validation", Payload: err})
+                        return
+                }</span>
+
+                // Prepare quiz by adding username and generating quiz id, then insert record.
+                <span class="cov5" title="3">updateRequest := model_cassandra.QuizMutateRequest{
+                        Username: username,
+                        QuizID:   quizId,
+                        Quiz: &amp;model_cassandra.Quiz{
+                                QuizCore: &amp;request,
+                        },
+                }
+                if _, err = db.Execute(cassandra.UpdateQuizQuery, &amp;updateRequest); err != nil </span><span class="cov3" title="2">{
+                        cassandraError := err.(*cassandra.Error)
+                        context.AbortWithStatusJSON(cassandraError.Status, &amp;model_rest.Error{Message: "error updating quiz", Payload: cassandraError.Message})
+                        return
+                }</span>
+
+                <span class="cov1" title="1">context.JSON(http.StatusOK, &amp;model_rest.Success{Message: "updated quiz with id", Payload: quizId.String()})</span>
+        }
+}
+
+// DeleteQuiz will delete a quiz using a variable in the URL.
+// @Summary     Delete a quiz.
+// @Description This endpoint will mark a quiz as delete if it was created by the requester. The provided Test ID is provided is a path parameter.
+// @Tags        delete remove test quiz
+// @Id          deleteQuiz
+// @Produce     json
+// @Security    ApiKeyAuth
+// @Param       quiz_id path     string             true "The Test ID for the quiz being deleted."
+// @Success     200     {object} model_rest.Success "The message will contain a confirmation of deletion"
+// @Failure     403     {object} model_rest.Error   "Error message with any available details in payload"
+// @Failure     500     {object} model_rest.Error   "Error message with any available details in payload"
+// @Router      /quiz/delete/{quiz_id} [delete]
+func DeleteQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, cache redis.Redis) gin.HandlerFunc <span class="cov8" title="7">{
+        return func(context *gin.Context) </span><span class="cov8" title="7">{
+                var err error
+                var username string
+                var quizId gocql.UUID
+
+                if quizId, err = gocql.ParseUUID(context.Param("quiz_id")); err != nil </span><span class="cov1" title="1">{
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
+                        return
+                }</span>
+
+                // Get username from JWT.
+                <span class="cov7" title="6">if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil </span><span class="cov1" title="1">{
+                        logger.Error("failed to validate JWT in create quiz handler", zap.Error(err))
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "unable to verify username"})
+                        return
+                }</span>
+
+                // Evict from cache, if present.
+                // This step must be executed before deletion to ensure the end user is able to reattempt the command in the event of failure.
+                // It must not be the case that data marked as deleted remains in the cache till LRU eviction or TTL expiration.
+                <span class="cov7" title="5">if err = cache.Del(quizId.String()); err != nil &amp;&amp; err.(*redis.Error).Code != redis.ErrorCacheMiss </span><span class="cov1" title="1">{
+                        logger.Error("failed to evict data from cache", zap.Error(err))
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "please retry the command at a later time"})
+                        return
+                }</span>
+
+                // Delete quiz record from database.
+                <span class="cov6" title="4">request := model_cassandra.QuizMutateRequest{
+                        Username: username,
+                        QuizID:   quizId,
+                }
+                if _, err = db.Execute(cassandra.DeleteQuizQuery, &amp;request); err != nil </span><span class="cov3" title="2">{
+                        cassandraError := err.(*cassandra.Error)
+                        context.AbortWithStatusJSON(cassandraError.Status, &amp;model_rest.Error{Message: "error deleting quiz", Payload: cassandraError.Message})
+                        return
+                }</span>
+
+                <span class="cov3" title="2">context.JSON(http.StatusOK, &amp;model_rest.Success{Message: "deleted quiz with id", Payload: quizId.String()})</span>
+        }
+}
+
+// PublishQuiz will publish a quiz using a variable in the URL.
+// @Summary     Publish a quiz.
+// @Description When a quiz is submitted it is not published by default and is thus unavailable to be taken.
+// @Description This endpoint will publish a quiz with the provided Test ID if it was created by the requester.
+// @Tags        publish test quiz create
+// @Id          publishQuiz
+// @Produce     json
+// @Security    ApiKeyAuth
+// @Param       quiz_id path     string             true "The Test ID for the quiz being published."
+// @Success     200     {object} model_rest.Success "The message will contain a confirmation of publishing"
+// @Failure     403     {object} model_rest.Error   "Error message with any available details in payload"
+// @Failure     500     {object} model_rest.Error   "Error message with any available details in payload"
+// @Router      /quiz/publish/{quiz_id} [patch]
+func PublishQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, cache redis.Redis) gin.HandlerFunc <span class="cov8" title="7">{
+        return func(context *gin.Context) </span><span class="cov8" title="7">{
+                var err error
+                var username string
+                var quizId gocql.UUID
+                var response any
+                var quiz *model_cassandra.Quiz
+
+                if quizId, err = gocql.ParseUUID(context.Param("quiz_id")); err != nil </span><span class="cov1" title="1">{
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
+                        return
+                }</span>
+
+                // Get username from JWT.
+                <span class="cov7" title="6">if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil </span><span class="cov1" title="1">{
+                        logger.Error("failed to validate JWT in create quiz handler", zap.Error(err))
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "unable to verify username"})
+                        return
+                }</span>
+
+                // Publish quiz record in database.
+                <span class="cov7" title="5">request := model_cassandra.QuizMutateRequest{
+                        Username: username,
+                        QuizID:   quizId,
+                }
+                if _, err = db.Execute(cassandra.PublishQuizQuery, &amp;request); err != nil </span><span class="cov3" title="2">{
+                        cassandraError := err.(*cassandra.Error)
+                        context.AbortWithStatusJSON(cassandraError.Status, &amp;model_rest.Error{Message: "error publishing quiz", Payload: cassandraError.Message})
+                        return
+                }</span>
+
+                // HTTP OK status should be set here because publishing succeeded.
+                // Any failures below this point are cache related and should be logged but not propagated to the end user.
+                <span class="cov5" title="3">context.JSON(http.StatusOK, &amp;model_rest.Success{Message: "published quiz with id", Payload: quizId.String()})
+
+                // Place quiz in cache.
+                // [1] Retrieve the quiz from Cassandra.
+                // [2] Place into Redis.
+
+                // Get quiz record from database.
+                if response, err = db.Execute(cassandra.ReadQuizQuery, quizId); err != nil </span><span class="cov1" title="1">{
+                        logger.Error("error retrieving quiz from database to be placed in cache post publishing", zap.Error(err))
+                        return
+                }</span>
+                <span class="cov3" title="2">quiz = response.(*model_cassandra.Quiz)
+
+                if err = cache.Set(quizId.String(), quiz); err != nil </span><span class="cov1" title="1">{
+                        logger.Error("error placing quiz in cache after publishing", zap.Error(err))
+                        return
+                }</span>
+        }
+}
+
+// TakeQuiz will submit the answers to a quiz using a variable in the URL.
+// @Summary     Take a quiz.
+// @Description Take a quiz by submitting an answer sheet. The username will be extracted from the JWT and associated with the scorecard.
+// @Tags        take test quiz submit answer
+// @Id          takeQuiz
+// @Accept      json
+// @Produce     json
+// @Security    ApiKeyAuth
+// @Param       quiz_id path     string                       true "The Test ID for the answers being submitted."
+// @Param       answers body     model_cassandra.QuizResponse true "The answer card to be submitted."
+// @Success     200     {object} model_rest.Success           "Score will be in the payload"
+// @Failure     400     {object} model_rest.Error             "Error message with any available details in payload"
+// @Failure     403     {object} model_rest.Error             "Error message with any available details in payload"
+// @Failure     500     {object} model_rest.Error             "Error message with any available details in payload"
+// @Router      /quiz/take/{quiz_id} [post]
+func TakeQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, grader grading.Grading) gin.HandlerFunc <span class="cov10" title="11">{
+        return func(context *gin.Context) </span><span class="cov10" title="11">{
+                var err error
+                var username string
+                var quizResponse model_cassandra.QuizResponse
+                var quiz *model_cassandra.Quiz
+                var quizId gocql.UUID
+                var rawQuiz any
+                var score float64
+
+                if quizId, err = gocql.ParseUUID(context.Param("quiz_id")); err != nil </span><span class="cov1" title="1">{
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "invalid quizResponse id supplied, must be a valid UUID"})
+                        return
+                }</span>
+
+                // Get username from JWT.
+                <span class="cov9" title="10">if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil </span><span class="cov1" title="1">{
+                        logger.Error("failed to validate JWT in update quizResponse handler", zap.Error(err))
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "unable to verify username"})
+                        return
+                }</span>
+
+                // Get quizResponse response from quizResponse and validate.
+                <span class="cov9" title="9">if err = context.ShouldBindJSON(&amp;quizResponse); err != nil </span><span class="cov0" title="0">{
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: err.Error()})
+                        return
+                }</span>
+
+                <span class="cov9" title="9">if err = validator.ValidateStruct(&amp;quizResponse); err != nil </span><span class="cov1" title="1">{
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "validation", Payload: err})
+                        return
+                }</span>
+
+                // Get quizResponse record from database.
+                <span class="cov8" title="8">if rawQuiz, err = db.Execute(cassandra.ReadQuizQuery, quizId); err != nil </span><span class="cov3" title="2">{
+                        cassandraError := err.(*cassandra.Error)
+                        context.AbortWithStatusJSON(cassandraError.Status, &amp;model_rest.Error{Message: "error retrieving quizResponse", Payload: cassandraError.Message})
+                        return
+                }</span>
+                <span class="cov7" title="6">quiz = rawQuiz.(*model_cassandra.Quiz)
+
+                // Check to see if the quiz is deleted or unpublished.
+                if !quiz.IsPublished || quiz.IsDeleted </span><span class="cov3" title="2">{
+                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_rest.Error{Message: "quiz is unavailable"})
+                        return
+                }</span>
+
+                // Grade the quizResponse.
+                <span class="cov6" title="4">if score, err = grader.Grade(&amp;quizResponse, quiz.QuizCore); err != nil </span><span class="cov1" title="1">{
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "error marking response", Payload: err.Error()})
+                        return
+                }</span>
+
+                // Insert updated record.
+                <span class="cov5" title="3">response := model_cassandra.Response{
+                        Username:     username,
+                        Score:        score,
+                        QuizResponse: &amp;quizResponse,
+                        QuizID:       quizId,
+                }
+                if _, err = db.Execute(cassandra.CreateResponseQuery, &amp;response); err != nil </span><span class="cov3" title="2">{
+                        cassandraError := err.(*cassandra.Error)
+                        context.AbortWithStatusJSON(cassandraError.Status, &amp;model_rest.Error{Message: "error submitting response", Payload: cassandraError.Message})
+                        return
+                }</span>
+
+                <span class="cov1" title="1">context.JSON(http.StatusOK, &amp;model_rest.Success{Message: "submitted quiz response", Payload: &amp;response})</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file14" style="display: none">package http_handlers
+
+import (
+        "bytes"
+        "fmt"
+        "net/http"
+        "strconv"
+
+        "github.com/gin-gonic/gin"
+        "github.com/gocql/gocql"
+        "github.com/surahman/mcq-platform/pkg/auth"
+        "github.com/surahman/mcq-platform/pkg/cassandra"
+        "github.com/surahman/mcq-platform/pkg/logger"
+        "github.com/surahman/mcq-platform/pkg/model/cassandra"
+        "github.com/surahman/mcq-platform/pkg/model/http"
+        "go.uber.org/zap"
+)
+
+// GetScore will retrieve a test score with the provided test id and the username from the JWT payload.
+// @Summary     Get a user's score.
+// @Description Gets a scorecard for a user. Extracts username from the JWT and Test ID is provided as a path parameter.
+// @Tags        score scores
+// @Id          getScore
+// @Accept      json
+// @Produce     json
+// @Security    ApiKeyAuth
+// @Param       quiz_id path     string             true "The Test ID for the requested scorecard."
+// @Success     200     {object} model_rest.Success "Score will be in the payload"
+// @Failure     400     {object} model_rest.Error   "Error message with any available details in payload"
+// @Failure     404     {object} model_rest.Error   "Error message with any available details in payload"
+// @Failure     500     {object} model_rest.Error   "Error message with any available details in payload"
+// @Router      /score/test/{quiz_id} [get]
+func GetScore(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc <span class="cov6" title="4">{
+        return func(context *gin.Context) </span><span class="cov6" title="4">{
+                var err error
+                var dbRecord any
+                var response *model_cassandra.Response
+                var username string
+                var quizId gocql.UUID
+
+                if quizId, err = gocql.ParseUUID(context.Param("quiz_id")); err != nil </span><span class="cov1" title="1">{
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
+                        return
+                }</span>
+
+                // Get username from JWT.
+                <span class="cov4" title="3">if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil </span><span class="cov1" title="1">{
+                        logger.Error("failed to validate JWT in create quiz handler", zap.Error(err))
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "unable to verify username"})
+                        return
+                }</span>
+
+                // Get scorecard record from database.
+                <span class="cov3" title="2">scoreRequest := &amp;model_cassandra.QuizMutateRequest{
+                        Username: username,
+                        QuizID:   quizId,
+                }
+                if dbRecord, err = db.Execute(cassandra.ReadResponseQuery, scoreRequest); err != nil </span><span class="cov1" title="1">{
+                        cassandraError := err.(*cassandra.Error)
+                        context.AbortWithStatusJSON(cassandraError.Status, &amp;model_rest.Error{Message: "error retrieving score card", Payload: cassandraError.Message})
+                        return
+                }</span>
+                <span class="cov1" title="1">response = dbRecord.(*model_cassandra.Response)
+
+                context.JSON(http.StatusOK, &amp;model_rest.Success{Message: "score card", Payload: response})</span>
+        }
+}
+
+// GetStats will retrieve test statistics with the provided test id and the username from the JWT payload.
+// @Summary     Get all statistics associated with a specific test.
+// @Description Gets the statistics associated with a specific test if the user created the test.
+// @Description Extracts username from the JWT and the Test ID is provided as a path parameter.
+// @Tags        score scores stats statistics
+// @Id          getStats
+// @Accept      json
+// @Produce     json
+// @Security    ApiKeyAuth
+// @Param       quiz_id path     string             true "The Test ID for the requested statistics."
+// @Success     200     {object} model_rest.Success "Statistics will be in the payload"
+// @Failure     400     {object} model_rest.Error   "Error message with any available details in payload"
+// @Failure     403     {object} model_rest.Error   "Error message with any available details in payload"
+// @Failure     404     {object} model_rest.Error   "Error message with any available details in payload"
+// @Failure     500     {object} model_rest.Error   "Error message with any available details in payload"
+// @Router      /score/stats/{quiz_id} [get]
+func GetStats(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc <span class="cov7" title="6">{
+        return func(context *gin.Context) </span><span class="cov7" title="6">{
+                var err error
+                var dbRecord any
+                var response []*model_cassandra.Response
+                var username string
+                var quizId gocql.UUID
+
+                if quizId, err = gocql.ParseUUID(context.Param("quiz_id")); err != nil </span><span class="cov1" title="1">{
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
+                        return
+                }</span>
+
+                // Get username from JWT.
+                <span class="cov6" title="5">if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil </span><span class="cov1" title="1">{
+                        logger.Error("failed to validate JWT in create quiz handler", zap.Error(err))
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "unable to verify username"})
+                        return
+                }</span>
+
+                // Get scorecard record from database.
+                <span class="cov6" title="4">if dbRecord, err = db.Execute(cassandra.ReadResponseStatisticsQuery, quizId); err != nil </span><span class="cov1" title="1">{
+                        cassandraError := err.(*cassandra.Error)
+                        context.AbortWithStatusJSON(cassandraError.Status, &amp;model_rest.Error{Message: "error retrieving score card", Payload: cassandraError.Message})
+                        return
+                }</span>
+                <span class="cov4" title="3">response = dbRecord.([]*model_cassandra.Response)
+
+                // Verify authorization.
+                if len(response) == 0 </span><span class="cov1" title="1">{
+                        context.AbortWithStatusJSON(http.StatusNotFound, &amp;model_rest.Error{Message: "could not locate results"})
+                        return
+                }</span>
+                <span class="cov3" title="2">if username != response[0].Author </span><span class="cov1" title="1">{
+                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_rest.Error{Message: "error verifying quiz author"})
+                        return
+                }</span>
+
+                <span class="cov1" title="1">context.JSON(http.StatusOK, &amp;model_rest.Success{Message: "score card", Payload: response})</span>
+        }
+}
+
+// GetStatsPage will retrieve paginated test statistics with the provided test id and the username from the JWT payload.
+// @Summary     Get paginated statistics associated with a specific test.
+// @Description Gets the paginated statistics associated with a specific test if the user created the test.
+// @Description Extracts username from the JWT and the Test ID is provided as a query parameter.
+// @Description A query string to be appended to the next request to retrieve the next page of data will be returned in the response.
+// @Tags        score scores stats statistics
+// @Id          getStatsPaged
+// @Accept      json
+// @Produce     json
+// @Security    ApiKeyAuth
+// @Param       quiz_id    path     string                   true  "The Test ID for the requested statistics."
+// @Param       pageCursor query    string                   false "The page cursor into the query results records."
+// @Param       pageSize   query    int                      false "The number of records to retrieve on this page."
+// @Success     200        {object} model_rest.StatsResponse "A page of statistics data"
+// @Failure     400        {object} model_rest.Error         "Error message with any available details in payload"
+// @Failure     403        {object} model_rest.Error         "Error message with any available details in payload"
+// @Failure     404        {object} model_rest.Error         "Error message with any available details in payload"
+// @Failure     500        {object} model_rest.Error         "Error message with any available details in payload"
+// @Router      /score/stats-paged/{quiz_id} [get]
+func GetStatsPage(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc <span class="cov8" title="9">{
+        return func(context *gin.Context) </span><span class="cov8" title="9">{
+                var err error
+                var dbRecord any
+                var statRequest *model_cassandra.StatsRequest
+                var restResponse *model_rest.StatsResponse
+                var username string
+                var quizId gocql.UUID
+
+                if quizId, err = gocql.ParseUUID(context.Param("quiz_id")); err != nil </span><span class="cov1" title="1">{
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
+                        return
+                }</span>
+
+                // Get username from JWT.
+                <span class="cov8" title="8">if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil </span><span class="cov1" title="1">{
+                        logger.Error("failed to validate JWT in create quiz handler", zap.Error(err))
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "unable to verify username"})
+                        return
+                }</span>
+
+                // Prepare stats page request for database.
+                <span class="cov8" title="7">if statRequest, err = prepareStatsRequest(auth, quizId, context.Query("pageCursor"), context.Query("pageSize")); err != nil </span><span class="cov1" title="1">{
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "malformed query request", Payload: err.Error()})
+                        return
+                }</span>
+
+                // Get scorecard record page from database.
+                <span class="cov7" title="6">if dbRecord, err = db.Execute(cassandra.ReadResponseStatisticsPageQuery, statRequest); err != nil </span><span class="cov1" title="1">{
+                        cassandraError := err.(*cassandra.Error)
+                        context.AbortWithStatusJSON(cassandraError.Status, &amp;model_rest.Error{Message: "error retrieving scorecard page", Payload: cassandraError.Message})
+                        return
+                }</span>
+                <span class="cov6" title="5">statsResponse := dbRecord.(*model_cassandra.StatsResponse)
+
+                // Verify authorization.
+                if len(statsResponse.Records) == 0 </span><span class="cov1" title="1">{
+                        context.AbortWithStatusJSON(http.StatusNotFound, &amp;model_rest.Error{Message: "could not locate results"})
+                        return
+                }</span>
+                <span class="cov6" title="4">if username != statsResponse.Records[0].Author </span><span class="cov1" title="1">{
+                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_rest.Error{Message: "error verifying quiz author"})
+                        return
+                }</span>
+
+                // Prepare REST response.
+                <span class="cov4" title="3">if restResponse, err = prepareStatsResponse(auth, statsResponse, quizId); err != nil </span><span class="cov1" title="1">{
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "error preparing stats page", Payload: err.Error()})
+                }</span>
+
+                <span class="cov4" title="3">context.JSON(http.StatusOK, restResponse)</span>
+        }
+}
+
+// prepareStatsRequest will prepare the paged statistics request for the database query.
+func prepareStatsRequest(auth auth.Auth, quizId gocql.UUID, cursor string, size string) (req *model_cassandra.StatsRequest, err error) <span class="cov10" title="12">{
+        req = &amp;model_cassandra.StatsRequest{QuizID: quizId}
+
+        if req.PageSize, err = strconv.Atoi(size); err != nil </span><span class="cov3" title="2">{
+                return nil, fmt.Errorf("failed to convert page size: %s", err.Error())
+        }</span>
+        <span class="cov9" title="10">if req.PageSize &lt; 1 </span><span class="cov1" title="1">{
+                req.PageSize = 10
+        }</span>
+
+        // Null cursor must be set if there was no cursor in the URI.
+        <span class="cov9" title="10">if len(cursor) != 0 </span><span class="cov8" title="8">{
+                if req.PageCursor, err = auth.DecryptFromString(cursor); err != nil </span><span class="cov1" title="1">{
+                        return nil, fmt.Errorf("failed to decrypt page cursor: %s", err.Error())
+                }</span>
+        }
+
+        <span class="cov8" title="9">return</span>
+}
+
+// prepareStatsResponse will prepare a http response from a database stats response. It will generate a link to the next
+// page of data as appropriate.
+func prepareStatsResponse(auth auth.Auth, dbResponse *model_cassandra.StatsResponse, quizId gocql.UUID) (response *model_rest.StatsResponse, err error) <span class="cov8" title="8">{
+        response = &amp;model_rest.StatsResponse{Records: dbResponse.Records}
+        response.Metadata.QuizID = quizId
+        response.Metadata.NumRecords = len(dbResponse.Records)
+
+        var nextPageLink bytes.Buffer
+
+        // Construct page cursor link segment.
+        if len(dbResponse.PageCursor) != 0 </span><span class="cov6" title="4">{
+                cursor, err := auth.EncryptToString(dbResponse.PageCursor)
+                if err != nil </span><span class="cov1" title="1">{
+                        return nil, err
+                }</span>
+                <span class="cov4" title="3">if _, err := nextPageLink.WriteString(fmt.Sprintf("?pageCursor=%s", cursor)); err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("failed to generate next page cursor link segment: %s", err.Error())
+                }</span>
+        }
+
+        // Construct page size link segment.
+        <span class="cov8" title="7">if len(dbResponse.PageCursor) != 0 &amp;&amp; dbResponse.PageSize &gt; 0 </span><span class="cov3" title="2">{
+                if _, err := nextPageLink.WriteString(fmt.Sprintf("&amp;pageSize=%d", dbResponse.PageSize)); err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("failed to generate next page size link segment: %s", err.Error())
+                }</span>
+        }
+
+        <span class="cov8" title="7">response.Links.NextPage = nextPageLink.String()
+
+        return</span>
+}
+</pre>
+		
+		<pre class="file" id="file15" style="display: none">package http_handlers
+
+import (
+        "fmt"
+        "math"
+        "net/http"
+        "time"
+
+        "github.com/gin-gonic/gin"
+        "github.com/surahman/mcq-platform/pkg/auth"
+        "github.com/surahman/mcq-platform/pkg/cassandra"
+        "github.com/surahman/mcq-platform/pkg/constants"
+        "github.com/surahman/mcq-platform/pkg/logger"
+        "github.com/surahman/mcq-platform/pkg/model/cassandra"
+        "github.com/surahman/mcq-platform/pkg/model/http"
+        "github.com/surahman/mcq-platform/pkg/validator"
+        "go.uber.org/zap"
+)
+
+// RegisterUser will handle an HTTP request to create a user.
+// @Summary     Register a user.
+// @Description Creates a user account by inserting credentials into the database. A hashed password is stored.
+// @Tags        user users register security
+// @Id          registerUser
+// @Accept      json
+// @Produce     json
+// @Param       user body     model_cassandra.UserAccount true "Username, password, first and last name, email address of user"
+// @Success     200  {object} model_rest.JWTAuthResponse  "a valid JWT token for the new account"
+// @Failure     400  {object} model_rest.Error            "error message with any available details in payload"
+// @Failure     409  {object} model_rest.Error            "error message with any available details in payload"
+// @Failure     500  {object} model_rest.Error            "error message with any available details in payload"
+// @Router      /user/register [post]
+func RegisterUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc <span class="cov7" title="5">{
+        return func(context *gin.Context) </span><span class="cov7" title="5">{
+                var err error
+                var authToken *model_rest.JWTAuthResponse
+                var user model_cassandra.UserAccount
+
+                if err = context.ShouldBindJSON(&amp;user); err != nil </span><span class="cov0" title="0">{
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: err.Error()})
+                        return
+                }</span>
+
+                <span class="cov7" title="5">if err = validator.ValidateStruct(&amp;user); err != nil </span><span class="cov1" title="1">{
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "validation", Payload: err})
+                        return
+                }</span>
+
+                <span class="cov7" title="4">if user.Password, err = auth.HashPassword(user.Password); err != nil </span><span class="cov1" title="1">{
+                        logger.Error("failure hashing password", zap.Error(err))
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: err.Error()})
+                        return
+                }</span>
+
+                <span class="cov5" title="3">if _, err = db.Execute(cassandra.CreateUserQuery, &amp;model_cassandra.User{UserAccount: &amp;user}); err != nil </span><span class="cov1" title="1">{
+                        context.AbortWithStatusJSON(err.(*cassandra.Error).Status, &amp;model_rest.Error{Message: err.Error()})
+                        return
+                }</span>
+
+                <span class="cov4" title="2">if authToken, err = auth.GenerateJWT(user.Username); err != nil </span><span class="cov1" title="1">{
+                        logger.Error("failure generating JWT during account creation", zap.Error(err))
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: err.Error()})
+                        return
+                }</span>
+
+                <span class="cov1" title="1">context.JSON(http.StatusOK, authToken)</span>
+        }
+}
+
+// LoginUser validates login credentials and generates a JWT.
+// @Summary     Login a user.
+// @Description Logs in a user by validating credentials and returning a JWT.
+// @Tags        user users login security
+// @Id          loginUser
+// @Accept      json
+// @Produce     json
+// @Param       credentials body     model_cassandra.UserLoginCredentials true "Username and password to login with"
+// @Success     200         {object} model_rest.JWTAuthResponse           "JWT in the api-key"
+// @Failure     400         {object} model_rest.Error                     "error message with any available details in payload"
+// @Failure     403         {object} model_rest.Error                     "error message with any available details in payload"
+// @Failure     500         {object} model_rest.Error                     "error message with any available details in payload"
+// @Router      /user/login [post]
+func LoginUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc <span class="cov8" title="6">{
+        return func(context *gin.Context) </span><span class="cov8" title="6">{
+                var err error
+                var authToken *model_rest.JWTAuthResponse
+                var loginRequest model_cassandra.UserLoginCredentials
+                var dbResponse any
+
+                if err = context.ShouldBindJSON(&amp;loginRequest); err != nil </span><span class="cov0" title="0">{
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: err.Error()})
+                        return
+                }</span>
+
+                <span class="cov8" title="6">if err = validator.ValidateStruct(&amp;loginRequest); err != nil </span><span class="cov1" title="1">{
+                        context.JSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "validation", Payload: err})
+                        return
+                }</span>
+
+                <span class="cov7" title="5">if dbResponse, err = db.Execute(cassandra.ReadUserQuery, loginRequest.Username); err != nil </span><span class="cov1" title="1">{
+                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_rest.Error{Message: "invalid username or password"})
+                        return
+                }</span>
+
+                <span class="cov7" title="4">truth := dbResponse.(*model_cassandra.User)
+                if err = auth.CheckPassword(truth.Password, loginRequest.Password); err != nil || truth.IsDeleted </span><span class="cov4" title="2">{
+                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_rest.Error{Message: "invalid username or password"})
+                        return
+                }</span>
+
+                <span class="cov4" title="2">if authToken, err = auth.GenerateJWT(loginRequest.Username); err != nil </span><span class="cov1" title="1">{
+                        logger.Error("failure generating JWT during login", zap.Error(err))
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: err.Error()})
+                        return
+                }</span>
+
+                <span class="cov1" title="1">context.JSON(http.StatusOK, authToken)</span>
+        }
+}
+
+// LoginRefresh validates a JWT token and issues a fresh token.
+// @Summary     Refresh a user's JWT by extending its expiration time.
+// @Description Refreshes a user's JWT by validating it and then issuing a fresh JWT with an extended validity time. JWT must be expiring in under 60 seconds.
+// @Tags        user users login refresh security
+// @Id          loginRefresh
+// @Accept      json
+// @Produce     json
+// @Security    ApiKeyAuth
+// @Success     200 {object} model_rest.JWTAuthResponse "A new valid JWT"
+// @Failure     400 {object} model_rest.Error           "error message with any available details in payload"
+// @Failure     403 {object} model_rest.Error           "error message with any available details in payload"
+// @Failure     500 {object} model_rest.Error           "error message with any available details in payload"
+// @Failure     510 {object} model_rest.Error           "error message with any available details in payload"
+// @Router      /user/refresh [post]
+func LoginRefresh(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, authHeaderKey string) gin.HandlerFunc <span class="cov9" title="7">{
+        return func(context *gin.Context) </span><span class="cov9" title="7">{
+                var err error
+                var freshToken *model_rest.JWTAuthResponse
+                var username string
+                var dbResponse any
+                var expiresAt int64
+                originalToken := context.GetHeader(authHeaderKey)
+
+                if username, expiresAt, err = auth.ValidateJWT(originalToken); err != nil </span><span class="cov4" title="2">{
+                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_rest.Error{Message: err.Error()})
+                        return
+                }</span>
+
+                <span class="cov7" title="5">if dbResponse, err = db.Execute(cassandra.ReadUserQuery, username); err != nil </span><span class="cov1" title="1">{
+                        logger.Warn("failed to read user record for a valid JWT", zap.String("username", username), zap.Error(err))
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "please retry your request later"})
+                        return
+                }</span>
+
+                <span class="cov7" title="4">if dbResponse.(*model_cassandra.User).IsDeleted </span><span class="cov1" title="1">{
+                        logger.Warn("attempt to refresh a JWT for a deleted user", zap.String("username", username))
+                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_rest.Error{Message: "invalid token"})
+                        return
+                }</span>
+
+                // Do not refresh tokens that have more than a minute left to expire.
+                <span class="cov5" title="3">if math.Abs(float64(time.Now().Unix()-expiresAt)) &gt; float64(auth.RefreshThreshold()) </span><span class="cov1" title="1">{
+                        context.AbortWithStatusJSON(http.StatusNotExtended, &amp;model_rest.Error{Message: "JWT is still valid for more than 60 seconds"})
+                        return
+                }</span>
+
+                <span class="cov4" title="2">if freshToken, err = auth.GenerateJWT(username); err != nil </span><span class="cov1" title="1">{
+                        logger.Error("failure generating JWT during token refresh", zap.Error(err))
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: err.Error()})
+                        return
+                }</span>
+
+                <span class="cov1" title="1">context.JSON(http.StatusOK, freshToken)</span>
+        }
+}
+
+// DeleteUser will mark a user as deleted in the database.
+// @Summary     Deletes a user. The user must supply their credentials as well as a confirmation message.
+// @Description Deletes a user stored in the database by marking it as deleted. The user must supply their login credentials as well as complete the following confirmation message: "I understand the consequences, delete my user account USERNAME HERE"
+// @Tags        user users delete security
+// @Id          deleteUser
+// @Accept      json
+// @Produce     json
+// @Security    ApiKeyAuth
+// @Param       request body     model_rest.DeleteUserRequest true "The request payload for deleting an account"
+// @Success     200     {object} model_rest.Success           "message with a confirmation of a deleted user account"
+// @Failure     400     {object} model_rest.Error             "error message with any available details in payload"
+// @Failure     409     {object} model_rest.Error             "error message with any available details in payload"
+// @Failure     500     {object} model_rest.Error             "error message with any available details in payload"
+// @Router      /user/delete [delete]
+func DeleteUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, authHeaderKey string) gin.HandlerFunc <span class="cov10" title="8">{
+        return func(context *gin.Context) </span><span class="cov10" title="8">{
+                var err error
+                var deleteRequest model_rest.DeleteUserRequest
+                var username string
+                var dbResponse any
+                jwt := context.GetHeader(authHeaderKey)
+
+                // Get the delete request from the message body and validate it.
+                if err = context.ShouldBindJSON(&amp;deleteRequest); err != nil </span><span class="cov0" title="0">{
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: err.Error()})
+                        return
+                }</span>
+
+                <span class="cov10" title="8">if err = validator.ValidateStruct(&amp;deleteRequest); err != nil </span><span class="cov1" title="1">{
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "validation", Payload: err})
+                        return
+                }</span>
+
+                // Validate the JWT and extract the username, compare the username against the deletion request login credentials.
+                <span class="cov9" title="7">if username, _, err = auth.ValidateJWT(jwt); err != nil </span><span class="cov0" title="0">{
+                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_rest.Error{Message: err.Error()})
+                        return
+                }</span>
+
+                <span class="cov9" title="7">if username != deleteRequest.Username </span><span class="cov1" title="1">{
+                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_rest.Error{Message: "invalid deletion request"})
+                        return
+                }</span>
+
+                // Check confirmation message.
+                <span class="cov8" title="6">if fmt.Sprintf(constants.GetDeleteUserAccountConfirmation(), username) != deleteRequest.Confirmation </span><span class="cov1" title="1">{
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "incorrect or incomplete deletion request confirmation"})
+                        return
+                }</span>
+
+                // Get user record.
+                <span class="cov7" title="5">if dbResponse, err = db.Execute(cassandra.ReadUserQuery, username); err != nil </span><span class="cov1" title="1">{
+                        logger.Warn("failed to read user record during an account deletion request", zap.String("username", username), zap.Error(err))
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "please retry your request later"})
+                        return
+                }</span>
+                <span class="cov7" title="4">truth := dbResponse.(*model_cassandra.User)
+
+                // Check to make sure the account is not already deleted.
+                if truth.IsDeleted </span><span class="cov1" title="1">{
+                        logger.Warn("attempt to delete an already deleted user account", zap.String("username", username))
+                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_rest.Error{Message: "user account is already deleted"})
+                        return
+                }</span>
+
+                <span class="cov5" title="3">if err = auth.CheckPassword(truth.Password, deleteRequest.Password); err != nil </span><span class="cov1" title="1">{
+                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_rest.Error{Message: "invalid username or password"})
+                        return
+                }</span>
+
+                // Mark account as deleted.
+                <span class="cov4" title="2">if _, err = db.Execute(cassandra.DeleteUserQuery, username); err != nil </span><span class="cov1" title="1">{
+                        logger.Warn("failed to mark a user record as deleted", zap.String("username", username), zap.Error(err))
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "please retry your request later"})
+                        return
+                }</span>
+
+                <span class="cov1" title="1">context.JSON(http.StatusOK, model_rest.Success{Message: "account successfully deleted"})</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file16" style="display: none">package rest
+
+import (
+        "context"
+        "fmt"
+        "net/http"
+        "os"
+        "os/signal"
+        "syscall"
+        "time"
+
+        "github.com/gin-gonic/gin"
+        "github.com/spf13/afero"
+        _ "github.com/surahman/mcq-platform/docs" // Swaggo generated Swagger documentation
+        "github.com/surahman/mcq-platform/pkg/auth"
+        "github.com/surahman/mcq-platform/pkg/cassandra"
+        "github.com/surahman/mcq-platform/pkg/grading"
+        "github.com/surahman/mcq-platform/pkg/http/rest/handlers"
+        "github.com/surahman/mcq-platform/pkg/logger"
+        "github.com/surahman/mcq-platform/pkg/redis"
+        swaggerfiles "github.com/swaggo/files"
+        ginSwagger "github.com/swaggo/gin-swagger"
+        "go.uber.org/zap"
+)
+
+// HttpRest is the HTTP REST server.
+type HttpRest struct {
+        auth    auth.Auth
+        cache   redis.Redis
+        db      cassandra.Cassandra
+        grading grading.Grading
+        conf    *config
+        logger  *logger.Logger
+        router  *gin.Engine
+}
+
+// NewRESTServer will create a new REST server instance in a non-running state.
+func NewRESTServer(fs *afero.Fs, auth auth.Auth, cassandra cassandra.Cassandra, redis redis.Redis,
+        grading grading.Grading, logger *logger.Logger) (server *HttpRest, err error) <span class="cov8" title="1">{
+        // Load configurations.
+        conf := newConfig()
+        if err = conf.Load(*fs); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov8" title="1">return &amp;HttpRest{
+                        conf:    conf,
+                        auth:    auth,
+                        cache:   redis,
+                        db:      cassandra,
+                        grading: grading,
+                        logger:  logger,
+                },
+                err</span>
+}
+
+// Run brings the HTTP service up.
+func (s *HttpRest) Run() <span class="cov0" title="0">{
+        // Configure routes.
+        s.initialize()
+
+        // Create server.
+        srv := &amp;http.Server{
+                Addr:    fmt.Sprintf(":%d", s.conf.Server.PortNumber),
+                Handler: s.router,
+        }
+
+        // Start HTTP listener.
+        go func() </span><span class="cov0" title="0">{
+                if err := srv.ListenAndServe(); err != nil &amp;&amp; err != http.ErrServerClosed </span><span class="cov0" title="0">{
+                        s.logger.Panic(fmt.Sprintf("listening port: %d", s.conf.Server.PortNumber), zap.Error(err))
+                }</span>
+        }()
+
+        // Wait for interrupt signal to gracefully shut down the server.
+        <span class="cov0" title="0">quit := make(chan os.Signal)
+        signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+        // Wait for interrupt.
+        &lt;-quit
+        s.logger.Info("Shutting down server...", zap.Duration("waiting", time.Duration(s.conf.Server.ShutdownDelay)*time.Second))
+        ctx, cancel := context.WithTimeout(context.Background(), time.Duration(s.conf.Server.ShutdownDelay)*time.Second)
+        defer cancel()
+        if err := srv.Shutdown(ctx); err != nil </span><span class="cov0" title="0">{
+                s.logger.Panic("Failed to shutdown server", zap.Error(err))
+        }</span>
+
+        // 5 second wait to exit.
+        <span class="cov0" title="0">&lt;-ctx.Done()
+
+        s.logger.Info("Server exited")</span>
+}
+
+// initialize will configure the HTTP server routes.
+func (s *HttpRest) initialize() <span class="cov0" title="0">{
+        s.router = gin.Default()
+
+        // @title                      Multiple Choice Question Platform.
+        // @version                    1.0.1
+        // @description                Multiple Choice Question Platform API.
+        // @description                This application supports the creation, managing, marking, viewing, retrieving stats, and scores of quizzes.
+        //
+        // @schemes                    http
+        // @host                       localhost:44243
+        // @BasePath                   /api/rest/v1
+        //
+        // @accept                     json
+        // @produce                    json
+        //
+        // @contact.name               Saad Ur Rahman
+        // @contact.url                https://www.linkedin.com/in/saad-ur-rahman/
+        // @contact.email              saad.ur.rahman@gmail.com
+        //
+        // @license.name               GPL-3.0
+        // @license.url                https://opensource.org/licenses/GPL-3.0
+        //
+        // @securityDefinitions.apikey ApiKeyAuth
+        // @in                         header
+        // @name                       Authorization
+
+        s.router.GET(s.conf.Server.SwaggerPath, ginSwagger.WrapHandler(swaggerfiles.Handler))
+
+        // Endpoint configurations
+        authMiddleware := http_handlers.AuthMiddleware(s.auth)
+        api := s.router.Group(s.conf.Server.BasePath)
+
+        api.GET("/health", http_handlers.Healthcheck(s.logger, s.db, s.cache))
+
+        userGroup := api.Group("/user")
+        userGroup.POST("/register", http_handlers.RegisterUser(s.logger, s.auth, s.db))
+        userGroup.POST("/login", http_handlers.LoginUser(s.logger, s.auth, s.db))
+        userGroup.Use(authMiddleware).POST("/refresh", http_handlers.LoginRefresh(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
+        userGroup.Use(authMiddleware).DELETE("/delete", http_handlers.DeleteUser(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
+
+        scoreGroup := api.Group("/score").Use(authMiddleware)
+        scoreGroup.GET("/test/:quiz_id", http_handlers.GetScore(s.logger, s.auth, s.db))
+        scoreGroup.GET("/stats/:quiz_id", http_handlers.GetStats(s.logger, s.auth, s.db))
+        scoreGroup.GET("/stats-paged/:quiz_id", http_handlers.GetStatsPage(s.logger, s.auth, s.db))
+
+        quizGroup := api.Group("/quiz").Use(authMiddleware)
+        quizGroup.GET("/view/:quiz_id", http_handlers.ViewQuiz(s.logger, s.auth, s.db, s.cache))
+        quizGroup.POST("/create", http_handlers.CreateQuiz(s.logger, s.auth, s.db))
+        quizGroup.PATCH("/update/:quiz_id", http_handlers.UpdateQuiz(s.logger, s.auth, s.db))
+        quizGroup.DELETE("/delete/:quiz_id", http_handlers.DeleteQuiz(s.logger, s.auth, s.db, s.cache))
+        quizGroup.PATCH("/publish/:quiz_id", http_handlers.PublishQuiz(s.logger, s.auth, s.db, s.cache))
+        quizGroup.POST("/take/:quiz_id", http_handlers.TakeQuiz(s.logger, s.auth, s.db, s.grading))
+}</span>
+</pre>
+		
+		<pre class="file" id="file17" style="display: none">package rest
+
+// configTestData will return a map of test data containing valid and invalid Authorization configs.
+func configTestData() map[string]string <span class="cov8" title="1">{
+        return map[string]string{
+                "empty": ``,
+
+                "valid": `
+server:
+  port_number: 44243
+  shutdown_delay: 5
+  base_path: api/rest/v1
+  swagger_path: /swagger/*any
+authorization:
+  header_key: Authorization`,
+
+                "out of range port": `
+server:
+  port_number: 99
+  shutdown_delay: 5
+  base_path: api/rest/v1
+  swagger_path: /swagger/*any
+authorization:
+  header_key: Authorization`,
+
+                "out of range shutdown delay": `
+server:
+  port_number: 44243
+  shutdown_delay: -1
+  base_path: api/rest/v1
+  swagger_path: /swagger/*any
+authorization:
+  header_key: Authorization`,
+
+                "no base path": `
+server:
+  port_number: 44243
+  shutdown_delay: 5
+  swagger_path: /swagger/*any
+authorization:
+  header_key: Authorization`,
+
+                "no swagger path": `
+server:
+  port_number: 44243
+  shutdown_delay: 5
+  base_path: api/rest/v1
+authorization:
+  header_key: Authorization`,
+
+                "no auth header": `
+server:
+  port_number: 44243
+  shutdown_delay: 5
+  base_path: api/rest/v1
+  swagger_path: /swagger/*any`,
+        }
+}</span>
+</pre>
+		
+		<pre class="file" id="file18" style="display: none">package logger
+
+import (
+        "github.com/spf13/afero"
+        "github.com/spf13/viper"
+        "github.com/surahman/mcq-platform/pkg/constants"
+        "github.com/surahman/mcq-platform/pkg/validator"
+)
+
+// config contains the configurations loaded from the configuration file.
+type config struct {
+        BuiltinConfig        string         `json:"builtin_config,omitempty" yaml:"builtin_config,omitempty" mapstructure:"builtin_config" validate:"oneof='Production' 'production' 'Development' 'development'"`
+        BuiltinEncoderConfig string         `json:"builtin_encoder_config,omitempty" yaml:"builtin_encoder_config,omitempty" mapstructure:"builtin_encoder_config" validate:"oneof='Production' 'production' 'Development' 'development'"`
+        GeneralConfig        *generalConfig `json:"general_config,omitempty" yaml:"general_config,omitempty" mapstructure:"general_config"`
+        EncoderConfig        *encoderConfig `json:"encoder_config,omitempty" yaml:"encoder_config,omitempty" mapstructure:"encoder_config"`
+}
+
+// generalConfig contains all the general logger configurations.
+type generalConfig struct {
+        Development       bool     `json:"development" yaml:"development" mapstructure:"development" validate:"required"`
+        DisableCaller     bool     `json:"disableCaller" yaml:"disableCaller" mapstructure:"disableCaller" validate:"required"`
+        DisableStacktrace bool     `json:"disableStacktrace" yaml:"disableStacktrace" mapstructure:"disableStacktrace" validate:"required"`
+        Encoding          string   `json:"encoding" yaml:"encoding" mapstructure:"encoding" validate:"required"`
+        OutputPaths       []string `json:"outputPaths" yaml:"outputPaths" mapstructure:"outputPaths" validate:"required"`
+        ErrorOutputPaths  []string `json:"errorOutputPaths" yaml:"errorOutputPaths" mapstructure:"errorOutputPaths" validate:"required"`
+}
+
+// encoderConfig contains all the log encoder configurations.
+type encoderConfig struct {
+        MessageKey       string `json:"messageKey" yaml:"messageKey" mapstructure:"messageKey" validate:"required"`
+        LevelKey         string `json:"levelKey" yaml:"levelKey" mapstructure:"levelKey" validate:"required"`
+        TimeKey          string `json:"timeKey" yaml:"timeKey" mapstructure:"timeKey" validate:"required"`
+        NameKey          string `json:"nameKey" yaml:"nameKey" mapstructure:"nameKey" validate:"required"`
+        CallerKey        string `json:"callerKey" yaml:"callerKey" mapstructure:"callerKey" validate:"required"`
+        FunctionKey      string `json:"functionKey" yaml:"functionKey" mapstructure:"functionKey" validate:"required"`
+        StacktraceKey    string `json:"stacktraceKey" yaml:"stacktraceKey" mapstructure:"stacktraceKey" validate:"required"`
+        SkipLineEnding   bool   `json:"skipLineEnding" yaml:"skipLineEnding" mapstructure:"skipLineEnding" validate:"required"`
+        LineEnding       string `json:"lineEnding" yaml:"lineEnding" mapstructure:"lineEnding" validate:"required"`
+        ConsoleSeparator string `json:"consoleSeparator" yaml:"consoleSeparator" mapstructure:"consoleSeparator" validate:"required"`
+}
+
+// newConfig creates a blank configuration struct for the Zap Logger.
+func newConfig() *config <span class="cov6" title="5">{
+        return &amp;config{}
+}</span>
+
+// Load will attempt to load configurations from a file on a file system.
+func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="13">{
+        viper.SetFs(fs)
+        viper.SetConfigName(constants.GetLoggerFileName())
+        viper.SetConfigType("yaml")
+        viper.AddConfigPath(constants.GetEtcDir())
+        viper.AddConfigPath(constants.GetHomeDir())
+        viper.AddConfigPath(constants.GetBaseDir())
+
+        viper.SetEnvPrefix(constants.GetLoggerPrefix())
+        if err := viper.BindEnv("builtin_config"); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov10" title="13">if err := viper.BindEnv("builtin_encoder_config"); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov10" title="13">if err = viper.ReadInConfig(); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov10" title="13">if err = viper.Unmarshal(cfg); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov10" title="13">if err = validator.ValidateStruct(cfg); err != nil </span><span class="cov4" title="3">{
+                return
+        }</span>
+
+        <span class="cov9" title="10">return</span>
+}
+</pre>
+		
+		<pre class="file" id="file19" style="display: none">package logger
+
+import (
+        "errors"
+        "log"
+        "strings"
+
+        "github.com/spf13/afero"
+        "go.uber.org/zap"
+        "go.uber.org/zap/zapcore"
+        "gopkg.in/yaml.v3"
+)
+
+// Logger is the Zap logger object.
+type Logger struct {
+        zapLogger *zap.Logger
+}
+
+// NewLogger will create a new uninitialized logger.
+func NewLogger() *Logger <span class="cov9" title="8">{
+        return &amp;Logger{}
+}</span>
+
+// Init will initialize the logger with configurations and start it.
+func (l *Logger) Init(fs *afero.Fs) (err error) <span class="cov8" title="6">{
+        if l.zapLogger != nil </span><span class="cov1" title="1">{
+                return errors.New("logger is already initialized")
+        }</span>
+        <span class="cov7" title="5">var baseConfig zap.Config
+        var encConfig zapcore.EncoderConfig
+
+        userConfig := newConfig()
+        if err = userConfig.Load(*fs); err != nil </span><span class="cov1" title="1">{
+                log.Printf("failed to load logger configuration file from disk: %v\n", err)
+                return
+        }</span>
+
+        // Base logger configuration.
+        <span class="cov6" title="4">switch strings.ToLower(userConfig.BuiltinConfig) </span>{
+        case "development":<span class="cov5" title="3">
+                baseConfig = zap.NewDevelopmentConfig()
+                break</span>
+        case "production":<span class="cov1" title="1">
+                baseConfig = zap.NewProductionConfig()
+                break</span>
+        default:<span class="cov0" title="0">
+                log.Println("could not select the base constants type")
+                return</span>
+        }
+
+        // Encoder logger configuration.
+        <span class="cov6" title="4">switch strings.ToLower(userConfig.BuiltinEncoderConfig) </span>{
+        case "development":<span class="cov5" title="3">
+                encConfig = zap.NewDevelopmentEncoderConfig()
+                break</span>
+        case "production":<span class="cov1" title="1">
+                encConfig = zap.NewProductionEncoderConfig()
+                break</span>
+        default:<span class="cov0" title="0">
+                log.Println("could not select the base encoder constants type")
+                return</span>
+        }
+
+        // Merge configurations.
+        <span class="cov6" title="4">if err = mergeConfig[*zap.Config, *generalConfig](&amp;baseConfig, userConfig.GeneralConfig); err != nil </span><span class="cov0" title="0">{
+                log.Printf("failed to merge base configurations and user provided configurations for logger: %v\n", err)
+                return
+        }</span>
+        <span class="cov6" title="4">if err = mergeConfig[*zapcore.EncoderConfig, *encoderConfig](&amp;encConfig, userConfig.EncoderConfig); err != nil </span><span class="cov0" title="0">{
+                log.Printf("failed to merge base encoder configurations and user provided encoder configurations for logger: %v\n", err)
+                return
+        }</span>
+
+        // Init and create logger.
+        <span class="cov6" title="4">baseConfig.EncoderConfig = encConfig
+        if l.zapLogger, err = baseConfig.Build(zap.AddCallerSkip(1)); err != nil </span><span class="cov0" title="0">{
+                log.Printf("failure configuring logger: %v\n", err)
+                return
+        }</span>
+        <span class="cov6" title="4">return</span>
+}
+
+// Info logs messages at the info level.
+func (l *Logger) Info(message string, fields ...zap.Field) <span class="cov3" title="2">{
+        l.zapLogger.Info(message, fields...)
+}</span>
+
+// Debug logs messages at the debug level.
+func (l *Logger) Debug(message string, fields ...zap.Field) <span class="cov3" title="2">{
+        l.zapLogger.Debug(message, fields...)
+}</span>
+
+// Warn logs messages at the warn level.
+func (l *Logger) Warn(message string, fields ...zap.Field) <span class="cov3" title="2">{
+        l.zapLogger.Warn(message, fields...)
+}</span>
+
+// Error logs messages at the error level.
+func (l *Logger) Error(message string, fields ...zap.Field) <span class="cov3" title="2">{
+        l.zapLogger.Error(message, fields...)
+}</span>
+
+// Panic logs messages at the panic level and then panics at the call site.
+func (l *Logger) Panic(message string, fields ...zap.Field) <span class="cov3" title="2">{
+        l.zapLogger.Panic(message, fields...)
+}</span>
+
+// mergeConfig will merge the configuration files by marshalling and unmarshalling.
+func mergeConfig[DST *zap.Config | *zapcore.EncoderConfig, SRC *generalConfig | *encoderConfig](dst DST, src SRC) (err error) <span class="cov10" title="10">{
+        var yamlToConv []byte
+        if yamlToConv, err = yaml.Marshal(src); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+        <span class="cov10" title="10">if err = yaml.Unmarshal(yamlToConv, dst); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+        <span class="cov10" title="10">return</span>
+}
+
+/*** Unexported methods and members to support testing. ***/
+
+// setTestLogger is an unexported utility method that set a logger base for testing.
+func (l *Logger) setTestLogger(testLogger *zap.Logger) <span class="cov3" title="2">{
+        l.zapLogger = testLogger
+}</span>
+
+// NewTestLogger will create a new development logger to be used in test suites.
+func NewTestLogger() (logger *Logger, err error) <span class="cov1" title="1">{
+        baseConfig := zap.NewDevelopmentConfig()
+        baseConfig.EncoderConfig = zap.NewDevelopmentEncoderConfig()
+        var zapLogger *zap.Logger
+        if zapLogger, err = baseConfig.Build(zap.AddCallerSkip(1)); err != nil </span><span class="cov0" title="0">{
+                log.Printf("failure configuring logger: %v\n", err)
+                return nil, err
+        }</span>
+        <span class="cov1" title="1">return &amp;Logger{zapLogger: zapLogger}, err</span>
+}
+</pre>
+		
+		<pre class="file" id="file20" style="display: none">package logger
+
+// configTestData will return a map of test data containing valid and invalid logger configs.
+func configTestData() map[string]string <span class="cov8" title="1">{
+        testData := make(map[string]string)
+
+        testData["empty"] = ``
+
+        testData["valid_devel"] = `
+builtin_config: Development
+builtin_encoder_config: Development`
+
+        testData["valid_prod"] = `
+builtin_config: Production
+builtin_encoder_config: Production`
+
+        testData["invalid_builtin"] = `
+builtin_config: Invalid
+builtin_encoder_config: Invalid`
+
+        testData["valid_config"] = `
+builtin_config: Development
+builtin_encoder_config: Development
+general_config:
+  development: true
+  disableCaller: true
+  disableStacktrace: true
+  encoding: json
+  outputPaths: ["stdout", "stderr"]
+  errorOutputPaths: ["stdout", "stderr"]
+encoder_config:
+  messageKey: message key
+  levelKey: level key
+  timeKey: time key
+  nameKey: name key
+  callerKey: caller key
+  functionKey: function key
+  stacktraceKey: stacktrace key
+  skipLineEnding: true
+  lineEnding: line ending
+  consoleSeparator: console separator`
+
+        return testData
+}</span>
+</pre>
+		
+		<pre class="file" id="file21" style="display: none">package redis
+
+import (
+        "github.com/spf13/afero"
+        "github.com/spf13/viper"
+        "github.com/surahman/mcq-platform/pkg/constants"
+        "github.com/surahman/mcq-platform/pkg/validator"
+)
+
+// config is the configuration container for connecting to the Redis cluster
+type config struct {
+        Authentication struct {
+                Password string `json:"password,omitempty" yaml:"password,omitempty" mapstructure:"password" validate:"required"`
+        } `json:"authentication,omitempty" yaml:"authentication,omitempty" mapstructure:"authentication"`
+        Connection struct {
+                Addrs          []string `json:"addrs,omitempty" yaml:"addrs,omitempty" mapstructure:"addrs" validate:"required,min=1"`
+                MaxRedirects   int      `json:"max_redirects,omitempty" yaml:"max_redirects,omitempty" mapstructure:"max_redirects" validate:"required,min=1"`
+                MaxRetries     int      `json:"max_retries,omitempty" yaml:"max_retries,omitempty" mapstructure:"max_retries" validate:"required,min=1"`
+                PoolSize       int      `json:"pool_size,omitempty" yaml:"pool_size,omitempty" mapstructure:"pool_size" validate:"required,min=1"`
+                MinIdleConns   int      `json:"min_idle_conns,omitempty" yaml:"min_idle_conns,omitempty" mapstructure:"min_idle_conns" validate:"required,min=1"`
+                ReadOnly       bool     `json:"read_only,omitempty" yaml:"read_only,omitempty" mapstructure:"read_only"`
+                RouteByLatency bool     `json:"route_by_latency,omitempty" yaml:"route_by_latency,omitempty" mapstructure:"route_by_latency"`
+        } `json:"connection,omitempty" yaml:"connection,omitempty" mapstructure:"connection"`
+        Data struct {
+                TTL int64 `json:"ttl,omitempty" yaml:"ttl,omitempty" mapstructure:"ttl" validate:"omitempty,min=60"`
+        } `json:"data,omitempty" yaml:"data,omitempty" mapstructure:"data"`
+}
+
+// newConfig creates a blank configuration struct for Redis.
+func newConfig() *config <span class="cov4" title="3">{
+        return &amp;config{}
+}</span>
+
+// Load will attempt to load configurations from a file on a file system and then overwrite values using environment variables.
+func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="13">{
+        viper.SetFs(fs)
+        viper.SetConfigName(constants.GetRedisFileName())
+        viper.SetConfigType("yaml")
+        viper.AddConfigPath(constants.GetEtcDir())
+        viper.AddConfigPath(constants.GetHomeDir())
+        viper.AddConfigPath(constants.GetBaseDir())
+
+        viper.SetEnvPrefix(constants.GetRedisPrefix())
+        viper.AutomaticEnv()
+
+        if err = viper.ReadInConfig(); err != nil </span><span class="cov1" title="1">{
+                return
+        }</span>
+
+        <span class="cov9" title="12">if err = viper.Unmarshal(cfg); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov9" title="12">if err = validator.ValidateStruct(cfg); err != nil </span><span class="cov8" title="8">{
+                return
+        }</span>
+
+        <span class="cov5" title="4">return</span>
+}
+</pre>
+		
+		<pre class="file" id="file22" style="display: none">package redis
+
+// Error codes.
+const (
+        ErrorUnknown = iota
+        ErrorCacheMiss
+        ErrorCacheSet
+        ErrorCacheDel
+)
+
+// Error is the base error type. The builder pattern is used to add specialization codes to the errors.
+type Error struct {
+        Message string
+        Code    int
+}
+
+// Check to ensure the error interface is implemented.
+var _ error = &amp;Error{}
+
+// Error get human readable error message.
+func (e *Error) Error() string <span class="cov4" title="2">{
+        return e.Message
+}</span>
+
+// NewError is a base error message with no special code.
+func NewError(message string) *Error <span class="cov10" title="8">{
+        return &amp;Error{Message: message, Code: ErrorUnknown}
+}</span>
+
+// errorCacheMiss will specialize the error as a cache miss.
+func (e *Error) errorCacheMiss() *Error <span class="cov7" title="5">{
+        e.Code = ErrorCacheMiss
+        return e
+}</span>
+
+// errorCacheSet will specialize the error as a cache set failure.
+func (e *Error) errorCacheSet() *Error <span class="cov1" title="1">{
+        e.Code = ErrorCacheSet
+        return e
+}</span>
+
+// errorCacheDel will specialize the error as a cache delete failure.
+func (e *Error) errorCacheDel() *Error <span class="cov1" title="1">{
+        e.Code = ErrorCacheDel
+        return e
+}</span>
+</pre>
+		
+		<pre class="file" id="file23" style="display: none">package redis
+
+import (
+        "bytes"
+        "context"
+        "encoding/gob"
+        "errors"
+        "time"
+
+        "github.com/go-redis/redis/v9"
+        "github.com/spf13/afero"
+        "github.com/surahman/mcq-platform/pkg/logger"
+        "go.uber.org/zap"
+)
+
+// Mock Redis interface stub generation.
+//go:generate mockgen -destination=../mocks/mock_redis.go -package=mocks github.com/surahman/mcq-platform/pkg/redis Redis
+
+// Redis is the interface through which the cluster can be accessed. Created to support mock testing.
+type Redis interface {
+        // Open will create a connection pool and establish a connection to the cache cluster.
+        Open() error
+
+        // Close will shut down the connection pool and ensure that the connection to the cache cluster is terminated correctly.
+        Close() error
+
+        // Healthcheck will ping all the nodes in the cluster to see if all the shards are reachable.
+        Healthcheck() error
+
+        // Set will place a key with a given value in the cluster with a TTL, if specified in the configurations.
+        Set(string, any) error
+
+        // Get will retrieve a value associated with a provided key.
+        Get(string, any) error
+
+        // Del will remove all keys provided as a set of keys.
+        Del(...string) error
+}
+
+// Check to ensure the Redis interface has been implemented.
+var _ Redis = &amp;redisImpl{}
+
+// redisImpl implements the Redis interface and contains the logic to interface with the cluster.
+type redisImpl struct {
+        conf    *config
+        redisDb *redis.ClusterClient
+        logger  *logger.Logger
+}
+
+// NewRedis will create a new Redis configuration by loading it.
+func NewRedis(fs *afero.Fs, logger *logger.Logger) (Redis, error) <span class="cov6" title="4">{
+        if fs == nil || logger == nil </span><span class="cov4" title="3">{
+                return nil, errors.New("nil file system or logger supplied")
+        }</span>
+        <span class="cov1" title="1">return newRedisImpl(fs, logger)</span>
+}
+
+// newRedisImpl will create a new redisImpl configuration and load it from disk.
+func newRedisImpl(fs *afero.Fs, logger *logger.Logger) (c *redisImpl, err error) <span class="cov4" title="3">{
+        c = &amp;redisImpl{conf: newConfig(), logger: logger}
+        if err = c.conf.Load(*fs); err != nil </span><span class="cov1" title="1">{
+                c.logger.Error("failed to load Redis configurations from disk", zap.Error(err))
+                return nil, err
+        }</span>
+        <span class="cov3" title="2">return</span>
+}
+
+// verifySession will check to see if a session is established.
+func (r *redisImpl) verifySession() error <span class="cov10" title="12">{
+        if r.redisDb == nil || r.redisDb.Ping(context.Background()).Err() != nil </span><span class="cov9" title="10">{
+                return errors.New("no session established")
+        }</span>
+        <span class="cov3" title="2">return nil</span>
+}
+
+// Open will establish a connection to the Redis cache cluster.
+func (r *redisImpl) Open() (err error) <span class="cov8" title="7">{
+        // Stop connection leaks.
+        if err = r.verifySession(); err == nil </span><span class="cov1" title="1">{
+                r.logger.Warn("session to cluster is already established")
+                return errors.New("session to cluster is already established")
+        }</span>
+
+        <span class="cov7" title="6">r.redisDb = redis.NewClusterClient(&amp;redis.ClusterOptions{
+                Addrs:          r.conf.Connection.Addrs,
+                MaxRedirects:   r.conf.Connection.MaxRedirects,
+                ReadOnly:       r.conf.Connection.ReadOnly,
+                RouteByLatency: r.conf.Connection.RouteByLatency,
+                Password:       r.conf.Authentication.Password,
+                MaxRetries:     r.conf.Connection.MaxRetries,
+                PoolSize:       r.conf.Connection.PoolSize,
+                MinIdleConns:   r.conf.Connection.MinIdleConns,
+        })
+
+        if err = r.redisDb.Ping(context.Background()).Err(); err != nil </span><span class="cov3" title="2">{
+                r.logger.Error("failed to establish redis cluster connection", zap.Error(err))
+                return
+        }</span>
+
+        <span class="cov6" title="4">return nil</span>
+}
+
+// Close will terminate a connection to the Redis cache cluster.
+func (r *redisImpl) Close() (err error) <span class="cov4" title="3">{
+        // Check for an open connection.
+        if err = r.verifySession(); err != nil </span><span class="cov3" title="2">{
+                msg := "no session to cluster established to close"
+                r.logger.Warn(msg)
+                return errors.New(msg)
+        }</span>
+        <span class="cov1" title="1">return r.redisDb.Close()</span>
+}
+
+// Healthcheck will iterate through all the data shards and attempt to ping them to ensure they are all reachable.
+func (r *redisImpl) Healthcheck() (err error) <span class="cov3" title="2">{
+        err = r.redisDb.ForEachShard(context.Background(), func(ctx context.Context, shard *redis.Client) error </span><span class="cov7" title="6">{
+                return shard.Ping(ctx).Err()
+        }</span>)
+        <span class="cov3" title="2">return</span>
+}
+
+// Set will place a key with a given value in the cluster with a TTL, if specified in the configurations.
+func (r *redisImpl) Set(key string, value any) error <span class="cov3" title="2">{
+        // Write value to byte array.
+        buffer := bytes.Buffer{}
+        encoder := gob.NewEncoder(&amp;buffer)
+        if err := encoder.Encode(value); err != nil </span><span class="cov0" title="0">{
+                return NewError(err.Error())
+        }</span>
+
+        <span class="cov3" title="2">if err := r.redisDb.Set(context.Background(), key, buffer.Bytes(), time.Duration(r.conf.Data.TTL)*time.Second).Err(); err != nil </span><span class="cov0" title="0">{
+                r.logger.Error("failed to place item in Redis cache", zap.String("key", key), zap.Error(err))
+                return NewError(err.Error()).errorCacheSet()
+        }</span>
+        <span class="cov3" title="2">return nil</span>
+}
+
+// Get will retrieve a value associated with a provided key and write the result into the value parameter.
+func (r *redisImpl) Get(key string, value any) error <span class="cov6" title="4">{
+        var err error
+        var rawData []byte
+        if rawData, err = r.redisDb.Get(context.Background(), key).Bytes(); err != nil </span><span class="cov3" title="2">{
+                return NewError(err.Error()).errorCacheMiss()
+        }</span>
+
+        // Convert to struct.
+        <span class="cov3" title="2">decoder := gob.NewDecoder(bytes.NewBuffer(rawData))
+        if err = decoder.Decode(value); err != nil </span><span class="cov0" title="0">{
+                return NewError(err.Error())
+        }</span>
+
+        <span class="cov3" title="2">return nil</span>
+}
+
+// Del will remove all keys provided as a list of keys.
+func (r *redisImpl) Del(keys ...string) error <span class="cov6" title="4">{
+        for _, key := range keys </span><span class="cov6" title="4">{
+                intCmd := r.redisDb.Del(context.Background(), key)
+                if err := intCmd.Err(); err != nil </span><span class="cov0" title="0">{
+                        r.logger.Error("failed to evict item from Redis cache", zap.String("key", key), zap.Error(err))
+                        return NewError(err.Error()).errorCacheDel()
+                }</span>
+                <span class="cov6" title="4">if intCmd.Val() == 0 </span><span class="cov3" title="2">{
+                        err := NewError("unable to locate key on Redis cluster").errorCacheMiss()
+                        r.logger.Warn("failed to evict item from Redis cache", zap.String("key", key), zap.Error(err))
+                        return err
+                }</span>
+        }
+        <span class="cov3" title="2">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file24" style="display: none">package redis
+
+// configTestData will return a map of test data containing valid and invalid Cassandra configs.
+func configTestData() map[string]string <span class="cov8" title="1">{
+        return map[string]string{
+                "empty": ``,
+
+                "valid": `
+authentication:
+  password: root
+connection:
+  addrs: [127.0.0.1:6379, 127.0.0.1:6380, 127.0.0.1:6381, 127.0.0.1:6382, 127.0.0.1:6383, 127.0.0.1:6384]
+  max_redirects: 3
+  max_retries: 3
+  pool_size: 4
+  min_idle_conns: 1
+  read_only: false
+  route_by_latency: false
+data:
+  ttl: 3600`,
+
+                "password_empty": `
+authentication:
+  password:
+connection:
+  addrs: [127.0.0.1:6379, 127.0.0.1:6380, 127.0.0.1:6381, 127.0.0.1:6382, 127.0.0.1:6383, 127.0.0.1:6384]
+  max_redirects: 3
+  max_retries: 3
+  pool_size: 4
+  min_idle_conns: 1
+  read_only: false
+  route_by_latency: false
+data:
+  ttl: 3600`,
+
+                "no_addrs": `
+authentication:
+  password: root
+connection:
+  addrs: []
+  max_redirects: 3
+  max_retries: 3
+  pool_size: 4
+  min_idle_conns: 1
+  read_only: false
+  route_by_latency: false
+data:
+  ttl: 3600`,
+
+                "invalid_max_redirects": `
+authentication:
+  password: root
+connection:
+  addrs: [127.0.0.1:6379, 127.0.0.1:6380, 127.0.0.1:6381, 127.0.0.1:6382, 127.0.0.1:6383, 127.0.0.1:6384]
+  max_redirects: 0
+  max_retries: 3
+  pool_size: 4
+  min_idle_conns: 1
+  read_only: false
+  route_by_latency: false
+data:
+  ttl: 3600`,
+
+                "invalid_max_retries": `
+authentication:
+  password: root
+connection:
+  addrs: [127.0.0.1:6379, 127.0.0.1:6380, 127.0.0.1:6381, 127.0.0.1:6382, 127.0.0.1:6383, 127.0.0.1:6384]
+  max_redirects: 3
+  max_retries: 0
+  pool_size: 4
+  min_idle_conns: 1
+  read_only: false
+  route_by_latency: false
+data:
+  ttl: 3600`,
+
+                "invalid_pool_size": `
+authentication:
+  password: root
+connection:
+  addrs: [127.0.0.1:6379, 127.0.0.1:6380, 127.0.0.1:6381, 127.0.0.1:6382, 127.0.0.1:6383, 127.0.0.1:6384]
+  max_redirects: 3
+  max_retries: 3
+  pool_size: 0
+  min_idle_conns: 1
+  read_only: false
+  route_by_latency: false
+data:
+  ttl: 3600`,
+
+                "invalid_min_idle_conns": `
+authentication:
+  password: root
+connection:
+  addrs: [127.0.0.1:6379, 127.0.0.1:6380, 127.0.0.1:6381, 127.0.0.1:6382, 127.0.0.1:6383, 127.0.0.1:6384]
+  max_redirects: 3
+  max_retries: 3
+  pool_size: 4
+  min_idle_conns: 0
+  read_only: false
+  route_by_latency: false
+data:
+  ttl: 3600`,
+
+                "invalid_min_ttl": `
+authentication:
+  password: root
+connection:
+  addrs: [127.0.0.1:6379, 127.0.0.1:6380, 127.0.0.1:6381, 127.0.0.1:6382, 127.0.0.1:6383, 127.0.0.1:6384]
+  max_redirects: 3
+  max_retries: 3
+  pool_size: 4
+  min_idle_conns: 1
+  read_only: false
+  route_by_latency: false
+data:
+  ttl: 59`,
+        }
+}</span>
+</pre>
+		
+		<pre class="file" id="file25" style="display: none">package validator
+
+import (
+        "bytes"
+        "fmt"
+        "log"
+
+        "github.com/go-playground/validator/v10"
+)
+
+// structValidator is the validator instance that is used for structure validation.
+var structValidator *validator.Validate
+
+// init the validator and add custom validation rules.
+func init() <span class="cov1" title="1">{
+        structValidator = validator.New()
+        if err := structValidator.RegisterValidation("answers_LT_options", validateNumAnswers); err != nil </span><span class="cov0" title="0">{
+                log.Fatalf("failed to initialize struct validator with custom validation rule: %v", err)
+        }</span>
+}
+
+// ErrorField contains information on JSON validation errors.
+type ErrorField struct {
+        Field string `json:"field" yaml:"field"` // Field name where the validation error occurred.
+        Tag   string `json:"tag" yaml:"tag"`     // The reason for the validation failure.
+        Value any    `json:"value" yaml:"value"` // The value(s) associated with the failure.
+}
+
+// Error will output the validation error for a single structs data member.
+func (err *ErrorField) Error() string <span class="cov10" title="7">{
+        return fmt.Sprintf("Field: %s, Tag: %s, Value: %s\n", err.Field, err.Tag, err.Value)
+}</span>
+
+// ErrorValidation contains all the validation errors found in a struct.
+type ErrorValidation struct {
+        Errors []*ErrorField `json:"validation_errors" yaml:"validation_errors"` // A list of all data members that failed validation.
+}
+
+// Error will output the validation error for all struct data members.
+func (err *ErrorValidation) Error() string <span class="cov6" title="3">{
+        var buffer bytes.Buffer
+        for _, item := range err.Errors </span><span class="cov6" title="3">{
+                buffer.WriteString(item.Error())
+        }</span>
+        <span class="cov6" title="3">return buffer.String()</span>
+}
+
+// ValidateStruct will validate a struct and list all deficiencies.
+func ValidateStruct(body any) error <span class="cov9" title="6">{
+        var validationErr ErrorValidation
+        if err := structValidator.Struct(body); err != nil </span><span class="cov8" title="5">{
+                for _, issue := range err.(validator.ValidationErrors) </span><span class="cov10" title="7">{
+                        var ev ErrorField
+                        ev.Field = issue.Field()
+                        ev.Tag = issue.Tag()
+                        ev.Value = issue.Value()
+                        validationErr.Errors = append(validationErr.Errors, &amp;ev)
+                }</span>
+        }
+        <span class="cov9" title="6">if validationErr.Errors == nil </span><span class="cov1" title="1">{
+                return nil
+        }</span>
+        <span class="cov8" title="5">return &amp;validationErr</span>
+}
+
+// validateNumAnswers is used by the validator to check if the number of answers is not greater than the number of questions.
+func validateNumAnswers(fieldValue validator.FieldLevel) bool <span class="cov0" title="0">{
+        options := fieldValue.Parent().FieldByName("Options").Interface().([]string)
+        numOptions := len(options)
+        numAnswers := fieldValue.Field().Len()
+
+        if numAnswers &gt; numOptions </span><span class="cov0" title="0">{
+                return false
+        }</span>
+
+        <span class="cov0" title="0">return true</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
