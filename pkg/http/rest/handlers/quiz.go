@@ -361,14 +361,13 @@ func PublishQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, 
 // @Failure     403     {object} model_rest.Error             "Error message with any available details in payload"
 // @Failure     500     {object} model_rest.Error             "Error message with any available details in payload"
 // @Router      /quiz/take/{quiz_id} [post]
-func TakeQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, grader grading.Grading) gin.HandlerFunc {
+func TakeQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, cache redis.Redis, grader grading.Grading) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		var err error
 		var username string
 		var quizResponse model_cassandra.QuizResponse
 		var quiz *model_cassandra.Quiz
 		var quizId gocql.UUID
-		var rawQuiz any
 		var score float64
 
 		if quizId, err = gocql.ParseUUID(context.Param("quiz_id")); err != nil {
@@ -394,13 +393,14 @@ func TakeQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, gra
 			return
 		}
 
-		// Get quizResponse record from database.
-		if rawQuiz, err = db.Execute(cassandra.ReadQuizQuery, quizId); err != nil {
+		// Get quiz:
+		// [1] Cache call.
+		// [2] Cache miss: read from the database and store it in the cache.
+		if quiz, err = getQuiz(quizId.String(), db, cache); err != nil {
 			cassandraError := err.(*cassandra.Error)
-			context.AbortWithStatusJSON(cassandraError.Status, &model_rest.Error{Message: "error retrieving quizResponse", Payload: cassandraError.Message})
+			context.AbortWithStatusJSON(cassandraError.Status, &model_rest.Error{Message: "error retrieving quiz", Payload: cassandraError.Message})
 			return
 		}
-		quiz = rawQuiz.(*model_cassandra.Quiz)
 
 		// Check to see if the quiz is deleted or unpublished.
 		if !quiz.IsPublished || quiz.IsDeleted {

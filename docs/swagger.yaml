@@ -209,7 +209,7 @@ info:
     name: GPL-3.0
     url: https://opensource.org/licenses/GPL-3.0
   title: Multiple Choice Question Platform.
-  version: 1.0.1
+  version: 1.1.0
 paths:
   /health:
     get:
