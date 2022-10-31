@@ -61,8 +61,7 @@ func getQuiz(quizId string, db cassandra.Cassandra, cache redis.Redis) (*model_c
 func ViewQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, cache redis.Redis) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		var err error
-		var response any
-		var quiz model_cassandra.Quiz
+		var quiz *model_cassandra.Quiz
 		var username string
 		var quizId gocql.UUID
 
@@ -78,25 +77,13 @@ func ViewQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, cac
 			return
 		}
 
-		// Cache call.
-		err = cache.Get(quizId.String(), &quiz)
-
-		// Cache miss:
-		// [1] Get quiz record from database.
-		// [2] Place quiz in cache. Log but do not propagate errors to user on cache set failures.
-		if err != nil {
-			// Get quiz record from database.
-			if response, err = db.Execute(cassandra.ReadQuizQuery, quizId); err != nil {
-				cassandraError := err.(*cassandra.Error)
-				context.AbortWithStatusJSON(cassandraError.Status, &model_rest.Error{Message: "error retrieving quiz", Payload: cassandraError.Message})
-				return
-			}
-			quiz = *response.(*model_cassandra.Quiz)
-
-			// Only place quiz in cache if it is published and not deleted. Set method will log errors.
-			if quiz.IsPublished && !quiz.IsDeleted {
-				_ = cache.Set(quizId.String(), &quiz)
-			}
+		// Get quiz:
+		// [1] Cache call.
+		// [2] Cache miss: read from the database and store it in the cache.
+		if quiz, err = getQuiz(quizId.String(), db, cache); err != nil {
+			cassandraError := err.(*cassandra.Error)
+			context.AbortWithStatusJSON(cassandraError.Status, &model_rest.Error{Message: "error retrieving quiz", Payload: cassandraError.Message})
+			return
 		}
 
 		// Check to see if quiz can be set to requester.
