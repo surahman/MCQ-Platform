@@ -2280,19 +2280,19 @@ func TakeQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, cac
                 }</span>
 
                 // Check to see if the quiz is deleted or unpublished.
-                <span class="cov6" title="8">if !quiz.IsPublished || quiz.IsDeleted </span><span class="cov4" title="3">{
+                <span class="cov6" title="8">if !quiz.IsPublished || quiz.IsDeleted </span><span class="cov2" title="2">{
                         context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_rest.Error{Message: "quiz is unavailable"})
                         return
                 }</span>
 
                 // Grade the quizResponse.
-                <span class="cov5" title="5">if score, err = grader.Grade(&amp;quizResponse, quiz.QuizCore); err != nil </span><span class="cov1" title="1">{
+                <span class="cov6" title="6">if score, err = grader.Grade(&amp;quizResponse, quiz.QuizCore); err != nil </span><span class="cov1" title="1">{
                         context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "error marking response", Payload: err.Error()})
                         return
                 }</span>
 
                 // Insert updated record.
-                <span class="cov4" title="4">response := model_cassandra.Response{
+                <span class="cov5" title="5">response := model_cassandra.Response{
                         Username:     username,
                         Score:        score,
                         QuizResponse: &amp;quizResponse,
@@ -2304,7 +2304,7 @@ func TakeQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, cac
                         return
                 }</span>
 
-                <span class="cov2" title="2">context.JSON(http.StatusOK, &amp;model_rest.Success{Message: "submitted quiz response", Payload: &amp;response})</span>
+                <span class="cov4" title="3">context.JSON(http.StatusOK, &amp;model_rest.Success{Message: "submitted quiz response", Payload: &amp;response})</span>
         }
 }
 </pre>

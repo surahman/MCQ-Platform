@@ -1288,6 +1288,7 @@ func TestTakeQuiz(t *testing.T) {
 				times:        1,
 			},
 			redisGetData: &mockRedisData{
+				param2: model_cassandra.Quiz{},
 				err: &redis.Error{
 					Message: "cache miss",
 					Code:    redis.ErrorCacheMiss,
@@ -1321,6 +1322,7 @@ func TestTakeQuiz(t *testing.T) {
 				times:        1,
 			},
 			redisGetData: &mockRedisData{
+				param2: model_cassandra.Quiz{},
 				err: &redis.Error{
 					Message: "cache miss",
 					Code:    redis.ErrorCacheMiss,
@@ -1354,6 +1356,7 @@ func TestTakeQuiz(t *testing.T) {
 				times:        1,
 			},
 			redisGetData: &mockRedisData{
+				param2: model_cassandra.Quiz{},
 				err: &redis.Error{
 					Message: "cache miss",
 					Code:    redis.ErrorCacheMiss,
@@ -1386,6 +1389,7 @@ func TestTakeQuiz(t *testing.T) {
 				times:        1,
 			},
 			redisGetData: &mockRedisData{
+				param2: model_cassandra.Quiz{},
 				err: &redis.Error{
 					Message: "cache miss",
 					Code:    redis.ErrorCacheMiss,
@@ -1419,6 +1423,7 @@ func TestTakeQuiz(t *testing.T) {
 				times:        1,
 			},
 			redisGetData: &mockRedisData{
+				param2: model_cassandra.Quiz{},
 				err: &redis.Error{
 					Message: "cache miss",
 					Code:    redis.ErrorCacheMiss,
@@ -1451,6 +1456,7 @@ func TestTakeQuiz(t *testing.T) {
 				times:        1,
 			},
 			redisGetData: &mockRedisData{
+				param2: model_cassandra.Quiz{},
 				err: &redis.Error{
 					Message: "cache miss",
 					Code:    redis.ErrorCacheMiss,
@@ -1487,6 +1493,7 @@ func TestTakeQuiz(t *testing.T) {
 				times:        1,
 			},
 			redisGetData: &mockRedisData{
+				param2: model_cassandra.Quiz{},
 				err: &redis.Error{
 					Message: "cache miss",
 					Code:    redis.ErrorCacheMiss,
@@ -1523,6 +1530,7 @@ func TestTakeQuiz(t *testing.T) {
 				times:        1,
 			},
 			redisGetData: &mockRedisData{
+				param2: model_cassandra.Quiz{},
 				err: &redis.Error{
 					Message: "cache miss",
 					Code:    redis.ErrorCacheMiss,
@@ -1555,6 +1563,7 @@ func TestTakeQuiz(t *testing.T) {
 				times:        1,
 			},
 			redisGetData: &mockRedisData{
+				param2: model_cassandra.Quiz{},
 				err: &redis.Error{
 					Message: "cache miss",
 					Code:    redis.ErrorCacheMiss,
@@ -1581,19 +1590,18 @@ func TestTakeQuiz(t *testing.T) {
 				times:       1,
 			},
 		}, {
-			// This test will return a forbidden error because the quiz returned by getQuiz is uninitialized and set to not published.
-			// The cache call will pass without an error resulting in the database and cache set calls being skipped.
 			name:           "success - cache hit",
 			path:           "/take/success-cache-hit/",
 			quizId:         gocql.TimeUUID().String(),
-			expectedStatus: http.StatusForbidden,
+			expectedStatus: http.StatusOK,
 			quizResponse:   &model_cassandra.QuizResponse{Responses: [][]int32{{}}},
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "",
 				times:        1,
 			},
 			redisGetData: &mockRedisData{
-				times: 1,
+				param2: model_cassandra.Quiz{IsPublished: true},
+				times:  1,
 			},
 			cassandraReadData: &mockCassandraData{
 				outputErr: nil,
@@ -1603,11 +1611,11 @@ func TestTakeQuiz(t *testing.T) {
 				times: 0,
 			},
 			cassandraTakeData: &mockCassandraData{
-				times: 0,
+				times: 1,
 			},
 			graderData: &mockGraderData{
 				outputParam: 1.333,
-				times:       0,
+				times:       1,
 			},
 		},
 		// ----- test cases end ----- //
@@ -1629,30 +1637,38 @@ func TestTakeQuiz(t *testing.T) {
 					testCase.authValidateJWTData.outputParam2,
 					testCase.authValidateJWTData.outputErr,
 				).Times(testCase.authValidateJWTData.times),
+
 				// Cache call.
-				mockRedis.EXPECT().Get(gomock.Any(), gomock.Any()).Return(
+				mockRedis.EXPECT().Get(gomock.Any(), gomock.Any()).SetArg(
+					1,
+					testCase.redisGetData.param2,
+				).Return(
 					testCase.redisGetData.err,
 				).Times(testCase.redisGetData.times),
+
 				// Read quizResponse.
 				mockCassandra.EXPECT().Execute(gomock.Any(), gomock.Any()).Return(
 					testCase.cassandraReadData.outputParam,
 					testCase.cassandraReadData.outputErr,
 				).Times(testCase.cassandraReadData.times),
+
 				// Cache set.
 				mockRedis.EXPECT().Set(gomock.Any(), gomock.Any()).Return(
 					testCase.redisSetData.err,
 				).Times(testCase.redisSetData.times),
+
+				// Grade quiz.
+				mockGrader.EXPECT().Grade(gomock.Any(), gomock.Any()).Return(
+					testCase.graderData.outputParam,
+					testCase.graderData.outputErr,
+				).Times(testCase.graderData.times),
+
 				// Submit response.
 				mockCassandra.EXPECT().Execute(gomock.Any(), gomock.Any()).Return(
 					testCase.cassandraTakeData.outputParam,
 					testCase.cassandraTakeData.outputErr,
 				).Times(testCase.cassandraTakeData.times),
 			)
-
-			mockGrader.EXPECT().Grade(gomock.Any(), gomock.Any()).Return(
-				testCase.graderData.outputParam,
-				testCase.graderData.outputErr,
-			).Times(testCase.graderData.times)
 
 			responseJson, err := json.Marshal(&testCase.quizResponse)
 			require.NoErrorf(t, err, "failed to marshall JSON: %v", err)
