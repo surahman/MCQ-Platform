@@ -149,7 +149,7 @@ func TestGetQuiz(t *testing.T) {
 				).Times(testCase.redisSetData.times),
 			)
 
-			actual, err := getQuiz(testCase.quiz.QuizID.String(), mockCassandra, mockRedis)
+			actual, err := getQuiz(testCase.quiz.QuizID, mockCassandra, mockRedis)
 
 			testCase.expectErr(t, err, "error expectation failed")
 			if err != nil {

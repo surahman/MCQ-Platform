@@ -1895,13 +1895,13 @@ import (
 
 // getQuiz will make a cache call for the quiz. Upon a cache miss it will call the database for the quiz and then load it into
 // the cache.
-func getQuiz(quizId string, db cassandra.Cassandra, cache redis.Redis) (*model_cassandra.Quiz, error) <span class="cov10" title="24">{
+func getQuiz(quizId gocql.UUID, db cassandra.Cassandra, cache redis.Redis) (*model_cassandra.Quiz, error) <span class="cov10" title="24">{
         var err error
         var quiz model_cassandra.Quiz
         var response any
 
         // Cache call.
-        err = cache.Get(quizId, &amp;quiz)
+        err = cache.Get(quizId.String(), &amp;quiz)
 
         // Cache miss:
         // [1] Get quiz record from database.
@@ -1915,7 +1915,7 @@ func getQuiz(quizId string, db cassandra.Cassandra, cache redis.Redis) (*model_c
 
                 // Only place quiz in cache if it is published and not deleted. Set method will log errors.
                 if quiz.IsPublished &amp;&amp; !quiz.IsDeleted </span><span class="cov7" title="10">{
-                        _ = cache.Set(quizId, &amp;quiz)
+                        _ = cache.Set(quizId.String(), &amp;quiz)
                 }</span>
         }
 
@@ -1957,7 +1957,7 @@ func ViewQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, cac
                 // Get quiz:
                 // [1] Cache call.
                 // [2] Cache miss: read from the database and store it in the cache.
-                <span class="cov7" title="9">if quiz, err = getQuiz(quizId.String(), db, cache); err != nil </span><span class="cov1" title="1">{
+                <span class="cov7" title="9">if quiz, err = getQuiz(quizId, db, cache); err != nil </span><span class="cov1" title="1">{
                         cassandraError := err.(*cassandra.Error)
                         context.AbortWithStatusJSON(cassandraError.Status, &amp;model_rest.Error{Message: "error retrieving quiz", Payload: cassandraError.Message})
                         return
@@ -2273,7 +2273,7 @@ func TakeQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, cac
                 // Get quiz:
                 // [1] Cache call.
                 // [2] Cache miss: read from the database and store it in the cache.
-                <span class="cov7" title="10">if quiz, err = getQuiz(quizId.String(), db, cache); err != nil </span><span class="cov2" title="2">{
+                <span class="cov7" title="10">if quiz, err = getQuiz(quizId, db, cache); err != nil </span><span class="cov2" title="2">{
                         cassandraError := err.(*cassandra.Error)
                         context.AbortWithStatusJSON(cassandraError.Status, &amp;model_rest.Error{Message: "error retrieving quiz", Payload: cassandraError.Message})
                         return
