@@ -100,5 +100,5 @@ docker compose down
 - 
 **Redis:**
 - Password : `root`
-- Database: `0` the default database
-- Ports: 6379, 6380, 6381, 6382, 6383, 6384
+- Database: `0`, the default database
+- Ports: `6379`, `6380`, `6381`, `6382`, `6383`, `6384`
