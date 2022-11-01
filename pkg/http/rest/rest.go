@@ -96,7 +96,7 @@ func (s *HttpRest) initialize() {
 	s.router = gin.Default()
 
 	// @title                      Multiple Choice Question Platform.
-	// @version                    1.0.1
+	// @version                    1.1.0
 	// @description                Multiple Choice Question Platform API.
 	// @description                This application supports the creation, managing, marking, viewing, retrieving stats, and scores of quizzes.
 	//
@@ -143,5 +143,5 @@ func (s *HttpRest) initialize() {
 	quizGroup.PATCH("/update/:quiz_id", http_handlers.UpdateQuiz(s.logger, s.auth, s.db))
 	quizGroup.DELETE("/delete/:quiz_id", http_handlers.DeleteQuiz(s.logger, s.auth, s.db, s.cache))
 	quizGroup.PATCH("/publish/:quiz_id", http_handlers.PublishQuiz(s.logger, s.auth, s.db, s.cache))
-	quizGroup.POST("/take/:quiz_id", http_handlers.TakeQuiz(s.logger, s.auth, s.db, s.grading))
+	quizGroup.POST("/take/:quiz_id", http_handlers.TakeQuiz(s.logger, s.auth, s.db, s.cache, s.grading))
 }

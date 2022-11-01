@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 
 	"github.com/gocql/gocql"
@@ -17,6 +18,148 @@ import (
 	"github.com/surahman/mcq-platform/pkg/model/http"
 	"github.com/surahman/mcq-platform/pkg/redis"
 )
+
+func TestGetQuiz(t *testing.T) {
+	testCases := []struct {
+		name              string
+		quiz              *model_cassandra.Quiz
+		redisGetData      *mockRedisData
+		cassandraReadData *mockCassandraData
+		redisSetData      *mockRedisData
+		expectErr         require.ErrorAssertionFunc
+	}{
+		// ----- test cases start ----- //
+		{
+			name: "not found",
+			quiz: &model_cassandra.Quiz{QuizID: gocql.TimeUUID()},
+			redisGetData: &mockRedisData{
+				err: &redis.Error{
+					Message: "cache miss",
+					Code:    redis.ErrorCacheMiss,
+				},
+				times: 1,
+			},
+			cassandraReadData: &mockCassandraData{
+				outputParam: nil,
+				outputErr: &cassandra.Error{
+					Message: "not found",
+					Status:  http.StatusNotFound,
+				},
+				times: 1,
+			},
+			redisSetData: &mockRedisData{
+				times: 0,
+			},
+			expectErr: require.Error,
+		}, {
+			name: "cache hit",
+			quiz: &model_cassandra.Quiz{},
+			redisGetData: &mockRedisData{
+				times: 1,
+			},
+			cassandraReadData: &mockCassandraData{
+				times: 0,
+			},
+			redisSetData: &mockRedisData{
+				times: 0,
+			},
+			expectErr: require.NoError,
+		}, {
+			name: "cache miss, db read success, cache store success",
+			quiz: testQuizData["myPubQuiz"],
+			redisGetData: &mockRedisData{
+				err: &redis.Error{
+					Message: "cache miss",
+					Code:    redis.ErrorCacheMiss,
+				},
+				times: 1,
+			},
+			cassandraReadData: &mockCassandraData{
+				outputParam: testQuizData["myPubQuiz"],
+				times:       1,
+			},
+			redisSetData: &mockRedisData{
+				times: 1,
+			},
+			expectErr: require.NoError,
+		}, {
+			name: "cache miss, db read success, cache set failure",
+			quiz: testQuizData["myPubQuiz"],
+			redisGetData: &mockRedisData{
+				err: &redis.Error{
+					Message: "cache miss",
+					Code:    redis.ErrorCacheMiss,
+				},
+				times: 1,
+			},
+			cassandraReadData: &mockCassandraData{
+				outputParam: testQuizData["myPubQuiz"],
+				times:       1,
+			},
+			redisSetData: &mockRedisData{
+				err: &redis.Error{
+					Message: "cache failure",
+					Code:    redis.ErrorUnknown,
+				},
+				times: 1,
+			},
+			expectErr: require.NoError,
+		}, {
+			name: "cache miss, db read success, not published",
+			quiz: testQuizData["myNoPubQuiz"],
+			redisGetData: &mockRedisData{
+				err: &redis.Error{
+					Message: "cache miss",
+					Code:    redis.ErrorCacheMiss,
+				},
+				times: 1,
+			},
+			cassandraReadData: &mockCassandraData{
+				outputParam: testQuizData["myNoPubQuiz"],
+				times:       1,
+			},
+			redisSetData: &mockRedisData{
+				times: 0,
+			},
+			expectErr: require.NoError,
+		},
+		// ----- test cases end ----- //
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockRedis := mocks.NewMockRedis(mockCtrl)
+			mockCassandra := mocks.NewMockCassandra(mockCtrl)
+
+			gomock.InOrder(
+				// Cache call.
+				mockRedis.EXPECT().Get(gomock.Any(), gomock.Any()).Return(
+					testCase.redisGetData.err,
+				).Times(testCase.redisGetData.times),
+				// Cassandra read.
+				mockCassandra.EXPECT().Execute(gomock.Any(), gomock.Any()).Return(
+					testCase.cassandraReadData.outputParam,
+					testCase.cassandraReadData.outputErr,
+				).Times(testCase.cassandraReadData.times),
+				// Cache set.
+				mockRedis.EXPECT().Set(gomock.Any(), gomock.Any()).Return(
+					testCase.redisSetData.err,
+				).Times(testCase.redisSetData.times),
+			)
+
+			actual, err := getQuiz(testCase.quiz.QuizID, mockCassandra, mockRedis)
+
+			testCase.expectErr(t, err, "error expectation failed")
+			if err != nil {
+				return
+			}
+
+			require.True(t, reflect.DeepEqual(testCase.quiz, actual), "returned quiz does not match expected")
+		})
+	}
+}
 
 func TestCreateQuiz(t *testing.T) {
 	router := getRouter()
@@ -174,7 +317,6 @@ func TestViewQuiz(t *testing.T) {
 		quizId              string
 		expectedStatus      int
 		expectAnswers       require.BoolAssertionFunc
-		expectNilPayload    require.ValueAssertionFunc
 		authValidateJWTData *mockAuthData
 		cassandraReadData   *mockCassandraData
 		redisGetData        *mockRedisData
@@ -228,6 +370,7 @@ func TestViewQuiz(t *testing.T) {
 				times:        1,
 			},
 			redisGetData: &mockRedisData{
+				param2: model_cassandra.Quiz{},
 				err: &redis.Error{
 					Message: "cache miss error",
 					Code:    redis.ErrorCacheMiss,
@@ -251,6 +394,7 @@ func TestViewQuiz(t *testing.T) {
 				times:        1,
 			},
 			redisGetData: &mockRedisData{
+				param2: model_cassandra.Quiz{},
 				err: &redis.Error{
 					Message: "cache miss error",
 					Code:    redis.ErrorCacheMiss,
@@ -275,6 +419,7 @@ func TestViewQuiz(t *testing.T) {
 				times:        1,
 			},
 			redisGetData: &mockRedisData{
+				param2: model_cassandra.Quiz{},
 				err: &redis.Error{
 					Message: "cache miss error",
 					Code:    redis.ErrorCacheMiss,
@@ -290,17 +435,17 @@ func TestViewQuiz(t *testing.T) {
 				times: 0,
 			},
 		}, {
-			name:             "published not owner",
-			path:             "/view/published-not-owner/",
-			quizId:           gocql.TimeUUID().String(),
-			expectedStatus:   http.StatusOK,
-			expectAnswers:    require.False,
-			expectNilPayload: require.NotNil,
+			name:           "published not owner",
+			path:           "/view/published-not-owner/",
+			quizId:         gocql.TimeUUID().String(),
+			expectedStatus: http.StatusOK,
+			expectAnswers:  require.False,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "not owner",
 				times:        1,
 			},
 			redisGetData: &mockRedisData{
+				param2: model_cassandra.Quiz{},
 				err: &redis.Error{
 					Message: "cache miss error",
 					Code:    redis.ErrorCacheMiss,
@@ -316,17 +461,17 @@ func TestViewQuiz(t *testing.T) {
 				times: 1,
 			},
 		}, {
-			name:             "published owner",
-			path:             "/view/published-owner/",
-			quizId:           gocql.TimeUUID().String(),
-			expectedStatus:   http.StatusOK,
-			expectAnswers:    require.True,
-			expectNilPayload: require.NotNil,
+			name:           "published owner",
+			path:           "/view/published-owner/",
+			quizId:         gocql.TimeUUID().String(),
+			expectedStatus: http.StatusOK,
+			expectAnswers:  require.True,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "user-2",
 				times:        1,
 			},
 			redisGetData: &mockRedisData{
+				param2: model_cassandra.Quiz{},
 				err: &redis.Error{
 					Message: "cache miss error",
 					Code:    redis.ErrorCacheMiss,
@@ -342,17 +487,17 @@ func TestViewQuiz(t *testing.T) {
 				times: 1,
 			},
 		}, {
-			name:             "unpublished owner",
-			path:             "/view/unpublished-owner/",
-			quizId:           gocql.TimeUUID().String(),
-			expectedStatus:   http.StatusOK,
-			expectAnswers:    require.True,
-			expectNilPayload: require.NotNil,
+			name:           "unpublished owner",
+			path:           "/view/unpublished-owner/",
+			quizId:         gocql.TimeUUID().String(),
+			expectedStatus: http.StatusOK,
+			expectAnswers:  require.True,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "user-3",
 				times:        1,
 			},
 			redisGetData: &mockRedisData{
+				param2: model_cassandra.Quiz{},
 				err: &redis.Error{
 					Message: "cache miss error",
 					Code:    redis.ErrorCacheMiss,
@@ -368,17 +513,17 @@ func TestViewQuiz(t *testing.T) {
 				times: 0,
 			},
 		}, {
-			name:             "published deleted owner",
-			path:             "/view/published-deleted-owner/",
-			quizId:           gocql.TimeUUID().String(),
-			expectedStatus:   http.StatusOK,
-			expectAnswers:    require.True,
-			expectNilPayload: require.NotNil,
+			name:           "published deleted owner",
+			path:           "/view/published-deleted-owner/",
+			quizId:         gocql.TimeUUID().String(),
+			expectedStatus: http.StatusOK,
+			expectAnswers:  require.True,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "user-2",
 				times:        1,
 			},
 			redisGetData: &mockRedisData{
+				param2: model_cassandra.Quiz{},
 				err: &redis.Error{
 					Message: "cache miss error",
 					Code:    redis.ErrorCacheMiss,
@@ -394,17 +539,17 @@ func TestViewQuiz(t *testing.T) {
 				times: 0,
 			},
 		}, {
-			name:             "cache set failure",
-			path:             "/view/cache-set-failure/",
-			quizId:           gocql.TimeUUID().String(),
-			expectedStatus:   http.StatusOK,
-			expectAnswers:    require.True,
-			expectNilPayload: require.NotNil,
+			name:           "cache set failure",
+			path:           "/view/cache-set-failure/",
+			quizId:         gocql.TimeUUID().String(),
+			expectedStatus: http.StatusOK,
+			expectAnswers:  require.True,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "user-2",
 				times:        1,
 			},
 			redisGetData: &mockRedisData{
+				param2: model_cassandra.Quiz{},
 				err: &redis.Error{
 					Message: "cache miss error",
 					Code:    redis.ErrorCacheMiss,
@@ -424,18 +569,18 @@ func TestViewQuiz(t *testing.T) {
 				times: 1,
 			},
 		}, {
-			name:             "cache hit",
-			path:             "/view/cache-hit/",
-			quizId:           gocql.TimeUUID().String(),
-			expectedStatus:   http.StatusOK,
-			expectAnswers:    require.True,
-			expectNilPayload: require.Nil,
+			name:           "cache hit",
+			path:           "/view/cache-hit/",
+			quizId:         gocql.TimeUUID().String(),
+			expectedStatus: http.StatusOK,
+			expectAnswers:  require.True,
 			authValidateJWTData: &mockAuthData{
-				outputParam1: "",
+				outputParam1: "user-2",
 				times:        1,
 			},
 			redisGetData: &mockRedisData{
-				times: 1,
+				param2: *testQuizData["myPubQuiz"],
+				times:  1,
 			},
 			cassandraReadData: &mockCassandraData{
 				times: 0,
@@ -466,6 +611,9 @@ func TestViewQuiz(t *testing.T) {
 				// Get data from Redis.
 				mockRedis.EXPECT().Get(gomock.Any(), gomock.Any()).Return(
 					testCase.redisGetData.err,
+				).SetArg(
+					1,
+					testCase.redisGetData.param2,
 				).Times(testCase.redisGetData.times),
 
 				// Get data from Cassandra.
@@ -495,11 +643,6 @@ func TestViewQuiz(t *testing.T) {
 				require.NoError(t, json.NewDecoder(w.Body).Decode(&response), "failed to unmarshall response body.")
 
 				require.True(t, len(response.Message) != 0, "did not receive quiz id in response")
-
-				testCase.expectNilPayload(t, response.Payload, "nil payload expectation failed")
-				if response.Payload == nil {
-					return
-				}
 
 				questions, ok := response.Payload.(map[string]any)["questions"]
 				require.True(t, ok, "failed to extract questions.")
@@ -1053,7 +1196,9 @@ func TestTakeQuiz(t *testing.T) {
 		expectedStatus      int
 		quizResponse        *model_cassandra.QuizResponse
 		authValidateJWTData *mockAuthData
+		redisGetData        *mockRedisData
 		cassandraReadData   *mockCassandraData
+		redisSetData        *mockRedisData
 		cassandraTakeData   *mockCassandraData
 		graderData          *mockGraderData
 	}{
@@ -1068,7 +1213,13 @@ func TestTakeQuiz(t *testing.T) {
 				outputErr:    errors.New("invalid token"),
 				times:        1,
 			},
+			redisGetData: &mockRedisData{
+				times: 0,
+			},
 			cassandraReadData: &mockCassandraData{
+				times: 0,
+			},
+			redisSetData: &mockRedisData{
 				times: 0,
 			},
 			cassandraTakeData: &mockCassandraData{
@@ -1086,7 +1237,13 @@ func TestTakeQuiz(t *testing.T) {
 				outputParam1: "",
 				times:        0,
 			},
+			redisGetData: &mockRedisData{
+				times: 0,
+			},
 			cassandraReadData: &mockCassandraData{
+				times: 0,
+			},
+			redisSetData: &mockRedisData{
 				times: 0,
 			},
 			cassandraTakeData: &mockCassandraData{
@@ -1105,7 +1262,13 @@ func TestTakeQuiz(t *testing.T) {
 				outputParam1: "",
 				times:        1,
 			},
+			redisGetData: &mockRedisData{
+				times: 0,
+			},
 			cassandraReadData: &mockCassandraData{
+				times: 0,
+			},
+			redisSetData: &mockRedisData{
 				times: 0,
 			},
 			cassandraTakeData: &mockCassandraData{
@@ -1124,12 +1287,23 @@ func TestTakeQuiz(t *testing.T) {
 				outputParam1: "",
 				times:        1,
 			},
+			redisGetData: &mockRedisData{
+				param2: model_cassandra.Quiz{},
+				err: &redis.Error{
+					Message: "cache miss",
+					Code:    redis.ErrorCacheMiss,
+				},
+				times: 1,
+			},
 			cassandraReadData: &mockCassandraData{
 				outputErr: &cassandra.Error{
 					Message: "",
 					Status:  http.StatusForbidden,
 				},
 				times: 1,
+			},
+			redisSetData: &mockRedisData{
+				times: 0,
 			},
 			cassandraTakeData: &mockCassandraData{
 				times: 0,
@@ -1147,12 +1321,23 @@ func TestTakeQuiz(t *testing.T) {
 				outputParam1: "",
 				times:        1,
 			},
+			redisGetData: &mockRedisData{
+				param2: model_cassandra.Quiz{},
+				err: &redis.Error{
+					Message: "cache miss",
+					Code:    redis.ErrorCacheMiss,
+				},
+				times: 1,
+			},
 			cassandraReadData: &mockCassandraData{
 				outputErr: &cassandra.Error{
 					Message: "",
 					Status:  http.StatusInternalServerError,
 				},
 				times: 1,
+			},
+			redisSetData: &mockRedisData{
+				times: 0,
 			},
 			cassandraTakeData: &mockCassandraData{
 				times: 0,
@@ -1170,11 +1355,22 @@ func TestTakeQuiz(t *testing.T) {
 				outputParam1: "",
 				times:        1,
 			},
+			redisGetData: &mockRedisData{
+				param2: model_cassandra.Quiz{},
+				err: &redis.Error{
+					Message: "cache miss",
+					Code:    redis.ErrorCacheMiss,
+				},
+				times: 1,
+			},
 			cassandraReadData: &mockCassandraData{
 				outputParam: &model_cassandra.Quiz{
 					IsPublished: false,
 				},
 				times: 1,
+			},
+			redisSetData: &mockRedisData{
+				times: 0,
 			},
 			cassandraTakeData: &mockCassandraData{
 				times: 0,
@@ -1192,12 +1388,23 @@ func TestTakeQuiz(t *testing.T) {
 				outputParam1: "",
 				times:        1,
 			},
+			redisGetData: &mockRedisData{
+				param2: model_cassandra.Quiz{},
+				err: &redis.Error{
+					Message: "cache miss",
+					Code:    redis.ErrorCacheMiss,
+				},
+				times: 1,
+			},
 			cassandraReadData: &mockCassandraData{
 				outputParam: &model_cassandra.Quiz{
 					IsPublished: true,
 					IsDeleted:   true,
 				},
 				times: 1,
+			},
+			redisSetData: &mockRedisData{
+				times: 0,
 			},
 			cassandraTakeData: &mockCassandraData{
 				times: 0,
@@ -1215,10 +1422,21 @@ func TestTakeQuiz(t *testing.T) {
 				outputParam1: "",
 				times:        1,
 			},
+			redisGetData: &mockRedisData{
+				param2: model_cassandra.Quiz{},
+				err: &redis.Error{
+					Message: "cache miss",
+					Code:    redis.ErrorCacheMiss,
+				},
+				times: 1,
+			},
 			cassandraReadData: &mockCassandraData{
 				outputParam: &model_cassandra.Quiz{IsPublished: true},
 				outputErr:   nil,
 				times:       1,
+			},
+			redisSetData: &mockRedisData{
+				times: 1,
 			},
 			cassandraTakeData: &mockCassandraData{
 				times: 0,
@@ -1237,10 +1455,21 @@ func TestTakeQuiz(t *testing.T) {
 				outputParam1: "",
 				times:        1,
 			},
+			redisGetData: &mockRedisData{
+				param2: model_cassandra.Quiz{},
+				err: &redis.Error{
+					Message: "cache miss",
+					Code:    redis.ErrorCacheMiss,
+				},
+				times: 1,
+			},
 			cassandraReadData: &mockCassandraData{
 				outputParam: &model_cassandra.Quiz{IsPublished: true},
 				outputErr:   nil,
 				times:       1,
+			},
+			redisSetData: &mockRedisData{
+				times: 1,
 			},
 			cassandraTakeData: &mockCassandraData{
 				outputErr: &cassandra.Error{
@@ -1263,10 +1492,21 @@ func TestTakeQuiz(t *testing.T) {
 				outputParam1: "",
 				times:        1,
 			},
+			redisGetData: &mockRedisData{
+				param2: model_cassandra.Quiz{},
+				err: &redis.Error{
+					Message: "cache miss",
+					Code:    redis.ErrorCacheMiss,
+				},
+				times: 1,
+			},
 			cassandraReadData: &mockCassandraData{
 				outputParam: &model_cassandra.Quiz{IsPublished: true},
 				outputErr:   nil,
 				times:       1,
+			},
+			redisSetData: &mockRedisData{
+				times: 1,
 			},
 			cassandraTakeData: &mockCassandraData{
 				outputErr: &cassandra.Error{
@@ -1289,10 +1529,86 @@ func TestTakeQuiz(t *testing.T) {
 				outputParam1: "",
 				times:        1,
 			},
+			redisGetData: &mockRedisData{
+				param2: model_cassandra.Quiz{},
+				err: &redis.Error{
+					Message: "cache miss",
+					Code:    redis.ErrorCacheMiss,
+				},
+				times: 1,
+			},
 			cassandraReadData: &mockCassandraData{
 				outputParam: &model_cassandra.Quiz{IsPublished: true},
 				outputErr:   nil,
 				times:       1,
+			},
+			redisSetData: &mockRedisData{
+				times: 1,
+			},
+			cassandraTakeData: &mockCassandraData{
+				times: 1,
+			},
+			graderData: &mockGraderData{
+				outputParam: 1.333,
+				times:       1,
+			},
+		}, {
+			name:           "success - cache set failure",
+			path:           "/take/success-cache-set-failure/",
+			quizId:         gocql.TimeUUID().String(),
+			expectedStatus: http.StatusOK,
+			quizResponse:   &model_cassandra.QuizResponse{Responses: [][]int32{{}}},
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "",
+				times:        1,
+			},
+			redisGetData: &mockRedisData{
+				param2: model_cassandra.Quiz{},
+				err: &redis.Error{
+					Message: "cache miss",
+					Code:    redis.ErrorCacheMiss,
+				},
+				times: 1,
+			},
+			cassandraReadData: &mockCassandraData{
+				outputParam: &model_cassandra.Quiz{IsPublished: true},
+				outputErr:   nil,
+				times:       1,
+			},
+			redisSetData: &mockRedisData{
+				err: &redis.Error{
+					Message: "internal error",
+					Code:    redis.ErrorUnknown,
+				},
+				times: 1,
+			},
+			cassandraTakeData: &mockCassandraData{
+				times: 1,
+			},
+			graderData: &mockGraderData{
+				outputParam: 1.333,
+				times:       1,
+			},
+		}, {
+			name:           "success - cache hit",
+			path:           "/take/success-cache-hit/",
+			quizId:         gocql.TimeUUID().String(),
+			expectedStatus: http.StatusOK,
+			quizResponse:   &model_cassandra.QuizResponse{Responses: [][]int32{{}}},
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "",
+				times:        1,
+			},
+			redisGetData: &mockRedisData{
+				param2: model_cassandra.Quiz{IsPublished: true},
+				times:  1,
+			},
+			cassandraReadData: &mockCassandraData{
+				outputErr: nil,
+				times:     0,
+			},
+			redisSetData: &mockRedisData{
+				times: 0,
 			},
 			cassandraTakeData: &mockCassandraData{
 				times: 1,
@@ -1311,14 +1627,42 @@ func TestTakeQuiz(t *testing.T) {
 			defer mockCtrl.Finish()
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockCassandra := mocks.NewMockCassandra(mockCtrl)
+			mockRedis := mocks.NewMockRedis(mockCtrl)
 			mockGrader := mocks.NewMockGrading(mockCtrl)
 
 			gomock.InOrder(
+				// Validate JWT.
+				mockAuth.EXPECT().ValidateJWT(gomock.Any()).Return(
+					testCase.authValidateJWTData.outputParam1,
+					testCase.authValidateJWTData.outputParam2,
+					testCase.authValidateJWTData.outputErr,
+				).Times(testCase.authValidateJWTData.times),
+
+				// Cache call.
+				mockRedis.EXPECT().Get(gomock.Any(), gomock.Any()).SetArg(
+					1,
+					testCase.redisGetData.param2,
+				).Return(
+					testCase.redisGetData.err,
+				).Times(testCase.redisGetData.times),
+
 				// Read quizResponse.
 				mockCassandra.EXPECT().Execute(gomock.Any(), gomock.Any()).Return(
 					testCase.cassandraReadData.outputParam,
 					testCase.cassandraReadData.outputErr,
 				).Times(testCase.cassandraReadData.times),
+
+				// Cache set.
+				mockRedis.EXPECT().Set(gomock.Any(), gomock.Any()).Return(
+					testCase.redisSetData.err,
+				).Times(testCase.redisSetData.times),
+
+				// Grade quiz.
+				mockGrader.EXPECT().Grade(gomock.Any(), gomock.Any()).Return(
+					testCase.graderData.outputParam,
+					testCase.graderData.outputErr,
+				).Times(testCase.graderData.times),
+
 				// Submit response.
 				mockCassandra.EXPECT().Execute(gomock.Any(), gomock.Any()).Return(
 					testCase.cassandraTakeData.outputParam,
@@ -1326,22 +1670,11 @@ func TestTakeQuiz(t *testing.T) {
 				).Times(testCase.cassandraTakeData.times),
 			)
 
-			mockAuth.EXPECT().ValidateJWT(gomock.Any()).Return(
-				testCase.authValidateJWTData.outputParam1,
-				testCase.authValidateJWTData.outputParam2,
-				testCase.authValidateJWTData.outputErr,
-			).Times(testCase.authValidateJWTData.times)
-
-			mockGrader.EXPECT().Grade(gomock.Any(), gomock.Any()).Return(
-				testCase.graderData.outputParam,
-				testCase.graderData.outputErr,
-			).Times(testCase.graderData.times)
-
 			responseJson, err := json.Marshal(&testCase.quizResponse)
 			require.NoErrorf(t, err, "failed to marshall JSON: %v", err)
 
 			// Endpoint setup for test.
-			router.POST(testCase.path+":quiz_id", TakeQuiz(zapLogger, mockAuth, mockCassandra, mockGrader))
+			router.POST(testCase.path+":quiz_id", TakeQuiz(zapLogger, mockAuth, mockCassandra, mockRedis, mockGrader))
 			req, _ := http.NewRequest("POST", testCase.path+testCase.quizId, bytes.NewBuffer(responseJson))
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)

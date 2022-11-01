@@ -21,7 +21,6 @@ import (
 // @Description Gets a scorecard for a user. Extracts username from the JWT and Test ID is provided as a path parameter.
 // @Tags        score scores
 // @Id          getScore
-// @Accept      json
 // @Produce     json
 // @Security    ApiKeyAuth
 // @Param       quiz_id path     string             true "The Test ID for the requested scorecard."
@@ -72,7 +71,6 @@ func GetScore(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin
 // @Description Extracts username from the JWT and the Test ID is provided as a path parameter.
 // @Tags        score scores stats statistics
 // @Id          getStats
-// @Accept      json
 // @Produce     json
 // @Security    ApiKeyAuth
 // @Param       quiz_id path     string             true "The Test ID for the requested statistics."
@@ -131,7 +129,6 @@ func GetStats(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin
 // @Description A query string to be appended to the next request to retrieve the next page of data will be returned in the response.
 // @Tags        score scores stats statistics
 // @Id          getStatsPaged
-// @Accept      json
 // @Produce     json
 // @Security    ApiKeyAuth
 // @Param       quiz_id    path     string                   true  "The Test ID for the requested statistics."

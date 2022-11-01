@@ -52,6 +52,16 @@ keyspace and schema will need to be deployed to the cluster manually. CQL statem
 
 <br/>
 
+## Redis
+
+Information on how to configure the Redis connection can be found in the [`redis`](pkg/redis) package.
+Details on the design and technical decisions taken can also be found in the [`redis`](pkg/redis) package.
+
+A docker-compose file is provided to bring up the necessary services, including a minimal Redis three-node cluster. Redis
+requires a minimum of three master and three slave nodes for Redis to run in Cluster mode.
+
+<br/>
+
 ## HTTP
 
 Details on the HTTP endpoints can be found in their respective packages below. 
@@ -90,5 +100,5 @@ docker compose down
 - 
 **Redis:**
 - Password : `root`
-- Database: `0` the default database
-- Ports: 6379, 6380, 6381, 6382, 6383, 6384
+- Database: `0`, the default database
+- Ports: `6379`, `6380`, `6381`, `6382`, `6383`, `6384`
