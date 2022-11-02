@@ -2841,6 +2841,9 @@ import (
         "go.uber.org/zap"
 )
 
+// Format and generate Swagger UI files using makefile.
+//go:generate make -C ../../../ swagger
+
 // HttpRest is the HTTP REST server.
 type HttpRest struct {
         auth    auth.Auth
