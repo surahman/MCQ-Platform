@@ -50,4 +50,4 @@ coverage_report: coverage
 dep:
 	go mod download
 
-.PHONY: build build_and_run generate swagger clean test test_short test_no_cache coverage coverage_report
+.PHONY: build run build_and_run generate swagger clean test test_short test_no_cache coverage coverage_report
