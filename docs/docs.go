@@ -400,9 +400,6 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Gets the paginated statistics associated with a specific test if the user created the test.\nExtracts username from the JWT and the Test ID is provided as a query parameter.\nA query string to be appended to the next request to retrieve the next page of data will be returned in the response.",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -474,9 +471,6 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Gets the statistics associated with a specific test if the user created the test.\nExtracts username from the JWT and the Test ID is provided as a path parameter.",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -536,9 +530,6 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Gets a scorecard for a user. Extracts username from the JWT and Test ID is provided as a path parameter.",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -703,9 +694,6 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Refreshes a user's JWT by validating it and then issuing a fresh JWT with an extended validity time. JWT must be expiring in under 60 seconds.",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1079,7 +1067,7 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "1.0.1",
+	Version:          "1.1.0",
 	Host:             "localhost:44243",
 	BasePath:         "/api/rest/v1",
 	Schemes:          []string{"http"},

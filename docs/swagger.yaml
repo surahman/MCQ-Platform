@@ -209,7 +209,7 @@ info:
     name: GPL-3.0
     url: https://opensource.org/licenses/GPL-3.0
   title: Multiple Choice Question Platform.
-  version: 1.0.1
+  version: 1.1.0
 paths:
   /health:
     get:
@@ -457,8 +457,6 @@ paths:
       - view test quiz
   /score/stats-paged/{quiz_id}:
     get:
-      consumes:
-      - application/json
       description: |-
         Gets the paginated statistics associated with a specific test if the user created the test.
         Extracts username from the JWT and the Test ID is provided as a query parameter.
@@ -508,8 +506,6 @@ paths:
       - score scores stats statistics
   /score/stats/{quiz_id}:
     get:
-      consumes:
-      - application/json
       description: |-
         Gets the statistics associated with a specific test if the user created the test.
         Extracts username from the JWT and the Test ID is provided as a path parameter.
@@ -550,8 +546,6 @@ paths:
       - score scores stats statistics
   /score/test/{quiz_id}:
     get:
-      consumes:
-      - application/json
       description: Gets a scorecard for a user. Extracts username from the JWT and
         Test ID is provided as a path parameter.
       operationId: getScore
@@ -663,8 +657,6 @@ paths:
       - user users login security
   /user/refresh:
     post:
-      consumes:
-      - application/json
       description: Refreshes a user's JWT by validating it and then issuing a fresh
         JWT with an extended validity time. JWT must be expiring in under 60 seconds.
       operationId: loginRefresh

@@ -123,7 +123,6 @@ func LoginUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gi
 // @Description Refreshes a user's JWT by validating it and then issuing a fresh JWT with an extended validity time. JWT must be expiring in under 60 seconds.
 // @Tags        user users login refresh security
 // @Id          loginRefresh
-// @Accept      json
 // @Produce     json
 // @Security    ApiKeyAuth
 // @Success     200 {object} model_rest.JWTAuthResponse "A new valid JWT"

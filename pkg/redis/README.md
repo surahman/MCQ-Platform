@@ -24,6 +24,7 @@ Cache Policy:
   quizzes will not be loaded into the cache.
 * Quizzes will be lazy-read into the cache upon a cache miss. Quizzes that are deleted or not published will not be
   placed into the cache.
+* The `view quiz` and `take quiz` REST endpoints will lazy load the quizzes into the cache upon a cache miss.
 
 :warning: **_Consistency_** :warning:
 
