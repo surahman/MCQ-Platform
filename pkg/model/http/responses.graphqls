@@ -1,10 +1,8 @@
-scalar Float64
-
 # Response represents a response to a quiz and is a row in responses table.
 type Response {
     Username: String!
     Author: String!
-    Score:Float64!
+    Score:Float!
     QuizResponse: QuizResponse!
     QuizID: String!
 }

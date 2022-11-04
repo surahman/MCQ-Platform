@@ -43,7 +43,7 @@ type Mutation {
     deleteQuiz(quizID: String!): String!
 
     # Request to submit responses to a quiz for marking.
-    takeQuiz(quizID: String!, input: QuizResponseInput!): Float64!
+    takeQuiz(quizID: String!, input: QuizResponseInput!): Float!
 }
 
 # Queries that will not mutate data in the database.
