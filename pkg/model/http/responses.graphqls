@@ -1,0 +1,20 @@
+scalar Float64
+
+# Response represents a response to a quiz and is a row in responses table.
+type Response {
+    Username: String!
+    Author: String!
+    Score:Float64!
+    QuizResponse: QuizResponse!
+    QuizID: String!
+}
+
+# The answer card to a quiz. The rows indices are the question numbers and the columns indices are the selected option numbers.
+type QuizResponse {
+    Responses: [[Int!]]!
+}
+
+# The response to a quiz submitted by an end user.
+input QuizResponseInput {
+    Responses: [[Int!]]!
+}
