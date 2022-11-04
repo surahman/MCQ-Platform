@@ -27,27 +27,3 @@ input QuestionCreate {
     Options: [String!]!
     Answers: [Int!]!
 }
-
-# Mutations that will create/alter data in the database.
-type Mutation {
-    # Request to create a quiz. The created quiz is not published.
-    createQuiz(input: QuizCreate!): String!
-
-    # Request to update a quiz. Only unpublished quizzes can be updated.
-    updateQuiz(input: QuizCreate!): String!
-
-    # Request to publish a quiz.
-    publishQuiz(quizID: String!): String!
-
-    # Request to delete a quiz. Quizzes are marked as deleted and unpublished.
-    deleteQuiz(quizID: String!): String!
-
-    # Request to submit responses to a quiz for marking.
-    takeQuiz(quizID: String!, input: QuizResponseInput!): Float!
-}
-
-# Queries that will not mutate data in the database.
-type Query {
-    # Request to view the quiz contents.
-    viewQuiz(quizID: String!): QuizCore!
-}

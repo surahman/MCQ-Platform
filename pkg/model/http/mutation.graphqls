@@ -1,0 +1,38 @@
+# Requests that might alter the state of data in the database.
+type Mutation {
+    ################################
+    ##### User data mutations. #####
+    ################################
+
+    # Send a user registration request and receive a JWT authorization token in response.
+    registerUser(input: UserRegistration): JWTResponse!
+
+    # Send a user account deletion request.
+    deleteUser(input: UserDeletion!): String!
+
+    # Send a user login request And receive a JWT authorization token in response.
+    loginUser(input: UserLogin!): JWTResponse!
+
+    # Refreshes a users JWT if it is within the refresh time window.
+    refreshToken(token: String!): JWTResponse!
+
+
+    ################################
+    ##### Quiz data mutations. #####
+    ################################
+
+    # Request to create a quiz. The created quiz is not published.
+    createQuiz(input: QuizCreate!): String!
+
+    # Request to update a quiz. Only unpublished quizzes can be updated.
+    updateQuiz(input: QuizCreate!): String!
+
+    # Request to publish a quiz.
+    publishQuiz(quizID: String!): String!
+
+    # Request to delete a quiz. Quizzes are marked as deleted and unpublished.
+    deleteQuiz(quizID: String!): String!
+
+    # Request to submit responses to a quiz for marking.
+    takeQuiz(quizID: String!, input: QuizResponseInput!): Float!
+}
