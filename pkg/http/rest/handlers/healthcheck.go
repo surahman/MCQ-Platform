@@ -28,7 +28,7 @@ func Healthcheck(logger *logger.Logger, db cassandra.Cassandra, cache redis.Redi
 		if _, err = db.Execute(cassandra.HealthcheckQuery, nil); err != nil {
 			msg := "Cassandra healthcheck failed"
 			logger.Warn(msg, zap.Error(err))
-			context.AbortWithStatusJSON(http.StatusServiceUnavailable, &model_rest.Error{Message: msg})
+			context.AbortWithStatusJSON(http.StatusServiceUnavailable, &model_http.Error{Message: msg})
 			return
 		}
 
@@ -36,10 +36,10 @@ func Healthcheck(logger *logger.Logger, db cassandra.Cassandra, cache redis.Redi
 		if err = cache.Healthcheck(); err != nil {
 			msg := "Redis healthcheck failed"
 			logger.Warn(msg, zap.Error(err))
-			context.AbortWithStatusJSON(http.StatusServiceUnavailable, &model_rest.Error{Message: msg})
+			context.AbortWithStatusJSON(http.StatusServiceUnavailable, &model_http.Error{Message: msg})
 			return
 		}
 
-		context.JSON(http.StatusOK, &model_rest.Success{Message: "healthy"})
+		context.JSON(http.StatusOK, &model_http.Success{Message: "healthy"})
 	}
 }

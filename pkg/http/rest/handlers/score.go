@@ -38,14 +38,14 @@ func GetScore(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin
 		var quizId gocql.UUID
 
 		if quizId, err = gocql.ParseUUID(context.Param("quiz_id")); err != nil {
-			context.AbortWithStatusJSON(http.StatusBadRequest, &model_rest.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
+			context.AbortWithStatusJSON(http.StatusBadRequest, &model_http.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
 			return
 		}
 
 		// Get username from JWT.
 		if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil {
 			logger.Error("failed to validate JWT in create quiz handler", zap.Error(err))
-			context.AbortWithStatusJSON(http.StatusInternalServerError, &model_rest.Error{Message: "unable to verify username"})
+			context.AbortWithStatusJSON(http.StatusInternalServerError, &model_http.Error{Message: "unable to verify username"})
 			return
 		}
 
@@ -56,12 +56,12 @@ func GetScore(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin
 		}
 		if dbRecord, err = db.Execute(cassandra.ReadResponseQuery, scoreRequest); err != nil {
 			cassandraError := err.(*cassandra.Error)
-			context.AbortWithStatusJSON(cassandraError.Status, &model_rest.Error{Message: "error retrieving score card", Payload: cassandraError.Message})
+			context.AbortWithStatusJSON(cassandraError.Status, &model_http.Error{Message: "error retrieving score card", Payload: cassandraError.Message})
 			return
 		}
 		response = dbRecord.(*model_cassandra.Response)
 
-		context.JSON(http.StatusOK, &model_rest.Success{Message: "score card", Payload: response})
+		context.JSON(http.StatusOK, &model_http.Success{Message: "score card", Payload: response})
 	}
 }
 
@@ -89,36 +89,36 @@ func GetStats(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin
 		var quizId gocql.UUID
 
 		if quizId, err = gocql.ParseUUID(context.Param("quiz_id")); err != nil {
-			context.AbortWithStatusJSON(http.StatusBadRequest, &model_rest.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
+			context.AbortWithStatusJSON(http.StatusBadRequest, &model_http.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
 			return
 		}
 
 		// Get username from JWT.
 		if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil {
 			logger.Error("failed to validate JWT in create quiz handler", zap.Error(err))
-			context.AbortWithStatusJSON(http.StatusInternalServerError, &model_rest.Error{Message: "unable to verify username"})
+			context.AbortWithStatusJSON(http.StatusInternalServerError, &model_http.Error{Message: "unable to verify username"})
 			return
 		}
 
 		// Get scorecard record from database.
 		if dbRecord, err = db.Execute(cassandra.ReadResponseStatisticsQuery, quizId); err != nil {
 			cassandraError := err.(*cassandra.Error)
-			context.AbortWithStatusJSON(cassandraError.Status, &model_rest.Error{Message: "error retrieving score card", Payload: cassandraError.Message})
+			context.AbortWithStatusJSON(cassandraError.Status, &model_http.Error{Message: "error retrieving score card", Payload: cassandraError.Message})
 			return
 		}
 		response = dbRecord.([]*model_cassandra.Response)
 
 		// Verify authorization.
 		if len(response) == 0 {
-			context.AbortWithStatusJSON(http.StatusNotFound, &model_rest.Error{Message: "could not locate results"})
+			context.AbortWithStatusJSON(http.StatusNotFound, &model_http.Error{Message: "could not locate results"})
 			return
 		}
 		if username != response[0].Author {
-			context.AbortWithStatusJSON(http.StatusForbidden, &model_rest.Error{Message: "error verifying quiz author"})
+			context.AbortWithStatusJSON(http.StatusForbidden, &model_http.Error{Message: "error verifying quiz author"})
 			return
 		}
 
-		context.JSON(http.StatusOK, &model_rest.Success{Message: "score card", Payload: response})
+		context.JSON(http.StatusOK, &model_http.Success{Message: "score card", Payload: response})
 	}
 }
 
@@ -145,49 +145,49 @@ func GetStatsPage(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra)
 		var err error
 		var dbRecord any
 		var statRequest *model_cassandra.StatsRequest
-		var restResponse *model_rest.StatsResponse
+		var restResponse *model_http.StatsResponse
 		var username string
 		var quizId gocql.UUID
 
 		if quizId, err = gocql.ParseUUID(context.Param("quiz_id")); err != nil {
-			context.AbortWithStatusJSON(http.StatusBadRequest, &model_rest.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
+			context.AbortWithStatusJSON(http.StatusBadRequest, &model_http.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
 			return
 		}
 
 		// Get username from JWT.
 		if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil {
 			logger.Error("failed to validate JWT in create quiz handler", zap.Error(err))
-			context.AbortWithStatusJSON(http.StatusInternalServerError, &model_rest.Error{Message: "unable to verify username"})
+			context.AbortWithStatusJSON(http.StatusInternalServerError, &model_http.Error{Message: "unable to verify username"})
 			return
 		}
 
 		// Prepare stats page request for database.
 		if statRequest, err = prepareStatsRequest(auth, quizId, context.Query("pageCursor"), context.Query("pageSize")); err != nil {
-			context.AbortWithStatusJSON(http.StatusBadRequest, &model_rest.Error{Message: "malformed query request", Payload: err.Error()})
+			context.AbortWithStatusJSON(http.StatusBadRequest, &model_http.Error{Message: "malformed query request", Payload: err.Error()})
 			return
 		}
 
 		// Get scorecard record page from database.
 		if dbRecord, err = db.Execute(cassandra.ReadResponseStatisticsPageQuery, statRequest); err != nil {
 			cassandraError := err.(*cassandra.Error)
-			context.AbortWithStatusJSON(cassandraError.Status, &model_rest.Error{Message: "error retrieving scorecard page", Payload: cassandraError.Message})
+			context.AbortWithStatusJSON(cassandraError.Status, &model_http.Error{Message: "error retrieving scorecard page", Payload: cassandraError.Message})
 			return
 		}
 		statsResponse := dbRecord.(*model_cassandra.StatsResponse)
 
 		// Verify authorization.
 		if len(statsResponse.Records) == 0 {
-			context.AbortWithStatusJSON(http.StatusNotFound, &model_rest.Error{Message: "could not locate results"})
+			context.AbortWithStatusJSON(http.StatusNotFound, &model_http.Error{Message: "could not locate results"})
 			return
 		}
 		if username != statsResponse.Records[0].Author {
-			context.AbortWithStatusJSON(http.StatusForbidden, &model_rest.Error{Message: "error verifying quiz author"})
+			context.AbortWithStatusJSON(http.StatusForbidden, &model_http.Error{Message: "error verifying quiz author"})
 			return
 		}
 
 		// Prepare REST response.
 		if restResponse, err = prepareStatsResponse(auth, statsResponse, quizId); err != nil {
-			context.AbortWithStatusJSON(http.StatusInternalServerError, &model_rest.Error{Message: "error preparing stats page", Payload: err.Error()})
+			context.AbortWithStatusJSON(http.StatusInternalServerError, &model_http.Error{Message: "error preparing stats page", Payload: err.Error()})
 		}
 
 		context.JSON(http.StatusOK, restResponse)
@@ -217,8 +217,8 @@ func prepareStatsRequest(auth auth.Auth, quizId gocql.UUID, cursor string, size 
 
 // prepareStatsResponse will prepare a http response from a database stats response. It will generate a link to the next
 // page of data as appropriate.
-func prepareStatsResponse(auth auth.Auth, dbResponse *model_cassandra.StatsResponse, quizId gocql.UUID) (response *model_rest.StatsResponse, err error) {
-	response = &model_rest.StatsResponse{Records: dbResponse.Records}
+func prepareStatsResponse(auth auth.Auth, dbResponse *model_cassandra.StatsResponse, quizId gocql.UUID) (response *model_http.StatsResponse, err error) {
+	response = &model_http.StatsResponse{Records: dbResponse.Records}
 	response.Metadata.QuizID = quizId
 	response.Metadata.NumRecords = len(dbResponse.Records)
 

@@ -1,4 +1,4 @@
-package model_rest
+package model_http
 
 import (
 	"github.com/gocql/gocql"

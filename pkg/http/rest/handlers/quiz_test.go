@@ -295,7 +295,7 @@ func TestCreateQuiz(t *testing.T) {
 
 			// Check message and quiz id.
 			if testCase.expectedStatus == http.StatusOK {
-				response := model_rest.Success{}
+				response := model_http.Success{}
 				require.NoError(t, json.NewDecoder(w.Body).Decode(&response), "failed to unmarshall response body.")
 
 				require.Containsf(t, response.Message, "created quiz", "got incorrect message %s", response.Message)
@@ -639,7 +639,7 @@ func TestViewQuiz(t *testing.T) {
 
 			// Check message and quiz id.
 			if testCase.expectedStatus == http.StatusOK {
-				response := model_rest.Success{}
+				response := model_http.Success{}
 				require.NoError(t, json.NewDecoder(w.Body).Decode(&response), "failed to unmarshall response body.")
 
 				require.True(t, len(response.Message) != 0, "did not receive quiz id in response")
@@ -832,7 +832,7 @@ func TestDeleteQuiz(t *testing.T) {
 
 			// Check message and quiz id.
 			if testCase.expectedStatus == http.StatusOK {
-				response := model_rest.Success{}
+				response := model_http.Success{}
 				require.NoError(t, json.NewDecoder(w.Body).Decode(&response), "failed to unmarshall response body.")
 
 				require.True(t, len(response.Message) != 0, "did not receive quiz id message response")
@@ -1029,7 +1029,7 @@ func TestPublishQuiz(t *testing.T) {
 
 			// Check message and quiz id.
 			if testCase.expectedStatus == http.StatusOK {
-				response := model_rest.Success{}
+				response := model_http.Success{}
 				require.NoError(t, json.NewDecoder(w.Body).Decode(&response), "failed to unmarshall response body.")
 
 				require.True(t, len(response.Message) != 0, "did not receive quiz id message response")
@@ -1176,7 +1176,7 @@ func TestUpdateQuiz(t *testing.T) {
 
 			// Check message and quiz id.
 			if testCase.expectedStatus == http.StatusOK {
-				response := model_rest.Success{}
+				response := model_http.Success{}
 				require.NoError(t, json.NewDecoder(w.Body).Decode(&response), "failed to unmarshall response body.")
 
 				require.True(t, len(response.Message) != 0, "did not receive quiz id message response")
@@ -1684,7 +1684,7 @@ func TestTakeQuiz(t *testing.T) {
 
 			// Check message and quizResponse id.
 			if testCase.expectedStatus == http.StatusOK {
-				response := model_rest.Success{}
+				response := model_http.Success{}
 				require.NoError(t, json.NewDecoder(w.Body).Decode(&response), "failed to unmarshall response body")
 
 				require.True(t, len(response.Message) != 0, "did not receive quiz response message")

@@ -510,7 +510,7 @@ func TestDeleteUser(t *testing.T) {
 		name                string
 		path                string
 		expectedStatus      int
-		deleteRequest       *model_rest.DeleteUserRequest
+		deleteRequest       *model_http.DeleteUserRequest
 		authValidateJWTData *mockAuthData
 		authCheckPwdData    *mockAuthData
 		cassandraReadData   *mockCassandraData
@@ -521,7 +521,7 @@ func TestDeleteUser(t *testing.T) {
 			name:           "empty request",
 			path:           "/delete/empty-request",
 			expectedStatus: http.StatusBadRequest,
-			deleteRequest:  &model_rest.DeleteUserRequest{},
+			deleteRequest:  &model_http.DeleteUserRequest{},
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "",
 				times:        0,
@@ -539,7 +539,7 @@ func TestDeleteUser(t *testing.T) {
 			name:           "valid token",
 			path:           "/delete/valid-request",
 			expectedStatus: http.StatusOK,
-			deleteRequest: &model_rest.DeleteUserRequest{
+			deleteRequest: &model_http.DeleteUserRequest{
 				UserLoginCredentials: model_cassandra.UserLoginCredentials{
 					Username: "username1",
 					Password: "password",
@@ -564,7 +564,7 @@ func TestDeleteUser(t *testing.T) {
 			name:           "token and request username mismatch",
 			path:           "/delete/token-and-request-username-mismatch",
 			expectedStatus: http.StatusForbidden,
-			deleteRequest: &model_rest.DeleteUserRequest{
+			deleteRequest: &model_http.DeleteUserRequest{
 				UserLoginCredentials: model_cassandra.UserLoginCredentials{
 					Username: "username1",
 					Password: "password",
@@ -588,7 +588,7 @@ func TestDeleteUser(t *testing.T) {
 			name:           "db read failure",
 			path:           "/delete/db-read-failure",
 			expectedStatus: http.StatusInternalServerError,
-			deleteRequest: &model_rest.DeleteUserRequest{
+			deleteRequest: &model_http.DeleteUserRequest{
 				UserLoginCredentials: model_cassandra.UserLoginCredentials{
 					Username: "username1",
 					Password: "password",
@@ -614,7 +614,7 @@ func TestDeleteUser(t *testing.T) {
 			name:           "already deleted",
 			path:           "/delete/already-deleted",
 			expectedStatus: http.StatusForbidden,
-			deleteRequest: &model_rest.DeleteUserRequest{
+			deleteRequest: &model_http.DeleteUserRequest{
 				UserLoginCredentials: model_cassandra.UserLoginCredentials{
 					Username: "username1",
 					Password: "password",
@@ -641,7 +641,7 @@ func TestDeleteUser(t *testing.T) {
 			name:           "db delete failure",
 			path:           "/delete/db-delete-failure",
 			expectedStatus: http.StatusInternalServerError,
-			deleteRequest: &model_rest.DeleteUserRequest{
+			deleteRequest: &model_http.DeleteUserRequest{
 				UserLoginCredentials: model_cassandra.UserLoginCredentials{
 					Username: "username1",
 					Password: "password",
@@ -667,7 +667,7 @@ func TestDeleteUser(t *testing.T) {
 			name:           "bad deletion confirmation",
 			path:           "/delete/bad-deletion-confirmation",
 			expectedStatus: http.StatusBadRequest,
-			deleteRequest: &model_rest.DeleteUserRequest{
+			deleteRequest: &model_http.DeleteUserRequest{
 				UserLoginCredentials: model_cassandra.UserLoginCredentials{
 					Username: "username1",
 					Password: "password",
@@ -691,7 +691,7 @@ func TestDeleteUser(t *testing.T) {
 			name:           "invalid password",
 			path:           "/delete/valid-password",
 			expectedStatus: http.StatusForbidden,
-			deleteRequest: &model_rest.DeleteUserRequest{
+			deleteRequest: &model_http.DeleteUserRequest{
 				UserLoginCredentials: model_cassandra.UserLoginCredentials{
 					Username: "username1",
 					Password: "password",
