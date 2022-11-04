@@ -1,0 +1,51 @@
+# User account information.
+type UserAccount implements UserLoginCredentials{
+    FirstName: String!
+    LastName: String!
+    Email: String!
+    Username: String!
+    Password: String!
+}
+
+# Login credentials.
+interface UserLoginCredentials {
+    Username: String!
+    Password: String!
+}
+
+# Register a new user account.
+input UserRegistration {
+    FirstName: String!
+    LastName: String!
+    Email: String!
+    Username: String!
+    Password: String!
+}
+
+# User login request.
+input UserLogin {
+    Username: String!
+    Password: String!
+}
+
+# User account deletion request.
+input UserDeletion {
+    Username: String!
+    Password: String!
+    Confirmation: String!
+}
+
+# User mutation requests.
+type Mutation {
+    # Send a user registration request and receive a JWT authorization token in response.
+    registerUser(input: UserRegistration): JWTAuthResponse!
+
+    # Send a user account deletion request.
+    deleteUser(input: UserDeletion!): String!
+
+    # Send a user login request And receive a JWT authorization token in response.
+    loginUser(input: UserLogin!): JWTAuthResponse!
+
+    # Refreshes a users JWT if it is within the refresh time window.
+    refreshToken(token: String!): JWTAuthResponse!
+}
