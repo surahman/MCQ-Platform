@@ -1,0 +1,53 @@
+# QuizCore is the complete quiz that is sent to the backend when a quiz is created/updated or to the end users.
+type QuizCore {
+    Title: String!
+    MarkingType: String!
+    Questions: [Question!]!
+}
+
+# Question is a single question of a quiz.
+type Question {
+    Description: String!
+    Asset: String!
+    Options: [String!]!
+    Answers: [Int!]!
+}
+
+# Request data to create a quiz.
+input QuizCreate {
+    Title: String!
+    MarkingType: String!
+    Questions: [QuestionCreate!]!
+}
+
+# Component for the create quiz request.
+input QuestionCreate {
+    Description: String!
+    Asset: String!
+    Options: [String!]!
+    Answers: [Int!]!
+}
+
+# Mutations that will create/alter data in the database.
+type Mutation {
+    # Request to create a quiz. The created quiz is not published.
+    createQuiz(input: QuizCreate!): String!
+
+    # Request to update a quiz. Only unpublished quizzes can be updated.
+    updateQuiz(input: QuizCreate!): String!
+
+    # Request to publish a quiz.
+    publishQuiz(quizID: String!): String!
+
+    # Request to delete a quiz. Quizzes are marked as deleted and unpublished.
+    deleteQuiz(quizID: String!): String!
+
+    # Request to submit responses to a quiz for marking.
+    takeQuiz(quizID: String!, input: QuizResponseInput!): Float64!
+}
+
+# Queries that will not mutate data in the database.
+type Query {
+    # Request to view the quiz contents.
+    viewQuiz(quizID: String!): QuizCore!
+}
