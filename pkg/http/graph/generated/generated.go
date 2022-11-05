@@ -46,7 +46,7 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
-	JWTResponse struct {
+	JWTAuthResponse struct {
 		Expires   func(childComplexity int) int
 		Threshold func(childComplexity int) int
 		Token     func(childComplexity int) int
@@ -60,7 +60,7 @@ type ComplexityRoot struct {
 		PublishQuiz  func(childComplexity int, quizID string) int
 		RefreshToken func(childComplexity int, token string) int
 		RegisterUser func(childComplexity int, input *model_http.UserRegistration) int
-		TakeQuiz     func(childComplexity int, quizID string, input model_http.QuizResponseInput) int
+		TakeQuiz     func(childComplexity int, quizID string, input model_cassandra.QuizResponse) int
 		UpdateQuiz   func(childComplexity int, input model_http.QuizCreate) int
 	}
 
@@ -79,10 +79,6 @@ type ComplexityRoot struct {
 		MarkingType func(childComplexity int) int
 		Questions   func(childComplexity int) int
 		Title       func(childComplexity int) int
-	}
-
-	QuizResponse struct {
-		Responses func(childComplexity int) int
 	}
 
 	Response struct {
@@ -107,20 +103,21 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	RegisterUser(ctx context.Context, input *model_http.UserRegistration) (*model_http.JWTResponse, error)
+	RegisterUser(ctx context.Context, input *model_http.UserRegistration) (*model_http.JWTAuthResponse, error)
 	DeleteUser(ctx context.Context, input model_http.UserDeletion) (string, error)
-	LoginUser(ctx context.Context, input model_http.UserLogin) (*model_http.JWTResponse, error)
-	RefreshToken(ctx context.Context, token string) (*model_http.JWTResponse, error)
+	LoginUser(ctx context.Context, input model_http.UserLogin) (*model_http.JWTAuthResponse, error)
+	RefreshToken(ctx context.Context, token string) (*model_http.JWTAuthResponse, error)
 	CreateQuiz(ctx context.Context, input model_http.QuizCreate) (string, error)
 	UpdateQuiz(ctx context.Context, input model_http.QuizCreate) (string, error)
 	PublishQuiz(ctx context.Context, quizID string) (string, error)
 	DeleteQuiz(ctx context.Context, quizID string) (string, error)
-	TakeQuiz(ctx context.Context, quizID string, input model_http.QuizResponseInput) (float64, error)
+	TakeQuiz(ctx context.Context, quizID string, input model_cassandra.QuizResponse) (float64, error)
 }
 type QueryResolver interface {
 	ViewQuiz(ctx context.Context, quizID string) (*model_cassandra.QuizCore, error)
 }
 type ResponseResolver interface {
+	QuizResponse(ctx context.Context, obj *model_cassandra.Response) ([][]int32, error)
 	QuizID(ctx context.Context, obj *model_cassandra.Response) (string, error)
 }
 
@@ -139,26 +136,26 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
-	case "JWTResponse.Expires":
-		if e.complexity.JWTResponse.Expires == nil {
+	case "JWTAuthResponse.Expires":
+		if e.complexity.JWTAuthResponse.Expires == nil {
 			break
 		}
 
-		return e.complexity.JWTResponse.Expires(childComplexity), true
+		return e.complexity.JWTAuthResponse.Expires(childComplexity), true
 
-	case "JWTResponse.Threshold":
-		if e.complexity.JWTResponse.Threshold == nil {
+	case "JWTAuthResponse.Threshold":
+		if e.complexity.JWTAuthResponse.Threshold == nil {
 			break
 		}
 
-		return e.complexity.JWTResponse.Threshold(childComplexity), true
+		return e.complexity.JWTAuthResponse.Threshold(childComplexity), true
 
-	case "JWTResponse.Token":
-		if e.complexity.JWTResponse.Token == nil {
+	case "JWTAuthResponse.Token":
+		if e.complexity.JWTAuthResponse.Token == nil {
 			break
 		}
 
-		return e.complexity.JWTResponse.Token(childComplexity), true
+		return e.complexity.JWTAuthResponse.Token(childComplexity), true
 
 	case "Mutation.createQuiz":
 		if e.complexity.Mutation.CreateQuiz == nil {
@@ -254,7 +251,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.TakeQuiz(childComplexity, args["quizID"].(string), args["input"].(model_http.QuizResponseInput)), true
+		return e.complexity.Mutation.TakeQuiz(childComplexity, args["quizID"].(string), args["input"].(model_cassandra.QuizResponse)), true
 
 	case "Mutation.updateQuiz":
 		if e.complexity.Mutation.UpdateQuiz == nil {
@@ -328,13 +325,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.QuizCore.Title(childComplexity), true
-
-	case "QuizResponse.Responses":
-		if e.complexity.QuizResponse.Responses == nil {
-			break
-		}
-
-		return e.complexity.QuizResponse.Responses(childComplexity), true
 
 	case "Response.Author":
 		if e.complexity.Response.Author == nil {
@@ -423,7 +413,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputQuestionCreate,
 		ec.unmarshalInputQuizCreate,
-		ec.unmarshalInputQuizResponseInput,
+		ec.unmarshalInputQuizResponse,
 		ec.unmarshalInputUserDeletion,
 		ec.unmarshalInputUserLogin,
 		ec.unmarshalInputUserRegistration,
@@ -488,10 +478,10 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 
 var sources = []*ast.Source{
 	{Name: "../../../model/http/auth.graphqls", Input: `# JWT Authorization Response.
-type JWTResponse {
+type JWTAuthResponse {
     Token: String!
-    Expires: Int!
-    Threshold: Int!
+    Expires: Int64!
+    Threshold: Int64!
 }
 `, BuiltIn: false},
 	{Name: "../../../model/http/mutation.graphqls", Input: `# Requests that might alter the state of data in the database.
@@ -501,16 +491,16 @@ type Mutation {
     ################################
 
     # Send a user registration request and receive a JWT authorization token in response.
-    registerUser(input: UserRegistration): JWTResponse!
+    registerUser(input: UserRegistration): JWTAuthResponse!
 
     # Send a user account deletion request.
     deleteUser(input: UserDeletion!): String!
 
     # Send a user login request And receive a JWT authorization token in response.
-    loginUser(input: UserLogin!): JWTResponse!
+    loginUser(input: UserLogin!): JWTAuthResponse!
 
     # Refreshes a users JWT if it is within the refresh time window.
-    refreshToken(token: String!): JWTResponse!
+    refreshToken(token: String!): JWTAuthResponse!
 
 
     ################################
@@ -530,7 +520,7 @@ type Mutation {
     deleteQuiz(quizID: String!): String!
 
     # Request to submit responses to a quiz for marking.
-    takeQuiz(quizID: String!, input: QuizResponseInput!): Float!
+    takeQuiz(quizID: String!, input: QuizResponse!): Float!
 }`, BuiltIn: false},
 	{Name: "../../../model/http/query.graphqls", Input: `# Requests that wil not alter the state of data in the database.
 type Query {
@@ -554,7 +544,7 @@ type Question {
     Description: String!
     Asset: String!
     Options: [String!]!
-    Answers: [Int!]!
+    Answers: [Int32!]!
 }
 
 # Request data to create a quiz.
@@ -569,7 +559,7 @@ input QuestionCreate {
     Description: String!
     Asset: String!
     Options: [String!]!
-    Answers: [Int!]!
+    Answers: [Int32!]!
 }
 `, BuiltIn: false},
 	{Name: "../../../model/http/responses.graphqls", Input: `# Response represents a response to a quiz and is a row in responses table.
@@ -577,19 +567,18 @@ type Response {
     Username: String!
     Author: String!
     Score:Float!
-    QuizResponse: QuizResponse!
+    QuizResponse: [[Int32!]]!
     QuizID: String!
 }
 
 # The answer card to a quiz. The rows indices are the question numbers and the columns indices are the selected option numbers.
-type QuizResponse {
-    Responses: [[Int!]]!
+input QuizResponse {
+    Responses: [[Int32!]]!
 }
-
-# The response to a quiz submitted by an end user.
-input QuizResponseInput {
-    Responses: [[Int!]]!
-}`, BuiltIn: false},
+`, BuiltIn: false},
+	{Name: "../../../model/http/scalars.graphqls", Input: `scalar Int32
+scalar Int64
+`, BuiltIn: false},
 	{Name: "../../../model/http/user.graphqls", Input: `# User account information.
 type UserAccount {
     FirstName: String!
@@ -750,10 +739,10 @@ func (ec *executionContext) field_Mutation_takeQuiz_args(ctx context.Context, ra
 		}
 	}
 	args["quizID"] = arg0
-	var arg1 model_http.QuizResponseInput
+	var arg1 model_cassandra.QuizResponse
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg1, err = ec.unmarshalNQuizResponseInput2githubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋhttpᚐQuizResponseInput(ctx, tmp)
+		arg1, err = ec.unmarshalNQuizResponse2githubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋcassandraᚐQuizResponse(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -845,8 +834,8 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _JWTResponse_Token(ctx context.Context, field graphql.CollectedField, obj *model_http.JWTResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_JWTResponse_Token(ctx, field)
+func (ec *executionContext) _JWTAuthResponse_Token(ctx context.Context, field graphql.CollectedField, obj *model_http.JWTAuthResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_JWTAuthResponse_Token(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -876,9 +865,9 @@ func (ec *executionContext) _JWTResponse_Token(ctx context.Context, field graphq
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_JWTResponse_Token(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_JWTAuthResponse_Token(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "JWTResponse",
+		Object:     "JWTAuthResponse",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -889,8 +878,8 @@ func (ec *executionContext) fieldContext_JWTResponse_Token(ctx context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _JWTResponse_Expires(ctx context.Context, field graphql.CollectedField, obj *model_http.JWTResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_JWTResponse_Expires(ctx, field)
+func (ec *executionContext) _JWTAuthResponse_Expires(ctx context.Context, field graphql.CollectedField, obj *model_http.JWTAuthResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_JWTAuthResponse_Expires(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -915,26 +904,26 @@ func (ec *executionContext) _JWTResponse_Expires(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(int64)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_JWTResponse_Expires(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_JWTAuthResponse_Expires(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "JWTResponse",
+		Object:     "JWTAuthResponse",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type Int64 does not have child fields")
 		},
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _JWTResponse_Threshold(ctx context.Context, field graphql.CollectedField, obj *model_http.JWTResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_JWTResponse_Threshold(ctx, field)
+func (ec *executionContext) _JWTAuthResponse_Threshold(ctx context.Context, field graphql.CollectedField, obj *model_http.JWTAuthResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_JWTAuthResponse_Threshold(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -959,19 +948,19 @@ func (ec *executionContext) _JWTResponse_Threshold(ctx context.Context, field gr
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(int64)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_JWTResponse_Threshold(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_JWTAuthResponse_Threshold(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "JWTResponse",
+		Object:     "JWTAuthResponse",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type Int64 does not have child fields")
 		},
 	}
 	return fc, nil
@@ -1003,9 +992,9 @@ func (ec *executionContext) _Mutation_registerUser(ctx context.Context, field gr
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model_http.JWTResponse)
+	res := resTmp.(*model_http.JWTAuthResponse)
 	fc.Result = res
-	return ec.marshalNJWTResponse2ᚖgithubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋhttpᚐJWTResponse(ctx, field.Selections, res)
+	return ec.marshalNJWTAuthResponse2ᚖgithubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋhttpᚐJWTAuthResponse(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_registerUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1017,13 +1006,13 @@ func (ec *executionContext) fieldContext_Mutation_registerUser(ctx context.Conte
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "Token":
-				return ec.fieldContext_JWTResponse_Token(ctx, field)
+				return ec.fieldContext_JWTAuthResponse_Token(ctx, field)
 			case "Expires":
-				return ec.fieldContext_JWTResponse_Expires(ctx, field)
+				return ec.fieldContext_JWTAuthResponse_Expires(ctx, field)
 			case "Threshold":
-				return ec.fieldContext_JWTResponse_Threshold(ctx, field)
+				return ec.fieldContext_JWTAuthResponse_Threshold(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type JWTResponse", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type JWTAuthResponse", field.Name)
 		},
 	}
 	defer func() {
@@ -1121,9 +1110,9 @@ func (ec *executionContext) _Mutation_loginUser(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model_http.JWTResponse)
+	res := resTmp.(*model_http.JWTAuthResponse)
 	fc.Result = res
-	return ec.marshalNJWTResponse2ᚖgithubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋhttpᚐJWTResponse(ctx, field.Selections, res)
+	return ec.marshalNJWTAuthResponse2ᚖgithubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋhttpᚐJWTAuthResponse(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_loginUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1135,13 +1124,13 @@ func (ec *executionContext) fieldContext_Mutation_loginUser(ctx context.Context,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "Token":
-				return ec.fieldContext_JWTResponse_Token(ctx, field)
+				return ec.fieldContext_JWTAuthResponse_Token(ctx, field)
 			case "Expires":
-				return ec.fieldContext_JWTResponse_Expires(ctx, field)
+				return ec.fieldContext_JWTAuthResponse_Expires(ctx, field)
 			case "Threshold":
-				return ec.fieldContext_JWTResponse_Threshold(ctx, field)
+				return ec.fieldContext_JWTAuthResponse_Threshold(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type JWTResponse", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type JWTAuthResponse", field.Name)
 		},
 	}
 	defer func() {
@@ -1184,9 +1173,9 @@ func (ec *executionContext) _Mutation_refreshToken(ctx context.Context, field gr
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model_http.JWTResponse)
+	res := resTmp.(*model_http.JWTAuthResponse)
 	fc.Result = res
-	return ec.marshalNJWTResponse2ᚖgithubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋhttpᚐJWTResponse(ctx, field.Selections, res)
+	return ec.marshalNJWTAuthResponse2ᚖgithubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋhttpᚐJWTAuthResponse(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_refreshToken(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1198,13 +1187,13 @@ func (ec *executionContext) fieldContext_Mutation_refreshToken(ctx context.Conte
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "Token":
-				return ec.fieldContext_JWTResponse_Token(ctx, field)
+				return ec.fieldContext_JWTAuthResponse_Token(ctx, field)
 			case "Expires":
-				return ec.fieldContext_JWTResponse_Expires(ctx, field)
+				return ec.fieldContext_JWTAuthResponse_Expires(ctx, field)
 			case "Threshold":
-				return ec.fieldContext_JWTResponse_Threshold(ctx, field)
+				return ec.fieldContext_JWTAuthResponse_Threshold(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type JWTResponse", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type JWTAuthResponse", field.Name)
 		},
 	}
 	defer func() {
@@ -1455,7 +1444,7 @@ func (ec *executionContext) _Mutation_takeQuiz(ctx context.Context, field graphq
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().TakeQuiz(rctx, fc.Args["quizID"].(string), fc.Args["input"].(model_http.QuizResponseInput))
+		return ec.resolvers.Mutation().TakeQuiz(rctx, fc.Args["quizID"].(string), fc.Args["input"].(model_cassandra.QuizResponse))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1848,7 +1837,7 @@ func (ec *executionContext) _Question_Answers(ctx context.Context, field graphql
 	}
 	res := resTmp.([]int32)
 	fc.Result = res
-	return ec.marshalNInt2ᚕint32ᚄ(ctx, field.Selections, res)
+	return ec.marshalNInt322ᚕint32ᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Question_Answers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1858,7 +1847,7 @@ func (ec *executionContext) fieldContext_Question_Answers(ctx context.Context, f
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type Int32 does not have child fields")
 		},
 	}
 	return fc, nil
@@ -2001,50 +1990,6 @@ func (ec *executionContext) fieldContext_QuizCore_Questions(ctx context.Context,
 				return ec.fieldContext_Question_Answers(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Question", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _QuizResponse_Responses(ctx context.Context, field graphql.CollectedField, obj *model_cassandra.QuizResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_QuizResponse_Responses(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Responses, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([][]int32)
-	fc.Result = res
-	return ec.marshalNInt2ᚕᚕint32(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_QuizResponse_Responses(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "QuizResponse",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -2196,7 +2141,7 @@ func (ec *executionContext) _Response_QuizResponse(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.QuizResponse, nil
+		return ec.resolvers.Response().QuizResponse(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2208,23 +2153,19 @@ func (ec *executionContext) _Response_QuizResponse(ctx context.Context, field gr
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model_cassandra.QuizResponse)
+	res := resTmp.([][]int32)
 	fc.Result = res
-	return ec.marshalNQuizResponse2ᚖgithubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋcassandraᚐQuizResponse(ctx, field.Selections, res)
+	return ec.marshalNInt322ᚕᚕint32(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Response_QuizResponse(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Response",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "Responses":
-				return ec.fieldContext_QuizResponse_Responses(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type QuizResponse", field.Name)
+			return nil, errors.New("field of type Int32 does not have child fields")
 		},
 	}
 	return fc, nil
@@ -4359,7 +4300,7 @@ func (ec *executionContext) unmarshalInputQuestionCreate(ctx context.Context, ob
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Answers"))
-			it.Answers, err = ec.unmarshalNInt2ᚕintᚄ(ctx, v)
+			it.Answers, err = ec.unmarshalNInt322ᚕint32ᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4413,8 +4354,8 @@ func (ec *executionContext) unmarshalInputQuizCreate(ctx context.Context, obj in
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputQuizResponseInput(ctx context.Context, obj interface{}) (model_http.QuizResponseInput, error) {
-	var it model_http.QuizResponseInput
+func (ec *executionContext) unmarshalInputQuizResponse(ctx context.Context, obj interface{}) (model_cassandra.QuizResponse, error) {
+	var it model_cassandra.QuizResponse
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
@@ -4431,7 +4372,7 @@ func (ec *executionContext) unmarshalInputQuizResponseInput(ctx context.Context,
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Responses"))
-			it.Responses, err = ec.unmarshalNInt2ᚕᚕint(ctx, v)
+			it.Responses, err = ec.unmarshalNInt322ᚕᚕint32(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4589,33 +4530,33 @@ func (ec *executionContext) unmarshalInputUserRegistration(ctx context.Context, 
 
 // region    **************************** object.gotpl ****************************
 
-var jWTResponseImplementors = []string{"JWTResponse"}
+var jWTAuthResponseImplementors = []string{"JWTAuthResponse"}
 
-func (ec *executionContext) _JWTResponse(ctx context.Context, sel ast.SelectionSet, obj *model_http.JWTResponse) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, jWTResponseImplementors)
+func (ec *executionContext) _JWTAuthResponse(ctx context.Context, sel ast.SelectionSet, obj *model_http.JWTAuthResponse) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, jWTAuthResponseImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("JWTResponse")
+			out.Values[i] = graphql.MarshalString("JWTAuthResponse")
 		case "Token":
 
-			out.Values[i] = ec._JWTResponse_Token(ctx, field, obj)
+			out.Values[i] = ec._JWTAuthResponse_Token(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "Expires":
 
-			out.Values[i] = ec._JWTResponse_Expires(ctx, field, obj)
+			out.Values[i] = ec._JWTAuthResponse_Expires(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "Threshold":
 
-			out.Values[i] = ec._JWTResponse_Threshold(ctx, field, obj)
+			out.Values[i] = ec._JWTAuthResponse_Threshold(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -4898,34 +4839,6 @@ func (ec *executionContext) _QuizCore(ctx context.Context, sel ast.SelectionSet,
 	return out
 }
 
-var quizResponseImplementors = []string{"QuizResponse"}
-
-func (ec *executionContext) _QuizResponse(ctx context.Context, sel ast.SelectionSet, obj *model_cassandra.QuizResponse) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, quizResponseImplementors)
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("QuizResponse")
-		case "Responses":
-
-			out.Values[i] = ec._QuizResponse_Responses(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
 var responseImplementors = []string{"Response"}
 
 func (ec *executionContext) _Response(ctx context.Context, sel ast.SelectionSet, obj *model_cassandra.Response) graphql.Marshaler {
@@ -4958,12 +4871,25 @@ func (ec *executionContext) _Response(ctx context.Context, sel ast.SelectionSet,
 				atomic.AddUint32(&invalids, 1)
 			}
 		case "QuizResponse":
+			field := field
 
-			out.Values[i] = ec._Response_QuizResponse(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Response_QuizResponse(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "QuizID":
 			field := field
 
@@ -5427,27 +5353,12 @@ func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.S
 	return graphql.WrapContextMarshaler(ctx, res)
 }
 
-func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
-	res, err := graphql.UnmarshalInt(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
-	res := graphql.MarshalInt(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-	}
-	return res
-}
-
-func (ec *executionContext) unmarshalNInt2int32(ctx context.Context, v interface{}) (int32, error) {
+func (ec *executionContext) unmarshalNInt322int32(ctx context.Context, v interface{}) (int32, error) {
 	res, err := graphql.UnmarshalInt32(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNInt2int32(ctx context.Context, sel ast.SelectionSet, v int32) graphql.Marshaler {
+func (ec *executionContext) marshalNInt322int32(ctx context.Context, sel ast.SelectionSet, v int32) graphql.Marshaler {
 	res := graphql.MarshalInt32(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -5457,7 +5368,7 @@ func (ec *executionContext) marshalNInt2int32(ctx context.Context, sel ast.Selec
 	return res
 }
 
-func (ec *executionContext) unmarshalNInt2ᚕint32ᚄ(ctx context.Context, v interface{}) ([]int32, error) {
+func (ec *executionContext) unmarshalNInt322ᚕint32ᚄ(ctx context.Context, v interface{}) ([]int32, error) {
 	var vSlice []interface{}
 	if v != nil {
 		vSlice = graphql.CoerceList(v)
@@ -5466,7 +5377,7 @@ func (ec *executionContext) unmarshalNInt2ᚕint32ᚄ(ctx context.Context, v int
 	res := make([]int32, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNInt2int32(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNInt322int32(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -5474,10 +5385,10 @@ func (ec *executionContext) unmarshalNInt2ᚕint32ᚄ(ctx context.Context, v int
 	return res, nil
 }
 
-func (ec *executionContext) marshalNInt2ᚕint32ᚄ(ctx context.Context, sel ast.SelectionSet, v []int32) graphql.Marshaler {
+func (ec *executionContext) marshalNInt322ᚕint32ᚄ(ctx context.Context, sel ast.SelectionSet, v []int32) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	for i := range v {
-		ret[i] = ec.marshalNInt2int32(ctx, sel, v[i])
+		ret[i] = ec.marshalNInt322int32(ctx, sel, v[i])
 	}
 
 	for _, e := range ret {
@@ -5489,65 +5400,7 @@ func (ec *executionContext) marshalNInt2ᚕint32ᚄ(ctx context.Context, sel ast
 	return ret
 }
 
-func (ec *executionContext) unmarshalNInt2ᚕintᚄ(ctx context.Context, v interface{}) ([]int, error) {
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]int, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNInt2int(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalNInt2ᚕintᚄ(ctx context.Context, sel ast.SelectionSet, v []int) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	for i := range v {
-		ret[i] = ec.marshalNInt2int(ctx, sel, v[i])
-	}
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) unmarshalNInt2ᚕᚕint(ctx context.Context, v interface{}) ([][]int, error) {
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([][]int, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalOInt2ᚕintᚄ(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalNInt2ᚕᚕint(ctx context.Context, sel ast.SelectionSet, v [][]int) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	for i := range v {
-		ret[i] = ec.marshalOInt2ᚕintᚄ(ctx, sel, v[i])
-	}
-
-	return ret
-}
-
-func (ec *executionContext) unmarshalNInt2ᚕᚕint32(ctx context.Context, v interface{}) ([][]int32, error) {
+func (ec *executionContext) unmarshalNInt322ᚕᚕint32(ctx context.Context, v interface{}) ([][]int32, error) {
 	var vSlice []interface{}
 	if v != nil {
 		vSlice = graphql.CoerceList(v)
@@ -5556,7 +5409,7 @@ func (ec *executionContext) unmarshalNInt2ᚕᚕint32(ctx context.Context, v int
 	res := make([][]int32, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalOInt2ᚕint32ᚄ(ctx, vSlice[i])
+		res[i], err = ec.unmarshalOInt322ᚕint32ᚄ(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -5564,27 +5417,42 @@ func (ec *executionContext) unmarshalNInt2ᚕᚕint32(ctx context.Context, v int
 	return res, nil
 }
 
-func (ec *executionContext) marshalNInt2ᚕᚕint32(ctx context.Context, sel ast.SelectionSet, v [][]int32) graphql.Marshaler {
+func (ec *executionContext) marshalNInt322ᚕᚕint32(ctx context.Context, sel ast.SelectionSet, v [][]int32) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	for i := range v {
-		ret[i] = ec.marshalOInt2ᚕint32ᚄ(ctx, sel, v[i])
+		ret[i] = ec.marshalOInt322ᚕint32ᚄ(ctx, sel, v[i])
 	}
 
 	return ret
 }
 
-func (ec *executionContext) marshalNJWTResponse2githubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋhttpᚐJWTResponse(ctx context.Context, sel ast.SelectionSet, v model_http.JWTResponse) graphql.Marshaler {
-	return ec._JWTResponse(ctx, sel, &v)
+func (ec *executionContext) unmarshalNInt642int64(ctx context.Context, v interface{}) (int64, error) {
+	res, err := graphql.UnmarshalInt64(v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNJWTResponse2ᚖgithubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋhttpᚐJWTResponse(ctx context.Context, sel ast.SelectionSet, v *model_http.JWTResponse) graphql.Marshaler {
+func (ec *executionContext) marshalNInt642int64(ctx context.Context, sel ast.SelectionSet, v int64) graphql.Marshaler {
+	res := graphql.MarshalInt64(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) marshalNJWTAuthResponse2githubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋhttpᚐJWTAuthResponse(ctx context.Context, sel ast.SelectionSet, v model_http.JWTAuthResponse) graphql.Marshaler {
+	return ec._JWTAuthResponse(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNJWTAuthResponse2ᚖgithubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋhttpᚐJWTAuthResponse(ctx context.Context, sel ast.SelectionSet, v *model_http.JWTAuthResponse) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
-	return ec._JWTResponse(ctx, sel, v)
+	return ec._JWTAuthResponse(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNQuestion2ᚕᚖgithubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋcassandraᚐQuestionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model_cassandra.Question) graphql.Marshaler {
@@ -5682,18 +5550,8 @@ func (ec *executionContext) unmarshalNQuizCreate2githubᚗcomᚋsurahmanᚋmcq�
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNQuizResponse2ᚖgithubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋcassandraᚐQuizResponse(ctx context.Context, sel ast.SelectionSet, v *model_cassandra.QuizResponse) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._QuizResponse(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalNQuizResponseInput2githubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋhttpᚐQuizResponseInput(ctx context.Context, v interface{}) (model_http.QuizResponseInput, error) {
-	res, err := ec.unmarshalInputQuizResponseInput(ctx, v)
+func (ec *executionContext) unmarshalNQuizResponse2githubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋcassandraᚐQuizResponse(ctx context.Context, v interface{}) (model_cassandra.QuizResponse, error) {
+	res, err := ec.unmarshalInputQuizResponse(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -6037,7 +5895,7 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) unmarshalOInt2ᚕint32ᚄ(ctx context.Context, v interface{}) ([]int32, error) {
+func (ec *executionContext) unmarshalOInt322ᚕint32ᚄ(ctx context.Context, v interface{}) ([]int32, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -6049,7 +5907,7 @@ func (ec *executionContext) unmarshalOInt2ᚕint32ᚄ(ctx context.Context, v int
 	res := make([]int32, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNInt2int32(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNInt322int32(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -6057,51 +5915,13 @@ func (ec *executionContext) unmarshalOInt2ᚕint32ᚄ(ctx context.Context, v int
 	return res, nil
 }
 
-func (ec *executionContext) marshalOInt2ᚕint32ᚄ(ctx context.Context, sel ast.SelectionSet, v []int32) graphql.Marshaler {
+func (ec *executionContext) marshalOInt322ᚕint32ᚄ(ctx context.Context, sel ast.SelectionSet, v []int32) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	ret := make(graphql.Array, len(v))
 	for i := range v {
-		ret[i] = ec.marshalNInt2int32(ctx, sel, v[i])
-	}
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) unmarshalOInt2ᚕintᚄ(ctx context.Context, v interface{}) ([]int, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]int, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNInt2int(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalOInt2ᚕintᚄ(ctx context.Context, sel ast.SelectionSet, v []int) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	for i := range v {
-		ret[i] = ec.marshalNInt2int(ctx, sel, v[i])
+		ret[i] = ec.marshalNInt322int32(ctx, sel, v[i])
 	}
 
 	for _, e := range ret {

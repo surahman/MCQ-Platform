@@ -3,16 +3,11 @@ type Response {
     Username: String!
     Author: String!
     Score:Float!
-    QuizResponse: QuizResponse!
+    QuizResponse: [[Int32!]]!
     QuizID: String!
 }
 
 # The answer card to a quiz. The rows indices are the question numbers and the columns indices are the selected option numbers.
-type QuizResponse {
-    Responses: [[Int!]]!
-}
-
-# The response to a quiz submitted by an end user.
-input QuizResponseInput {
-    Responses: [[Int!]]!
+input QuizResponse {
+    Responses: [[Int32!]]!
 }

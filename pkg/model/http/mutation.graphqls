@@ -5,16 +5,16 @@ type Mutation {
     ################################
 
     # Send a user registration request and receive a JWT authorization token in response.
-    registerUser(input: UserRegistration): JWTResponse!
+    registerUser(input: UserRegistration): JWTAuthResponse!
 
     # Send a user account deletion request.
     deleteUser(input: UserDeletion!): String!
 
     # Send a user login request And receive a JWT authorization token in response.
-    loginUser(input: UserLogin!): JWTResponse!
+    loginUser(input: UserLogin!): JWTAuthResponse!
 
     # Refreshes a users JWT if it is within the refresh time window.
-    refreshToken(token: String!): JWTResponse!
+    refreshToken(token: String!): JWTAuthResponse!
 
 
     ################################
@@ -34,5 +34,5 @@ type Mutation {
     deleteQuiz(quizID: String!): String!
 
     # Request to submit responses to a quiz for marking.
-    takeQuiz(quizID: String!, input: QuizResponseInput!): Float!
+    takeQuiz(quizID: String!, input: QuizResponse!): Float!
 }

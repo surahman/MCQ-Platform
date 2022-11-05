@@ -2,27 +2,17 @@
 
 package model_http
 
-type JWTResponse struct {
-	Token     string `json:"Token"`
-	Expires   int    `json:"Expires"`
-	Threshold int    `json:"Threshold"`
-}
-
 type QuestionCreate struct {
 	Description string   `json:"Description"`
 	Asset       string   `json:"Asset"`
 	Options     []string `json:"Options"`
-	Answers     []int    `json:"Answers"`
+	Answers     []int32  `json:"Answers"`
 }
 
 type QuizCreate struct {
 	Title       string            `json:"Title"`
 	MarkingType string            `json:"MarkingType"`
 	Questions   []*QuestionCreate `json:"Questions"`
-}
-
-type QuizResponseInput struct {
-	Responses [][]int `json:"Responses"`
 }
 
 type UserDeletion struct {

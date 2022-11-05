@@ -1,6 +1,6 @@
 # JWT Authorization Response.
-type JWTResponse {
+type JWTAuthResponse {
     Token: String!
-    Expires: Int!
-    Threshold: Int!
+    Expires: Int64!
+    Threshold: Int64!
 }

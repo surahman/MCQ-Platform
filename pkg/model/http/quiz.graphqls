@@ -10,7 +10,7 @@ type Question {
     Description: String!
     Asset: String!
     Options: [String!]!
-    Answers: [Int!]!
+    Answers: [Int32!]!
 }
 
 # Request data to create a quiz.
@@ -25,5 +25,5 @@ input QuestionCreate {
     Description: String!
     Asset: String!
     Options: [String!]!
-    Answers: [Int!]!
+    Answers: [Int32!]!
 }
