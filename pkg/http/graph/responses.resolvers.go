@@ -11,6 +11,11 @@ import (
 	model_cassandra "github.com/surahman/mcq-platform/pkg/model/cassandra"
 )
 
+// TakeQuiz is the resolver for the takeQuiz field.
+func (r *mutationResolver) TakeQuiz(ctx context.Context, quizID string, input model_cassandra.QuizResponse) (float64, error) {
+	panic(fmt.Errorf("not implemented: TakeQuiz - takeQuiz"))
+}
+
 // QuizResponse is the resolver for the QuizResponse field.
 func (r *responseResolver) QuizResponse(ctx context.Context, obj *model_cassandra.Response) ([][]int32, error) {
 	panic(fmt.Errorf("not implemented: QuizResponse - QuizResponse"))

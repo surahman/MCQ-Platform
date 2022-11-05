@@ -8,7 +8,6 @@ import (
 	"fmt"
 
 	"github.com/surahman/mcq-platform/pkg/http/graph/generated"
-	model_cassandra "github.com/surahman/mcq-platform/pkg/model/cassandra"
 	model_http "github.com/surahman/mcq-platform/pkg/model/http"
 )
 
@@ -30,31 +29,6 @@ func (r *mutationResolver) LoginUser(ctx context.Context, input model_http.UserL
 // RefreshToken is the resolver for the refreshToken field.
 func (r *mutationResolver) RefreshToken(ctx context.Context, token string) (*model_http.JWTAuthResponse, error) {
 	panic(fmt.Errorf("not implemented: RefreshToken - refreshToken"))
-}
-
-// CreateQuiz is the resolver for the createQuiz field.
-func (r *mutationResolver) CreateQuiz(ctx context.Context, input model_http.QuizCreate) (string, error) {
-	panic(fmt.Errorf("not implemented: CreateQuiz - createQuiz"))
-}
-
-// UpdateQuiz is the resolver for the updateQuiz field.
-func (r *mutationResolver) UpdateQuiz(ctx context.Context, input model_http.QuizCreate) (string, error) {
-	panic(fmt.Errorf("not implemented: UpdateQuiz - updateQuiz"))
-}
-
-// PublishQuiz is the resolver for the publishQuiz field.
-func (r *mutationResolver) PublishQuiz(ctx context.Context, quizID string) (string, error) {
-	panic(fmt.Errorf("not implemented: PublishQuiz - publishQuiz"))
-}
-
-// DeleteQuiz is the resolver for the deleteQuiz field.
-func (r *mutationResolver) DeleteQuiz(ctx context.Context, quizID string) (string, error) {
-	panic(fmt.Errorf("not implemented: DeleteQuiz - deleteQuiz"))
-}
-
-// TakeQuiz is the resolver for the takeQuiz field.
-func (r *mutationResolver) TakeQuiz(ctx context.Context, quizID string, input model_cassandra.QuizResponse) (float64, error) {
-	panic(fmt.Errorf("not implemented: TakeQuiz - takeQuiz"))
 }
 
 // Mutation returns generated.MutationResolver implementation.

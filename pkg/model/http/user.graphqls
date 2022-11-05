@@ -33,3 +33,18 @@ input UserDeletion {
     Password: String!
     Confirmation: String!
 }
+
+# Requests that might alter the state of data in the database.
+type Mutation {
+    # Send a user registration request and receive a JWT authorization token in response.
+    registerUser(input: UserRegistration): JWTAuthResponse!
+
+    # Send a user account deletion request.
+    deleteUser(input: UserDeletion!): String!
+
+    # Send a user login request And receive a JWT authorization token in response.
+    loginUser(input: UserLogin!): JWTAuthResponse!
+
+    # Refreshes a users JWT if it is within the refresh time window.
+    refreshToken(token: String!): JWTAuthResponse!
+}

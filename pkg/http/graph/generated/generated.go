@@ -484,54 +484,6 @@ type JWTAuthResponse {
     Threshold: Int64!
 }
 `, BuiltIn: false},
-	{Name: "../../../model/http/mutation.graphqls", Input: `# Requests that might alter the state of data in the database.
-type Mutation {
-    ################################
-    ##### User data mutations. #####
-    ################################
-
-    # Send a user registration request and receive a JWT authorization token in response.
-    registerUser(input: UserRegistration): JWTAuthResponse!
-
-    # Send a user account deletion request.
-    deleteUser(input: UserDeletion!): String!
-
-    # Send a user login request And receive a JWT authorization token in response.
-    loginUser(input: UserLogin!): JWTAuthResponse!
-
-    # Refreshes a users JWT if it is within the refresh time window.
-    refreshToken(token: String!): JWTAuthResponse!
-
-
-    ################################
-    ##### Quiz data mutations. #####
-    ################################
-
-    # Request to create a quiz. The created quiz is not published.
-    createQuiz(input: QuizCreate!): String!
-
-    # Request to update a quiz. Only unpublished quizzes can be updated.
-    updateQuiz(input: QuizCreate!): String!
-
-    # Request to publish a quiz.
-    publishQuiz(quizID: String!): String!
-
-    # Request to delete a quiz. Quizzes are marked as deleted and unpublished.
-    deleteQuiz(quizID: String!): String!
-
-    # Request to submit responses to a quiz for marking.
-    takeQuiz(quizID: String!, input: QuizResponse!): Float!
-}`, BuiltIn: false},
-	{Name: "../../../model/http/query.graphqls", Input: `# Requests that wil not alter the state of data in the database.
-type Query {
-    ################################
-    #####  Quiz data queries.  #####
-    ################################
-
-    # Request to view the quiz contents.
-    viewQuiz(quizID: String!): QuizCore!
-}
-`, BuiltIn: false},
 	{Name: "../../../model/http/quiz.graphqls", Input: `# QuizCore is the complete quiz that is sent to the backend when a quiz is created/updated or to the end users.
 type QuizCore {
     Title: String!
@@ -561,7 +513,27 @@ input QuestionCreate {
     Options: [String!]!
     Answers: [Int32!]!
 }
-`, BuiltIn: false},
+
+# Requests that might alter the state of data in the database.
+extend type Mutation {
+    # Request to create a quiz. The created quiz is not published.
+    createQuiz(input: QuizCreate!): String!
+
+    # Request to update a quiz. Only unpublished quizzes can be updated.
+    updateQuiz(input: QuizCreate!): String!
+
+    # Request to publish a quiz.
+    publishQuiz(quizID: String!): String!
+
+    # Request to delete a quiz. Quizzes are marked as deleted and unpublished.
+    deleteQuiz(quizID: String!): String!
+}
+
+# Requests that wil not alter the state of data in the database.
+type Query {
+    # Request to view the quiz contents.
+    viewQuiz(quizID: String!): QuizCore!
+}`, BuiltIn: false},
 	{Name: "../../../model/http/responses.graphqls", Input: `# Response represents a response to a quiz and is a row in responses table.
 type Response {
     Username: String!
@@ -575,7 +547,12 @@ type Response {
 input QuizResponse {
     Responses: [[Int32!]]!
 }
-`, BuiltIn: false},
+
+# Requests that might alter the state of data in the database.
+extend type Mutation {
+    # Request to submit responses to a quiz for marking.
+    takeQuiz(quizID: String!, input: QuizResponse!): Float!
+}`, BuiltIn: false},
 	{Name: "../../../model/http/scalars.graphqls", Input: `scalar Int32
 scalar Int64
 `, BuiltIn: false},
@@ -614,7 +591,21 @@ input UserDeletion {
     Password: String!
     Confirmation: String!
 }
-`, BuiltIn: false},
+
+# Requests that might alter the state of data in the database.
+type Mutation {
+    # Send a user registration request and receive a JWT authorization token in response.
+    registerUser(input: UserRegistration): JWTAuthResponse!
+
+    # Send a user account deletion request.
+    deleteUser(input: UserDeletion!): String!
+
+    # Send a user login request And receive a JWT authorization token in response.
+    loginUser(input: UserLogin!): JWTAuthResponse!
+
+    # Refreshes a users JWT if it is within the refresh time window.
+    refreshToken(token: String!): JWTAuthResponse!
+}`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 

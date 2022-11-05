@@ -27,3 +27,24 @@ input QuestionCreate {
     Options: [String!]!
     Answers: [Int32!]!
 }
+
+# Requests that might alter the state of data in the database.
+extend type Mutation {
+    # Request to create a quiz. The created quiz is not published.
+    createQuiz(input: QuizCreate!): String!
+
+    # Request to update a quiz. Only unpublished quizzes can be updated.
+    updateQuiz(input: QuizCreate!): String!
+
+    # Request to publish a quiz.
+    publishQuiz(quizID: String!): String!
+
+    # Request to delete a quiz. Quizzes are marked as deleted and unpublished.
+    deleteQuiz(quizID: String!): String!
+}
+
+# Requests that wil not alter the state of data in the database.
+type Query {
+    # Request to view the quiz contents.
+    viewQuiz(quizID: String!): QuizCore!
+}

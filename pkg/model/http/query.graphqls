@@ -1,9 +1,0 @@
-# Requests that wil not alter the state of data in the database.
-type Query {
-    ################################
-    #####  Quiz data queries.  #####
-    ################################
-
-    # Request to view the quiz contents.
-    viewQuiz(quizID: String!): QuizCore!
-}
