@@ -55,7 +55,7 @@ type ComplexityRoot struct {
 	Mutation struct {
 		CreateQuiz   func(childComplexity int, input model_http.QuizCreate) int
 		DeleteQuiz   func(childComplexity int, quizID string) int
-		DeleteUser   func(childComplexity int, input model_http.UserDeletion) int
+		DeleteUser   func(childComplexity int, input model_http.DeleteUserRequest) int
 		LoginUser    func(childComplexity int, input model_http.UserLogin) int
 		PublishQuiz  func(childComplexity int, quizID string) int
 		RefreshToken func(childComplexity int, token string) int
@@ -104,7 +104,7 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	RegisterUser(ctx context.Context, input *model_http.UserRegistration) (*model_http.JWTAuthResponse, error)
-	DeleteUser(ctx context.Context, input model_http.UserDeletion) (string, error)
+	DeleteUser(ctx context.Context, input model_http.DeleteUserRequest) (string, error)
 	LoginUser(ctx context.Context, input model_http.UserLogin) (*model_http.JWTAuthResponse, error)
 	RefreshToken(ctx context.Context, token string) (*model_http.JWTAuthResponse, error)
 	CreateQuiz(ctx context.Context, input model_http.QuizCreate) (string, error)
@@ -191,7 +191,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteUser(childComplexity, args["input"].(model_http.UserDeletion)), true
+		return e.complexity.Mutation.DeleteUser(childComplexity, args["input"].(model_http.DeleteUserRequest)), true
 
 	case "Mutation.loginUser":
 		if e.complexity.Mutation.LoginUser == nil {
@@ -411,10 +411,10 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	rc := graphql.GetOperationContext(ctx)
 	ec := executionContext{rc, e}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputDeleteUserRequest,
 		ec.unmarshalInputQuestionCreate,
 		ec.unmarshalInputQuizCreate,
 		ec.unmarshalInputQuizResponse,
-		ec.unmarshalInputUserDeletion,
 		ec.unmarshalInputUserLogin,
 		ec.unmarshalInputUserRegistration,
 	)
@@ -586,7 +586,7 @@ input UserLogin {
 }
 
 # User account deletion request.
-input UserDeletion {
+input DeleteUserRequest {
     Username: String!
     Password: String!
     Confirmation: String!
@@ -598,7 +598,7 @@ type Mutation {
     registerUser(input: UserRegistration): JWTAuthResponse!
 
     # Send a user account deletion request.
-    deleteUser(input: UserDeletion!): String!
+    deleteUser(input: DeleteUserRequest!): String!
 
     # Send a user login request And receive a JWT authorization token in response.
     loginUser(input: UserLogin!): JWTAuthResponse!
@@ -646,10 +646,10 @@ func (ec *executionContext) field_Mutation_deleteQuiz_args(ctx context.Context, 
 func (ec *executionContext) field_Mutation_deleteUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model_http.UserDeletion
+	var arg0 model_http.DeleteUserRequest
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNUserDeletion2githubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋhttpᚐUserDeletion(ctx, tmp)
+		arg0, err = ec.unmarshalNDeleteUserRequest2githubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋhttpᚐDeleteUserRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1034,7 +1034,7 @@ func (ec *executionContext) _Mutation_deleteUser(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteUser(rctx, fc.Args["input"].(model_http.UserDeletion))
+		return ec.resolvers.Mutation().DeleteUser(rctx, fc.Args["input"].(model_http.DeleteUserRequest))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4249,6 +4249,50 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Conte
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputDeleteUserRequest(ctx context.Context, obj interface{}) (model_http.DeleteUserRequest, error) {
+	var it model_http.DeleteUserRequest
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"Username", "Password", "Confirmation"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "Username":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Username"))
+			it.Username, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "Password":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Password"))
+			it.Password, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "Confirmation":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Confirmation"))
+			it.Confirmation, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputQuestionCreate(ctx context.Context, obj interface{}) (model_http.QuestionCreate, error) {
 	var it model_http.QuestionCreate
 	asMap := map[string]interface{}{}
@@ -4364,50 +4408,6 @@ func (ec *executionContext) unmarshalInputQuizResponse(ctx context.Context, obj 
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Responses"))
 			it.Responses, err = ec.unmarshalNInt322ᚕᚕint32(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputUserDeletion(ctx context.Context, obj interface{}) (model_http.UserDeletion, error) {
-	var it model_http.UserDeletion
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"Username", "Password", "Confirmation"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "Username":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Username"))
-			it.Username, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "Password":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Password"))
-			it.Password, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "Confirmation":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Confirmation"))
-			it.Confirmation, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -5329,6 +5329,11 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
+func (ec *executionContext) unmarshalNDeleteUserRequest2githubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋhttpᚐDeleteUserRequest(ctx context.Context, v interface{}) (model_http.DeleteUserRequest, error) {
+	res, err := ec.unmarshalInputDeleteUserRequest(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v interface{}) (float64, error) {
 	res, err := graphql.UnmarshalFloatContext(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -5591,11 +5596,6 @@ func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel
 	}
 
 	return ret
-}
-
-func (ec *executionContext) unmarshalNUserDeletion2githubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋhttpᚐUserDeletion(ctx context.Context, v interface{}) (model_http.UserDeletion, error) {
-	res, err := ec.unmarshalInputUserDeletion(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNUserLogin2githubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋhttpᚐUserLogin(ctx context.Context, v interface{}) (model_http.UserLogin, error) {

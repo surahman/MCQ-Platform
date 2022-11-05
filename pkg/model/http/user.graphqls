@@ -28,7 +28,7 @@ input UserLogin {
 }
 
 # User account deletion request.
-input UserDeletion {
+input DeleteUserRequest {
     Username: String!
     Password: String!
     Confirmation: String!
@@ -40,7 +40,7 @@ type Mutation {
     registerUser(input: UserRegistration): JWTAuthResponse!
 
     # Send a user account deletion request.
-    deleteUser(input: UserDeletion!): String!
+    deleteUser(input: DeleteUserRequest!): String!
 
     # Send a user login request And receive a JWT authorization token in response.
     loginUser(input: UserLogin!): JWTAuthResponse!

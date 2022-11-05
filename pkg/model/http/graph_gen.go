@@ -15,12 +15,6 @@ type QuizCreate struct {
 	Questions   []*QuestionCreate `json:"Questions"`
 }
 
-type UserDeletion struct {
-	Username     string `json:"Username"`
-	Password     string `json:"Password"`
-	Confirmation string `json:"Confirmation"`
-}
-
 type UserLogin struct {
 	Username string `json:"Username"`
 	Password string `json:"Password"`

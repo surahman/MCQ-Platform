@@ -17,7 +17,7 @@ func (r *mutationResolver) RegisterUser(ctx context.Context, input *model_http.U
 }
 
 // DeleteUser is the resolver for the deleteUser field.
-func (r *mutationResolver) DeleteUser(ctx context.Context, input model_http.UserDeletion) (string, error) {
+func (r *mutationResolver) DeleteUser(ctx context.Context, input model_http.DeleteUserRequest) (string, error) {
 	panic(fmt.Errorf("not implemented: DeleteUser - deleteUser"))
 }
 
