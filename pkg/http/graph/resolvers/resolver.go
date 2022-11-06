@@ -1,4 +1,4 @@
-package graphql
+package graphql_resolvers
 
 // This file will not be regenerated automatically.
 //

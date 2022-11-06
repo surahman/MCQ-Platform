@@ -1,4 +1,4 @@
-package graphql
+package graphql_resolvers
 
 // This file will be automatically regenerated based on the schema, any resolver implementations
 // will be copied through when generating and any unknown code will be moved to the end.
@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/surahman/mcq-platform/pkg/http/graph/generated"
+	graphql_generated "github.com/surahman/mcq-platform/pkg/http/graph/generated"
 	model_cassandra "github.com/surahman/mcq-platform/pkg/model/cassandra"
 	model_http "github.com/surahman/mcq-platform/pkg/model/http"
 )
@@ -37,7 +37,7 @@ func (r *queryResolver) ViewQuiz(ctx context.Context, quizID string) (*model_cas
 	panic(fmt.Errorf("not implemented: ViewQuiz - viewQuiz"))
 }
 
-// Query returns generated.QueryResolver implementation.
-func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
+// Query returns graphql_generated.QueryResolver implementation.
+func (r *Resolver) Query() graphql_generated.QueryResolver { return &queryResolver{r} }
 
 type queryResolver struct{ *Resolver }

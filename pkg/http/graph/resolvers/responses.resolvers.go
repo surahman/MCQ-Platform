@@ -1,4 +1,4 @@
-package graphql
+package graphql_resolvers
 
 // This file will be automatically regenerated based on the schema, any resolver implementations
 // will be copied through when generating and any unknown code will be moved to the end.
@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/surahman/mcq-platform/pkg/http/graph/generated"
+	graphql_generated "github.com/surahman/mcq-platform/pkg/http/graph/generated"
 	model_cassandra "github.com/surahman/mcq-platform/pkg/model/cassandra"
 )
 
@@ -26,7 +26,7 @@ func (r *responseResolver) QuizID(ctx context.Context, obj *model_cassandra.Resp
 	panic(fmt.Errorf("not implemented: QuizID - QuizID"))
 }
 
-// Response returns generated.ResponseResolver implementation.
-func (r *Resolver) Response() generated.ResponseResolver { return &responseResolver{r} }
+// Response returns graphql_generated.ResponseResolver implementation.
+func (r *Resolver) Response() graphql_generated.ResponseResolver { return &responseResolver{r} }
 
 type responseResolver struct{ *Resolver }

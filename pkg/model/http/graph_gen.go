@@ -14,16 +14,3 @@ type QuizCreate struct {
 	MarkingType string            `json:"MarkingType"`
 	Questions   []*QuestionCreate `json:"Questions"`
 }
-
-type UserLogin struct {
-	Username string `json:"Username"`
-	Password string `json:"Password"`
-}
-
-type UserRegistration struct {
-	FirstName string `json:"FirstName"`
-	LastName  string `json:"LastName"`
-	Email     string `json:"Email"`
-	Username  string `json:"Username"`
-	Password  string `json:"Password"`
-}
