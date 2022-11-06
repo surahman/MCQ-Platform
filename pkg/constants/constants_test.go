@@ -62,6 +62,14 @@ func TestGetHTTPRESTPrefix(t *testing.T) {
 	require.Equal(t, restPrefix, GetHTTPRESTPrefix(), "Incorrect HTTP REST environment prefix")
 }
 
+func TestGetGraphQLFileName(t *testing.T) {
+	require.Equal(t, graphqlConfigFileName, GetGraphQLFileName(), "Incorrect HTTP GraphQL filename")
+}
+
+func TestGetGraphQLPrefix(t *testing.T) {
+	require.Equal(t, graphqlPrefix, GetGraphQLPrefix(), "Incorrect HTTP GraphQL environment prefix")
+}
+
 func TestGetDeleteUserAccountConfirmation(t *testing.T) {
 	require.Equal(t, deleteUserAccountConfirmation, GetDeleteUserAccountConfirmation(), "Incorrect user account deletion confirmation message.")
 }
