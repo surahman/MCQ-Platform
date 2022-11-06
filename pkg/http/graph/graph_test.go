@@ -1,6 +1,7 @@
 package graphql
 
 import (
+	"sync"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -24,7 +25,7 @@ func TestNewRESTServer(t *testing.T) {
 	require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetGraphQLFileName(),
 		[]byte(graphqlConfigTestData["valid"]), 0644), "Failed to write in memory file")
 
-	server, err := NewServer(&fs, mockAuth, mockCassandra, mockRedis, mockGrading, zapLogger)
+	server, err := NewServer(&fs, mockAuth, mockCassandra, mockRedis, mockGrading, zapLogger, &sync.WaitGroup{})
 	require.NoError(t, err, "error whilst creating mock server")
 	require.NotNil(t, server, "failed to create mock server")
 }

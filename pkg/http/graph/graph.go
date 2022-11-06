@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -31,16 +32,20 @@ type Server struct {
 	conf    *config
 	logger  *logger.Logger
 	router  *gin.Engine
+	wg      *sync.WaitGroup
 }
 
 // NewServer will create a new REST server instance in a non-running state.
 func NewServer(fs *afero.Fs, auth auth.Auth, cassandra cassandra.Cassandra, redis redis.Redis,
-	grading grading.Grading, logger *logger.Logger) (server *Server, err error) {
+	grading grading.Grading, logger *logger.Logger, wg *sync.WaitGroup) (server *Server, err error) {
 	// Load configurations.
 	conf := newConfig()
 	if err = conf.Load(*fs); err != nil {
 		return
 	}
+
+	// Add to the wait group to stop bootstrap thread from exiting.
+	wg.Add(1)
 
 	return &Server{
 			conf:    conf,
@@ -49,6 +54,7 @@ func NewServer(fs *afero.Fs, auth auth.Auth, cassandra cassandra.Cassandra, redi
 			db:      cassandra,
 			grading: grading,
 			logger:  logger,
+			wg:      wg,
 		},
 		err
 }
@@ -88,6 +94,9 @@ func (s *Server) Run() {
 	<-ctx.Done()
 
 	s.logger.Info("Server exited")
+
+	// Indicate completion to wait group.
+	s.wg.Done()
 }
 
 // initialize will configure the HTTP server routes.
@@ -96,5 +105,8 @@ func (s *Server) initialize() {
 
 	// Endpoint configurations
 	api := s.router.Group(s.conf.Server.BasePath)
-	_ = api
+	// TODO: Add middleware handler to store authentication data in context for access in GraphQL resolvers.
+
+	api.POST(s.conf.Server.QueryPath, graphQLHandler(s.auth, s.cache, s.db, s.grading, s.logger))
+	api.GET(s.conf.Server.PlaygroundPath, playgroundHandler(s.conf.Server.QueryPath))
 }
