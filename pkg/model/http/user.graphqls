@@ -1,5 +1,5 @@
 # User account information.
-type UserAccount {
+input UserAccount {
     FirstName: String!
     LastName: String!
     Email: String!
@@ -7,22 +7,7 @@ type UserAccount {
 }
 
 # Login credentials.
-type UserLoginCredentials {
-    Username: String!
-    Password: String!
-}
-
-# Register a new user account.
-input UserRegistration {
-    FirstName: String!
-    LastName: String!
-    Email: String!
-    Username: String!
-    Password: String!
-}
-
-# User login request.
-input UserLogin {
+input UserLoginCredentials {
     Username: String!
     Password: String!
 }
@@ -37,13 +22,13 @@ input DeleteUserRequest {
 # Requests that might alter the state of data in the database.
 type Mutation {
     # Send a user registration request and receive a JWT authorization token in response.
-    registerUser(input: UserRegistration): JWTAuthResponse!
+    registerUser(input: UserAccount): JWTAuthResponse!
 
     # Send a user account deletion request.
     deleteUser(input: DeleteUserRequest!): String!
 
     # Send a user login request And receive a JWT authorization token in response.
-    loginUser(input: UserLogin!): JWTAuthResponse!
+    loginUser(input: UserLoginCredentials!): JWTAuthResponse!
 
     # Refreshes a users JWT if it is within the refresh time window.
     refreshToken(token: String!): JWTAuthResponse!
