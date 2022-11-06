@@ -28,7 +28,7 @@ func TestRestConfigs_Load(t *testing.T) {
 			"empty - etc dir",
 			graphqlConfigTestData["empty"],
 			require.Error,
-			5,
+			6,
 		}, {
 			"valid - etc dir",
 			graphqlConfigTestData["valid"],
@@ -45,8 +45,13 @@ func TestRestConfigs_Load(t *testing.T) {
 			require.Error,
 			1,
 		}, {
-			"no swagger path - etc dir",
-			graphqlConfigTestData["no swagger path"],
+			"no playground path - etc dir",
+			graphqlConfigTestData["no playground path"],
+			require.Error,
+			1,
+		}, {
+			"no query path - etc dir",
+			graphqlConfigTestData["no query path"],
 			require.Error,
 			1,
 		}, {
@@ -82,21 +87,24 @@ func TestRestConfigs_Load(t *testing.T) {
 			// Test configuring of environment variable.
 			basePath := xid.New().String()
 			playgroundPath := xid.New().String()
+			queryPath := xid.New().String()
 			headerKey := xid.New().String()
 			portNumber := 1600
 			shutdownDelay := 36
 			t.Setenv(keyspaceGen+"BASE_PATH", basePath)
 			t.Setenv(keyspaceGen+"PLAYGROUND_PATH", playgroundPath)
+			t.Setenv(keyspaceGen+"QUERY_PATH", queryPath)
 			t.Setenv(keyspaceGen+"PORT_NUMBER", strconv.Itoa(portNumber))
 			t.Setenv(keyspaceGen+"SHUTDOWN_DELAY", strconv.Itoa(shutdownDelay))
 			t.Setenv(keyspaceAuth+"HEADER_KEY", headerKey)
 			err = actual.Load(fs)
-			require.NoErrorf(t, err, "Failed to load constants file: %v", err)
-			require.Equal(t, basePath, actual.Server.BasePath, "Failed to load base path environment variable into configs")
-			require.Equal(t, playgroundPath, actual.Server.PlaygroundPath, "Failed to load playground path environment variable into configs")
-			require.Equal(t, portNumber, actual.Server.PortNumber, "Failed to load port environment variable into configs")
-			require.Equal(t, shutdownDelay, actual.Server.ShutdownDelay, "Failed to load shutdown delay environment variable into configs")
-			require.Equal(t, headerKey, actual.Authorization.HeaderKey, "Failed to load authorization header key environment variable into configs")
+			require.NoErrorf(t, err, "failed to load constants file: %v", err)
+			require.Equal(t, basePath, actual.Server.BasePath, "failed to load base path environment variable into configs")
+			require.Equal(t, playgroundPath, actual.Server.PlaygroundPath, "failed to load playground path environment variable into configs")
+			require.Equal(t, queryPath, actual.Server.QueryPath, "failed to load query path environment variable into configs")
+			require.Equal(t, portNumber, actual.Server.PortNumber, "failed to load port environment variable into configs")
+			require.Equal(t, shutdownDelay, actual.Server.ShutdownDelay, "failed to load shutdown delay environment variable into configs")
+			require.Equal(t, headerKey, actual.Authorization.HeaderKey, "failed to load authorization header key environment variable into configs")
 		})
 	}
 }

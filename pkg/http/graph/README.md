@@ -40,6 +40,7 @@ The expected file name is `GraphQLConfig.yaml`. All the configuration items belo
 | ↳ shutdown_delay    | ↳ `.SHUTDOWN_DELAY`      | int    | The number of seconds to wait after a shutdown signal is received to terminate the server. |
 | ↳ base_path         | ↳ `.BASE_PATH`           | string | The service endpoints base path.                                                           |
 | ↳ playground_path   | ↳ `.PLAYGROUND_PATH`     | string | The path through which the GraphQL Playground UI will be accessible.                       |
+| ↳ query_path        | ↳ `.QUERY_PATH`          | string | The path through which the GraphQL queries can be executed.                                |
 | **_Authorization_** | `REST_AUTHORIZATION`     |        | **_Parent key for authentication configurations._**                                        |
 | ↳ header_key        | ↳ `.HEADER_KEY`          | string | The HTTP header key where the authorization token is stored.                               |
 
@@ -52,6 +53,7 @@ server:
   shutdown_delay: 5
   base_path: api/graphql/v1
   playground_path: /playground
+  query_path: /query
 authorization:
   header_key: Authorization
 ```

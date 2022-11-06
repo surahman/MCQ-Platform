@@ -11,6 +11,7 @@ server:
   shutdown_delay: 5
   base_path: api/graphql/v1
   playground_path: /playground
+  query_path: /query
 authorization:
   header_key: Authorization`,
 
@@ -20,6 +21,7 @@ server:
   shutdown_delay: 5
   base_path: api/graphql/v1
   playground_path: /playground
+  query_path: /query
 authorization:
   header_key: Authorization`,
 
@@ -29,6 +31,7 @@ server:
   shutdown_delay: -1
   base_path: api/graphql/v1
   playground_path: /playground
+  query_path: /query
 authorization:
   header_key: Authorization`,
 
@@ -37,14 +40,25 @@ server:
   port_number: 44243
   shutdown_delay: 5
   playground_path: /playground
+  query_path: /query
 authorization:
   header_key: Authorization`,
 
-		"no swagger path": `
+		"no playground path": `
 server:
   port_number: 44255
   shutdown_delay: 5
   base_path: api/graphql/v1
+  query_path: /query
+authorization:
+  header_key: Authorization`,
+
+		"no query path": `
+server:
+  port_number: 44255
+  shutdown_delay: 5
+  base_path: api/graphql/v1
+  playground_path: /playground
 authorization:
   header_key: Authorization`,
 
@@ -53,6 +67,7 @@ server:
   port_number: 44255
   shutdown_delay: 5
   base_path: api/graphql/v1
-  playground_path: /playground`,
+  playground_path: /playground
+  query_path: /query`,
 	}
 }
