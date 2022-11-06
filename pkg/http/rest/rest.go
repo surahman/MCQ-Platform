@@ -26,8 +26,8 @@ import (
 // Format and generate Swagger UI files using makefile.
 //go:generate make -C ../../../ swagger
 
-// HttpRest is the HTTP REST server.
-type HttpRest struct {
+// Server is the HTTP REST server.
+type Server struct {
 	auth    auth.Auth
 	cache   redis.Redis
 	db      cassandra.Cassandra
@@ -39,14 +39,14 @@ type HttpRest struct {
 
 // NewRESTServer will create a new REST server instance in a non-running state.
 func NewRESTServer(fs *afero.Fs, auth auth.Auth, cassandra cassandra.Cassandra, redis redis.Redis,
-	grading grading.Grading, logger *logger.Logger) (server *HttpRest, err error) {
+	grading grading.Grading, logger *logger.Logger) (server *Server, err error) {
 	// Load configurations.
 	conf := newConfig()
 	if err = conf.Load(*fs); err != nil {
 		return
 	}
 
-	return &HttpRest{
+	return &Server{
 			conf:    conf,
 			auth:    auth,
 			cache:   redis,
@@ -58,7 +58,7 @@ func NewRESTServer(fs *afero.Fs, auth auth.Auth, cassandra cassandra.Cassandra, 
 }
 
 // Run brings the HTTP service up.
-func (s *HttpRest) Run() {
+func (s *Server) Run() {
 	// Configure routes.
 	s.initialize()
 
@@ -95,7 +95,7 @@ func (s *HttpRest) Run() {
 }
 
 // initialize will configure the HTTP server routes.
-func (s *HttpRest) initialize() {
+func (s *Server) initialize() {
 	s.router = gin.Default()
 
 	// @title                      Multiple Choice Question Platform.

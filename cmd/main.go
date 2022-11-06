@@ -16,7 +16,7 @@ import (
 func main() {
 	var (
 		err           error
-		serverREST    *rest.HttpRest
+		serverREST    *rest.Server
 		logging       *logger.Logger
 		authorization auth.Auth
 		database      cassandra.Cassandra
