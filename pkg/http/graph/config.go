@@ -1,4 +1,4 @@
-package graph
+package graphql
 
 import (
 	"github.com/spf13/afero"

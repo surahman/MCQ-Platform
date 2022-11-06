@@ -1,4 +1,4 @@
-package graph
+package graphql
 
 // configTestData will return a map of test data containing valid and invalid Authorization configs.
 func configTestData() map[string]string {
