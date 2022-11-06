@@ -1,0 +1,7 @@
+server:
+  port_number: 44255
+  shutdown_delay: 5
+  base_path: api/graphql/v1
+  playground_path: /graphql
+authorization:
+  header_key: Authorization
