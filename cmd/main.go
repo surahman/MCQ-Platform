@@ -8,6 +8,7 @@ import (
 	"github.com/surahman/mcq-platform/pkg/auth"
 	"github.com/surahman/mcq-platform/pkg/cassandra"
 	"github.com/surahman/mcq-platform/pkg/grading"
+	graphql "github.com/surahman/mcq-platform/pkg/http/graph"
 	"github.com/surahman/mcq-platform/pkg/http/rest"
 	"github.com/surahman/mcq-platform/pkg/logger"
 	"github.com/surahman/mcq-platform/pkg/redis"
@@ -18,6 +19,7 @@ func main() {
 	var (
 		err           error
 		serverREST    *rest.Server
+		serverGraphQL *graphql.Server
 		logging       *logger.Logger
 		authorization auth.Auth
 		database      cassandra.Cassandra
@@ -71,6 +73,12 @@ func main() {
 		logging.Panic("failed to create the REST server", zap.Error(err))
 	}
 	go serverREST.Run()
+
+	// Setup GraphQL server and start it.
+	if serverGraphQL, err = graphql.NewServer(&fs, authorization, database, cache, grader, logging, &waitGroup); err != nil {
+		logging.Panic("failed to create the GraphQL server", zap.Error(err))
+	}
+	go serverGraphQL.Run()
 
 	waitGroup.Wait()
 }

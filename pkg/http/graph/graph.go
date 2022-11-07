@@ -45,9 +45,6 @@ func NewServer(fs *afero.Fs, auth auth.Auth, cassandra cassandra.Cassandra, redi
 		return
 	}
 
-	// Add to the wait group to stop bootstrap thread from exiting.
-	wg.Add(1)
-
 	return &Server{
 			conf:    conf,
 			auth:    auth,
@@ -62,6 +59,10 @@ func NewServer(fs *afero.Fs, auth auth.Auth, cassandra cassandra.Cassandra, redi
 
 // Run brings the HTTP service up.
 func (s *Server) Run() {
+	// Indicate to bootstrapping thread to wait for completion.
+	s.wg.Add(1)
+	defer s.wg.Done()
+
 	// Configure routes.
 	s.initialize()
 
@@ -84,20 +85,17 @@ func (s *Server) Run() {
 
 	// Wait for interrupt.
 	<-quit
-	s.logger.Info("Shutting down server...", zap.Duration("waiting", time.Duration(s.conf.Server.ShutdownDelay)*time.Second))
+	s.logger.Info("Shutting down GraphQL server...", zap.Duration("waiting", time.Duration(s.conf.Server.ShutdownDelay)*time.Second))
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(s.conf.Server.ShutdownDelay)*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
-		s.logger.Panic("Failed to shutdown server", zap.Error(err))
+		s.logger.Panic("Failed to shutdown GraphQL server", zap.Error(err))
 	}
 
 	// 5 second wait to exit.
 	<-ctx.Done()
 
-	s.logger.Info("Server exited")
-
-	// Indicate completion to wait group.
-	s.wg.Done()
+	s.logger.Info("GraphQL server exited")
 }
 
 // initialize will configure the HTTP server routes.
