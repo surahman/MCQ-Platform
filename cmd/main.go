@@ -69,12 +69,14 @@ func main() {
 	}(cache)
 
 	// Setup REST server and start it.
+	waitGroup.Add(1)
 	if serverREST, err = rest.NewServer(&fs, authorization, database, cache, grader, logging, &waitGroup); err != nil {
 		logging.Panic("failed to create the REST server", zap.Error(err))
 	}
 	go serverREST.Run()
 
 	// Setup GraphQL server and start it.
+	waitGroup.Add(1)
 	if serverGraphQL, err = graphql.NewServer(&fs, authorization, database, cache, grader, logging, &waitGroup); err != nil {
 		logging.Panic("failed to create the GraphQL server", zap.Error(err))
 	}

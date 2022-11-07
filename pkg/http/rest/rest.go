@@ -63,7 +63,6 @@ func NewServer(fs *afero.Fs, auth auth.Auth, cassandra cassandra.Cassandra, redi
 // Run brings the HTTP service up.
 func (s *Server) Run() {
 	// Indicate to bootstrapping thread to wait for completion.
-	s.wg.Add(1)
 	defer s.wg.Done()
 
 	// Configure routes.
