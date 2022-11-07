@@ -23,6 +23,6 @@ func TestQueryHandler(t *testing.T) {
 }
 
 func TestPlaygroundHandler(t *testing.T) {
-	handler := PlaygroundHandler("/query-endpoint-url")
+	handler := PlaygroundHandler("/base-url", "/query-endpoint-url")
 	require.NotNil(t, handler, "failed to create playground endpoint handler")
 }

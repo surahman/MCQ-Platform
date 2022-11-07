@@ -107,5 +107,5 @@ func (s *Server) initialize() {
 	// TODO: Add middleware handler to store authentication data in context for access in GraphQL resolvers.
 
 	api.POST(s.conf.Server.QueryPath, graphql_resolvers.QueryHandler(s.auth, s.cache, s.db, s.grading, s.logger))
-	api.GET(s.conf.Server.PlaygroundPath, graphql_resolvers.PlaygroundHandler(s.conf.Server.QueryPath))
+	api.GET(s.conf.Server.PlaygroundPath, graphql_resolvers.PlaygroundHandler(s.conf.Server.BasePath, s.conf.Server.QueryPath))
 }

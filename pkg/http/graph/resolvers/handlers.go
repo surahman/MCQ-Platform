@@ -1,6 +1,8 @@
 package graphql_resolvers
 
 import (
+	"fmt"
+
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gin-gonic/gin"
@@ -33,8 +35,8 @@ func QueryHandler(auth auth.Auth, cache redis.Redis, db cassandra.Cassandra,
 }
 
 // PlaygroundHandler is the endpoint through which the GraphQL playground can be accessed.
-func PlaygroundHandler(endpointURL string) gin.HandlerFunc {
-	h := playground.Handler("GraphQL", endpointURL)
+func PlaygroundHandler(baseURL, queryURL string) gin.HandlerFunc {
+	h := playground.Handler("GraphQL", fmt.Sprintf("/%s%s", baseURL, queryURL))
 
 	return func(c *gin.Context) {
 		h.ServeHTTP(c.Writer, c.Request)
