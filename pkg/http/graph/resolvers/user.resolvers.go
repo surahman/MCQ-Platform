@@ -7,14 +7,38 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/surahman/mcq-platform/pkg/cassandra"
 	graphql_generated "github.com/surahman/mcq-platform/pkg/http/graph/generated"
 	model_cassandra "github.com/surahman/mcq-platform/pkg/model/cassandra"
 	model_http "github.com/surahman/mcq-platform/pkg/model/http"
+	"github.com/surahman/mcq-platform/pkg/validator"
+	"go.uber.org/zap"
 )
 
 // RegisterUser is the resolver for the registerUser field.
 func (r *mutationResolver) RegisterUser(ctx context.Context, input *model_cassandra.UserAccount) (*model_http.JWTAuthResponse, error) {
-	panic(fmt.Errorf("not implemented: RegisterUser - registerUser"))
+	var err error
+	var authToken *model_http.JWTAuthResponse
+
+	if err = validator.ValidateStruct(input); err != nil {
+		return authToken, err
+	}
+
+	if input.Password, err = r.Auth.HashPassword(input.Password); err != nil {
+		r.Logger.Error("failure hashing password", zap.Error(err))
+		return authToken, err
+	}
+
+	if _, err = r.DB.Execute(cassandra.CreateUserQuery, &model_cassandra.User{UserAccount: input}); err != nil {
+		return authToken, err
+	}
+
+	if authToken, err = r.Auth.GenerateJWT(input.Username); err != nil {
+		r.Logger.Error("failure generating JWT during account creation", zap.Error(err))
+		return authToken, err
+	}
+
+	return authToken, err
 }
 
 // DeleteUser is the resolver for the deleteUser field.

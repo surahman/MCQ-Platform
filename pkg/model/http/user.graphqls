@@ -1,22 +1,22 @@
 # User account information.
 input UserAccount {
-    FirstName: String!
-    LastName: String!
-    Email: String!
-    UserLoginCredentials: UserLoginCredentials!
+    firstname: String!
+    lastname: String!
+    email: String!
+    userLoginCredentials: UserLoginCredentials!
 }
 
 # Login credentials.
 input UserLoginCredentials {
-    Username: String!
-    Password: String!
+    username: String!
+    password: String!
 }
 
 # User account deletion request.
 input DeleteUserRequest {
-    Username: String!
-    Password: String!
-    Confirmation: String!
+    username: String!
+    password: String!
+    confirmation: String!
 }
 
 # Requests that might alter the state of data in the database.

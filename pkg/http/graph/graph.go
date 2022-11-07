@@ -15,6 +15,7 @@ import (
 	"github.com/surahman/mcq-platform/pkg/auth"
 	"github.com/surahman/mcq-platform/pkg/cassandra"
 	"github.com/surahman/mcq-platform/pkg/grading"
+	"github.com/surahman/mcq-platform/pkg/http/graph/resolvers"
 	"github.com/surahman/mcq-platform/pkg/logger"
 	"github.com/surahman/mcq-platform/pkg/redis"
 	"go.uber.org/zap"
@@ -107,6 +108,6 @@ func (s *Server) initialize() {
 	api := s.router.Group(s.conf.Server.BasePath)
 	// TODO: Add middleware handler to store authentication data in context for access in GraphQL resolvers.
 
-	api.POST(s.conf.Server.QueryPath, graphQLHandler(s.auth, s.cache, s.db, s.grading, s.logger))
-	api.GET(s.conf.Server.PlaygroundPath, playgroundHandler(s.conf.Server.QueryPath))
+	api.POST(s.conf.Server.QueryPath, graphql_resolvers.QueryHandler(s.auth, s.cache, s.db, s.grading, s.logger))
+	api.GET(s.conf.Server.PlaygroundPath, graphql_resolvers.PlaygroundHandler(s.conf.Server.QueryPath))
 }

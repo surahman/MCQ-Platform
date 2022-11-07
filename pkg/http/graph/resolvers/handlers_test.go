@@ -1,4 +1,4 @@
-package graphql
+package graphql_resolvers
 
 import (
 	"testing"
@@ -8,7 +8,7 @@ import (
 	"github.com/surahman/mcq-platform/pkg/mocks"
 )
 
-func TestGraphQLHandler(t *testing.T) {
+func TestQueryHandler(t *testing.T) {
 	// Mock configurations.
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -17,12 +17,12 @@ func TestGraphQLHandler(t *testing.T) {
 	mockRedis := mocks.NewMockRedis(mockCtrl)
 	mockGrader := mocks.NewMockGrading(mockCtrl)
 
-	handler := graphQLHandler(mockAuth, mockRedis, mockCassandra, mockGrader, zapLogger)
+	handler := QueryHandler(mockAuth, mockRedis, mockCassandra, mockGrader, zapLogger)
 
 	require.NotNil(t, handler, "failed to create graphql endpoint handler")
 }
 
 func TestPlaygroundHandler(t *testing.T) {
-	handler := playgroundHandler("/query-endpoint-url")
+	handler := PlaygroundHandler("/query-endpoint-url")
 	require.NotNil(t, handler, "failed to create playground endpoint handler")
 }

@@ -124,21 +124,21 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
-	case "JWTAuthResponse.Expires":
+	case "JWTAuthResponse.expires":
 		if e.complexity.JWTAuthResponse.Expires == nil {
 			break
 		}
 
 		return e.complexity.JWTAuthResponse.Expires(childComplexity), true
 
-	case "JWTAuthResponse.Threshold":
+	case "JWTAuthResponse.threshold":
 		if e.complexity.JWTAuthResponse.Threshold == nil {
 			break
 		}
 
 		return e.complexity.JWTAuthResponse.Threshold(childComplexity), true
 
-	case "JWTAuthResponse.Token":
+	case "JWTAuthResponse.token":
 		if e.complexity.JWTAuthResponse.Token == nil {
 			break
 		}
@@ -425,9 +425,9 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 var sources = []*ast.Source{
 	{Name: "../../../model/http/auth.graphqls", Input: `# JWT Authorization Response.
 type JWTAuthResponse {
-    Token: String!
-    Expires: Int64!
-    Threshold: Int64!
+    token: String!
+    expires: Int64!
+    threshold: Int64!
 }
 `, BuiltIn: false},
 	{Name: "../../../model/http/quiz.graphqls", Input: `# QuizCore is the complete quiz that is sent to the backend when a quiz is created/updated or to the end users.
@@ -504,23 +504,23 @@ scalar Int64
 `, BuiltIn: false},
 	{Name: "../../../model/http/user.graphqls", Input: `# User account information.
 input UserAccount {
-    FirstName: String!
-    LastName: String!
-    Email: String!
-    UserLoginCredentials: UserLoginCredentials!
+    firstname: String!
+    lastname: String!
+    email: String!
+    userLoginCredentials: UserLoginCredentials!
 }
 
 # Login credentials.
 input UserLoginCredentials {
-    Username: String!
-    Password: String!
+    username: String!
+    password: String!
 }
 
 # User account deletion request.
 input DeleteUserRequest {
-    Username: String!
-    Password: String!
-    Confirmation: String!
+    username: String!
+    password: String!
+    confirmation: String!
 }
 
 # Requests that might alter the state of data in the database.
@@ -756,8 +756,8 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _JWTAuthResponse_Token(ctx context.Context, field graphql.CollectedField, obj *model_http.JWTAuthResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_JWTAuthResponse_Token(ctx, field)
+func (ec *executionContext) _JWTAuthResponse_token(ctx context.Context, field graphql.CollectedField, obj *model_http.JWTAuthResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_JWTAuthResponse_token(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -787,7 +787,7 @@ func (ec *executionContext) _JWTAuthResponse_Token(ctx context.Context, field gr
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_JWTAuthResponse_Token(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_JWTAuthResponse_token(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "JWTAuthResponse",
 		Field:      field,
@@ -800,8 +800,8 @@ func (ec *executionContext) fieldContext_JWTAuthResponse_Token(ctx context.Conte
 	return fc, nil
 }
 
-func (ec *executionContext) _JWTAuthResponse_Expires(ctx context.Context, field graphql.CollectedField, obj *model_http.JWTAuthResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_JWTAuthResponse_Expires(ctx, field)
+func (ec *executionContext) _JWTAuthResponse_expires(ctx context.Context, field graphql.CollectedField, obj *model_http.JWTAuthResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_JWTAuthResponse_expires(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -831,7 +831,7 @@ func (ec *executionContext) _JWTAuthResponse_Expires(ctx context.Context, field 
 	return ec.marshalNInt642int64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_JWTAuthResponse_Expires(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_JWTAuthResponse_expires(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "JWTAuthResponse",
 		Field:      field,
@@ -844,8 +844,8 @@ func (ec *executionContext) fieldContext_JWTAuthResponse_Expires(ctx context.Con
 	return fc, nil
 }
 
-func (ec *executionContext) _JWTAuthResponse_Threshold(ctx context.Context, field graphql.CollectedField, obj *model_http.JWTAuthResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_JWTAuthResponse_Threshold(ctx, field)
+func (ec *executionContext) _JWTAuthResponse_threshold(ctx context.Context, field graphql.CollectedField, obj *model_http.JWTAuthResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_JWTAuthResponse_threshold(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -875,7 +875,7 @@ func (ec *executionContext) _JWTAuthResponse_Threshold(ctx context.Context, fiel
 	return ec.marshalNInt642int64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_JWTAuthResponse_Threshold(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_JWTAuthResponse_threshold(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "JWTAuthResponse",
 		Field:      field,
@@ -927,12 +927,12 @@ func (ec *executionContext) fieldContext_Mutation_registerUser(ctx context.Conte
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "Token":
-				return ec.fieldContext_JWTAuthResponse_Token(ctx, field)
-			case "Expires":
-				return ec.fieldContext_JWTAuthResponse_Expires(ctx, field)
-			case "Threshold":
-				return ec.fieldContext_JWTAuthResponse_Threshold(ctx, field)
+			case "token":
+				return ec.fieldContext_JWTAuthResponse_token(ctx, field)
+			case "expires":
+				return ec.fieldContext_JWTAuthResponse_expires(ctx, field)
+			case "threshold":
+				return ec.fieldContext_JWTAuthResponse_threshold(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type JWTAuthResponse", field.Name)
 		},
@@ -1045,12 +1045,12 @@ func (ec *executionContext) fieldContext_Mutation_loginUser(ctx context.Context,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "Token":
-				return ec.fieldContext_JWTAuthResponse_Token(ctx, field)
-			case "Expires":
-				return ec.fieldContext_JWTAuthResponse_Expires(ctx, field)
-			case "Threshold":
-				return ec.fieldContext_JWTAuthResponse_Threshold(ctx, field)
+			case "token":
+				return ec.fieldContext_JWTAuthResponse_token(ctx, field)
+			case "expires":
+				return ec.fieldContext_JWTAuthResponse_expires(ctx, field)
+			case "threshold":
+				return ec.fieldContext_JWTAuthResponse_threshold(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type JWTAuthResponse", field.Name)
 		},
@@ -1108,12 +1108,12 @@ func (ec *executionContext) fieldContext_Mutation_refreshToken(ctx context.Conte
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "Token":
-				return ec.fieldContext_JWTAuthResponse_Token(ctx, field)
-			case "Expires":
-				return ec.fieldContext_JWTAuthResponse_Expires(ctx, field)
-			case "Threshold":
-				return ec.fieldContext_JWTAuthResponse_Threshold(ctx, field)
+			case "token":
+				return ec.fieldContext_JWTAuthResponse_token(ctx, field)
+			case "expires":
+				return ec.fieldContext_JWTAuthResponse_expires(ctx, field)
+			case "threshold":
+				return ec.fieldContext_JWTAuthResponse_threshold(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type JWTAuthResponse", field.Name)
 		},
@@ -3917,33 +3917,33 @@ func (ec *executionContext) unmarshalInputDeleteUserRequest(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"Username", "Password", "Confirmation"}
+	fieldsInOrder := [...]string{"username", "password", "confirmation"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "Username":
+		case "username":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Username"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("username"))
 			it.Username, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
-		case "Password":
+		case "password":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Password"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
 			it.Password, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
-		case "Confirmation":
+		case "confirmation":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Confirmation"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("confirmation"))
 			it.Confirmation, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
@@ -4085,41 +4085,41 @@ func (ec *executionContext) unmarshalInputUserAccount(ctx context.Context, obj i
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"FirstName", "LastName", "Email", "UserLoginCredentials"}
+	fieldsInOrder := [...]string{"firstname", "lastname", "email", "userLoginCredentials"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "FirstName":
+		case "firstname":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("FirstName"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("firstname"))
 			it.FirstName, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
-		case "LastName":
+		case "lastname":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("LastName"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastname"))
 			it.LastName, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
-		case "Email":
+		case "email":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Email"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
 			it.Email, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
-		case "UserLoginCredentials":
+		case "userLoginCredentials":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("UserLoginCredentials"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userLoginCredentials"))
 			it.UserLoginCredentials, err = ec.unmarshalNUserLoginCredentials2githubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋcassandraᚐUserLoginCredentials(ctx, v)
 			if err != nil {
 				return it, err
@@ -4137,25 +4137,25 @@ func (ec *executionContext) unmarshalInputUserLoginCredentials(ctx context.Conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"Username", "Password"}
+	fieldsInOrder := [...]string{"username", "password"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "Username":
+		case "username":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Username"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("username"))
 			it.Username, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
-		case "Password":
+		case "password":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Password"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
 			it.Password, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
@@ -4184,23 +4184,23 @@ func (ec *executionContext) _JWTAuthResponse(ctx context.Context, sel ast.Select
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("JWTAuthResponse")
-		case "Token":
+		case "token":
 
-			out.Values[i] = ec._JWTAuthResponse_Token(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "Expires":
-
-			out.Values[i] = ec._JWTAuthResponse_Expires(ctx, field, obj)
+			out.Values[i] = ec._JWTAuthResponse_token(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "Threshold":
+		case "expires":
 
-			out.Values[i] = ec._JWTAuthResponse_Threshold(ctx, field, obj)
+			out.Values[i] = ec._JWTAuthResponse_expires(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "threshold":
+
+			out.Values[i] = ec._JWTAuthResponse_threshold(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++

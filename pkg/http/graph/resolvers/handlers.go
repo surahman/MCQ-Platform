@@ -1,4 +1,4 @@
-package graphql
+package graphql_resolvers
 
 import (
 	"github.com/99designs/gqlgen/graphql/handler"
@@ -8,17 +8,16 @@ import (
 	"github.com/surahman/mcq-platform/pkg/cassandra"
 	"github.com/surahman/mcq-platform/pkg/grading"
 	"github.com/surahman/mcq-platform/pkg/http/graph/generated"
-	"github.com/surahman/mcq-platform/pkg/http/graph/resolvers"
 	"github.com/surahman/mcq-platform/pkg/logger"
 	"github.com/surahman/mcq-platform/pkg/redis"
 )
 
-// graphQLHandler is the endpoint through which GraphQL can be accessed.
-func graphQLHandler(auth auth.Auth, cache redis.Redis, db cassandra.Cassandra,
+// QueryHandler is the endpoint through which GraphQL can be accessed.
+func QueryHandler(auth auth.Auth, cache redis.Redis, db cassandra.Cassandra,
 	grading grading.Grading, logger *logger.Logger) gin.HandlerFunc {
 	h := handler.NewDefaultServer(graphql_generated.NewExecutableSchema(
 		graphql_generated.Config{
-			Resolvers: &graphql_resolvers.Resolver{
+			Resolvers: &Resolver{
 				Auth:    auth,
 				Cache:   cache,
 				DB:      db,
@@ -33,8 +32,8 @@ func graphQLHandler(auth auth.Auth, cache redis.Redis, db cassandra.Cassandra,
 	}
 }
 
-// playgroundHandler is the endpoint through which the GraphQL playground can be accessed.
-func playgroundHandler(endpointURL string) gin.HandlerFunc {
+// PlaygroundHandler is the endpoint through which the GraphQL playground can be accessed.
+func PlaygroundHandler(endpointURL string) gin.HandlerFunc {
 	h := playground.Handler("GraphQL", endpointURL)
 
 	return func(c *gin.Context) {
