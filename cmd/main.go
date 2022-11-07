@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"sync"
 
 	"github.com/spf13/afero"
 	"github.com/surahman/mcq-platform/pkg/auth"
@@ -22,6 +23,7 @@ func main() {
 		database      cassandra.Cassandra
 		cache         redis.Redis
 		grader        = grading.NewGrading()
+		waitGroup     sync.WaitGroup
 	)
 
 	// File system setup.
@@ -65,8 +67,10 @@ func main() {
 	}(cache)
 
 	// Setup REST server and start it.
-	if serverREST, err = rest.NewRESTServer(&fs, authorization, database, cache, grader, logging); err != nil {
+	if serverREST, err = rest.NewServer(&fs, authorization, database, cache, grader, logging, &waitGroup); err != nil {
 		logging.Panic("failed to create the REST server", zap.Error(err))
 	}
-	serverREST.Run()
+	go serverREST.Run()
+
+	waitGroup.Wait()
 }

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -35,16 +36,20 @@ type Server struct {
 	conf    *config
 	logger  *logger.Logger
 	router  *gin.Engine
+	wg      *sync.WaitGroup
 }
 
-// NewRESTServer will create a new REST server instance in a non-running state.
-func NewRESTServer(fs *afero.Fs, auth auth.Auth, cassandra cassandra.Cassandra, redis redis.Redis,
-	grading grading.Grading, logger *logger.Logger) (server *Server, err error) {
+// NewServer will create a new REST server instance in a non-running state.
+func NewServer(fs *afero.Fs, auth auth.Auth, cassandra cassandra.Cassandra, redis redis.Redis,
+	grading grading.Grading, logger *logger.Logger, wg *sync.WaitGroup) (server *Server, err error) {
 	// Load configurations.
 	conf := newConfig()
 	if err = conf.Load(*fs); err != nil {
 		return
 	}
+
+	// Add to the wait group to stop bootstrap thread from exiting.
+	wg.Add(1)
 
 	return &Server{
 			conf:    conf,
@@ -53,6 +58,7 @@ func NewRESTServer(fs *afero.Fs, auth auth.Auth, cassandra cassandra.Cassandra, 
 			db:      cassandra,
 			grading: grading,
 			logger:  logger,
+			wg:      wg,
 		},
 		err
 }
@@ -81,17 +87,20 @@ func (s *Server) Run() {
 
 	// Wait for interrupt.
 	<-quit
-	s.logger.Info("Shutting down server...", zap.Duration("waiting", time.Duration(s.conf.Server.ShutdownDelay)*time.Second))
+	s.logger.Info("Shutting down REST server...", zap.Duration("waiting", time.Duration(s.conf.Server.ShutdownDelay)*time.Second))
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(s.conf.Server.ShutdownDelay)*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
-		s.logger.Panic("Failed to shutdown server", zap.Error(err))
+		s.logger.Panic("Failed to shutdown REST server", zap.Error(err))
 	}
 
 	// 5 second wait to exit.
 	<-ctx.Done()
 
 	s.logger.Info("Server exited")
+
+	// Indicate completion to wait group.
+	s.wg.Done()
 }
 
 // initialize will configure the HTTP server routes.
