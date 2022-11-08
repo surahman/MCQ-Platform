@@ -10,6 +10,7 @@ require (
 	github.com/gocql/gocql v1.2.1
 	github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/golang/mock v1.6.0
+	github.com/pkg/errors v0.9.1
 	github.com/rs/xid v1.4.0
 	github.com/spf13/afero v1.9.2
 	github.com/spf13/viper v1.13.0
