@@ -48,7 +48,29 @@ func (r *mutationResolver) DeleteUser(ctx context.Context, input model_http.Dele
 
 // LoginUser is the resolver for the loginUser field.
 func (r *mutationResolver) LoginUser(ctx context.Context, input model_cassandra.UserLoginCredentials) (*model_http.JWTAuthResponse, error) {
-	panic(fmt.Errorf("not implemented: LoginUser - loginUser"))
+	var err error
+	var authToken *model_http.JWTAuthResponse
+	var dbResponse any
+
+	if err = validator.ValidateStruct(&input); err != nil {
+		return nil, err
+	}
+
+	if dbResponse, err = r.DB.Execute(cassandra.ReadUserQuery, input.Username); err != nil {
+		return nil, err
+	}
+
+	truth := dbResponse.(*model_cassandra.User)
+	if err = r.Auth.CheckPassword(truth.Password, input.Password); err != nil || truth.IsDeleted {
+		return nil, err
+	}
+
+	if authToken, err = r.Auth.GenerateJWT(input.Username); err != nil {
+		r.Logger.Error("failure generating JWT during login", zap.Error(err))
+		return nil, err
+	}
+
+	return authToken, err
 }
 
 // RefreshToken is the resolver for the refreshToken field.
