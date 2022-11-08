@@ -130,7 +130,7 @@ func (s *Server) initialize() {
 	s.router.GET(s.conf.Server.SwaggerPath, ginSwagger.WrapHandler(swaggerfiles.Handler))
 
 	// Endpoint configurations
-	authMiddleware := http_handlers.AuthMiddleware(s.auth)
+	authMiddleware := http_handlers.AuthMiddleware(s.auth, s.conf.Authorization.HeaderKey)
 	api := s.router.Group(s.conf.Server.BasePath)
 
 	api.GET("/health", http_handlers.Healthcheck(s.logger, s.db, s.cache))
