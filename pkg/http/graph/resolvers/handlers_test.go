@@ -1,6 +1,8 @@
 package graphql_resolvers
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -25,4 +27,15 @@ func TestQueryHandler(t *testing.T) {
 func TestPlaygroundHandler(t *testing.T) {
 	handler := PlaygroundHandler("/base-url", "/query-endpoint-url")
 	require.NotNil(t, handler, "failed to create playground endpoint handler")
+}
+
+func TestGinContextToContextMiddleware(t *testing.T) {
+	router := getRouter()
+	router.POST("/middleware-test", GinContextToContextMiddleware())
+	req, _ := http.NewRequest("POST", "/middleware-test", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Verify responses
+	require.Equal(t, http.StatusOK, w.Code, "expected status codes do not match")
 }

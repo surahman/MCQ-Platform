@@ -1,6 +1,7 @@
 package graphql_resolvers
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/99designs/gqlgen/graphql/handler"
@@ -40,5 +41,14 @@ func PlaygroundHandler(baseURL, queryURL string) gin.HandlerFunc {
 
 	return func(c *gin.Context) {
 		h.ServeHTTP(c.Writer, c.Request)
+	}
+}
+
+// GinContextToContextMiddleware is middleware that will place the Gin context into a context for the GraphQL resolvers.
+func GinContextToContextMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx := context.WithValue(c.Request.Context(), "GinContextKey", c)
+		c.Request = c.Request.WithContext(ctx)
+		c.Next()
 	}
 }

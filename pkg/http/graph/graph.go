@@ -103,7 +103,7 @@ func (s *Server) initialize() {
 
 	// Endpoint configurations
 	api := s.router.Group(s.conf.Server.BasePath)
-	// TODO: Add middleware handler to store authentication data in context for access in GraphQL resolvers.
+	api.Use(graphql_resolvers.GinContextToContextMiddleware())
 
 	api.POST(s.conf.Server.QueryPath, graphql_resolvers.QueryHandler(s.auth, s.cache, s.db, s.grading, s.logger))
 	api.GET(s.conf.Server.PlaygroundPath, graphql_resolvers.PlaygroundHandler(s.conf.Server.BasePath, s.conf.Server.QueryPath))
