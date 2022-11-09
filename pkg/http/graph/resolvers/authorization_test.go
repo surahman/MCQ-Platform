@@ -115,8 +115,8 @@ func TestAuthorizationCheck(t *testing.T) {
 			expectErr: require.NoError,
 			ctx:       context.WithValue(context.TODO(), "GinContextKey", ginCtxAuth),
 			authValidateJWTData: &mockAuthData{
-				outputParam1: "",
-				outputParam2: int64(-1),
+				outputParam1: "successful token refresh",
+				outputParam2: int64(999),
 				outputErr:    nil,
 				times:        1,
 			},
@@ -136,12 +136,16 @@ func TestAuthorizationCheck(t *testing.T) {
 				testCase.authValidateJWTData.outputErr,
 			).Times(testCase.authValidateJWTData.times)
 
-			err := AuthorizationCheck(mockAuth, zapLogger, "Authorization", testCase.ctx)
+			username, expiresAt, err := AuthorizationCheck(mockAuth, zapLogger, "Authorization", testCase.ctx)
+
+			require.Equal(t, testCase.authValidateJWTData.outputParam1, username, "expected username does not match")
+			require.Equal(t, testCase.authValidateJWTData.outputParam2, expiresAt, "expected expiration time does not match")
 
 			testCase.expectErr(t, err, "error expectation failed")
 			if err != nil {
 				require.Contains(t, err.Error(), testCase.expectedMsg, "incorrect error message returned")
 			}
+
 		})
 	}
 }

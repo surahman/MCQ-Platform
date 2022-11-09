@@ -26,18 +26,21 @@ func GinContextFromContext(ctx context.Context, logger *logger.Logger) (*gin.Con
 }
 
 // AuthorizationCheck will validate the JWT payload for valid authorization information.
-func AuthorizationCheck(auth auth.Auth, logger *logger.Logger, authHeaderKey string, ctx context.Context) error {
+func AuthorizationCheck(auth auth.Auth, logger *logger.Logger, authHeaderKey string, ctx context.Context) (string, int64, error) {
 	ginContext, err := GinContextFromContext(ctx, logger)
 	if err != nil {
-		return err
+		return "", -1, err
 	}
 
 	tokenString := ginContext.GetHeader(authHeaderKey)
 	if tokenString == "" {
-		return errors.New("request does not contain an access token")
+		return "", -1, errors.New("request does not contain an access token")
 	}
-	if _, _, err := auth.ValidateJWT(tokenString); err != nil {
-		return err
+
+	var username string
+	var expiresAt int64
+	if username, expiresAt, err = auth.ValidateJWT(tokenString); err != nil {
+		return username, expiresAt, err
 	}
-	return nil
+	return username, expiresAt, nil
 }
