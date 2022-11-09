@@ -1,14 +1,18 @@
 package graphql_resolvers
 
 import (
+	"encoding/json"
 	"log"
 	"os"
+	"reflect"
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/require"
 	"github.com/surahman/mcq-platform/pkg/cassandra"
 	"github.com/surahman/mcq-platform/pkg/logger"
 	"github.com/surahman/mcq-platform/pkg/model/cassandra"
+	model_http "github.com/surahman/mcq-platform/pkg/model/http"
 	"go.uber.org/zap"
 )
 
@@ -96,4 +100,27 @@ type mockRedisData struct {
 	param2 any
 	err    error
 	times  int
+}
+
+// verifyErrorReturned will check an HTTP response to ensure an error was returned.
+func verifyErrorReturned(t *testing.T, response map[string]any) {
+	value, ok := response["data"]
+	require.True(t, ok, "data key expected but not set")
+	require.Nil(t, value, "data value should be set to nil")
+
+	value, ok = response["errors"]
+	require.True(t, ok, "error key expected but not set")
+	require.NotNil(t, value, "error value should not be nil")
+}
+
+// verifyJWTReturned will check an HTTP response from a resolver to ensure a correct JWT was returned.
+func verifyJWTReturned(t *testing.T, response map[string]any, functionName string, expectedJWT *model_http.JWTAuthResponse) {
+	data, ok := response["data"]
+	require.True(t, ok, "data key expected but not set")
+
+	authToken := model_http.JWTAuthResponse{}
+	jsonStr, err := json.Marshal(data.(map[string]any)[functionName])
+	require.NoError(t, err, "failed to generate JSON string")
+	require.NoError(t, json.Unmarshal([]byte(jsonStr), &authToken), "failed to unmarshall to JWT Auth Response")
+	require.True(t, reflect.DeepEqual(*expectedJWT, authToken), "auth tokens did not match")
 }

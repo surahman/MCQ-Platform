@@ -6,7 +6,6 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"testing"
 	"time"
 
@@ -165,23 +164,10 @@ func TestMutationResolver_RegisterUser(t *testing.T) {
 
 			// Error is expected check to ensure one is set.
 			if testCase.expectErr {
-				value, ok := response["data"]
-				require.True(t, ok, "data key expected but not set")
-				require.Nil(t, value, "data value should be set to nil")
-
-				value, ok = response["errors"]
-				require.True(t, ok, "error key expected but not set")
-				require.NotNil(t, value, "error value should not be nil")
+				verifyErrorReturned(t, response)
 			} else {
 				// Auth token is expected.
-				data, ok := response["data"]
-				require.True(t, ok, "data key expected but not set")
-
-				authToken := model_http.JWTAuthResponse{}
-				jsonStr, err := json.Marshal(data.(map[string]any)["registerUser"])
-				require.NoError(t, err, "failed to generate JSON string")
-				require.NoError(t, json.Unmarshal([]byte(jsonStr), &authToken), "failed to unmarshall to JWT Auth Response")
-				require.True(t, reflect.DeepEqual(*testCase.authGenJWTData.outputParam1.(*model_http.JWTAuthResponse), authToken), "auth tokens did not match")
+				verifyJWTReturned(t, response, "registerUser", testCase.authGenJWTData.outputParam1.(*model_http.JWTAuthResponse))
 			}
 		})
 	}
@@ -354,23 +340,10 @@ func TestMutationResolver_LoginUser(t *testing.T) {
 
 			// Error is expected check to ensure one is set.
 			if testCase.expectErr {
-				value, ok := response["data"]
-				require.True(t, ok, "data key expected but not set")
-				require.Nil(t, value, "data value should be set to nil")
-
-				value, ok = response["errors"]
-				require.True(t, ok, "error key expected but not set")
-				require.NotNil(t, value, "error value should not be nil")
+				verifyErrorReturned(t, response)
 			} else {
 				// Auth token is expected.
-				data, ok := response["data"]
-				require.True(t, ok, "data key expected but not set")
-
-				authToken := model_http.JWTAuthResponse{}
-				jsonStr, err := json.Marshal(data.(map[string]any)["loginUser"])
-				require.NoError(t, err, "failed to generate JSON string")
-				require.NoError(t, json.Unmarshal([]byte(jsonStr), &authToken), "failed to unmarshall to JWT Auth Response")
-				require.True(t, reflect.DeepEqual(*testCase.authGenJWTData.outputParam1.(*model_http.JWTAuthResponse), authToken), "auth tokens did not match")
+				verifyJWTReturned(t, response, "loginUser", testCase.authGenJWTData.outputParam1.(*model_http.JWTAuthResponse))
 			}
 		})
 	}
@@ -595,23 +568,10 @@ func TestMutationResolver_RefreshToken(t *testing.T) {
 
 			// Error is expected check to ensure one is set.
 			if testCase.expectErr {
-				value, ok := response["data"]
-				require.True(t, ok, "data key expected but not set")
-				require.Nil(t, value, "data value should be set to nil")
-
-				value, ok = response["errors"]
-				require.True(t, ok, "error key expected but not set")
-				require.NotNil(t, value, "error value should not be nil")
+				verifyErrorReturned(t, response)
 			} else {
 				// Auth token is expected.
-				data, ok := response["data"]
-				require.True(t, ok, "data key expected but not set")
-
-				authToken := model_http.JWTAuthResponse{}
-				jsonStr, err := json.Marshal(data.(map[string]any)["refreshToken"])
-				require.NoError(t, err, "failed to generate JSON string")
-				require.NoError(t, json.Unmarshal([]byte(jsonStr), &authToken), "failed to unmarshall to JWT Auth Response")
-				require.True(t, reflect.DeepEqual(*testCase.authGenJWTData.outputParam1.(*model_http.JWTAuthResponse), authToken), "auth tokens did not match")
+				verifyJWTReturned(t, response, "refreshToken", testCase.authGenJWTData.outputParam1.(*model_http.JWTAuthResponse))
 			}
 		})
 	}
