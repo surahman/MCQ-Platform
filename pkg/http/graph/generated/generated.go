@@ -58,7 +58,7 @@ type ComplexityRoot struct {
 		DeleteUser   func(childComplexity int, input model_http.DeleteUserRequest) int
 		LoginUser    func(childComplexity int, input model_cassandra.UserLoginCredentials) int
 		PublishQuiz  func(childComplexity int, quizID string) int
-		RefreshToken func(childComplexity int, token string) int
+		RefreshToken func(childComplexity int) int
 		RegisterUser func(childComplexity int, input *model_cassandra.UserAccount) int
 		TakeQuiz     func(childComplexity int, quizID string, input model_cassandra.QuizResponse) int
 		UpdateQuiz   func(childComplexity int, input model_http.QuizCreate) int
@@ -94,7 +94,7 @@ type MutationResolver interface {
 	RegisterUser(ctx context.Context, input *model_cassandra.UserAccount) (*model_http.JWTAuthResponse, error)
 	DeleteUser(ctx context.Context, input model_http.DeleteUserRequest) (string, error)
 	LoginUser(ctx context.Context, input model_cassandra.UserLoginCredentials) (*model_http.JWTAuthResponse, error)
-	RefreshToken(ctx context.Context, token string) (*model_http.JWTAuthResponse, error)
+	RefreshToken(ctx context.Context) (*model_http.JWTAuthResponse, error)
 	CreateQuiz(ctx context.Context, input model_http.QuizCreate) (string, error)
 	UpdateQuiz(ctx context.Context, input model_http.QuizCreate) (string, error)
 	PublishQuiz(ctx context.Context, quizID string) (string, error)
@@ -210,12 +210,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_refreshToken_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.RefreshToken(childComplexity, args["token"].(string)), true
+		return e.complexity.Mutation.RefreshToken(childComplexity), true
 
 	case "Mutation.registerUser":
 		if e.complexity.Mutation.RegisterUser == nil {
@@ -535,7 +530,7 @@ type Mutation {
     loginUser(input: UserLoginCredentials!): JWTAuthResponse!
 
     # Refreshes a users JWT if it is within the refresh time window.
-    refreshToken(token: String!): JWTAuthResponse!
+    refreshToken: JWTAuthResponse!
 }`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -616,21 +611,6 @@ func (ec *executionContext) field_Mutation_publishQuiz_args(ctx context.Context,
 		}
 	}
 	args["quizID"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_refreshToken_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["token"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("token"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["token"] = arg0
 	return args, nil
 }
 
@@ -1083,7 +1063,7 @@ func (ec *executionContext) _Mutation_refreshToken(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().RefreshToken(rctx, fc.Args["token"].(string))
+		return ec.resolvers.Mutation().RefreshToken(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1117,17 +1097,6 @@ func (ec *executionContext) fieldContext_Mutation_refreshToken(ctx context.Conte
 			}
 			return nil, fmt.Errorf("no field named %q was found under type JWTAuthResponse", field.Name)
 		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_refreshToken_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
 	}
 	return fc, nil
 }

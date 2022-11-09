@@ -13,9 +13,10 @@ import (
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 type Resolver struct {
-	Auth    auth.Auth
-	Cache   redis.Redis
-	DB      cassandra.Cassandra
-	Grading grading.Grading
-	Logger  *logger.Logger
+	AuthHeaderKey string
+	Auth          auth.Auth
+	Cache         redis.Redis
+	DB            cassandra.Cassandra
+	Grading       grading.Grading
+	Logger        *logger.Logger
 }

@@ -19,7 +19,7 @@ var zapLogger *logger.Logger
 var testUserData = cassandra.GetTestUsers()
 
 // testQuizData is the test quiz data.
-var testQuizData = cassandra.GetTestQuizzes()
+var testAuthHeaderKey = "Authorization"
 
 func TestMain(m *testing.M) {
 	var err error

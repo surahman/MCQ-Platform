@@ -31,5 +31,5 @@ type Mutation {
     loginUser(input: UserLoginCredentials!): JWTAuthResponse!
 
     # Refreshes a users JWT if it is within the refresh time window.
-    refreshToken(token: String!): JWTAuthResponse!
+    refreshToken: JWTAuthResponse!
 }

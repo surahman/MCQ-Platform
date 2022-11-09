@@ -5,7 +5,10 @@ package graphql_resolvers
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"math"
+	"time"
 
 	"github.com/surahman/mcq-platform/pkg/cassandra"
 	graphql_generated "github.com/surahman/mcq-platform/pkg/http/graph/generated"
@@ -74,8 +77,37 @@ func (r *mutationResolver) LoginUser(ctx context.Context, input model_cassandra.
 }
 
 // RefreshToken is the resolver for the refreshToken field.
-func (r *mutationResolver) RefreshToken(ctx context.Context, token string) (*model_http.JWTAuthResponse, error) {
-	panic(fmt.Errorf("not implemented: RefreshToken - refreshToken"))
+func (r *mutationResolver) RefreshToken(ctx context.Context) (*model_http.JWTAuthResponse, error) {
+	var err error
+	var freshToken *model_http.JWTAuthResponse
+	var username string
+	var dbResponse any
+	var expiresAt int64
+
+	if username, expiresAt, err = AuthorizationCheck(r.Auth, r.Logger, r.AuthHeaderKey, ctx); err != nil {
+		return nil, err
+	}
+
+	if dbResponse, err = r.DB.Execute(cassandra.ReadUserQuery, username); err != nil {
+		r.Logger.Warn("failed to read user record for a valid JWT", zap.String("username", username), zap.Error(err))
+		return nil, errors.New("please retry your request later")
+	}
+
+	if dbResponse.(*model_cassandra.User).IsDeleted {
+		r.Logger.Warn("attempt to refresh a JWT for a deleted user", zap.String("username", username))
+		return nil, errors.New("invalid token")
+	}
+
+	// Do not refresh tokens that have more than a minute left to expire.
+	if math.Abs(float64(time.Now().Unix()-expiresAt)) > float64(r.Auth.RefreshThreshold()) {
+		return nil, errors.New("JWT is still valid for more than 60 seconds")
+	}
+
+	if freshToken, err = r.Auth.GenerateJWT(username); err != nil {
+		r.Logger.Error("failure generating JWT during token refresh", zap.Error(err))
+		return nil, errors.New(err.Error())
+	}
+	return freshToken, nil
 }
 
 // Mutation returns graphql_generated.MutationResolver implementation.

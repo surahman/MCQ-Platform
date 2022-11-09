@@ -53,10 +53,10 @@ func TestGinContextFromContext(t *testing.T) {
 func TestAuthorizationCheck(t *testing.T) {
 
 	ginCtxNoAuth := &gin.Context{Request: &http.Request{Header: http.Header{}}}
-	ginCtxNoAuth.Request.Header.Add("Authorization", "")
+	ginCtxNoAuth.Request.Header.Add(testAuthHeaderKey, "")
 
 	ginCtxAuth := &gin.Context{Request: &http.Request{Header: http.Header{}}}
-	ginCtxAuth.Request.Header.Add("Authorization", "test-token")
+	ginCtxAuth.Request.Header.Add(testAuthHeaderKey, "test-token")
 
 	testCases := []struct {
 		name                string
@@ -136,7 +136,7 @@ func TestAuthorizationCheck(t *testing.T) {
 				testCase.authValidateJWTData.outputErr,
 			).Times(testCase.authValidateJWTData.times)
 
-			username, expiresAt, err := AuthorizationCheck(mockAuth, zapLogger, "Authorization", testCase.ctx)
+			username, expiresAt, err := AuthorizationCheck(mockAuth, zapLogger, testAuthHeaderKey, testCase.ctx)
 
 			require.Equal(t, testCase.authValidateJWTData.outputParam1, username, "expected username does not match")
 			require.Equal(t, testCase.authValidateJWTData.outputParam2, expiresAt, "expected expiration time does not match")

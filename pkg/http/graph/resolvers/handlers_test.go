@@ -19,7 +19,7 @@ func TestQueryHandler(t *testing.T) {
 	mockRedis := mocks.NewMockRedis(mockCtrl)
 	mockGrader := mocks.NewMockGrading(mockCtrl)
 
-	handler := QueryHandler(mockAuth, mockRedis, mockCassandra, mockGrader, zapLogger)
+	handler := QueryHandler("Authorization", mockAuth, mockRedis, mockCassandra, mockGrader, zapLogger)
 
 	require.NotNil(t, handler, "failed to create graphql endpoint handler")
 }

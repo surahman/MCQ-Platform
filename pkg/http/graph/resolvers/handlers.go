@@ -16,16 +16,17 @@ import (
 )
 
 // QueryHandler is the endpoint through which GraphQL can be accessed.
-func QueryHandler(auth auth.Auth, cache redis.Redis, db cassandra.Cassandra,
+func QueryHandler(authHeaderKey string, auth auth.Auth, cache redis.Redis, db cassandra.Cassandra,
 	grading grading.Grading, logger *logger.Logger) gin.HandlerFunc {
 	h := handler.NewDefaultServer(graphql_generated.NewExecutableSchema(
 		graphql_generated.Config{
 			Resolvers: &Resolver{
-				Auth:    auth,
-				Cache:   cache,
-				DB:      db,
-				Grading: grading,
-				Logger:  logger,
+				AuthHeaderKey: authHeaderKey,
+				Auth:          auth,
+				Cache:         cache,
+				DB:            db,
+				Grading:       grading,
+				Logger:        logger,
 			},
 		},
 	))
