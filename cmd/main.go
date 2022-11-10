@@ -8,7 +8,7 @@ import (
 	"github.com/surahman/mcq-platform/pkg/auth"
 	"github.com/surahman/mcq-platform/pkg/cassandra"
 	"github.com/surahman/mcq-platform/pkg/grading"
-	graphql "github.com/surahman/mcq-platform/pkg/http/graph"
+	"github.com/surahman/mcq-platform/pkg/http/graph"
 	"github.com/surahman/mcq-platform/pkg/http/rest"
 	"github.com/surahman/mcq-platform/pkg/logger"
 	"github.com/surahman/mcq-platform/pkg/redis"
