@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/surahman/mcq-platform/pkg/cassandra"
+	"github.com/surahman/mcq-platform/pkg/constants"
 	graphql_generated "github.com/surahman/mcq-platform/pkg/http/graph/generated"
 	model_cassandra "github.com/surahman/mcq-platform/pkg/model/cassandra"
 	model_http "github.com/surahman/mcq-platform/pkg/model/http"
@@ -46,7 +47,51 @@ func (r *mutationResolver) RegisterUser(ctx context.Context, input *model_cassan
 
 // DeleteUser is the resolver for the deleteUser field.
 func (r *mutationResolver) DeleteUser(ctx context.Context, input model_http.DeleteUserRequest) (string, error) {
-	panic(fmt.Errorf("not implemented: DeleteUser - deleteUser"))
+	var err error
+	var username string
+	var dbResponse any
+
+	if err = validator.ValidateStruct(&input); err != nil {
+		return "", errors.New(err.Error())
+	}
+
+	if username, _, err = AuthorizationCheck(r.Auth, r.Logger, r.AuthHeaderKey, ctx); err != nil {
+		return "", err
+	}
+
+	if username != input.Username {
+		return "", errors.New("invalid deletion request")
+	}
+
+	// Check confirmation message.
+	if fmt.Sprintf(constants.GetDeleteUserAccountConfirmation(), username) != input.Confirmation {
+		return "", errors.New("incorrect or incomplete deletion request confirmation")
+	}
+
+	// Get user record.
+	if dbResponse, err = r.DB.Execute(cassandra.ReadUserQuery, username); err != nil {
+		r.Logger.Warn("failed to read user record during an account deletion request", zap.String("username", username), zap.Error(err))
+		return "", errors.New("please retry your request later")
+	}
+	truth := dbResponse.(*model_cassandra.User)
+
+	// Check to make sure the account is not already deleted.
+	if truth.IsDeleted {
+		r.Logger.Warn("attempt to delete an already deleted user account", zap.String("username", username))
+		return "", errors.New("user account is already deleted")
+	}
+
+	if err = r.Auth.CheckPassword(truth.Password, input.Password); err != nil {
+		return "", errors.New("invalid username or password")
+	}
+
+	// Mark account as deleted.
+	if _, err = r.DB.Execute(cassandra.DeleteUserQuery, username); err != nil {
+		r.Logger.Warn("failed to mark a user record as deleted", zap.String("username", username), zap.Error(err))
+		return "", errors.New("please retry your request later")
+	}
+
+	return "account successfully deleted", nil
 }
 
 // LoginUser is the resolver for the loginUser field.
