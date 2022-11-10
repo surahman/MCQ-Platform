@@ -1,4 +1,4 @@
-package http_handlers
+package graphql_resolvers
 
 import (
 	"bytes"
@@ -14,30 +14,33 @@ import (
 	"github.com/rs/xid"
 	"github.com/stretchr/testify/require"
 	"github.com/surahman/mcq-platform/pkg/cassandra"
-	"github.com/surahman/mcq-platform/pkg/constants"
 	"github.com/surahman/mcq-platform/pkg/mocks"
-	"github.com/surahman/mcq-platform/pkg/model/cassandra"
+	model_cassandra "github.com/surahman/mcq-platform/pkg/model/cassandra"
 	"github.com/surahman/mcq-platform/pkg/model/http"
 )
 
-func TestRegisterUser(t *testing.T) {
+func TestMutationResolver_RegisterUser(t *testing.T) {
 	router := getRouter()
+
+	registerUserQuery := `{
+    "query": "mutation { registerUser(input: { firstname: \"%s\", lastname:\"%s\", email: \"%s\", userLoginCredentials: { username:\"%s\", password: \"%s\" } }) { token, expires, threshold }}"
+}`
 
 	testCases := []struct {
 		name                string
 		path                string
-		expectedStatus      int
-		user                *model_cassandra.UserAccount
+		user                string
+		expectErr           bool
 		authHashData        *mockAuthData
 		authGenJWTData      *mockAuthData
 		cassandraCreateData *mockCassandraData
 	}{
 		// ----- test cases start ----- //
 		{
-			name:           "empty user",
-			path:           "/register/empty-user",
-			expectedStatus: http.StatusBadRequest,
-			user:           &model_cassandra.UserAccount{},
+			name:      "empty user",
+			path:      "/register/empty-user",
+			user:      fmt.Sprintf(registerUserQuery, "", "", "", "", ""),
+			expectErr: true,
 			authHashData: &mockAuthData{
 				outputParam1: "",
 				times:        0,
@@ -49,10 +52,9 @@ func TestRegisterUser(t *testing.T) {
 				times: 0,
 			},
 		}, {
-			name:           "valid user",
-			path:           "/register/valid-user",
-			expectedStatus: http.StatusOK,
-			user:           testUserData["username1"].UserAccount,
+			name: "valid user",
+			path: "/register/valid-user",
+			user: fmt.Sprintf(registerUserQuery, "first name", "last name", "email@address.com", "username999", "password999"),
 			authHashData: &mockAuthData{
 				outputParam1: "hashed password",
 				times:        1,
@@ -61,13 +63,18 @@ func TestRegisterUser(t *testing.T) {
 				times: 1,
 			},
 			authGenJWTData: &mockAuthData{
+				outputParam1: &model_http.JWTAuthResponse{
+					Token:     "Test Token",
+					Expires:   99,
+					Threshold: 100,
+				},
 				times: 1,
 			},
 		}, {
-			name:           "password hash failure",
-			path:           "/register/pwd-hash-failure",
-			expectedStatus: http.StatusInternalServerError,
-			user:           testUserData["username1"].UserAccount,
+			name:      "password hash failure",
+			path:      "/register/pwd-hash-failure",
+			user:      fmt.Sprintf(registerUserQuery, "first name", "last name", "email@address.com", "username999", "password999"),
+			expectErr: true,
 			authHashData: &mockAuthData{
 				outputParam1: "hashed password",
 				outputErr:    errors.New("password hash failure"),
@@ -80,10 +87,10 @@ func TestRegisterUser(t *testing.T) {
 				times: 0,
 			},
 		}, {
-			name:           "database failure",
-			path:           "/register/database-failure",
-			expectedStatus: http.StatusNotFound,
-			user:           testUserData["username1"].UserAccount,
+			name:      "database failure",
+			path:      "/register/database-failure",
+			user:      fmt.Sprintf(registerUserQuery, "first name", "last name", "email@address.com", "username999", "password999"),
+			expectErr: true,
 			authHashData: &mockAuthData{
 				outputParam1: "hashed password",
 				times:        1,
@@ -96,10 +103,10 @@ func TestRegisterUser(t *testing.T) {
 				times: 0,
 			},
 		}, {
-			name:           "auth token failure",
-			path:           "/register/auth-token-failure",
-			expectedStatus: http.StatusInternalServerError,
-			user:           testUserData["username1"].UserAccount,
+			name:      "auth token failure",
+			path:      "/register/auth-token-failure",
+			user:      fmt.Sprintf(registerUserQuery, "first name", "last name", "email@address.com", "username999", "password999"),
+			expectErr: true,
 			authHashData: &mockAuthData{
 				outputParam1: "hashed password",
 				times:        1,
@@ -121,10 +128,8 @@ func TestRegisterUser(t *testing.T) {
 			defer mockCtrl.Finish()
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockCassandra := mocks.NewMockCassandra(mockCtrl)
-
-			user := testCase.user
-			userJson, err := json.Marshal(&user)
-			require.NoErrorf(t, err, "failed to marshall JSON: %v", err)
+			mockRedis := mocks.NewMockRedis(mockCtrl)     // Not called.
+			mockGrading := mocks.NewMockGrading(mockCtrl) // Not called.
 
 			mockAuth.EXPECT().HashPassword(gomock.Any()).Return(
 				testCase.authHashData.outputParam1,
@@ -142,35 +147,52 @@ func TestRegisterUser(t *testing.T) {
 			).Times(testCase.authGenJWTData.times)
 
 			// Endpoint setup for test.
-			router.POST(testCase.path, RegisterUser(zapLogger, mockAuth, mockCassandra))
-			req, _ := http.NewRequest("POST", testCase.path, bytes.NewBuffer(userJson))
+			router.POST(testCase.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockCassandra, mockGrading, zapLogger))
+
+			req, _ := http.NewRequest("POST", testCase.path, bytes.NewBufferString(testCase.user))
+			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
 
 			// Verify responses
-			require.Equal(t, testCase.expectedStatus, w.Code, "expected status codes do not match")
+			require.Equal(t, http.StatusOK, w.Code, "expected status codes do not match")
+
+			response := map[string]any{}
+			require.NoError(t, json.Unmarshal(w.Body.Bytes(), &response), "failed to unmarshal response body")
+
+			// Error is expected check to ensure one is set.
+			if testCase.expectErr {
+				verifyErrorReturned(t, response)
+			} else {
+				// Auth token is expected.
+				verifyJWTReturned(t, response, "registerUser", testCase.authGenJWTData.outputParam1.(*model_http.JWTAuthResponse))
+			}
 		})
 	}
 }
 
-func TestLoginUser(t *testing.T) {
+func TestMutationResolver_LoginUser(t *testing.T) {
 	router := getRouter()
+
+	loginUserQuery := `{
+    "query": "mutation { loginUser(input: { username:\"%s\", password: \"%s\" }) { token, expires, threshold }}"
+}`
 
 	testCases := []struct {
 		name              string
 		path              string
-		expectedStatus    int
-		user              *model_cassandra.UserLoginCredentials
+		user              string
+		expectErr         bool
 		authCheckPwdData  *mockAuthData
 		authGenJWTData    *mockAuthData
 		cassandraReadData *mockCassandraData
 	}{
 		// ----- test cases start ----- //
 		{
-			name:           "empty user",
-			path:           "/login/empty-user",
-			expectedStatus: http.StatusBadRequest,
-			user:           &model_cassandra.UserLoginCredentials{},
+			name:      "empty user",
+			path:      "/login/empty-user",
+			user:      fmt.Sprintf(loginUserQuery, "", ""),
+			expectErr: true,
 			cassandraReadData: &mockCassandraData{
 				times: 0,
 			},
@@ -182,10 +204,10 @@ func TestLoginUser(t *testing.T) {
 				times: 0,
 			},
 		}, {
-			name:           "valid user",
-			path:           "/login/valid-user",
-			expectedStatus: http.StatusOK,
-			user:           &testUserData["username1"].UserLoginCredentials,
+			name:      "valid user",
+			path:      "/login/valid-user",
+			user:      fmt.Sprintf(loginUserQuery, "username999", "password999"),
+			expectErr: false,
 			cassandraReadData: &mockCassandraData{
 				outputParam: testUserData["username1"],
 				times:       1,
@@ -194,13 +216,18 @@ func TestLoginUser(t *testing.T) {
 				times: 1,
 			},
 			authGenJWTData: &mockAuthData{
+				outputParam1: &model_http.JWTAuthResponse{
+					Token:     "Test Token",
+					Expires:   99,
+					Threshold: 100,
+				},
 				times: 1,
 			},
 		}, {
-			name:           "database failure",
-			path:           "/login/database-failure",
-			expectedStatus: http.StatusForbidden,
-			user:           &testUserData["username1"].UserLoginCredentials,
+			name:      "database failure",
+			path:      "/login/database-failure",
+			user:      fmt.Sprintf(loginUserQuery, "username999", "password999"),
+			expectErr: true,
 			cassandraReadData: &mockCassandraData{
 				outputErr: &cassandra.Error{Status: http.StatusNotFound},
 				times:     1,
@@ -213,10 +240,10 @@ func TestLoginUser(t *testing.T) {
 				times: 0,
 			},
 		}, {
-			name:           "password check failure",
-			path:           "/login/pwd-check-failure",
-			expectedStatus: http.StatusForbidden,
-			user:           &testUserData["username1"].UserLoginCredentials,
+			name:      "password check failure",
+			path:      "/login/pwd-check-failure",
+			user:      fmt.Sprintf(loginUserQuery, "username999", "password999"),
+			expectErr: true,
 			cassandraReadData: &mockCassandraData{
 				outputParam: testUserData["username1"],
 				times:       1,
@@ -229,10 +256,10 @@ func TestLoginUser(t *testing.T) {
 				times: 0,
 			},
 		}, {
-			name:           "auth token failure",
-			path:           "/login/auth-token-failure",
-			expectedStatus: http.StatusInternalServerError,
-			user:           &testUserData["username1"].UserLoginCredentials,
+			name:      "auth token failure",
+			path:      "/login/auth-token-failure",
+			user:      fmt.Sprintf(loginUserQuery, "username999", "password999"),
+			expectErr: true,
 			authCheckPwdData: &mockAuthData{
 				times: 1,
 			},
@@ -245,10 +272,10 @@ func TestLoginUser(t *testing.T) {
 				times:     1,
 			},
 		}, {
-			name:           "deleted user",
-			path:           "/login/deleted-user",
-			expectedStatus: http.StatusForbidden,
-			user:           &testUserData["username1"].UserLoginCredentials,
+			name:      "deleted user",
+			path:      "/login/deleted-user",
+			user:      fmt.Sprintf(loginUserQuery, "username999", "password999"),
+			expectErr: true,
 			cassandraReadData: &mockCassandraData{
 				outputParam: &model_cassandra.User{
 					UserAccount: &model_cassandra.UserAccount{
@@ -274,10 +301,8 @@ func TestLoginUser(t *testing.T) {
 			defer mockCtrl.Finish()
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockCassandra := mocks.NewMockCassandra(mockCtrl)
-
-			user := testCase.user
-			userJson, err := json.Marshal(&user)
-			require.NoErrorf(t, err, "failed to marshall JSON: %v", err)
+			mockRedis := mocks.NewMockRedis(mockCtrl)     // Not called.
+			mockGrading := mocks.NewMockGrading(mockCtrl) // Not called.
 
 			mockCassandra.EXPECT().Execute(gomock.Any(), gomock.Any()).Return(
 				testCase.cassandraReadData.outputParam,
@@ -294,24 +319,41 @@ func TestLoginUser(t *testing.T) {
 			).Times(testCase.authGenJWTData.times)
 
 			// Endpoint setup for test.
-			router.POST(testCase.path, LoginUser(zapLogger, mockAuth, mockCassandra))
-			req, _ := http.NewRequest("POST", testCase.path, bytes.NewBuffer(userJson))
+			router.POST(testCase.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockCassandra, mockGrading, zapLogger))
+
+			req, _ := http.NewRequest("POST", testCase.path, bytes.NewBufferString(testCase.user))
+			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
 
 			// Verify responses
-			require.Equal(t, testCase.expectedStatus, w.Code, "expected status codes do not match")
+			require.Equal(t, http.StatusOK, w.Code, "expected status codes do not match")
+
+			response := map[string]any{}
+			require.NoError(t, json.Unmarshal(w.Body.Bytes(), &response), "failed to unmarshal response body")
+
+			// Error is expected check to ensure one is set.
+			if testCase.expectErr {
+				verifyErrorReturned(t, response)
+			} else {
+				// Auth token is expected.
+				verifyJWTReturned(t, response, "loginUser", testCase.authGenJWTData.outputParam1.(*model_http.JWTAuthResponse))
+			}
 		})
 	}
 }
 
-func TestLoginRefresh(t *testing.T) {
+func TestMutationResolver_RefreshToken(t *testing.T) {
+	// Configure router and middleware that loads the Gin context for the resolvers.
 	router := getRouter()
+	router.Use(GinContextToContextMiddleware())
+
+	refreshTokenQuery := `{ "query": "mutation { refreshToken() { token expires threshold }}" }`
 
 	testCases := []struct {
 		name                 string
 		path                 string
-		expectedStatus       int
+		expectErr            bool
 		authValidateJWTData  *mockAuthData
 		authGenJWTData       *mockAuthData
 		authRefThresholdData *mockAuthData
@@ -319,9 +361,9 @@ func TestLoginRefresh(t *testing.T) {
 	}{
 		// ----- test cases start ----- //
 		{
-			name:           "empty token",
-			path:           "/refresh/empty-token",
-			expectedStatus: http.StatusForbidden,
+			name:      "empty token",
+			path:      "/refresh/empty-token",
+			expectErr: true,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "",
 				outputErr:    errors.New("invalid token"),
@@ -338,9 +380,9 @@ func TestLoginRefresh(t *testing.T) {
 				times: 0,
 			},
 		}, {
-			name:           "valid token",
-			path:           "/refresh/valid-token",
-			expectedStatus: http.StatusOK,
+			name:      "valid token",
+			path:      "/refresh/valid-token",
+			expectErr: false,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "username1",
 				outputParam2: time.Now().Add(-time.Duration(30) * time.Second).Unix(),
@@ -355,12 +397,17 @@ func TestLoginRefresh(t *testing.T) {
 				times:        1,
 			},
 			authGenJWTData: &mockAuthData{
+				outputParam1: &model_http.JWTAuthResponse{
+					Token:     "some valid token should be here",
+					Expires:   9999999,
+					Threshold: 5555,
+				},
 				times: 1,
 			},
 		}, {
-			name:           "valid token not expiring",
-			path:           "/refresh/valid-token-not-expiring",
-			expectedStatus: http.StatusNotExtended,
+			name:      "valid token not expiring",
+			path:      "/refresh/valid-token-not-expiring",
+			expectErr: true,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "username1",
 				outputParam2: time.Now().Add(-time.Duration(3) * time.Minute).Unix(),
@@ -378,9 +425,9 @@ func TestLoginRefresh(t *testing.T) {
 				times: 0,
 			},
 		}, {
-			name:           "invalid token",
-			path:           "/refresh/invalid-token",
-			expectedStatus: http.StatusForbidden,
+			name:      "invalid token",
+			path:      "/refresh/invalid-token",
+			expectErr: true,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "username1",
 				outputParam2: time.Now().Add(-time.Duration(30) * time.Second).Unix(),
@@ -399,9 +446,9 @@ func TestLoginRefresh(t *testing.T) {
 				times: 0,
 			},
 		}, {
-			name:           "db failure",
-			path:           "/refresh/db-failure",
-			expectedStatus: http.StatusInternalServerError,
+			name:      "db failure",
+			path:      "/refresh/db-failure",
+			expectErr: true,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "username1",
 				outputParam2: time.Now().Add(-time.Duration(30) * time.Second).Unix(),
@@ -419,9 +466,9 @@ func TestLoginRefresh(t *testing.T) {
 				times: 0,
 			},
 		}, {
-			name:           "deleted user",
-			path:           "/refresh/deleted-user",
-			expectedStatus: http.StatusForbidden,
+			name:      "deleted user",
+			path:      "/refresh/deleted-user",
+			expectErr: true,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "username1",
 				times:        1,
@@ -440,9 +487,9 @@ func TestLoginRefresh(t *testing.T) {
 				times: 0,
 			},
 		}, {
-			name:           "token generation failure",
-			path:           "/refresh/token-generation-failure",
-			expectedStatus: http.StatusInternalServerError,
+			name:      "token generation failure",
+			path:      "/refresh/token-generation-failure",
+			expectErr: true,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "username1",
 				outputParam2: time.Now().Add(-time.Duration(30) * time.Second).Unix(),
@@ -470,47 +517,75 @@ func TestLoginRefresh(t *testing.T) {
 			defer mockCtrl.Finish()
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockCassandra := mocks.NewMockCassandra(mockCtrl)
+			mockRedis := mocks.NewMockRedis(mockCtrl)     // Not called.
+			mockGrading := mocks.NewMockGrading(mockCtrl) // Not called.
 
-			mockCassandra.EXPECT().Execute(gomock.Any(), gomock.Any()).Return(
-				testCase.cassandraReadData.outputParam,
-				testCase.cassandraReadData.outputErr,
-			).Times(testCase.cassandraReadData.times)
+			gomock.InOrder(
+				// JWT check.
+				mockAuth.EXPECT().ValidateJWT(gomock.Any()).Return(
+					testCase.authValidateJWTData.outputParam1,
+					testCase.authValidateJWTData.outputParam2,
+					testCase.authValidateJWTData.outputErr,
+				).Times(testCase.authValidateJWTData.times),
 
-			mockAuth.EXPECT().ValidateJWT(gomock.Any()).Return(
-				testCase.authValidateJWTData.outputParam1,
-				testCase.authValidateJWTData.outputParam2,
-				testCase.authValidateJWTData.outputErr,
-			).Times(testCase.authValidateJWTData.times)
+				// Database call for user record.
+				mockCassandra.EXPECT().Execute(gomock.Any(), gomock.Any()).Return(
+					testCase.cassandraReadData.outputParam,
+					testCase.cassandraReadData.outputErr,
+				).Times(testCase.cassandraReadData.times),
 
-			mockAuth.EXPECT().GenerateJWT(gomock.Any()).Return(
-				testCase.authGenJWTData.outputParam1,
-				testCase.authGenJWTData.outputErr,
-			).Times(testCase.authGenJWTData.times)
+				// Refresh threshold request.
+				mockAuth.EXPECT().RefreshThreshold().Return(
+					testCase.authRefThresholdData.outputParam1,
+				).Times(testCase.authRefThresholdData.times),
 
-			mockAuth.EXPECT().RefreshThreshold().Return(
-				testCase.authRefThresholdData.outputParam1,
-			).Times(testCase.authRefThresholdData.times)
+				// Generate fresh JWT.
+				mockAuth.EXPECT().GenerateJWT(gomock.Any()).Return(
+					testCase.authGenJWTData.outputParam1,
+					testCase.authGenJWTData.outputErr,
+				).Times(testCase.authGenJWTData.times),
+			)
 
 			// Endpoint setup for test.
-			router.POST(testCase.path, LoginRefresh(zapLogger, mockAuth, mockCassandra, "Authorization"))
-			req, _ := http.NewRequest("POST", testCase.path, nil)
+			router.POST(testCase.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockCassandra, mockGrading, zapLogger))
+
+			req, _ := http.NewRequest("POST", testCase.path, bytes.NewBufferString(refreshTokenQuery))
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", "some valid auth token goes here")
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
 
 			// Verify responses
-			require.Equal(t, testCase.expectedStatus, w.Code, "expected status codes do not match")
+			require.Equal(t, http.StatusOK, w.Code, "expected status codes do not match")
+
+			response := map[string]any{}
+			require.NoError(t, json.Unmarshal(w.Body.Bytes(), &response), "failed to unmarshal response body")
+
+			// Error is expected check to ensure one is set.
+			if testCase.expectErr {
+				verifyErrorReturned(t, response)
+			} else {
+				// Auth token is expected.
+				verifyJWTReturned(t, response, "refreshToken", testCase.authGenJWTData.outputParam1.(*model_http.JWTAuthResponse))
+			}
 		})
 	}
 }
 
-func TestDeleteUser(t *testing.T) {
+func TestMutationResolver_DeleteUser(t *testing.T) {
+	// Configure router and middleware that loads the Gin context for the resolvers.
 	router := getRouter()
+	router.Use(GinContextToContextMiddleware())
+
+	deleteUserQuery := `{
+  "query": "mutation { deleteUser(input: { username: \"%s\" password: \"%s\" confirmation:\"I understand the consequences, delete my user account %s\" })}"
+}`
 
 	testCases := []struct {
 		name                string
 		path                string
-		expectedStatus      int
-		deleteRequest       *model_http.DeleteUserRequest
+		query               string
+		expectErr           bool
 		authValidateJWTData *mockAuthData
 		authCheckPwdData    *mockAuthData
 		cassandraReadData   *mockCassandraData
@@ -518,10 +593,10 @@ func TestDeleteUser(t *testing.T) {
 	}{
 		// ----- test cases start ----- //
 		{
-			name:           "empty request",
-			path:           "/delete/empty-request",
-			expectedStatus: http.StatusBadRequest,
-			deleteRequest:  &model_http.DeleteUserRequest{},
+			name:      "empty request",
+			path:      "/delete/empty-request",
+			query:     fmt.Sprintf(deleteUserQuery, "", "", ""),
+			expectErr: true,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "",
 				times:        0,
@@ -536,16 +611,10 @@ func TestDeleteUser(t *testing.T) {
 				times: 0,
 			},
 		}, {
-			name:           "valid token",
-			path:           "/delete/valid-request",
-			expectedStatus: http.StatusOK,
-			deleteRequest: &model_http.DeleteUserRequest{
-				UserLoginCredentials: model_cassandra.UserLoginCredentials{
-					Username: "username1",
-					Password: "password",
-				},
-				Confirmation: fmt.Sprintf(constants.GetDeleteUserAccountConfirmation(), "username1"),
-			},
+			name:      "valid token",
+			path:      "/delete/valid-request",
+			query:     fmt.Sprintf(deleteUserQuery, "username1", "password", "username1"),
+			expectErr: false,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "username1",
 				times:        1,
@@ -561,16 +630,30 @@ func TestDeleteUser(t *testing.T) {
 				times: 1,
 			},
 		}, {
-			name:           "token and request username mismatch",
-			path:           "/delete/token-and-request-username-mismatch",
-			expectedStatus: http.StatusForbidden,
-			deleteRequest: &model_http.DeleteUserRequest{
-				UserLoginCredentials: model_cassandra.UserLoginCredentials{
-					Username: "username1",
-					Password: "password",
-				},
-				Confirmation: fmt.Sprintf(constants.GetDeleteUserAccountConfirmation(), "username1"),
+			name:      "invalid token",
+			path:      "/delete/invalid-token-request",
+			query:     fmt.Sprintf(deleteUserQuery, "username1", "password", "username1"),
+			expectErr: true,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "username1",
+				outputErr:    errors.New("JWT failed authorization check"),
+				times:        1,
 			},
+			cassandraReadData: &mockCassandraData{
+				outputParam: testUserData["username1"],
+				times:       0,
+			},
+			authCheckPwdData: &mockAuthData{
+				times: 0,
+			},
+			cassandraDeleteData: &mockCassandraData{
+				times: 0,
+			},
+		}, {
+			name:      "token and request username mismatch",
+			path:      "/delete/token-and-request-username-mismatch",
+			query:     fmt.Sprintf(deleteUserQuery, "username1", "password", "username1"),
+			expectErr: true,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "username mismatch",
 				times:        1,
@@ -585,16 +668,10 @@ func TestDeleteUser(t *testing.T) {
 				times: 0,
 			},
 		}, {
-			name:           "db read failure",
-			path:           "/delete/db-read-failure",
-			expectedStatus: http.StatusInternalServerError,
-			deleteRequest: &model_http.DeleteUserRequest{
-				UserLoginCredentials: model_cassandra.UserLoginCredentials{
-					Username: "username1",
-					Password: "password",
-				},
-				Confirmation: fmt.Sprintf(constants.GetDeleteUserAccountConfirmation(), "username1"),
-			},
+			name:      "db read failure",
+			path:      "/delete/db-read-failure",
+			query:     fmt.Sprintf(deleteUserQuery, "username1", "password", "username1"),
+			expectErr: true,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "username1",
 				times:        1,
@@ -611,16 +688,10 @@ func TestDeleteUser(t *testing.T) {
 				times: 0,
 			},
 		}, {
-			name:           "already deleted",
-			path:           "/delete/already-deleted",
-			expectedStatus: http.StatusForbidden,
-			deleteRequest: &model_http.DeleteUserRequest{
-				UserLoginCredentials: model_cassandra.UserLoginCredentials{
-					Username: "username1",
-					Password: "password",
-				},
-				Confirmation: fmt.Sprintf(constants.GetDeleteUserAccountConfirmation(), "username1"),
-			},
+			name:      "already deleted",
+			path:      "/delete/already-deleted",
+			query:     fmt.Sprintf(deleteUserQuery, "username1", "password", "username1"),
+			expectErr: true,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "username1",
 				times:        1,
@@ -638,16 +709,10 @@ func TestDeleteUser(t *testing.T) {
 				times: 0,
 			},
 		}, {
-			name:           "db delete failure",
-			path:           "/delete/db-delete-failure",
-			expectedStatus: http.StatusInternalServerError,
-			deleteRequest: &model_http.DeleteUserRequest{
-				UserLoginCredentials: model_cassandra.UserLoginCredentials{
-					Username: "username1",
-					Password: "password",
-				},
-				Confirmation: fmt.Sprintf(constants.GetDeleteUserAccountConfirmation(), "username1"),
-			},
+			name:      "db delete failure",
+			path:      "/delete/db-delete-failure",
+			query:     fmt.Sprintf(deleteUserQuery, "username1", "password", "username1"),
+			expectErr: true,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "username1",
 				times:        1,
@@ -664,16 +729,10 @@ func TestDeleteUser(t *testing.T) {
 				times:     1,
 			},
 		}, {
-			name:           "bad deletion confirmation",
-			path:           "/delete/bad-deletion-confirmation",
-			expectedStatus: http.StatusBadRequest,
-			deleteRequest: &model_http.DeleteUserRequest{
-				UserLoginCredentials: model_cassandra.UserLoginCredentials{
-					Username: "username1",
-					Password: "password",
-				},
-				Confirmation: fmt.Sprintf(constants.GetDeleteUserAccountConfirmation(), "incorrect and incomplete confirmation"),
-			},
+			name:      "bad deletion confirmation",
+			path:      "/delete/bad-deletion-confirmation",
+			query:     fmt.Sprintf(deleteUserQuery, "username1", "password", "incorrect and incomplete confirmation"),
+			expectErr: true,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "username1",
 				times:        1,
@@ -688,16 +747,10 @@ func TestDeleteUser(t *testing.T) {
 				times: 0,
 			},
 		}, {
-			name:           "invalid password",
-			path:           "/delete/valid-password",
-			expectedStatus: http.StatusForbidden,
-			deleteRequest: &model_http.DeleteUserRequest{
-				UserLoginCredentials: model_cassandra.UserLoginCredentials{
-					Username: "username1",
-					Password: "password",
-				},
-				Confirmation: fmt.Sprintf(constants.GetDeleteUserAccountConfirmation(), "username1"),
-			},
+			name:      "invalid password",
+			path:      "/delete/valid-password",
+			query:     fmt.Sprintf(deleteUserQuery, "username1", "incorrect password", "username1"),
+			expectErr: true,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "username1",
 				times:        1,
@@ -723,18 +776,27 @@ func TestDeleteUser(t *testing.T) {
 			defer mockCtrl.Finish()
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockCassandra := mocks.NewMockCassandra(mockCtrl)
-
-			requestJson, err := json.Marshal(&testCase.deleteRequest)
-			require.NoErrorf(t, err, "failed to marshall JSON: %v", err)
+			mockRedis := mocks.NewMockRedis(mockCtrl)     // Not called.
+			mockGrading := mocks.NewMockGrading(mockCtrl) // Not called.
 
 			authToken := xid.New().String()
 
 			gomock.InOrder(
+				// Authorization check.
+				mockAuth.EXPECT().ValidateJWT(authToken).Return(
+					testCase.authValidateJWTData.outputParam1,
+					testCase.authValidateJWTData.outputParam2,
+					testCase.authValidateJWTData.outputErr,
+				).Times(testCase.authValidateJWTData.times),
 				// DB read call.
 				mockCassandra.EXPECT().Execute(gomock.Any(), gomock.Any()).Return(
 					testCase.cassandraReadData.outputParam,
 					testCase.cassandraReadData.outputErr,
 				).Times(testCase.cassandraReadData.times),
+				// Password check.
+				mockAuth.EXPECT().CheckPassword(gomock.Any(), gomock.Any()).Return(
+					testCase.authCheckPwdData.outputErr,
+				).Times(testCase.authCheckPwdData.times),
 				// DB delete call.
 				mockCassandra.EXPECT().Execute(gomock.Any(), gomock.Any()).Return(
 					testCase.cassandraDeleteData.outputParam,
@@ -742,25 +804,31 @@ func TestDeleteUser(t *testing.T) {
 				).Times(testCase.cassandraDeleteData.times),
 			)
 
-			mockAuth.EXPECT().ValidateJWT(authToken).Return(
-				testCase.authValidateJWTData.outputParam1,
-				testCase.authValidateJWTData.outputParam2,
-				testCase.authValidateJWTData.outputErr,
-			).Times(testCase.authValidateJWTData.times)
-
-			mockAuth.EXPECT().CheckPassword(gomock.Any(), gomock.Any()).Return(
-				testCase.authCheckPwdData.outputErr,
-			).Times(testCase.authCheckPwdData.times)
-
 			// Endpoint setup for test.
-			router.DELETE(testCase.path, DeleteUser(zapLogger, mockAuth, mockCassandra, "Authorization"))
-			req, _ := http.NewRequest("DELETE", testCase.path, bytes.NewBuffer(requestJson))
+			router.POST(testCase.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockCassandra, mockGrading, zapLogger))
+
+			req, _ := http.NewRequest("POST", testCase.path, bytes.NewBufferString(testCase.query))
+			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("Authorization", authToken)
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
 
 			// Verify responses
-			require.Equal(t, testCase.expectedStatus, w.Code, "expected status codes do not match")
+			require.Equal(t, http.StatusOK, w.Code, "expected status codes do not match")
+
+			response := map[string]any{}
+			require.NoError(t, json.Unmarshal(w.Body.Bytes(), &response), "failed to unmarshal response body")
+
+			// Error is expected check to ensure one is set.
+			if testCase.expectErr {
+				verifyErrorReturned(t, response)
+			} else {
+				// Auth token is expected.
+				data, ok := response["data"]
+				require.True(t, ok, "data key expected but not set")
+				confirmation := data.(map[string]any)["deleteUser"].(string)
+				require.Equal(t, "account successfully deleted", confirmation, "confirmation message does not match expected")
+			}
 		})
 	}
 }

@@ -16,7 +16,7 @@ func TestAuthMiddleware(t *testing.T) {
 	defer mockCtrl.Finish()
 	mockAuth := mocks.NewMockAuth(mockCtrl)
 
-	handler := AuthMiddleware(mockAuth)
+	handler := AuthMiddleware(mockAuth, "Authorization")
 	require.NotNil(t, handler)
 }
 
@@ -81,7 +81,7 @@ func TestAuthMiddleware_Handler(t *testing.T) {
 			).Times(testCase.authValidateJWTData.times)
 
 			// Endpoint setup for test.
-			router.POST(testCase.path, AuthMiddleware(mockAuth))
+			router.POST(testCase.path, AuthMiddleware(mockAuth, "Authorization"))
 			req, _ := http.NewRequest("POST", testCase.path, nil)
 			req.Header.Set("Authorization", testCase.token)
 			w := httptest.NewRecorder()

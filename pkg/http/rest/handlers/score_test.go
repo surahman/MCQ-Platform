@@ -121,7 +121,7 @@ func TestGetScore(t *testing.T) {
 
 			// Check message and quizResponse id.
 			if testCase.expectedStatus == http.StatusOK {
-				response := model_rest.Success{}
+				response := model_http.Success{}
 				require.NoError(t, json.NewDecoder(w.Body).Decode(&response), "failed to unmarshall response body")
 
 				require.True(t, len(response.Message) != 0, "did not receive quiz response message")
@@ -297,7 +297,7 @@ func TestGetStats(t *testing.T) {
 
 			// Check message and quizResponse id.
 			if testCase.expectedStatus == http.StatusOK {
-				response := model_rest.Success{}
+				response := model_http.Success{}
 				require.NoError(t, json.NewDecoder(w.Body).Decode(&response), "failed to unmarshall response body")
 
 				require.True(t, len(response.Message) != 0, "did not receive quiz response message")
@@ -790,7 +790,7 @@ func TestGetStatsPage(t *testing.T) {
 
 			// Check message and quizResponse id.
 			if testCase.expectedStatus == http.StatusOK {
-				response := model_rest.StatsResponse{}
+				response := model_http.StatsResponse{}
 				require.NoError(t, json.NewDecoder(w.Body).Decode(&response), "failed to unmarshall response body")
 
 				require.Equal(t, testCase.expectedLen, len(response.Records), "records count does not match expected")

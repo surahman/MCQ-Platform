@@ -2,11 +2,13 @@ package main
 
 import (
 	"log"
+	"sync"
 
 	"github.com/spf13/afero"
 	"github.com/surahman/mcq-platform/pkg/auth"
 	"github.com/surahman/mcq-platform/pkg/cassandra"
 	"github.com/surahman/mcq-platform/pkg/grading"
+	"github.com/surahman/mcq-platform/pkg/http/graph"
 	"github.com/surahman/mcq-platform/pkg/http/rest"
 	"github.com/surahman/mcq-platform/pkg/logger"
 	"github.com/surahman/mcq-platform/pkg/redis"
@@ -16,12 +18,14 @@ import (
 func main() {
 	var (
 		err           error
-		serverREST    *rest.HttpRest
+		serverREST    *rest.Server
+		serverGraphQL *graphql.Server
 		logging       *logger.Logger
 		authorization auth.Auth
 		database      cassandra.Cassandra
 		cache         redis.Redis
 		grader        = grading.NewGrading()
+		waitGroup     sync.WaitGroup
 	)
 
 	// File system setup.
@@ -65,8 +69,18 @@ func main() {
 	}(cache)
 
 	// Setup REST server and start it.
-	if serverREST, err = rest.NewRESTServer(&fs, authorization, database, cache, grader, logging); err != nil {
+	waitGroup.Add(1)
+	if serverREST, err = rest.NewServer(&fs, authorization, database, cache, grader, logging, &waitGroup); err != nil {
 		logging.Panic("failed to create the REST server", zap.Error(err))
 	}
-	serverREST.Run()
+	go serverREST.Run()
+
+	// Setup GraphQL server and start it.
+	waitGroup.Add(1)
+	if serverGraphQL, err = graphql.NewServer(&fs, authorization, database, cache, grader, logging, &waitGroup); err != nil {
+		logging.Panic("failed to create the GraphQL server", zap.Error(err))
+	}
+	go serverGraphQL.Run()
+
+	waitGroup.Wait()
 }

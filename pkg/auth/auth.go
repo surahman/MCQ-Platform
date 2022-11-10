@@ -29,7 +29,7 @@ type Auth interface {
 	CheckPassword(string, string) error
 
 	// GenerateJWT will create a valid JSON Web Token and return it in a JWT Authorization Response structure.
-	GenerateJWT(string) (*model_rest.JWTAuthResponse, error)
+	GenerateJWT(string) (*model_http.JWTAuthResponse, error)
 
 	// ValidateJWT will take the JSON Web Token and validate it. It will extract and return the username and expiration
 	// time (Unix timestamp) or an error if validation fails.
@@ -37,7 +37,7 @@ type Auth interface {
 
 	// RefreshJWT will take a valid JSON Web Token, and if valid and expiring soon, issue a fresh valid JWT with the time
 	// extended in JWT Authorization Response structure.
-	RefreshJWT(string) (*model_rest.JWTAuthResponse, error)
+	RefreshJWT(string) (*model_http.JWTAuthResponse, error)
 
 	// RefreshThreshold returns the time before the end of the JSON Web Tokens validity interval that a JWT can be
 	// refreshed in.
@@ -105,7 +105,7 @@ type jwtClaim struct {
 }
 
 // GenerateJWT creates a payload consisting of the JWT with the username as well as expiration time.
-func (a *authImpl) GenerateJWT(username string) (*model_rest.JWTAuthResponse, error) {
+func (a *authImpl) GenerateJWT(username string) (*model_http.JWTAuthResponse, error) {
 	claims := &jwtClaim{
 		Username: username,
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -119,7 +119,7 @@ func (a *authImpl) GenerateJWT(username string) (*model_rest.JWTAuthResponse, er
 		return nil, err
 	}
 
-	authResponse := &model_rest.JWTAuthResponse{
+	authResponse := &model_http.JWTAuthResponse{
 		Token:     tokenString,
 		Expires:   claims.ExpiresAt.Time.Unix(),
 		Threshold: a.conf.JWTConfig.RefreshThreshold,
@@ -158,7 +158,7 @@ func (a *authImpl) ValidateJWT(signedToken string) (string, int64, error) {
 }
 
 // RefreshJWT will extend a valid JWT's lease by generating a fresh valid JWT.
-func (a *authImpl) RefreshJWT(token string) (authResponse *model_rest.JWTAuthResponse, err error) {
+func (a *authImpl) RefreshJWT(token string) (authResponse *model_http.JWTAuthResponse, err error) {
 	var username string
 	if username, _, err = a.ValidateJWT(token); err != nil {
 		return

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -26,8 +27,8 @@ import (
 // Format and generate Swagger UI files using makefile.
 //go:generate make -C ../../../ swagger
 
-// HttpRest is the HTTP REST server.
-type HttpRest struct {
+// Server is the HTTP REST server.
+type Server struct {
 	auth    auth.Auth
 	cache   redis.Redis
 	db      cassandra.Cassandra
@@ -35,30 +36,35 @@ type HttpRest struct {
 	conf    *config
 	logger  *logger.Logger
 	router  *gin.Engine
+	wg      *sync.WaitGroup
 }
 
-// NewRESTServer will create a new REST server instance in a non-running state.
-func NewRESTServer(fs *afero.Fs, auth auth.Auth, cassandra cassandra.Cassandra, redis redis.Redis,
-	grading grading.Grading, logger *logger.Logger) (server *HttpRest, err error) {
+// NewServer will create a new REST server instance in a non-running state.
+func NewServer(fs *afero.Fs, auth auth.Auth, cassandra cassandra.Cassandra, redis redis.Redis,
+	grading grading.Grading, logger *logger.Logger, wg *sync.WaitGroup) (server *Server, err error) {
 	// Load configurations.
 	conf := newConfig()
 	if err = conf.Load(*fs); err != nil {
 		return
 	}
 
-	return &HttpRest{
+	return &Server{
 			conf:    conf,
 			auth:    auth,
 			cache:   redis,
 			db:      cassandra,
 			grading: grading,
 			logger:  logger,
+			wg:      wg,
 		},
 		err
 }
 
 // Run brings the HTTP service up.
-func (s *HttpRest) Run() {
+func (s *Server) Run() {
+	// Indicate to bootstrapping thread to wait for completion.
+	defer s.wg.Done()
+
 	// Configure routes.
 	s.initialize()
 
@@ -81,21 +87,21 @@ func (s *HttpRest) Run() {
 
 	// Wait for interrupt.
 	<-quit
-	s.logger.Info("Shutting down server...", zap.Duration("waiting", time.Duration(s.conf.Server.ShutdownDelay)*time.Second))
+	s.logger.Info("Shutting down REST server...", zap.Duration("waiting", time.Duration(s.conf.Server.ShutdownDelay)*time.Second))
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(s.conf.Server.ShutdownDelay)*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
-		s.logger.Panic("Failed to shutdown server", zap.Error(err))
+		s.logger.Panic("Failed to shutdown REST server", zap.Error(err))
 	}
 
 	// 5 second wait to exit.
 	<-ctx.Done()
 
-	s.logger.Info("Server exited")
+	s.logger.Info("REST server exited")
 }
 
 // initialize will configure the HTTP server routes.
-func (s *HttpRest) initialize() {
+func (s *Server) initialize() {
 	s.router = gin.Default()
 
 	// @title                      Multiple Choice Question Platform.
@@ -124,7 +130,7 @@ func (s *HttpRest) initialize() {
 	s.router.GET(s.conf.Server.SwaggerPath, ginSwagger.WrapHandler(swaggerfiles.Handler))
 
 	// Endpoint configurations
-	authMiddleware := http_handlers.AuthMiddleware(s.auth)
+	authMiddleware := http_handlers.AuthMiddleware(s.auth, s.conf.Authorization.HeaderKey)
 	api := s.router.Group(s.conf.Server.BasePath)
 
 	api.GET("/health", http_handlers.Healthcheck(s.logger, s.db, s.cache))
