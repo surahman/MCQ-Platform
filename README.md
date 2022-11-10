@@ -9,6 +9,29 @@ below.
 
 <br/>
 
+:warning: **_Transport Layer Security_** :warning:
+
+Encryption is vital to help safeguard against theft of login credentials and JSON Web Tokens.
+
+In a production environment, `TLS` would be the only HTTP protocol over which the API endpoints would be exposed. Setting
+up the `TLS`/`SSL` certificated for a Dockerized demonstration environment is unnecessary and complicates the tester's
+experience.
+
+Other methods like envelope encryption of payloads add an extra layer of security, but these add an excessive overhead for
+the use case and workloads here.
+
+<br/>
+
+:warning: **_Protocols_** :warning:
+
+This demonstration environment will launch both the `HTTP REST` as well as the `GraphQL` over `HTTP` endpoints. This is
+unsuitable for a production environment.
+
+Ideally, each of these protocol endpoints would be exposed in its own clusters with auto-scaling, load balancing, and
+across availability zones.
+
+<br/>
+
 **_TODO:_** _There are a number of items that I will complete as time permits:_
 
 - [x] REST API `score/stats` response pagination: The response to a stats request could contain far too many records to 
@@ -77,7 +100,7 @@ formats.
 
 ### GraphQL
 
-Coming soon.
+Work in progress.
 
 <br/>
 
