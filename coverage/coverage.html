@@ -75,37 +75,53 @@
 				
 				<option value="file9">github.com/surahman/mcq-platform/pkg/grading/grading.go (100.0%)</option>
 				
-				<option value="file10">github.com/surahman/mcq-platform/pkg/http/rest/config.go (87.5%)</option>
+				<option value="file10">github.com/surahman/mcq-platform/pkg/http/graph/config.go (87.5%)</option>
 				
-				<option value="file11">github.com/surahman/mcq-platform/pkg/http/rest/handlers/authorization.go (100.0%)</option>
+				<option value="file11">github.com/surahman/mcq-platform/pkg/http/graph/graph.go (12.0%)</option>
 				
-				<option value="file12">github.com/surahman/mcq-platform/pkg/http/rest/handlers/healthcheck.go (100.0%)</option>
+				<option value="file12">github.com/surahman/mcq-platform/pkg/http/graph/resolvers/authorization.go (100.0%)</option>
 				
-				<option value="file13">github.com/surahman/mcq-platform/pkg/http/rest/handlers/quiz.go (96.3%)</option>
+				<option value="file13">github.com/surahman/mcq-platform/pkg/http/graph/resolvers/handlers.go (90.0%)</option>
 				
-				<option value="file14">github.com/surahman/mcq-platform/pkg/http/rest/handlers/score.go (98.0%)</option>
+				<option value="file14">github.com/surahman/mcq-platform/pkg/http/graph/resolvers/quiz.resolvers.go (0.0%)</option>
 				
-				<option value="file15">github.com/surahman/mcq-platform/pkg/http/rest/handlers/users.go (92.7%)</option>
+				<option value="file15">github.com/surahman/mcq-platform/pkg/http/graph/resolvers/responses.resolvers.go (0.0%)</option>
 				
-				<option value="file16">github.com/surahman/mcq-platform/pkg/http/rest/rest.go (7.5%)</option>
+				<option value="file16">github.com/surahman/mcq-platform/pkg/http/graph/resolvers/user.resolvers.go (100.0%)</option>
 				
-				<option value="file17">github.com/surahman/mcq-platform/pkg/http/rest/testdata.go (100.0%)</option>
+				<option value="file17">github.com/surahman/mcq-platform/pkg/http/graph/testdata.go (100.0%)</option>
 				
-				<option value="file18">github.com/surahman/mcq-platform/pkg/logger/config.go (78.9%)</option>
+				<option value="file18">github.com/surahman/mcq-platform/pkg/http/rest/config.go (87.5%)</option>
 				
-				<option value="file19">github.com/surahman/mcq-platform/pkg/logger/logger.go (73.6%)</option>
+				<option value="file19">github.com/surahman/mcq-platform/pkg/http/rest/handlers/authorization.go (100.0%)</option>
 				
-				<option value="file20">github.com/surahman/mcq-platform/pkg/logger/testdata.go (100.0%)</option>
+				<option value="file20">github.com/surahman/mcq-platform/pkg/http/rest/handlers/healthcheck.go (100.0%)</option>
 				
-				<option value="file21">github.com/surahman/mcq-platform/pkg/redis/config.go (93.8%)</option>
+				<option value="file21">github.com/surahman/mcq-platform/pkg/http/rest/handlers/quiz.go (96.3%)</option>
 				
-				<option value="file22">github.com/surahman/mcq-platform/pkg/redis/error.go (100.0%)</option>
+				<option value="file22">github.com/surahman/mcq-platform/pkg/http/rest/handlers/score.go (98.0%)</option>
 				
-				<option value="file23">github.com/surahman/mcq-platform/pkg/redis/redis.go (88.7%)</option>
+				<option value="file23">github.com/surahman/mcq-platform/pkg/http/rest/handlers/users.go (92.7%)</option>
 				
-				<option value="file24">github.com/surahman/mcq-platform/pkg/redis/testdata.go (100.0%)</option>
+				<option value="file24">github.com/surahman/mcq-platform/pkg/http/rest/rest.go (7.3%)</option>
 				
-				<option value="file25">github.com/surahman/mcq-platform/pkg/validator/validator.go (72.0%)</option>
+				<option value="file25">github.com/surahman/mcq-platform/pkg/http/rest/testdata.go (100.0%)</option>
+				
+				<option value="file26">github.com/surahman/mcq-platform/pkg/logger/config.go (78.9%)</option>
+				
+				<option value="file27">github.com/surahman/mcq-platform/pkg/logger/logger.go (73.6%)</option>
+				
+				<option value="file28">github.com/surahman/mcq-platform/pkg/logger/testdata.go (100.0%)</option>
+				
+				<option value="file29">github.com/surahman/mcq-platform/pkg/redis/config.go (93.8%)</option>
+				
+				<option value="file30">github.com/surahman/mcq-platform/pkg/redis/error.go (100.0%)</option>
+				
+				<option value="file31">github.com/surahman/mcq-platform/pkg/redis/redis.go (88.7%)</option>
+				
+				<option value="file32">github.com/surahman/mcq-platform/pkg/redis/testdata.go (100.0%)</option>
+				
+				<option value="file33">github.com/surahman/mcq-platform/pkg/validator/validator.go (72.0%)</option>
 				
 				</select>
 			</div>
@@ -159,7 +175,7 @@ type Auth interface {
         CheckPassword(string, string) error
 
         // GenerateJWT will create a valid JSON Web Token and return it in a JWT Authorization Response structure.
-        GenerateJWT(string) (*model_rest.JWTAuthResponse, error)
+        GenerateJWT(string) (*model_http.JWTAuthResponse, error)
 
         // ValidateJWT will take the JSON Web Token and validate it. It will extract and return the username and expiration
         // time (Unix timestamp) or an error if validation fails.
@@ -167,7 +183,7 @@ type Auth interface {
 
         // RefreshJWT will take a valid JSON Web Token, and if valid and expiring soon, issue a fresh valid JWT with the time
         // extended in JWT Authorization Response structure.
-        RefreshJWT(string) (*model_rest.JWTAuthResponse, error)
+        RefreshJWT(string) (*model_http.JWTAuthResponse, error)
 
         // RefreshThreshold returns the time before the end of the JSON Web Tokens validity interval that a JWT can be
         // refreshed in.
@@ -235,7 +251,7 @@ type jwtClaim struct {
 }
 
 // GenerateJWT creates a payload consisting of the JWT with the username as well as expiration time.
-func (a *authImpl) GenerateJWT(username string) (*model_rest.JWTAuthResponse, error) <span class="cov8" title="7">{
+func (a *authImpl) GenerateJWT(username string) (*model_http.JWTAuthResponse, error) <span class="cov8" title="7">{
         claims := &amp;jwtClaim{
                 Username: username,
                 RegisteredClaims: jwt.RegisteredClaims{
@@ -249,7 +265,7 @@ func (a *authImpl) GenerateJWT(username string) (*model_rest.JWTAuthResponse, er
                 return nil, err
         }</span>
 
-        <span class="cov8" title="7">authResponse := &amp;model_rest.JWTAuthResponse{
+        <span class="cov8" title="7">authResponse := &amp;model_http.JWTAuthResponse{
                 Token:     tokenString,
                 Expires:   claims.ExpiresAt.Time.Unix(),
                 Threshold: a.conf.JWTConfig.RefreshThreshold,
@@ -288,7 +304,7 @@ func (a *authImpl) ValidateJWT(signedToken string) (string, int64, error) <span 
 }
 
 // RefreshJWT will extend a valid JWT's lease by generating a fresh valid JWT.
-func (a *authImpl) RefreshJWT(token string) (authResponse *model_rest.JWTAuthResponse, err error) <span class="cov3" title="2">{
+func (a *authImpl) RefreshJWT(token string) (authResponse *model_http.JWTAuthResponse, err error) <span class="cov3" title="2">{
         var username string
         if username, _, err = a.ValidateJWT(token); err != nil </span><span class="cov1" title="1">{
                 return
@@ -1495,6 +1511,7 @@ const (
         loggerConfigFileName    = "LoggerConfig.yaml"
         authConfigFileName      = "AuthConfig.yaml"
         restConfigFileName      = "HTTPRESTConfig.yaml"
+        graphqlConfigFileName   = "GraphQLConfig.yaml"
         redisConfigFileName     = "RedisConfig.yaml"
 
         // Environment variables
@@ -1503,6 +1520,7 @@ const (
         githubCIKey     = "GITHUB_ACTIONS_CI"
         authPrefix      = "AUTH"
         restPrefix      = "REST"
+        graphqlPrefix   = "GRAPHQL"
         redisPrefix     = "REDIS"
 
         // Misc.
@@ -1546,6 +1564,11 @@ func GetHTTPRESTFileName() string <span class="cov8" title="1">{
         return restConfigFileName
 }</span>
 
+// GetGraphQLFileName returns the HTTP GraphQL endpoint configuration file name.
+func GetGraphQLFileName() string <span class="cov8" title="1">{
+        return graphqlConfigFileName
+}</span>
+
 // GetRedisFileName returns the Redis cluster configuration file name.
 func GetRedisFileName() string <span class="cov8" title="1">{
         return redisConfigFileName
@@ -1569,6 +1592,11 @@ func GetAuthPrefix() string <span class="cov8" title="1">{
 // GetHTTPRESTPrefix returns the environment variable prefix for the HTTP REST endpoint.
 func GetHTTPRESTPrefix() string <span class="cov8" title="1">{
         return restPrefix
+}</span>
+
+// GetGraphQLPrefix returns the environment variable prefix for the HTTP GraphQL endpoint.
+func GetGraphQLPrefix() string <span class="cov8" title="1">{
+        return graphqlPrefix
 }</span>
 
 // GetRedisPrefix returns the environment variable prefix for the Redis cluster.
@@ -1744,7 +1772,597 @@ func binaryMarking(responses []int32, answerKey map[int32]any, _ int) float64 <s
 }
 </pre>
 		
-		<pre class="file" id="file10" style="display: none">package rest
+		<pre class="file" id="file10" style="display: none">package graphql
+
+import (
+        "github.com/spf13/afero"
+        "github.com/spf13/viper"
+        "github.com/surahman/mcq-platform/pkg/constants"
+        "github.com/surahman/mcq-platform/pkg/validator"
+)
+
+// config is the configuration container for the HTTP GraphQL endpoint.
+type config struct {
+        Server struct {
+                BasePath       string `json:"base_path,omitempty" yaml:"base_path,omitempty" mapstructure:"base_path" validate:"required"`
+                PlaygroundPath string `json:"playground_path,omitempty" yaml:"playground_path,omitempty" mapstructure:"playground_path" validate:"required"`
+                QueryPath      string `json:"query_path,omitempty" yaml:"query_path,omitempty" mapstructure:"query_path" validate:"required"`
+                PortNumber     int    `json:"port_number,omitempty" yaml:"port_number,omitempty" mapstructure:"port_number" validate:"required,min=1000"`
+                ShutdownDelay  int    `json:"shutdown_delay,omitempty" yaml:"shutdown_delay,omitempty" mapstructure:"shutdown_delay" validate:"required,min=0"`
+        } `json:"server,omitempty" yaml:"server,omitempty" mapstructure:"server" validate:"required"`
+        Authorization struct {
+                HeaderKey string `json:"header_key,omitempty" yaml:"header_key,omitempty" mapstructure:"header_key" validate:"required"`
+        } `json:"authorization,omitempty" yaml:"authorization,omitempty" mapstructure:"authorization" validate:"required"`
+}
+
+// newConfig creates a blank configuration struct for Cassandra.
+func newConfig() *config <span class="cov1" title="1">{
+        return &amp;config{}
+}</span>
+
+// Load will attempt to load configurations from a file on a file system and then overwrite values using environment variables.
+func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="9">{
+        viper.SetFs(fs)
+        viper.SetConfigName(constants.GetGraphQLFileName())
+        viper.SetConfigType("yaml")
+        viper.AddConfigPath(constants.GetEtcDir())
+        viper.AddConfigPath(constants.GetHomeDir())
+        viper.AddConfigPath(constants.GetBaseDir())
+
+        viper.SetEnvPrefix(constants.GetGraphQLPrefix())
+        viper.AutomaticEnv()
+
+        if err = viper.ReadInConfig(); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov10" title="9">if err = viper.Unmarshal(cfg); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov10" title="9">if err = validator.ValidateStruct(cfg); err != nil </span><span class="cov8" title="6">{
+                return
+        }</span>
+
+        <span class="cov5" title="3">return</span>
+}
+</pre>
+		
+		<pre class="file" id="file11" style="display: none">package graphql
+
+import (
+        "context"
+        "fmt"
+        "net/http"
+        "os"
+        "os/signal"
+        "sync"
+        "syscall"
+        "time"
+
+        "github.com/gin-gonic/gin"
+        "github.com/spf13/afero"
+        "github.com/surahman/mcq-platform/pkg/auth"
+        "github.com/surahman/mcq-platform/pkg/cassandra"
+        "github.com/surahman/mcq-platform/pkg/grading"
+        "github.com/surahman/mcq-platform/pkg/http/graph/resolvers"
+        "github.com/surahman/mcq-platform/pkg/logger"
+        "github.com/surahman/mcq-platform/pkg/redis"
+        "go.uber.org/zap"
+)
+
+// Generate the GraphQL Go code for resolvers.
+//go:generate go run github.com/99designs/gqlgen generate
+
+// Server is the HTTP GraphQL server.
+type Server struct {
+        auth    auth.Auth
+        cache   redis.Redis
+        db      cassandra.Cassandra
+        grading grading.Grading
+        conf    *config
+        logger  *logger.Logger
+        router  *gin.Engine
+        wg      *sync.WaitGroup
+}
+
+// NewServer will create a new REST server instance in a non-running state.
+func NewServer(fs *afero.Fs, auth auth.Auth, cassandra cassandra.Cassandra, redis redis.Redis,
+        grading grading.Grading, logger *logger.Logger, wg *sync.WaitGroup) (server *Server, err error) <span class="cov8" title="1">{
+        // Load configurations.
+        conf := newConfig()
+        if err = conf.Load(*fs); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov8" title="1">return &amp;Server{
+                        conf:    conf,
+                        auth:    auth,
+                        cache:   redis,
+                        db:      cassandra,
+                        grading: grading,
+                        logger:  logger,
+                        wg:      wg,
+                },
+                err</span>
+}
+
+// Run brings the HTTP service up.
+func (s *Server) Run() <span class="cov0" title="0">{
+        // Indicate to bootstrapping thread to wait for completion.
+        defer s.wg.Done()
+
+        // Configure routes.
+        s.initialize()
+
+        // Create server.
+        srv := &amp;http.Server{
+                Addr:    fmt.Sprintf(":%d", s.conf.Server.PortNumber),
+                Handler: s.router,
+        }
+
+        // Start HTTP listener.
+        go func() </span><span class="cov0" title="0">{
+                if err := srv.ListenAndServe(); err != nil &amp;&amp; err != http.ErrServerClosed </span><span class="cov0" title="0">{
+                        s.logger.Panic(fmt.Sprintf("listening port: %d", s.conf.Server.PortNumber), zap.Error(err))
+                }</span>
+        }()
+
+        // Wait for interrupt signal to gracefully shut down the server.
+        <span class="cov0" title="0">quit := make(chan os.Signal)
+        signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+        // Wait for interrupt.
+        &lt;-quit
+        s.logger.Info("Shutting down GraphQL server...", zap.Duration("waiting", time.Duration(s.conf.Server.ShutdownDelay)*time.Second))
+        ctx, cancel := context.WithTimeout(context.Background(), time.Duration(s.conf.Server.ShutdownDelay)*time.Second)
+        defer cancel()
+        if err := srv.Shutdown(ctx); err != nil </span><span class="cov0" title="0">{
+                s.logger.Panic("Failed to shutdown GraphQL server", zap.Error(err))
+        }</span>
+
+        // 5 second wait to exit.
+        <span class="cov0" title="0">&lt;-ctx.Done()
+
+        s.logger.Info("GraphQL server exited")</span>
+}
+
+// initialize will configure the HTTP server routes.
+func (s *Server) initialize() <span class="cov0" title="0">{
+        s.router = gin.Default()
+
+        // Endpoint configurations
+        api := s.router.Group(s.conf.Server.BasePath)
+        api.Use(graphql_resolvers.GinContextToContextMiddleware())
+
+        api.POST(s.conf.Server.QueryPath, graphql_resolvers.QueryHandler(s.conf.Authorization.HeaderKey, s.auth, s.cache, s.db, s.grading, s.logger))
+        api.GET(s.conf.Server.PlaygroundPath, graphql_resolvers.PlaygroundHandler(s.conf.Server.BasePath, s.conf.Server.QueryPath))
+}</span>
+</pre>
+		
+		<pre class="file" id="file12" style="display: none">package graphql_resolvers
+
+import (
+        "context"
+        "errors"
+
+        "github.com/gin-gonic/gin"
+        "github.com/surahman/mcq-platform/pkg/auth"
+        "github.com/surahman/mcq-platform/pkg/logger"
+)
+
+// GinContextFromContext will extract the Gin context from the context passed in.
+func GinContextFromContext(ctx context.Context, logger *logger.Logger) (*gin.Context, error) <span class="cov10" title="23">{
+        ctxValue := ctx.Value("GinContextKey")
+        if ctxValue == nil </span><span class="cov2" title="2">{
+                logger.Error("could not retrieve gin.Context")
+                return nil, errors.New("malformed request: authorization information not found")
+        }</span>
+
+        <span class="cov9" title="21">ginContext, ok := ctxValue.(*gin.Context)
+        if !ok </span><span class="cov2" title="2">{
+                logger.Error("gin.Context has wrong type")
+                return nil, errors.New("malformed request: authorization information malformed")
+        }</span>
+        <span class="cov9" title="19">return ginContext, nil</span>
+}
+
+// AuthorizationCheck will validate the JWT payload for valid authorization information.
+func AuthorizationCheck(auth auth.Auth, logger *logger.Logger, authHeaderKey string, ctx context.Context) (string, int64, error) <span class="cov9" title="20">{
+        ginContext, err := GinContextFromContext(ctx, logger)
+        if err != nil </span><span class="cov2" title="2">{
+                return "", -1, err
+        }</span>
+
+        <span class="cov9" title="18">tokenString := ginContext.GetHeader(authHeaderKey)
+        if tokenString == "" </span><span class="cov1" title="1">{
+                return "", -1, errors.New("request does not contain an access token")
+        }</span>
+
+        <span class="cov9" title="17">var username string
+        var expiresAt int64
+        if username, expiresAt, err = auth.ValidateJWT(tokenString); err != nil </span><span class="cov4" title="4">{
+                return username, expiresAt, err
+        }</span>
+        <span class="cov8" title="13">return username, expiresAt, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file13" style="display: none">package graphql_resolvers
+
+import (
+        "context"
+        "fmt"
+
+        "github.com/99designs/gqlgen/graphql/handler"
+        "github.com/99designs/gqlgen/graphql/playground"
+        "github.com/gin-gonic/gin"
+        "github.com/surahman/mcq-platform/pkg/auth"
+        "github.com/surahman/mcq-platform/pkg/cassandra"
+        "github.com/surahman/mcq-platform/pkg/grading"
+        "github.com/surahman/mcq-platform/pkg/http/graph/generated"
+        "github.com/surahman/mcq-platform/pkg/logger"
+        "github.com/surahman/mcq-platform/pkg/redis"
+)
+
+// QueryHandler is the endpoint through which GraphQL can be accessed.
+func QueryHandler(authHeaderKey string, auth auth.Auth, cache redis.Redis, db cassandra.Cassandra,
+        grading grading.Grading, logger *logger.Logger) gin.HandlerFunc <span class="cov10" title="28">{
+        h := handler.NewDefaultServer(graphql_generated.NewExecutableSchema(
+                graphql_generated.Config{
+                        Resolvers: &amp;Resolver{
+                                AuthHeaderKey: authHeaderKey,
+                                Auth:          auth,
+                                Cache:         cache,
+                                DB:            db,
+                                Grading:       grading,
+                                Logger:        logger,
+                        },
+                },
+        ))
+
+        return func(c *gin.Context) </span><span class="cov9" title="27">{
+                h.ServeHTTP(c.Writer, c.Request)
+        }</span>
+}
+
+// PlaygroundHandler is the endpoint through which the GraphQL playground can be accessed.
+func PlaygroundHandler(baseURL, queryURL string) gin.HandlerFunc <span class="cov1" title="1">{
+        h := playground.Handler("GraphQL", fmt.Sprintf("/%s%s", baseURL, queryURL))
+
+        return func(c *gin.Context) </span><span class="cov0" title="0">{
+                h.ServeHTTP(c.Writer, c.Request)
+        }</span>
+}
+
+// GinContextToContextMiddleware is middleware that will place the Gin context into a context for the GraphQL resolvers.
+func GinContextToContextMiddleware() gin.HandlerFunc <span class="cov3" title="3">{
+        return func(c *gin.Context) </span><span class="cov8" title="17">{
+                ctx := context.WithValue(c.Request.Context(), "GinContextKey", c)
+                c.Request = c.Request.WithContext(ctx)
+                c.Next()
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file14" style="display: none">package graphql_resolvers
+
+// This file will be automatically regenerated based on the schema, any resolver implementations
+// will be copied through when generating and any unknown code will be moved to the end.
+
+import (
+        "context"
+        "fmt"
+
+        graphql_generated "github.com/surahman/mcq-platform/pkg/http/graph/generated"
+        model_cassandra "github.com/surahman/mcq-platform/pkg/model/cassandra"
+        model_http "github.com/surahman/mcq-platform/pkg/model/http"
+)
+
+// CreateQuiz is the resolver for the createQuiz field.
+func (r *mutationResolver) CreateQuiz(ctx context.Context, input model_http.QuizCreate) (string, error) <span class="cov0" title="0">{
+        panic(fmt.Errorf("not implemented: CreateQuiz - createQuiz"))</span>
+}
+
+// UpdateQuiz is the resolver for the updateQuiz field.
+func (r *mutationResolver) UpdateQuiz(ctx context.Context, input model_http.QuizCreate) (string, error) <span class="cov0" title="0">{
+        panic(fmt.Errorf("not implemented: UpdateQuiz - updateQuiz"))</span>
+}
+
+// PublishQuiz is the resolver for the publishQuiz field.
+func (r *mutationResolver) PublishQuiz(ctx context.Context, quizID string) (string, error) <span class="cov0" title="0">{
+        panic(fmt.Errorf("not implemented: PublishQuiz - publishQuiz"))</span>
+}
+
+// DeleteQuiz is the resolver for the deleteQuiz field.
+func (r *mutationResolver) DeleteQuiz(ctx context.Context, quizID string) (string, error) <span class="cov0" title="0">{
+        panic(fmt.Errorf("not implemented: DeleteQuiz - deleteQuiz"))</span>
+}
+
+// ViewQuiz is the resolver for the viewQuiz field.
+func (r *queryResolver) ViewQuiz(ctx context.Context, quizID string) (*model_cassandra.QuizCore, error) <span class="cov0" title="0">{
+        panic(fmt.Errorf("not implemented: ViewQuiz - viewQuiz"))</span>
+}
+
+// Query returns graphql_generated.QueryResolver implementation.
+func (r *Resolver) Query() graphql_generated.QueryResolver <span class="cov0" title="0">{ return &amp;queryResolver{r} }</span>
+
+type queryResolver struct{ *Resolver }
+</pre>
+		
+		<pre class="file" id="file15" style="display: none">package graphql_resolvers
+
+// This file will be automatically regenerated based on the schema, any resolver implementations
+// will be copied through when generating and any unknown code will be moved to the end.
+
+import (
+        "context"
+        "fmt"
+
+        graphql_generated "github.com/surahman/mcq-platform/pkg/http/graph/generated"
+        model_cassandra "github.com/surahman/mcq-platform/pkg/model/cassandra"
+)
+
+// TakeQuiz is the resolver for the takeQuiz field.
+func (r *mutationResolver) TakeQuiz(ctx context.Context, quizID string, input model_cassandra.QuizResponse) (float64, error) <span class="cov0" title="0">{
+        panic(fmt.Errorf("not implemented: TakeQuiz - takeQuiz"))</span>
+}
+
+// QuizResponse is the resolver for the QuizResponse field.
+func (r *responseResolver) QuizResponse(ctx context.Context, obj *model_cassandra.Response) ([][]int32, error) <span class="cov0" title="0">{
+        panic(fmt.Errorf("not implemented: QuizResponse - QuizResponse"))</span>
+}
+
+// QuizID is the resolver for the QuizID field.
+func (r *responseResolver) QuizID(ctx context.Context, obj *model_cassandra.Response) (string, error) <span class="cov0" title="0">{
+        panic(fmt.Errorf("not implemented: QuizID - QuizID"))</span>
+}
+
+// Response returns graphql_generated.ResponseResolver implementation.
+func (r *Resolver) Response() graphql_generated.ResponseResolver <span class="cov0" title="0">{ return &amp;responseResolver{r} }</span>
+
+type responseResolver struct{ *Resolver }
+</pre>
+		
+		<pre class="file" id="file16" style="display: none">package graphql_resolvers
+
+// This file will be automatically regenerated based on the schema, any resolver implementations
+// will be copied through when generating and any unknown code will be moved to the end.
+
+import (
+        "context"
+        "errors"
+        "fmt"
+        "math"
+        "time"
+
+        "github.com/surahman/mcq-platform/pkg/cassandra"
+        "github.com/surahman/mcq-platform/pkg/constants"
+        graphql_generated "github.com/surahman/mcq-platform/pkg/http/graph/generated"
+        model_cassandra "github.com/surahman/mcq-platform/pkg/model/cassandra"
+        model_http "github.com/surahman/mcq-platform/pkg/model/http"
+        "github.com/surahman/mcq-platform/pkg/validator"
+        "go.uber.org/zap"
+)
+
+// RegisterUser is the resolver for the registerUser field.
+func (r *mutationResolver) RegisterUser(ctx context.Context, input *model_cassandra.UserAccount) (*model_http.JWTAuthResponse, error) <span class="cov5" title="5">{
+        var err error
+        var authToken *model_http.JWTAuthResponse
+
+        if err = validator.ValidateStruct(input); err != nil </span><span class="cov1" title="1">{
+                return authToken, err
+        }</span>
+
+        <span class="cov4" title="4">if input.Password, err = r.Auth.HashPassword(input.Password); err != nil </span><span class="cov1" title="1">{
+                r.Logger.Error("failure hashing password", zap.Error(err))
+                return authToken, err
+        }</span>
+
+        <span class="cov4" title="3">if _, err = r.DB.Execute(cassandra.CreateUserQuery, &amp;model_cassandra.User{UserAccount: input}); err != nil </span><span class="cov1" title="1">{
+                return authToken, err
+        }</span>
+
+        <span class="cov2" title="2">if authToken, err = r.Auth.GenerateJWT(input.Username); err != nil </span><span class="cov1" title="1">{
+                r.Logger.Error("failure generating JWT during account creation", zap.Error(err))
+                return authToken, err
+        }</span>
+
+        <span class="cov1" title="1">return authToken, err</span>
+}
+
+// DeleteUser is the resolver for the deleteUser field.
+func (r *mutationResolver) DeleteUser(ctx context.Context, input model_http.DeleteUserRequest) (string, error) <span class="cov7" title="9">{
+        var err error
+        var username string
+        var dbResponse any
+
+        if err = validator.ValidateStruct(&amp;input); err != nil </span><span class="cov1" title="1">{
+                return "", errors.New(err.Error())
+        }</span>
+
+        <span class="cov6" title="8">if username, _, err = AuthorizationCheck(r.Auth, r.Logger, r.AuthHeaderKey, ctx); err != nil </span><span class="cov1" title="1">{
+                return "", err
+        }</span>
+
+        <span class="cov6" title="7">if username != input.Username </span><span class="cov1" title="1">{
+                return "", errors.New("invalid deletion request")
+        }</span>
+
+        // Check confirmation message.
+        <span class="cov5" title="6">if fmt.Sprintf(constants.GetDeleteUserAccountConfirmation(), username) != input.Confirmation </span><span class="cov1" title="1">{
+                return "", errors.New("incorrect or incomplete deletion request confirmation")
+        }</span>
+
+        // Get user record.
+        <span class="cov5" title="5">if dbResponse, err = r.DB.Execute(cassandra.ReadUserQuery, username); err != nil </span><span class="cov1" title="1">{
+                r.Logger.Warn("failed to read user record during an account deletion request", zap.String("username", username), zap.Error(err))
+                return "", errors.New("please retry your request later")
+        }</span>
+        <span class="cov4" title="4">truth := dbResponse.(*model_cassandra.User)
+
+        // Check to make sure the account is not already deleted.
+        if truth.IsDeleted </span><span class="cov1" title="1">{
+                r.Logger.Warn("attempt to delete an already deleted user account", zap.String("username", username))
+                return "", errors.New("user account is already deleted")
+        }</span>
+
+        <span class="cov4" title="3">if err = r.Auth.CheckPassword(truth.Password, input.Password); err != nil </span><span class="cov1" title="1">{
+                return "", errors.New("invalid username or password")
+        }</span>
+
+        // Mark account as deleted.
+        <span class="cov2" title="2">if _, err = r.DB.Execute(cassandra.DeleteUserQuery, username); err != nil </span><span class="cov1" title="1">{
+                r.Logger.Warn("failed to mark a user record as deleted", zap.String("username", username), zap.Error(err))
+                return "", errors.New("please retry your request later")
+        }</span>
+
+        <span class="cov1" title="1">return "account successfully deleted", nil</span>
+}
+
+// LoginUser is the resolver for the loginUser field.
+func (r *mutationResolver) LoginUser(ctx context.Context, input model_cassandra.UserLoginCredentials) (*model_http.JWTAuthResponse, error) <span class="cov5" title="6">{
+        var err error
+        var authToken *model_http.JWTAuthResponse
+        var dbResponse any
+
+        if err = validator.ValidateStruct(&amp;input); err != nil </span><span class="cov1" title="1">{
+                return nil, err
+        }</span>
+
+        <span class="cov5" title="5">if dbResponse, err = r.DB.Execute(cassandra.ReadUserQuery, input.Username); err != nil </span><span class="cov1" title="1">{
+                return nil, err
+        }</span>
+
+        <span class="cov4" title="4">truth := dbResponse.(*model_cassandra.User)
+        if err = r.Auth.CheckPassword(truth.Password, input.Password); err != nil || truth.IsDeleted </span><span class="cov2" title="2">{
+                return nil, err
+        }</span>
+
+        <span class="cov2" title="2">if authToken, err = r.Auth.GenerateJWT(input.Username); err != nil </span><span class="cov1" title="1">{
+                r.Logger.Error("failure generating JWT during login", zap.Error(err))
+                return nil, err
+        }</span>
+
+        <span class="cov1" title="1">return authToken, err</span>
+}
+
+// RefreshToken is the resolver for the refreshToken field.
+func (r *mutationResolver) RefreshToken(ctx context.Context) (*model_http.JWTAuthResponse, error) <span class="cov6" title="7">{
+        var err error
+        var freshToken *model_http.JWTAuthResponse
+        var username string
+        var dbResponse any
+        var expiresAt int64
+
+        if username, expiresAt, err = AuthorizationCheck(r.Auth, r.Logger, r.AuthHeaderKey, ctx); err != nil </span><span class="cov2" title="2">{
+                return nil, err
+        }</span>
+
+        <span class="cov5" title="5">if dbResponse, err = r.DB.Execute(cassandra.ReadUserQuery, username); err != nil </span><span class="cov1" title="1">{
+                r.Logger.Warn("failed to read user record for a valid JWT", zap.String("username", username), zap.Error(err))
+                return nil, errors.New("please retry your request later")
+        }</span>
+
+        <span class="cov4" title="4">if dbResponse.(*model_cassandra.User).IsDeleted </span><span class="cov1" title="1">{
+                r.Logger.Warn("attempt to refresh a JWT for a deleted user", zap.String("username", username))
+                return nil, errors.New("invalid token")
+        }</span>
+
+        // Do not refresh tokens that have more than a minute left to expire.
+        <span class="cov4" title="3">if math.Abs(float64(time.Now().Unix()-expiresAt)) &gt; float64(r.Auth.RefreshThreshold()) </span><span class="cov1" title="1">{
+                return nil, errors.New("JWT is still valid for more than 60 seconds")
+        }</span>
+
+        <span class="cov2" title="2">if freshToken, err = r.Auth.GenerateJWT(username); err != nil </span><span class="cov1" title="1">{
+                r.Logger.Error("failure generating JWT during token refresh", zap.Error(err))
+                return nil, errors.New(err.Error())
+        }</span>
+        <span class="cov1" title="1">return freshToken, nil</span>
+}
+
+// Mutation returns graphql_generated.MutationResolver implementation.
+func (r *Resolver) Mutation() graphql_generated.MutationResolver <span class="cov10" title="27">{ return &amp;mutationResolver{r} }</span>
+
+type mutationResolver struct{ *Resolver }
+</pre>
+		
+		<pre class="file" id="file17" style="display: none">package graphql
+
+// configTestData will return a map of test data containing valid and invalid Authorization configs.
+func configTestData() map[string]string <span class="cov8" title="1">{
+        return map[string]string{
+                "empty": ``,
+
+                "valid": `
+server:
+  port_number: 44255
+  shutdown_delay: 5
+  base_path: api/graphql/v1
+  playground_path: /playground
+  query_path: /query
+authorization:
+  header_key: Authorization`,
+
+                "out of range port": `
+server:
+  port_number: 99
+  shutdown_delay: 5
+  base_path: api/graphql/v1
+  playground_path: /playground
+  query_path: /query
+authorization:
+  header_key: Authorization`,
+
+                "out of range shutdown delay": `
+server:
+  port_number: 44255
+  shutdown_delay: -1
+  base_path: api/graphql/v1
+  playground_path: /playground
+  query_path: /query
+authorization:
+  header_key: Authorization`,
+
+                "no base path": `
+server:
+  port_number: 44243
+  shutdown_delay: 5
+  playground_path: /playground
+  query_path: /query
+authorization:
+  header_key: Authorization`,
+
+                "no playground path": `
+server:
+  port_number: 44255
+  shutdown_delay: 5
+  base_path: api/graphql/v1
+  query_path: /query
+authorization:
+  header_key: Authorization`,
+
+                "no query path": `
+server:
+  port_number: 44255
+  shutdown_delay: 5
+  base_path: api/graphql/v1
+  playground_path: /playground
+authorization:
+  header_key: Authorization`,
+
+                "no auth header": `
+server:
+  port_number: 44255
+  shutdown_delay: 5
+  base_path: api/graphql/v1
+  playground_path: /playground
+  query_path: /query`,
+        }
+}</span>
+</pre>
+		
+		<pre class="file" id="file18" style="display: none">package rest
 
 import (
         "github.com/spf13/afero"
@@ -1799,7 +2417,7 @@ func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="8">{
 }
 </pre>
 		
-		<pre class="file" id="file11" style="display: none">package http_handlers
+		<pre class="file" id="file19" style="display: none">package http_handlers
 
 import (
         "net/http"
@@ -1809,9 +2427,9 @@ import (
 )
 
 // AuthMiddleware is the middleware that checks whether a JWT is valid and can access an endpoint.
-func AuthMiddleware(auth auth.Auth) gin.HandlerFunc <span class="cov10" title="4">{
+func AuthMiddleware(auth auth.Auth, authHeaderKey string) gin.HandlerFunc <span class="cov10" title="4">{
         handler := func(context *gin.Context) </span><span class="cov8" title="3">{
-                tokenString := context.GetHeader("Authorization")
+                tokenString := context.GetHeader(authHeaderKey)
                 if tokenString == "" </span><span class="cov1" title="1">{
                         context.JSON(http.StatusUnauthorized, "request does not contain an access token")
                         context.Abort()
@@ -1828,7 +2446,7 @@ func AuthMiddleware(auth auth.Auth) gin.HandlerFunc <span class="cov10" title="4
 }
 </pre>
 		
-		<pre class="file" id="file12" style="display: none">package http_handlers
+		<pre class="file" id="file20" style="display: none">package http_handlers
 
 import (
         "net/http"
@@ -1858,7 +2476,7 @@ func Healthcheck(logger *logger.Logger, db cassandra.Cassandra, cache redis.Redi
                 if _, err = db.Execute(cassandra.HealthcheckQuery, nil); err != nil </span><span class="cov1" title="1">{
                         msg := "Cassandra healthcheck failed"
                         logger.Warn(msg, zap.Error(err))
-                        context.AbortWithStatusJSON(http.StatusServiceUnavailable, &amp;model_rest.Error{Message: msg})
+                        context.AbortWithStatusJSON(http.StatusServiceUnavailable, &amp;model_http.Error{Message: msg})
                         return
                 }</span>
 
@@ -1866,16 +2484,16 @@ func Healthcheck(logger *logger.Logger, db cassandra.Cassandra, cache redis.Redi
                 <span class="cov6" title="2">if err = cache.Healthcheck(); err != nil </span><span class="cov1" title="1">{
                         msg := "Redis healthcheck failed"
                         logger.Warn(msg, zap.Error(err))
-                        context.AbortWithStatusJSON(http.StatusServiceUnavailable, &amp;model_rest.Error{Message: msg})
+                        context.AbortWithStatusJSON(http.StatusServiceUnavailable, &amp;model_http.Error{Message: msg})
                         return
                 }</span>
 
-                <span class="cov1" title="1">context.JSON(http.StatusOK, &amp;model_rest.Success{Message: "healthy"})</span>
+                <span class="cov1" title="1">context.JSON(http.StatusOK, &amp;model_http.Success{Message: "healthy"})</span>
         }
 }
 </pre>
 		
-		<pre class="file" id="file13" style="display: none">package http_handlers
+		<pre class="file" id="file21" style="display: none">package http_handlers
 
 import (
         "net/http"
@@ -1943,14 +2561,14 @@ func ViewQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, cac
                 var quizId gocql.UUID
 
                 if quizId, err = gocql.ParseUUID(context.Param("quiz_id")); err != nil </span><span class="cov1" title="1">{
-                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_http.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
                         return
                 }</span>
 
                 // Get username from JWT.
                 <span class="cov7" title="10">if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil </span><span class="cov1" title="1">{
                         logger.Error("failed to validate JWT in create quiz handler", zap.Error(err))
-                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "unable to verify username"})
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_http.Error{Message: "unable to verify username"})
                         return
                 }</span>
 
@@ -1959,7 +2577,7 @@ func ViewQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, cac
                 // [2] Cache miss: read from the database and store it in the cache.
                 <span class="cov7" title="9">if quiz, err = getQuiz(quizId, db, cache); err != nil </span><span class="cov1" title="1">{
                         cassandraError := err.(*cassandra.Error)
-                        context.AbortWithStatusJSON(cassandraError.Status, &amp;model_rest.Error{Message: "error retrieving quiz", Payload: cassandraError.Message})
+                        context.AbortWithStatusJSON(cassandraError.Status, &amp;model_http.Error{Message: "error retrieving quiz", Payload: cassandraError.Message})
                         return
                 }</span>
 
@@ -1968,7 +2586,7 @@ func ViewQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, cac
                 // [2] Requester is not the author
                 // FAIL
                 <span class="cov6" title="8">if (!quiz.IsPublished || quiz.IsDeleted) &amp;&amp; username != quiz.Author </span><span class="cov2" title="2">{
-                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_rest.Error{Message: "quiz is not available"})
+                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_http.Error{Message: "quiz is not available"})
                         return
                 }</span>
 
@@ -1979,7 +2597,7 @@ func ViewQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, cac
                         }</span>
                 }
 
-                <span class="cov6" title="6">context.JSON(http.StatusOK, &amp;model_rest.Success{Message: quiz.QuizID.String(), Payload: &amp;quiz.QuizCore})</span>
+                <span class="cov6" title="6">context.JSON(http.StatusOK, &amp;model_http.Success{Message: quiz.QuizID.String(), Payload: &amp;quiz.QuizCore})</span>
         }
 }
 
@@ -2007,18 +2625,18 @@ func CreateQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) g
                 // Get username from JWT.
                 if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil </span><span class="cov1" title="1">{
                         logger.Error("failed to validate JWT in create quiz handler", zap.Error(err))
-                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "unable to verify username"})
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_http.Error{Message: "unable to verify username"})
                         return
                 }</span>
 
                 // Get quiz core from request and validate.
                 <span class="cov5" title="5">if err = context.ShouldBindJSON(&amp;request); err != nil </span><span class="cov0" title="0">{
-                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: err.Error()})
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_http.Error{Message: err.Error()})
                         return
                 }</span>
 
                 <span class="cov5" title="5">if err = validator.ValidateStruct(&amp;request); err != nil </span><span class="cov2" title="2">{
-                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "validation", Payload: err})
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_http.Error{Message: "validation", Payload: err})
                         return
                 }</span>
 
@@ -2032,11 +2650,11 @@ func CreateQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) g
                 }
                 if _, err = db.Execute(cassandra.CreateQuizQuery, &amp;quiz); err != nil </span><span class="cov2" title="2">{
                         cassandraError := err.(*cassandra.Error)
-                        context.AbortWithStatusJSON(cassandraError.Status, &amp;model_rest.Error{Message: "error creating quiz", Payload: cassandraError.Message})
+                        context.AbortWithStatusJSON(cassandraError.Status, &amp;model_http.Error{Message: "error creating quiz", Payload: cassandraError.Message})
                         return
                 }</span>
 
-                <span class="cov1" title="1">context.JSON(http.StatusOK, &amp;model_rest.Success{Message: "created quiz with id", Payload: quiz.QuizID.String()})</span>
+                <span class="cov1" title="1">context.JSON(http.StatusOK, &amp;model_http.Success{Message: "created quiz with id", Payload: quiz.QuizID.String()})</span>
         }
 }
 
@@ -2063,25 +2681,25 @@ func UpdateQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) g
                 var quizId gocql.UUID
 
                 if quizId, err = gocql.ParseUUID(context.Param("quiz_id")); err != nil </span><span class="cov1" title="1">{
-                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_http.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
                         return
                 }</span>
 
                 // Get username from JWT.
                 <span class="cov5" title="5">if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil </span><span class="cov1" title="1">{
                         logger.Error("failed to validate JWT in update quiz handler", zap.Error(err))
-                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "unable to verify username"})
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_http.Error{Message: "unable to verify username"})
                         return
                 }</span>
 
                 // Get quiz core from request and validate.
                 <span class="cov4" title="4">if err = context.ShouldBindJSON(&amp;request); err != nil </span><span class="cov0" title="0">{
-                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: err.Error()})
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_http.Error{Message: err.Error()})
                         return
                 }</span>
 
                 <span class="cov4" title="4">if err = validator.ValidateStruct(&amp;request); err != nil </span><span class="cov1" title="1">{
-                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "validation", Payload: err})
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_http.Error{Message: "validation", Payload: err})
                         return
                 }</span>
 
@@ -2095,11 +2713,11 @@ func UpdateQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) g
                 }
                 if _, err = db.Execute(cassandra.UpdateQuizQuery, &amp;updateRequest); err != nil </span><span class="cov2" title="2">{
                         cassandraError := err.(*cassandra.Error)
-                        context.AbortWithStatusJSON(cassandraError.Status, &amp;model_rest.Error{Message: "error updating quiz", Payload: cassandraError.Message})
+                        context.AbortWithStatusJSON(cassandraError.Status, &amp;model_http.Error{Message: "error updating quiz", Payload: cassandraError.Message})
                         return
                 }</span>
 
-                <span class="cov1" title="1">context.JSON(http.StatusOK, &amp;model_rest.Success{Message: "updated quiz with id", Payload: quizId.String()})</span>
+                <span class="cov1" title="1">context.JSON(http.StatusOK, &amp;model_http.Success{Message: "updated quiz with id", Payload: quizId.String()})</span>
         }
 }
 
@@ -2122,14 +2740,14 @@ func DeleteQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, c
                 var quizId gocql.UUID
 
                 if quizId, err = gocql.ParseUUID(context.Param("quiz_id")); err != nil </span><span class="cov1" title="1">{
-                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_http.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
                         return
                 }</span>
 
                 // Get username from JWT.
                 <span class="cov6" title="6">if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil </span><span class="cov1" title="1">{
                         logger.Error("failed to validate JWT in create quiz handler", zap.Error(err))
-                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "unable to verify username"})
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_http.Error{Message: "unable to verify username"})
                         return
                 }</span>
 
@@ -2138,7 +2756,7 @@ func DeleteQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, c
                 // It must not be the case that data marked as deleted remains in the cache till LRU eviction or TTL expiration.
                 <span class="cov5" title="5">if err = cache.Del(quizId.String()); err != nil &amp;&amp; err.(*redis.Error).Code != redis.ErrorCacheMiss </span><span class="cov1" title="1">{
                         logger.Error("failed to evict data from cache", zap.Error(err))
-                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "please retry the command at a later time"})
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_http.Error{Message: "please retry the command at a later time"})
                         return
                 }</span>
 
@@ -2149,11 +2767,11 @@ func DeleteQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, c
                 }
                 if _, err = db.Execute(cassandra.DeleteQuizQuery, &amp;request); err != nil </span><span class="cov2" title="2">{
                         cassandraError := err.(*cassandra.Error)
-                        context.AbortWithStatusJSON(cassandraError.Status, &amp;model_rest.Error{Message: "error deleting quiz", Payload: cassandraError.Message})
+                        context.AbortWithStatusJSON(cassandraError.Status, &amp;model_http.Error{Message: "error deleting quiz", Payload: cassandraError.Message})
                         return
                 }</span>
 
-                <span class="cov2" title="2">context.JSON(http.StatusOK, &amp;model_rest.Success{Message: "deleted quiz with id", Payload: quizId.String()})</span>
+                <span class="cov2" title="2">context.JSON(http.StatusOK, &amp;model_http.Success{Message: "deleted quiz with id", Payload: quizId.String()})</span>
         }
 }
 
@@ -2179,14 +2797,14 @@ func PublishQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, 
                 var quiz *model_cassandra.Quiz
 
                 if quizId, err = gocql.ParseUUID(context.Param("quiz_id")); err != nil </span><span class="cov1" title="1">{
-                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_http.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
                         return
                 }</span>
 
                 // Get username from JWT.
                 <span class="cov6" title="6">if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil </span><span class="cov1" title="1">{
                         logger.Error("failed to validate JWT in create quiz handler", zap.Error(err))
-                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "unable to verify username"})
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_http.Error{Message: "unable to verify username"})
                         return
                 }</span>
 
@@ -2197,13 +2815,13 @@ func PublishQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, 
                 }
                 if _, err = db.Execute(cassandra.PublishQuizQuery, &amp;request); err != nil </span><span class="cov2" title="2">{
                         cassandraError := err.(*cassandra.Error)
-                        context.AbortWithStatusJSON(cassandraError.Status, &amp;model_rest.Error{Message: "error publishing quiz", Payload: cassandraError.Message})
+                        context.AbortWithStatusJSON(cassandraError.Status, &amp;model_http.Error{Message: "error publishing quiz", Payload: cassandraError.Message})
                         return
                 }</span>
 
                 // HTTP OK status should be set here because publishing succeeded.
                 // Any failures below this point are cache related and should be logged but not propagated to the end user.
-                <span class="cov4" title="3">context.JSON(http.StatusOK, &amp;model_rest.Success{Message: "published quiz with id", Payload: quizId.String()})
+                <span class="cov4" title="3">context.JSON(http.StatusOK, &amp;model_http.Success{Message: "published quiz with id", Payload: quizId.String()})
 
                 // Place quiz in cache.
                 // [1] Retrieve the quiz from Cassandra.
@@ -2248,25 +2866,25 @@ func TakeQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, cac
                 var score float64
 
                 if quizId, err = gocql.ParseUUID(context.Param("quiz_id")); err != nil </span><span class="cov1" title="1">{
-                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "invalid quizResponse id supplied, must be a valid UUID"})
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_http.Error{Message: "invalid quizResponse id supplied, must be a valid UUID"})
                         return
                 }</span>
 
                 // Get username from JWT.
                 <span class="cov8" title="12">if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil </span><span class="cov1" title="1">{
                         logger.Error("failed to validate JWT in update quizResponse handler", zap.Error(err))
-                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "unable to verify username"})
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_http.Error{Message: "unable to verify username"})
                         return
                 }</span>
 
                 // Get quizResponse response from quizResponse and validate.
                 <span class="cov7" title="11">if err = context.ShouldBindJSON(&amp;quizResponse); err != nil </span><span class="cov0" title="0">{
-                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: err.Error()})
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_http.Error{Message: err.Error()})
                         return
                 }</span>
 
                 <span class="cov7" title="11">if err = validator.ValidateStruct(&amp;quizResponse); err != nil </span><span class="cov1" title="1">{
-                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "validation", Payload: err})
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_http.Error{Message: "validation", Payload: err})
                         return
                 }</span>
 
@@ -2275,19 +2893,19 @@ func TakeQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, cac
                 // [2] Cache miss: read from the database and store it in the cache.
                 <span class="cov7" title="10">if quiz, err = getQuiz(quizId, db, cache); err != nil </span><span class="cov2" title="2">{
                         cassandraError := err.(*cassandra.Error)
-                        context.AbortWithStatusJSON(cassandraError.Status, &amp;model_rest.Error{Message: "error retrieving quiz", Payload: cassandraError.Message})
+                        context.AbortWithStatusJSON(cassandraError.Status, &amp;model_http.Error{Message: "error retrieving quiz", Payload: cassandraError.Message})
                         return
                 }</span>
 
                 // Check to see if the quiz is deleted or unpublished.
                 <span class="cov6" title="8">if !quiz.IsPublished || quiz.IsDeleted </span><span class="cov2" title="2">{
-                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_rest.Error{Message: "quiz is unavailable"})
+                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_http.Error{Message: "quiz is unavailable"})
                         return
                 }</span>
 
                 // Grade the quizResponse.
                 <span class="cov6" title="6">if score, err = grader.Grade(&amp;quizResponse, quiz.QuizCore); err != nil </span><span class="cov1" title="1">{
-                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "error marking response", Payload: err.Error()})
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_http.Error{Message: "error marking response", Payload: err.Error()})
                         return
                 }</span>
 
@@ -2300,16 +2918,16 @@ func TakeQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, cac
                 }
                 if _, err = db.Execute(cassandra.CreateResponseQuery, &amp;response); err != nil </span><span class="cov2" title="2">{
                         cassandraError := err.(*cassandra.Error)
-                        context.AbortWithStatusJSON(cassandraError.Status, &amp;model_rest.Error{Message: "error submitting response", Payload: cassandraError.Message})
+                        context.AbortWithStatusJSON(cassandraError.Status, &amp;model_http.Error{Message: "error submitting response", Payload: cassandraError.Message})
                         return
                 }</span>
 
-                <span class="cov4" title="3">context.JSON(http.StatusOK, &amp;model_rest.Success{Message: "submitted quiz response", Payload: &amp;response})</span>
+                <span class="cov4" title="3">context.JSON(http.StatusOK, &amp;model_http.Success{Message: "submitted quiz response", Payload: &amp;response})</span>
         }
 }
 </pre>
 		
-		<pre class="file" id="file14" style="display: none">package http_handlers
+		<pre class="file" id="file22" style="display: none">package http_handlers
 
 import (
         "bytes"
@@ -2349,14 +2967,14 @@ func GetScore(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin
                 var quizId gocql.UUID
 
                 if quizId, err = gocql.ParseUUID(context.Param("quiz_id")); err != nil </span><span class="cov1" title="1">{
-                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_http.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
                         return
                 }</span>
 
                 // Get username from JWT.
                 <span class="cov4" title="3">if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil </span><span class="cov1" title="1">{
                         logger.Error("failed to validate JWT in create quiz handler", zap.Error(err))
-                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "unable to verify username"})
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_http.Error{Message: "unable to verify username"})
                         return
                 }</span>
 
@@ -2367,12 +2985,12 @@ func GetScore(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin
                 }
                 if dbRecord, err = db.Execute(cassandra.ReadResponseQuery, scoreRequest); err != nil </span><span class="cov1" title="1">{
                         cassandraError := err.(*cassandra.Error)
-                        context.AbortWithStatusJSON(cassandraError.Status, &amp;model_rest.Error{Message: "error retrieving score card", Payload: cassandraError.Message})
+                        context.AbortWithStatusJSON(cassandraError.Status, &amp;model_http.Error{Message: "error retrieving score card", Payload: cassandraError.Message})
                         return
                 }</span>
                 <span class="cov1" title="1">response = dbRecord.(*model_cassandra.Response)
 
-                context.JSON(http.StatusOK, &amp;model_rest.Success{Message: "score card", Payload: response})</span>
+                context.JSON(http.StatusOK, &amp;model_http.Success{Message: "score card", Payload: response})</span>
         }
 }
 
@@ -2400,36 +3018,36 @@ func GetStats(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin
                 var quizId gocql.UUID
 
                 if quizId, err = gocql.ParseUUID(context.Param("quiz_id")); err != nil </span><span class="cov1" title="1">{
-                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_http.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
                         return
                 }</span>
 
                 // Get username from JWT.
                 <span class="cov6" title="5">if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil </span><span class="cov1" title="1">{
                         logger.Error("failed to validate JWT in create quiz handler", zap.Error(err))
-                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "unable to verify username"})
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_http.Error{Message: "unable to verify username"})
                         return
                 }</span>
 
                 // Get scorecard record from database.
                 <span class="cov6" title="4">if dbRecord, err = db.Execute(cassandra.ReadResponseStatisticsQuery, quizId); err != nil </span><span class="cov1" title="1">{
                         cassandraError := err.(*cassandra.Error)
-                        context.AbortWithStatusJSON(cassandraError.Status, &amp;model_rest.Error{Message: "error retrieving score card", Payload: cassandraError.Message})
+                        context.AbortWithStatusJSON(cassandraError.Status, &amp;model_http.Error{Message: "error retrieving score card", Payload: cassandraError.Message})
                         return
                 }</span>
                 <span class="cov4" title="3">response = dbRecord.([]*model_cassandra.Response)
 
                 // Verify authorization.
                 if len(response) == 0 </span><span class="cov1" title="1">{
-                        context.AbortWithStatusJSON(http.StatusNotFound, &amp;model_rest.Error{Message: "could not locate results"})
+                        context.AbortWithStatusJSON(http.StatusNotFound, &amp;model_http.Error{Message: "could not locate results"})
                         return
                 }</span>
                 <span class="cov3" title="2">if username != response[0].Author </span><span class="cov1" title="1">{
-                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_rest.Error{Message: "error verifying quiz author"})
+                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_http.Error{Message: "error verifying quiz author"})
                         return
                 }</span>
 
-                <span class="cov1" title="1">context.JSON(http.StatusOK, &amp;model_rest.Success{Message: "score card", Payload: response})</span>
+                <span class="cov1" title="1">context.JSON(http.StatusOK, &amp;model_http.Success{Message: "score card", Payload: response})</span>
         }
 }
 
@@ -2456,49 +3074,49 @@ func GetStatsPage(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra)
                 var err error
                 var dbRecord any
                 var statRequest *model_cassandra.StatsRequest
-                var restResponse *model_rest.StatsResponse
+                var restResponse *model_http.StatsResponse
                 var username string
                 var quizId gocql.UUID
 
                 if quizId, err = gocql.ParseUUID(context.Param("quiz_id")); err != nil </span><span class="cov1" title="1">{
-                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_http.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
                         return
                 }</span>
 
                 // Get username from JWT.
                 <span class="cov8" title="8">if username, _, err = auth.ValidateJWT(context.GetHeader("Authorization")); err != nil </span><span class="cov1" title="1">{
                         logger.Error("failed to validate JWT in create quiz handler", zap.Error(err))
-                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "unable to verify username"})
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_http.Error{Message: "unable to verify username"})
                         return
                 }</span>
 
                 // Prepare stats page request for database.
                 <span class="cov8" title="7">if statRequest, err = prepareStatsRequest(auth, quizId, context.Query("pageCursor"), context.Query("pageSize")); err != nil </span><span class="cov1" title="1">{
-                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "malformed query request", Payload: err.Error()})
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_http.Error{Message: "malformed query request", Payload: err.Error()})
                         return
                 }</span>
 
                 // Get scorecard record page from database.
                 <span class="cov7" title="6">if dbRecord, err = db.Execute(cassandra.ReadResponseStatisticsPageQuery, statRequest); err != nil </span><span class="cov1" title="1">{
                         cassandraError := err.(*cassandra.Error)
-                        context.AbortWithStatusJSON(cassandraError.Status, &amp;model_rest.Error{Message: "error retrieving scorecard page", Payload: cassandraError.Message})
+                        context.AbortWithStatusJSON(cassandraError.Status, &amp;model_http.Error{Message: "error retrieving scorecard page", Payload: cassandraError.Message})
                         return
                 }</span>
                 <span class="cov6" title="5">statsResponse := dbRecord.(*model_cassandra.StatsResponse)
 
                 // Verify authorization.
                 if len(statsResponse.Records) == 0 </span><span class="cov1" title="1">{
-                        context.AbortWithStatusJSON(http.StatusNotFound, &amp;model_rest.Error{Message: "could not locate results"})
+                        context.AbortWithStatusJSON(http.StatusNotFound, &amp;model_http.Error{Message: "could not locate results"})
                         return
                 }</span>
                 <span class="cov6" title="4">if username != statsResponse.Records[0].Author </span><span class="cov1" title="1">{
-                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_rest.Error{Message: "error verifying quiz author"})
+                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_http.Error{Message: "error verifying quiz author"})
                         return
                 }</span>
 
                 // Prepare REST response.
                 <span class="cov4" title="3">if restResponse, err = prepareStatsResponse(auth, statsResponse, quizId); err != nil </span><span class="cov1" title="1">{
-                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "error preparing stats page", Payload: err.Error()})
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_http.Error{Message: "error preparing stats page", Payload: err.Error()})
                 }</span>
 
                 <span class="cov4" title="3">context.JSON(http.StatusOK, restResponse)</span>
@@ -2528,8 +3146,8 @@ func prepareStatsRequest(auth auth.Auth, quizId gocql.UUID, cursor string, size 
 
 // prepareStatsResponse will prepare a http response from a database stats response. It will generate a link to the next
 // page of data as appropriate.
-func prepareStatsResponse(auth auth.Auth, dbResponse *model_cassandra.StatsResponse, quizId gocql.UUID) (response *model_rest.StatsResponse, err error) <span class="cov8" title="8">{
-        response = &amp;model_rest.StatsResponse{Records: dbResponse.Records}
+func prepareStatsResponse(auth auth.Auth, dbResponse *model_cassandra.StatsResponse, quizId gocql.UUID) (response *model_http.StatsResponse, err error) <span class="cov8" title="8">{
+        response = &amp;model_http.StatsResponse{Records: dbResponse.Records}
         response.Metadata.QuizID = quizId
         response.Metadata.NumRecords = len(dbResponse.Records)
 
@@ -2559,7 +3177,7 @@ func prepareStatsResponse(auth auth.Auth, dbResponse *model_cassandra.StatsRespo
 }
 </pre>
 		
-		<pre class="file" id="file15" style="display: none">package http_handlers
+		<pre class="file" id="file23" style="display: none">package http_handlers
 
 import (
         "fmt"
@@ -2594,33 +3212,33 @@ import (
 func RegisterUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc <span class="cov7" title="5">{
         return func(context *gin.Context) </span><span class="cov7" title="5">{
                 var err error
-                var authToken *model_rest.JWTAuthResponse
+                var authToken *model_http.JWTAuthResponse
                 var user model_cassandra.UserAccount
 
                 if err = context.ShouldBindJSON(&amp;user); err != nil </span><span class="cov0" title="0">{
-                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: err.Error()})
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_http.Error{Message: err.Error()})
                         return
                 }</span>
 
                 <span class="cov7" title="5">if err = validator.ValidateStruct(&amp;user); err != nil </span><span class="cov1" title="1">{
-                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "validation", Payload: err})
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_http.Error{Message: "validation", Payload: err})
                         return
                 }</span>
 
                 <span class="cov7" title="4">if user.Password, err = auth.HashPassword(user.Password); err != nil </span><span class="cov1" title="1">{
                         logger.Error("failure hashing password", zap.Error(err))
-                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: err.Error()})
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_http.Error{Message: err.Error()})
                         return
                 }</span>
 
                 <span class="cov5" title="3">if _, err = db.Execute(cassandra.CreateUserQuery, &amp;model_cassandra.User{UserAccount: &amp;user}); err != nil </span><span class="cov1" title="1">{
-                        context.AbortWithStatusJSON(err.(*cassandra.Error).Status, &amp;model_rest.Error{Message: err.Error()})
+                        context.AbortWithStatusJSON(err.(*cassandra.Error).Status, &amp;model_http.Error{Message: err.Error()})
                         return
                 }</span>
 
                 <span class="cov4" title="2">if authToken, err = auth.GenerateJWT(user.Username); err != nil </span><span class="cov1" title="1">{
                         logger.Error("failure generating JWT during account creation", zap.Error(err))
-                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: err.Error()})
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_http.Error{Message: err.Error()})
                         return
                 }</span>
 
@@ -2644,34 +3262,34 @@ func RegisterUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra)
 func LoginUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc <span class="cov8" title="6">{
         return func(context *gin.Context) </span><span class="cov8" title="6">{
                 var err error
-                var authToken *model_rest.JWTAuthResponse
+                var authToken *model_http.JWTAuthResponse
                 var loginRequest model_cassandra.UserLoginCredentials
                 var dbResponse any
 
                 if err = context.ShouldBindJSON(&amp;loginRequest); err != nil </span><span class="cov0" title="0">{
-                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: err.Error()})
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_http.Error{Message: err.Error()})
                         return
                 }</span>
 
                 <span class="cov8" title="6">if err = validator.ValidateStruct(&amp;loginRequest); err != nil </span><span class="cov1" title="1">{
-                        context.JSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "validation", Payload: err})
+                        context.JSON(http.StatusBadRequest, &amp;model_http.Error{Message: "validation", Payload: err})
                         return
                 }</span>
 
                 <span class="cov7" title="5">if dbResponse, err = db.Execute(cassandra.ReadUserQuery, loginRequest.Username); err != nil </span><span class="cov1" title="1">{
-                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_rest.Error{Message: "invalid username or password"})
+                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_http.Error{Message: "invalid username or password"})
                         return
                 }</span>
 
                 <span class="cov7" title="4">truth := dbResponse.(*model_cassandra.User)
                 if err = auth.CheckPassword(truth.Password, loginRequest.Password); err != nil || truth.IsDeleted </span><span class="cov4" title="2">{
-                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_rest.Error{Message: "invalid username or password"})
+                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_http.Error{Message: "invalid username or password"})
                         return
                 }</span>
 
                 <span class="cov4" title="2">if authToken, err = auth.GenerateJWT(loginRequest.Username); err != nil </span><span class="cov1" title="1">{
                         logger.Error("failure generating JWT during login", zap.Error(err))
-                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: err.Error()})
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_http.Error{Message: err.Error()})
                         return
                 }</span>
 
@@ -2695,38 +3313,38 @@ func LoginUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gi
 func LoginRefresh(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, authHeaderKey string) gin.HandlerFunc <span class="cov9" title="7">{
         return func(context *gin.Context) </span><span class="cov9" title="7">{
                 var err error
-                var freshToken *model_rest.JWTAuthResponse
+                var freshToken *model_http.JWTAuthResponse
                 var username string
                 var dbResponse any
                 var expiresAt int64
                 originalToken := context.GetHeader(authHeaderKey)
 
                 if username, expiresAt, err = auth.ValidateJWT(originalToken); err != nil </span><span class="cov4" title="2">{
-                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_rest.Error{Message: err.Error()})
+                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_http.Error{Message: err.Error()})
                         return
                 }</span>
 
                 <span class="cov7" title="5">if dbResponse, err = db.Execute(cassandra.ReadUserQuery, username); err != nil </span><span class="cov1" title="1">{
                         logger.Warn("failed to read user record for a valid JWT", zap.String("username", username), zap.Error(err))
-                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "please retry your request later"})
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_http.Error{Message: "please retry your request later"})
                         return
                 }</span>
 
                 <span class="cov7" title="4">if dbResponse.(*model_cassandra.User).IsDeleted </span><span class="cov1" title="1">{
                         logger.Warn("attempt to refresh a JWT for a deleted user", zap.String("username", username))
-                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_rest.Error{Message: "invalid token"})
+                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_http.Error{Message: "invalid token"})
                         return
                 }</span>
 
                 // Do not refresh tokens that have more than a minute left to expire.
                 <span class="cov5" title="3">if math.Abs(float64(time.Now().Unix()-expiresAt)) &gt; float64(auth.RefreshThreshold()) </span><span class="cov1" title="1">{
-                        context.AbortWithStatusJSON(http.StatusNotExtended, &amp;model_rest.Error{Message: "JWT is still valid for more than 60 seconds"})
+                        context.AbortWithStatusJSON(http.StatusNotExtended, &amp;model_http.Error{Message: "JWT is still valid for more than 60 seconds"})
                         return
                 }</span>
 
                 <span class="cov4" title="2">if freshToken, err = auth.GenerateJWT(username); err != nil </span><span class="cov1" title="1">{
                         logger.Error("failure generating JWT during token refresh", zap.Error(err))
-                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: err.Error()})
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_http.Error{Message: err.Error()})
                         return
                 }</span>
 
@@ -2751,43 +3369,43 @@ func LoginRefresh(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra,
 func DeleteUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, authHeaderKey string) gin.HandlerFunc <span class="cov10" title="8">{
         return func(context *gin.Context) </span><span class="cov10" title="8">{
                 var err error
-                var deleteRequest model_rest.DeleteUserRequest
+                var deleteRequest model_http.DeleteUserRequest
                 var username string
                 var dbResponse any
                 jwt := context.GetHeader(authHeaderKey)
 
                 // Get the delete request from the message body and validate it.
                 if err = context.ShouldBindJSON(&amp;deleteRequest); err != nil </span><span class="cov0" title="0">{
-                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: err.Error()})
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_http.Error{Message: err.Error()})
                         return
                 }</span>
 
                 <span class="cov10" title="8">if err = validator.ValidateStruct(&amp;deleteRequest); err != nil </span><span class="cov1" title="1">{
-                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "validation", Payload: err})
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_http.Error{Message: "validation", Payload: err})
                         return
                 }</span>
 
                 // Validate the JWT and extract the username, compare the username against the deletion request login credentials.
                 <span class="cov9" title="7">if username, _, err = auth.ValidateJWT(jwt); err != nil </span><span class="cov0" title="0">{
-                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_rest.Error{Message: err.Error()})
+                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_http.Error{Message: err.Error()})
                         return
                 }</span>
 
                 <span class="cov9" title="7">if username != deleteRequest.Username </span><span class="cov1" title="1">{
-                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_rest.Error{Message: "invalid deletion request"})
+                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_http.Error{Message: "invalid deletion request"})
                         return
                 }</span>
 
                 // Check confirmation message.
                 <span class="cov8" title="6">if fmt.Sprintf(constants.GetDeleteUserAccountConfirmation(), username) != deleteRequest.Confirmation </span><span class="cov1" title="1">{
-                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_rest.Error{Message: "incorrect or incomplete deletion request confirmation"})
+                        context.AbortWithStatusJSON(http.StatusBadRequest, &amp;model_http.Error{Message: "incorrect or incomplete deletion request confirmation"})
                         return
                 }</span>
 
                 // Get user record.
                 <span class="cov7" title="5">if dbResponse, err = db.Execute(cassandra.ReadUserQuery, username); err != nil </span><span class="cov1" title="1">{
                         logger.Warn("failed to read user record during an account deletion request", zap.String("username", username), zap.Error(err))
-                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "please retry your request later"})
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_http.Error{Message: "please retry your request later"})
                         return
                 }</span>
                 <span class="cov7" title="4">truth := dbResponse.(*model_cassandra.User)
@@ -2795,28 +3413,28 @@ func DeleteUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, a
                 // Check to make sure the account is not already deleted.
                 if truth.IsDeleted </span><span class="cov1" title="1">{
                         logger.Warn("attempt to delete an already deleted user account", zap.String("username", username))
-                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_rest.Error{Message: "user account is already deleted"})
+                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_http.Error{Message: "user account is already deleted"})
                         return
                 }</span>
 
                 <span class="cov5" title="3">if err = auth.CheckPassword(truth.Password, deleteRequest.Password); err != nil </span><span class="cov1" title="1">{
-                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_rest.Error{Message: "invalid username or password"})
+                        context.AbortWithStatusJSON(http.StatusForbidden, &amp;model_http.Error{Message: "invalid username or password"})
                         return
                 }</span>
 
                 // Mark account as deleted.
                 <span class="cov4" title="2">if _, err = db.Execute(cassandra.DeleteUserQuery, username); err != nil </span><span class="cov1" title="1">{
                         logger.Warn("failed to mark a user record as deleted", zap.String("username", username), zap.Error(err))
-                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_rest.Error{Message: "please retry your request later"})
+                        context.AbortWithStatusJSON(http.StatusInternalServerError, &amp;model_http.Error{Message: "please retry your request later"})
                         return
                 }</span>
 
-                <span class="cov1" title="1">context.JSON(http.StatusOK, model_rest.Success{Message: "account successfully deleted"})</span>
+                <span class="cov1" title="1">context.JSON(http.StatusOK, model_http.Success{Message: "account successfully deleted"})</span>
         }
 }
 </pre>
 		
-		<pre class="file" id="file16" style="display: none">package rest
+		<pre class="file" id="file24" style="display: none">package rest
 
 import (
         "context"
@@ -2824,6 +3442,7 @@ import (
         "net/http"
         "os"
         "os/signal"
+        "sync"
         "syscall"
         "time"
 
@@ -2844,8 +3463,8 @@ import (
 // Format and generate Swagger UI files using makefile.
 //go:generate make -C ../../../ swagger
 
-// HttpRest is the HTTP REST server.
-type HttpRest struct {
+// Server is the HTTP REST server.
+type Server struct {
         auth    auth.Auth
         cache   redis.Redis
         db      cassandra.Cassandra
@@ -2853,30 +3472,35 @@ type HttpRest struct {
         conf    *config
         logger  *logger.Logger
         router  *gin.Engine
+        wg      *sync.WaitGroup
 }
 
-// NewRESTServer will create a new REST server instance in a non-running state.
-func NewRESTServer(fs *afero.Fs, auth auth.Auth, cassandra cassandra.Cassandra, redis redis.Redis,
-        grading grading.Grading, logger *logger.Logger) (server *HttpRest, err error) <span class="cov8" title="1">{
+// NewServer will create a new REST server instance in a non-running state.
+func NewServer(fs *afero.Fs, auth auth.Auth, cassandra cassandra.Cassandra, redis redis.Redis,
+        grading grading.Grading, logger *logger.Logger, wg *sync.WaitGroup) (server *Server, err error) <span class="cov8" title="1">{
         // Load configurations.
         conf := newConfig()
         if err = conf.Load(*fs); err != nil </span><span class="cov0" title="0">{
                 return
         }</span>
 
-        <span class="cov8" title="1">return &amp;HttpRest{
+        <span class="cov8" title="1">return &amp;Server{
                         conf:    conf,
                         auth:    auth,
                         cache:   redis,
                         db:      cassandra,
                         grading: grading,
                         logger:  logger,
+                        wg:      wg,
                 },
                 err</span>
 }
 
 // Run brings the HTTP service up.
-func (s *HttpRest) Run() <span class="cov0" title="0">{
+func (s *Server) Run() <span class="cov0" title="0">{
+        // Indicate to bootstrapping thread to wait for completion.
+        defer s.wg.Done()
+
         // Configure routes.
         s.initialize()
 
@@ -2899,21 +3523,21 @@ func (s *HttpRest) Run() <span class="cov0" title="0">{
 
         // Wait for interrupt.
         &lt;-quit
-        s.logger.Info("Shutting down server...", zap.Duration("waiting", time.Duration(s.conf.Server.ShutdownDelay)*time.Second))
+        s.logger.Info("Shutting down REST server...", zap.Duration("waiting", time.Duration(s.conf.Server.ShutdownDelay)*time.Second))
         ctx, cancel := context.WithTimeout(context.Background(), time.Duration(s.conf.Server.ShutdownDelay)*time.Second)
         defer cancel()
         if err := srv.Shutdown(ctx); err != nil </span><span class="cov0" title="0">{
-                s.logger.Panic("Failed to shutdown server", zap.Error(err))
+                s.logger.Panic("Failed to shutdown REST server", zap.Error(err))
         }</span>
 
         // 5 second wait to exit.
         <span class="cov0" title="0">&lt;-ctx.Done()
 
-        s.logger.Info("Server exited")</span>
+        s.logger.Info("REST server exited")</span>
 }
 
 // initialize will configure the HTTP server routes.
-func (s *HttpRest) initialize() <span class="cov0" title="0">{
+func (s *Server) initialize() <span class="cov0" title="0">{
         s.router = gin.Default()
 
         // @title                      Multiple Choice Question Platform.
@@ -2942,7 +3566,7 @@ func (s *HttpRest) initialize() <span class="cov0" title="0">{
         s.router.GET(s.conf.Server.SwaggerPath, ginSwagger.WrapHandler(swaggerfiles.Handler))
 
         // Endpoint configurations
-        authMiddleware := http_handlers.AuthMiddleware(s.auth)
+        authMiddleware := http_handlers.AuthMiddleware(s.auth, s.conf.Authorization.HeaderKey)
         api := s.router.Group(s.conf.Server.BasePath)
 
         api.GET("/health", http_handlers.Healthcheck(s.logger, s.db, s.cache))
@@ -2968,7 +3592,7 @@ func (s *HttpRest) initialize() <span class="cov0" title="0">{
 }</span>
 </pre>
 		
-		<pre class="file" id="file17" style="display: none">package rest
+		<pre class="file" id="file25" style="display: none">package rest
 
 // configTestData will return a map of test data containing valid and invalid Authorization configs.
 func configTestData() map[string]string <span class="cov8" title="1">{
@@ -3028,7 +3652,7 @@ server:
 }</span>
 </pre>
 		
-		<pre class="file" id="file18" style="display: none">package logger
+		<pre class="file" id="file26" style="display: none">package logger
 
 import (
         "github.com/spf13/afero"
@@ -3107,7 +3731,7 @@ func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="13">
 }
 </pre>
 		
-		<pre class="file" id="file19" style="display: none">package logger
+		<pre class="file" id="file27" style="display: none">package logger
 
 import (
         "errors"
@@ -3246,7 +3870,7 @@ func NewTestLogger() (logger *Logger, err error) <span class="cov1" title="1">{
 }
 </pre>
 		
-		<pre class="file" id="file20" style="display: none">package logger
+		<pre class="file" id="file28" style="display: none">package logger
 
 // configTestData will return a map of test data containing valid and invalid logger configs.
 func configTestData() map[string]string <span class="cov8" title="1">{
@@ -3292,7 +3916,7 @@ encoder_config:
 }</span>
 </pre>
 		
-		<pre class="file" id="file21" style="display: none">package redis
+		<pre class="file" id="file29" style="display: none">package redis
 
 import (
         "github.com/spf13/afero"
@@ -3353,7 +3977,7 @@ func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="13">
 }
 </pre>
 		
-		<pre class="file" id="file22" style="display: none">package redis
+		<pre class="file" id="file30" style="display: none">package redis
 
 // Error codes.
 const (
@@ -3401,7 +4025,7 @@ func (e *Error) errorCacheDel() *Error <span class="cov1" title="1">{
 }</span>
 </pre>
 		
-		<pre class="file" id="file23" style="display: none">package redis
+		<pre class="file" id="file31" style="display: none">package redis
 
 import (
         "bytes"
@@ -3573,7 +4197,7 @@ func (r *redisImpl) Del(keys ...string) error <span class="cov6" title="4">{
 }
 </pre>
 		
-		<pre class="file" id="file24" style="display: none">package redis
+		<pre class="file" id="file32" style="display: none">package redis
 
 // configTestData will return a map of test data containing valid and invalid Cassandra configs.
 func configTestData() map[string]string <span class="cov8" title="1">{
@@ -3695,7 +4319,7 @@ data:
 }</span>
 </pre>
 		
-		<pre class="file" id="file25" style="display: none">package validator
+		<pre class="file" id="file33" style="display: none">package validator
 
 import (
         "bytes"

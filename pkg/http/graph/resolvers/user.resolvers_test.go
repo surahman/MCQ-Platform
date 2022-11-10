@@ -630,6 +630,26 @@ func TestMutationResolver_DeleteUser(t *testing.T) {
 				times: 1,
 			},
 		}, {
+			name:      "invalid token",
+			path:      "/delete/invalid-token-request",
+			query:     fmt.Sprintf(deleteUserQuery, "username1", "password", "username1"),
+			expectErr: true,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "username1",
+				outputErr:    errors.New("JWT failed authorization check"),
+				times:        1,
+			},
+			cassandraReadData: &mockCassandraData{
+				outputParam: testUserData["username1"],
+				times:       0,
+			},
+			authCheckPwdData: &mockAuthData{
+				times: 0,
+			},
+			cassandraDeleteData: &mockCassandraData{
+				times: 0,
+			},
+		}, {
 			name:      "token and request username mismatch",
 			path:      "/delete/token-and-request-username-mismatch",
 			query:     fmt.Sprintf(deleteUserQuery, "username1", "password", "username1"),
