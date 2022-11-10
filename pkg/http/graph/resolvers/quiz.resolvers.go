@@ -9,16 +9,15 @@ import (
 
 	graphql_generated "github.com/surahman/mcq-platform/pkg/http/graph/generated"
 	model_cassandra "github.com/surahman/mcq-platform/pkg/model/cassandra"
-	model_http "github.com/surahman/mcq-platform/pkg/model/http"
 )
 
 // CreateQuiz is the resolver for the createQuiz field.
-func (r *mutationResolver) CreateQuiz(ctx context.Context, input model_http.QuizCreate) (string, error) {
+func (r *mutationResolver) CreateQuiz(ctx context.Context, input model_cassandra.QuizCore) (string, error) {
 	panic(fmt.Errorf("not implemented: CreateQuiz - createQuiz"))
 }
 
 // UpdateQuiz is the resolver for the updateQuiz field.
-func (r *mutationResolver) UpdateQuiz(ctx context.Context, input model_http.QuizCreate) (string, error) {
+func (r *mutationResolver) UpdateQuiz(ctx context.Context, input model_cassandra.QuizCore) (string, error) {
 	panic(fmt.Errorf("not implemented: UpdateQuiz - updateQuiz"))
 }
 

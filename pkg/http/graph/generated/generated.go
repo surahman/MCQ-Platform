@@ -53,7 +53,7 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateQuiz   func(childComplexity int, input model_http.QuizCreate) int
+		CreateQuiz   func(childComplexity int, input model_cassandra.QuizCore) int
 		DeleteQuiz   func(childComplexity int, quizID string) int
 		DeleteUser   func(childComplexity int, input model_http.DeleteUserRequest) int
 		LoginUser    func(childComplexity int, input model_cassandra.UserLoginCredentials) int
@@ -61,7 +61,7 @@ type ComplexityRoot struct {
 		RefreshToken func(childComplexity int) int
 		RegisterUser func(childComplexity int, input *model_cassandra.UserAccount) int
 		TakeQuiz     func(childComplexity int, quizID string, input model_cassandra.QuizResponse) int
-		UpdateQuiz   func(childComplexity int, input model_http.QuizCreate) int
+		UpdateQuiz   func(childComplexity int, input model_cassandra.QuizCore) int
 	}
 
 	Query struct {
@@ -95,8 +95,8 @@ type MutationResolver interface {
 	DeleteUser(ctx context.Context, input model_http.DeleteUserRequest) (string, error)
 	LoginUser(ctx context.Context, input model_cassandra.UserLoginCredentials) (*model_http.JWTAuthResponse, error)
 	RefreshToken(ctx context.Context) (*model_http.JWTAuthResponse, error)
-	CreateQuiz(ctx context.Context, input model_http.QuizCreate) (string, error)
-	UpdateQuiz(ctx context.Context, input model_http.QuizCreate) (string, error)
+	CreateQuiz(ctx context.Context, input model_cassandra.QuizCore) (string, error)
+	UpdateQuiz(ctx context.Context, input model_cassandra.QuizCore) (string, error)
 	PublishQuiz(ctx context.Context, quizID string) (string, error)
 	DeleteQuiz(ctx context.Context, quizID string) (string, error)
 	TakeQuiz(ctx context.Context, quizID string, input model_cassandra.QuizResponse) (float64, error)
@@ -155,7 +155,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateQuiz(childComplexity, args["input"].(model_http.QuizCreate)), true
+		return e.complexity.Mutation.CreateQuiz(childComplexity, args["input"].(model_cassandra.QuizCore)), true
 
 	case "Mutation.deleteQuiz":
 		if e.complexity.Mutation.DeleteQuiz == nil {
@@ -246,7 +246,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateQuiz(childComplexity, args["input"].(model_http.QuizCreate)), true
+		return e.complexity.Mutation.UpdateQuiz(childComplexity, args["input"].(model_cassandra.QuizCore)), true
 
 	case "Query.viewQuiz":
 		if e.complexity.Query.ViewQuiz == nil {
@@ -542,10 +542,10 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 func (ec *executionContext) field_Mutation_createQuiz_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model_http.QuizCreate
+	var arg0 model_cassandra.QuizCore
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNQuizCreate2githubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋhttpᚐQuizCreate(ctx, tmp)
+		arg0, err = ec.unmarshalNQuizCreate2githubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋcassandraᚐQuizCore(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -656,10 +656,10 @@ func (ec *executionContext) field_Mutation_takeQuiz_args(ctx context.Context, ra
 func (ec *executionContext) field_Mutation_updateQuiz_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model_http.QuizCreate
+	var arg0 model_cassandra.QuizCore
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNQuizCreate2githubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋhttpᚐQuizCreate(ctx, tmp)
+		arg0, err = ec.unmarshalNQuizCreate2githubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋcassandraᚐQuizCore(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1115,7 +1115,7 @@ func (ec *executionContext) _Mutation_createQuiz(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateQuiz(rctx, fc.Args["input"].(model_http.QuizCreate))
+		return ec.resolvers.Mutation().CreateQuiz(rctx, fc.Args["input"].(model_cassandra.QuizCore))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1170,7 +1170,7 @@ func (ec *executionContext) _Mutation_updateQuiz(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateQuiz(rctx, fc.Args["input"].(model_http.QuizCreate))
+		return ec.resolvers.Mutation().UpdateQuiz(rctx, fc.Args["input"].(model_cassandra.QuizCore))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3923,8 +3923,8 @@ func (ec *executionContext) unmarshalInputDeleteUserRequest(ctx context.Context,
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputQuestionCreate(ctx context.Context, obj interface{}) (model_http.QuestionCreate, error) {
-	var it model_http.QuestionCreate
+func (ec *executionContext) unmarshalInputQuestionCreate(ctx context.Context, obj interface{}) (model_cassandra.Question, error) {
+	var it model_cassandra.Question
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
@@ -3975,8 +3975,8 @@ func (ec *executionContext) unmarshalInputQuestionCreate(ctx context.Context, ob
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputQuizCreate(ctx context.Context, obj interface{}) (model_http.QuizCreate, error) {
-	var it model_http.QuizCreate
+func (ec *executionContext) unmarshalInputQuizCreate(ctx context.Context, obj interface{}) (model_cassandra.QuizCore, error) {
+	var it model_cassandra.QuizCore
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
@@ -4009,7 +4009,7 @@ func (ec *executionContext) unmarshalInputQuizCreate(ctx context.Context, obj in
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Questions"))
-			it.Questions, err = ec.unmarshalNQuestionCreate2ᚕᚖgithubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋhttpᚐQuestionCreateᚄ(ctx, v)
+			it.Questions, err = ec.unmarshalNQuestionCreate2ᚕᚖgithubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋcassandraᚐQuestionᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -5043,16 +5043,16 @@ func (ec *executionContext) marshalNQuestion2ᚖgithubᚗcomᚋsurahmanᚋmcqᚑ
 	return ec._Question(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNQuestionCreate2ᚕᚖgithubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋhttpᚐQuestionCreateᚄ(ctx context.Context, v interface{}) ([]*model_http.QuestionCreate, error) {
+func (ec *executionContext) unmarshalNQuestionCreate2ᚕᚖgithubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋcassandraᚐQuestionᚄ(ctx context.Context, v interface{}) ([]*model_cassandra.Question, error) {
 	var vSlice []interface{}
 	if v != nil {
 		vSlice = graphql.CoerceList(v)
 	}
 	var err error
-	res := make([]*model_http.QuestionCreate, len(vSlice))
+	res := make([]*model_cassandra.Question, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNQuestionCreate2ᚖgithubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋhttpᚐQuestionCreate(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNQuestionCreate2ᚖgithubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋcassandraᚐQuestion(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -5060,7 +5060,7 @@ func (ec *executionContext) unmarshalNQuestionCreate2ᚕᚖgithubᚗcomᚋsurahm
 	return res, nil
 }
 
-func (ec *executionContext) unmarshalNQuestionCreate2ᚖgithubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋhttpᚐQuestionCreate(ctx context.Context, v interface{}) (*model_http.QuestionCreate, error) {
+func (ec *executionContext) unmarshalNQuestionCreate2ᚖgithubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋcassandraᚐQuestion(ctx context.Context, v interface{}) (*model_cassandra.Question, error) {
 	res, err := ec.unmarshalInputQuestionCreate(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
@@ -5079,7 +5079,7 @@ func (ec *executionContext) marshalNQuizCore2ᚖgithubᚗcomᚋsurahmanᚋmcqᚑ
 	return ec._QuizCore(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNQuizCreate2githubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋhttpᚐQuizCreate(ctx context.Context, v interface{}) (model_http.QuizCreate, error) {
+func (ec *executionContext) unmarshalNQuizCreate2githubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋcassandraᚐQuizCore(ctx context.Context, v interface{}) (model_cassandra.QuizCore, error) {
 	res, err := ec.unmarshalInputQuizCreate(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
