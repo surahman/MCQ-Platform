@@ -18,12 +18,15 @@ func (r *mutationResolver) TakeQuiz(ctx context.Context, quizID string, input mo
 
 // QuizResponse is the resolver for the QuizResponse field.
 func (r *responseResolver) QuizResponse(ctx context.Context, obj *model_cassandra.Response) ([][]int32, error) {
-	panic(fmt.Errorf("not implemented: QuizResponse - QuizResponse"))
+	if obj.QuizResponse == nil {
+		return nil, nil
+	}
+	return obj.QuizResponse.Responses, nil
 }
 
 // QuizID is the resolver for the QuizID field.
 func (r *responseResolver) QuizID(ctx context.Context, obj *model_cassandra.Response) (string, error) {
-	panic(fmt.Errorf("not implemented: QuizID - QuizID"))
+	return obj.QuizID.String(), nil
 }
 
 // Response returns graphql_generated.ResponseResolver implementation.
