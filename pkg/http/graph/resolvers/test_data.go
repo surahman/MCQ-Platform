@@ -40,6 +40,9 @@ func getQuizzesQuery() map[string]string {
 		"view": `{
   	"query": "query { viewQuiz(quizID: \"%s\"){ Title MarkingType Questions { Description Asset Options Answers } }}"
 }`,
+		"delete": `{
+	"query": "mutation { deleteQuiz(quizID:\"%s\")}"
+}`,
 	}
 
 }

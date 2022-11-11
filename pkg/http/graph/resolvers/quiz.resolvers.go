@@ -13,7 +13,9 @@ import (
 	http_common "github.com/surahman/mcq-platform/pkg/http"
 	graphql_generated "github.com/surahman/mcq-platform/pkg/http/graph/generated"
 	model_cassandra "github.com/surahman/mcq-platform/pkg/model/cassandra"
+	"github.com/surahman/mcq-platform/pkg/redis"
 	"github.com/surahman/mcq-platform/pkg/validator"
+	"go.uber.org/zap"
 )
 
 // CreateQuiz is the resolver for the createQuiz field.
@@ -84,7 +86,37 @@ func (r *mutationResolver) PublishQuiz(ctx context.Context, quizID string) (stri
 
 // DeleteQuiz is the resolver for the deleteQuiz field.
 func (r *mutationResolver) DeleteQuiz(ctx context.Context, quizID string) (string, error) {
-	panic(fmt.Errorf("not implemented: DeleteQuiz - deleteQuiz"))
+	var err error
+	var username string
+	var quizId gocql.UUID
+
+	if quizId, err = gocql.ParseUUID(quizID); err != nil {
+		return "", errors.New("invalid quiz id supplied, must be a valid UUID")
+	}
+
+	// Get username from JWT.
+	if username, _, err = AuthorizationCheck(r.Auth, r.Logger, r.AuthHeaderKey, ctx); err != nil {
+		return "", err
+	}
+
+	// Evict from cache, if present.
+	// This step must be executed before deletion to ensure the end user is able to reattempt the command in the event of failure.
+	// It must not be the case that data marked as deleted remains in the cache till LRU eviction or TTL expiration.
+	if err = r.Cache.Del(quizId.String()); err != nil && err.(*redis.Error).Code != redis.ErrorCacheMiss {
+		r.Logger.Error("failed to evict data from cache", zap.Error(err))
+		return "", errors.New("please retry the command at a later time")
+	}
+
+	// Delete quiz record from database.
+	request := model_cassandra.QuizMutateRequest{
+		Username: username,
+		QuizID:   quizId,
+	}
+	if _, err = r.DB.Execute(cassandra.DeleteQuizQuery, &request); err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("successfully deleted %s", quizId.String()), nil
 }
 
 // ViewQuiz is the resolver for the viewQuiz field.
