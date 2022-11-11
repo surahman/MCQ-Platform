@@ -37,6 +37,9 @@ func getQuizzesQuery() map[string]string {
 		"update_invalid": `{
     "query": "mutation { updateQuiz( quizID: \"%s\" quiz: { Title: \"\" MarkingType: \"\" Questions: [ { Description: \"\" Asset: \"\" Options: [\"\", \"\", \"\"] Answers: [] } { Description: \"\" Asset: \"\" Options: [\"\", \"\"] Answers: [] } ] } )}"
 }`,
+		"view": `{
+  	"query": "query { viewQuiz(quizID: \"%s\"){ Title MarkingType Questions { Description Asset Options Answers } }}"
+}`,
 	}
 
 }

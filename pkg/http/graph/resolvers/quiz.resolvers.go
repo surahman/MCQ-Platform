@@ -10,6 +10,7 @@ import (
 
 	"github.com/gocql/gocql"
 	"github.com/surahman/mcq-platform/pkg/cassandra"
+	http_common "github.com/surahman/mcq-platform/pkg/http"
 	graphql_generated "github.com/surahman/mcq-platform/pkg/http/graph/generated"
 	model_cassandra "github.com/surahman/mcq-platform/pkg/model/cassandra"
 	"github.com/surahman/mcq-platform/pkg/validator"
@@ -88,7 +89,43 @@ func (r *mutationResolver) DeleteQuiz(ctx context.Context, quizID string) (strin
 
 // ViewQuiz is the resolver for the viewQuiz field.
 func (r *queryResolver) ViewQuiz(ctx context.Context, quizID string) (*model_cassandra.QuizCore, error) {
-	panic(fmt.Errorf("not implemented: ViewQuiz - viewQuiz"))
+	var err error
+	var quiz *model_cassandra.Quiz
+	var username string
+	var quizUUID gocql.UUID
+
+	if quizUUID, err = gocql.ParseUUID(quizID); err != nil {
+		return nil, errors.New("invalid quiz id supplied, must be a valid UUID")
+	}
+
+	// Get username from JWT.
+	if username, _, err = AuthorizationCheck(r.Auth, r.Logger, r.AuthHeaderKey, ctx); err != nil {
+		return nil, err
+	}
+
+	// Get quiz:
+	// [1] Cache call.
+	// [2] Cache miss: read from the database and store it in the cache.
+	if quiz, err = http_common.GetQuiz(quizUUID, r.DB, r.Cache); err != nil {
+		return nil, err
+	}
+
+	// Check to see if quiz can be set to requester.
+	// [1] Requested quiz is NOT published OR IS deleted
+	// [2] Requester is not the author
+	// FAIL
+	if (!quiz.IsPublished || quiz.IsDeleted) && username != quiz.Author {
+		return nil, errors.New("quiz is not available")
+	}
+
+	// If the requester is not the author remove the answer key.
+	if username != quiz.Author {
+		for idx := range quiz.Questions {
+			quiz.Questions[idx].Answers = nil
+		}
+	}
+
+	return quiz.QuizCore, nil
 }
 
 // Query returns graphql_generated.QueryResolver implementation.

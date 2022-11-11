@@ -25,6 +25,9 @@ var testAuthHeaderKey = "Authorization"
 // testUserData is the test user account data.
 var testUserData = cassandra.GetTestUsers()
 
+// testQuizData is the test user account data.
+var testQuizData = cassandra.GetTestQuizzes()
+
 // testQuizData is the test quiz data.
 var testUserQuery = getUsersQuery()
 

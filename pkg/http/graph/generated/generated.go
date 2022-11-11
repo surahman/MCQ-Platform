@@ -437,7 +437,7 @@ type Question {
     Description: String!
     Asset: String!
     Options: [String!]!
-    Answers: [Int32!]!
+    Answers: [Int32!]
 }
 
 # Request data to create a quiz.
@@ -1730,14 +1730,11 @@ func (ec *executionContext) _Question_Answers(ctx context.Context, field graphql
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.([]int32)
 	fc.Result = res
-	return ec.marshalNInt322ᚕint32ᚄ(ctx, field.Selections, res)
+	return ec.marshalOInt322ᚕint32ᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Question_Answers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4405,9 +4402,6 @@ func (ec *executionContext) _Question(ctx context.Context, sel ast.SelectionSet,
 
 			out.Values[i] = ec._Question_Answers(ctx, field, obj)
 
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
