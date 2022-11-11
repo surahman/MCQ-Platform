@@ -8,6 +8,7 @@ import (
 	"github.com/surahman/mcq-platform/pkg/auth"
 	"github.com/surahman/mcq-platform/pkg/cassandra"
 	"github.com/surahman/mcq-platform/pkg/grading"
+	http_common "github.com/surahman/mcq-platform/pkg/http"
 	"github.com/surahman/mcq-platform/pkg/logger"
 	"github.com/surahman/mcq-platform/pkg/model/cassandra"
 	"github.com/surahman/mcq-platform/pkg/model/http"
@@ -15,35 +16,6 @@ import (
 	"github.com/surahman/mcq-platform/pkg/validator"
 	"go.uber.org/zap"
 )
-
-// getQuiz will make a cache call for the quiz. Upon a cache miss it will call the database for the quiz and then load it into
-// the cache.
-func getQuiz(quizId gocql.UUID, db cassandra.Cassandra, cache redis.Redis) (*model_cassandra.Quiz, error) {
-	var err error
-	var quiz model_cassandra.Quiz
-	var response any
-
-	// Cache call.
-	err = cache.Get(quizId.String(), &quiz)
-
-	// Cache miss:
-	// [1] Get quiz record from database.
-	// [2] Place quiz in cache. Log but do not propagate errors to user on cache set failures.
-	if err != nil {
-		// Get quiz record from database.
-		if response, err = db.Execute(cassandra.ReadQuizQuery, quizId); err != nil {
-			return nil, err
-		}
-		quiz = *response.(*model_cassandra.Quiz)
-
-		// Only place quiz in cache if it is published and not deleted. Set method will log errors.
-		if quiz.IsPublished && !quiz.IsDeleted {
-			_ = cache.Set(quizId.String(), &quiz)
-		}
-	}
-
-	return &quiz, nil
-}
 
 // ViewQuiz will retrieve a test using a variable in the URL.
 // @Summary     View a quiz.
@@ -80,7 +52,7 @@ func ViewQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, cac
 		// Get quiz:
 		// [1] Cache call.
 		// [2] Cache miss: read from the database and store it in the cache.
-		if quiz, err = getQuiz(quizId, db, cache); err != nil {
+		if quiz, err = http_common.GetQuiz(quizId, db, cache); err != nil {
 			cassandraError := err.(*cassandra.Error)
 			context.AbortWithStatusJSON(cassandraError.Status, &model_http.Error{Message: "error retrieving quiz", Payload: cassandraError.Message})
 			return
@@ -396,7 +368,7 @@ func TakeQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, cac
 		// Get quiz:
 		// [1] Cache call.
 		// [2] Cache miss: read from the database and store it in the cache.
-		if quiz, err = getQuiz(quizId, db, cache); err != nil {
+		if quiz, err = http_common.GetQuiz(quizId, db, cache); err != nil {
 			cassandraError := err.(*cassandra.Error)
 			context.AbortWithStatusJSON(cassandraError.Status, &model_http.Error{Message: "error retrieving quiz", Payload: cassandraError.Message})
 			return
