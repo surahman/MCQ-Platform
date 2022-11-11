@@ -43,6 +43,9 @@ func getQuizzesQuery() map[string]string {
 		"delete": `{
 	"query": "mutation { deleteQuiz(quizID:\"%s\")}"
 }`,
+		"publish": `{
+	"query": "mutation { publishQuiz(quizID:\"%s\")}"
+}`,
 	}
 
 }

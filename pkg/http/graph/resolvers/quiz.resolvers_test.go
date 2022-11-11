@@ -864,20 +864,25 @@ func TestMutationResolver_DeleteQuiz(t *testing.T) {
 			mockRedis := mocks.NewMockRedis(mockCtrl)
 			mockGrading := mocks.NewMockGrading(mockCtrl) // Not called.
 
-			mockCassandra.EXPECT().Execute(gomock.Any(), gomock.Any()).Return(
-				testCase.cassandraDeleteData.outputParam,
-				testCase.cassandraDeleteData.outputErr,
-			).Times(testCase.cassandraDeleteData.times)
+			gomock.InOrder(
+				// Check authorization.
+				mockAuth.EXPECT().ValidateJWT(gomock.Any()).Return(
+					testCase.authValidateJWTData.outputParam1,
+					testCase.authValidateJWTData.outputParam2,
+					testCase.authValidateJWTData.outputErr,
+				).Times(testCase.authValidateJWTData.times),
 
-			mockAuth.EXPECT().ValidateJWT(gomock.Any()).Return(
-				testCase.authValidateJWTData.outputParam1,
-				testCase.authValidateJWTData.outputParam2,
-				testCase.authValidateJWTData.outputErr,
-			).Times(testCase.authValidateJWTData.times)
+				// Cache delete.
+				mockRedis.EXPECT().Del(gomock.Any()).Return(
+					testCase.redisDeleteData.err,
+				).Times(testCase.redisDeleteData.times),
 
-			mockRedis.EXPECT().Del(gomock.Any()).Return(
-				testCase.redisDeleteData.err,
-			).Times(testCase.redisDeleteData.times)
+				// Update record in Cassandra.
+				mockCassandra.EXPECT().Execute(gomock.Any(), gomock.Any()).Return(
+					testCase.cassandraDeleteData.outputParam,
+					testCase.cassandraDeleteData.outputErr,
+				).Times(testCase.cassandraDeleteData.times),
+			)
 
 			// Endpoint setup for test.
 			router.POST(testCase.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockCassandra, mockGrading, zapLogger))
@@ -903,6 +908,222 @@ func TestMutationResolver_DeleteQuiz(t *testing.T) {
 				require.True(t, ok, "data key expected but not set")
 				quizID := data.(map[string]any)["deleteQuiz"].(string)
 				require.Contains(t, quizID, testCase.quizId, "actual and expected quid ids did not match")
+			}
+		})
+	}
+}
+
+func TestMutationResolver_PublishQuiz(t *testing.T) {
+	// Configure router and middleware that loads the Gin context for the resolvers.
+	router := getRouter()
+	router.Use(GinContextToContextMiddleware())
+
+	testCases := []struct {
+		name                 string
+		path                 string
+		quizId               string
+		query                string
+		expectErr            bool
+		authValidateJWTData  *mockAuthData
+		cassandraPublishData *mockCassandraData
+		cassandraGetData     *mockCassandraData
+		redisSetData         *mockRedisData
+	}{
+		// ----- test cases start ----- //
+		{
+			name:      "empty token",
+			path:      "/publish/empty-token/",
+			quizId:    gocql.TimeUUID().String(),
+			query:     testQuizQuery["publish"],
+			expectErr: true,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "",
+				outputErr:    errors.New("invalid token"),
+				times:        1,
+			},
+			cassandraPublishData: &mockCassandraData{
+				outputErr: nil,
+				times:     0,
+			},
+			cassandraGetData: &mockCassandraData{times: 0},
+			redisSetData:     &mockRedisData{times: 0},
+		}, {
+			name:      "invalid quiz id",
+			path:      "/publish/invalid-quiz-id",
+			quizId:    "not a valid uuid",
+			query:     testQuizQuery["publish"],
+			expectErr: true,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "",
+				times:        0,
+			},
+			cassandraPublishData: &mockCassandraData{
+				times: 0,
+			},
+			cassandraGetData: &mockCassandraData{times: 0},
+			redisSetData:     &mockRedisData{times: 0},
+		}, {
+			name:      "db failure",
+			path:      "/publish/db-failure/",
+			quizId:    gocql.TimeUUID().String(),
+			query:     testQuizQuery["publish"],
+			expectErr: true,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "",
+				times:        1,
+			},
+			cassandraPublishData: &mockCassandraData{
+				outputErr: &cassandra.Error{
+					Message: "",
+					Status:  http.StatusInternalServerError,
+				},
+				times: 1,
+			},
+			cassandraGetData: &mockCassandraData{times: 0},
+			redisSetData:     &mockRedisData{times: 0},
+		}, {
+			name:      "db unauthorized",
+			path:      "/publish/db-unauthorized/",
+			quizId:    gocql.TimeUUID().String(),
+			query:     testQuizQuery["publish"],
+			expectErr: true,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "",
+				times:        1,
+			},
+			cassandraPublishData: &mockCassandraData{
+				outputErr: &cassandra.Error{
+					Message: "",
+					Status:  http.StatusForbidden,
+				},
+				times: 1,
+			},
+			cassandraGetData: &mockCassandraData{times: 0},
+			redisSetData:     &mockRedisData{times: 0},
+		}, {
+			name:      "success - db read failure",
+			path:      "/publish/success-db-read-failure/",
+			quizId:    gocql.TimeUUID().String(),
+			query:     testQuizQuery["publish"],
+			expectErr: false,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "",
+				times:        1,
+			},
+			cassandraPublishData: &mockCassandraData{
+				outputErr: nil,
+				times:     1,
+			},
+			cassandraGetData: &mockCassandraData{
+				outputParam: &model_cassandra.Quiz{},
+				outputErr: &cassandra.Error{
+					Message: "",
+					Status:  http.StatusInternalServerError,
+				},
+				times: 1,
+			},
+			redisSetData: &mockRedisData{times: 0},
+		}, {
+			name:      "success - cache set failure",
+			path:      "/publish/success-cache-set-failure/",
+			quizId:    gocql.TimeUUID().String(),
+			query:     testQuizQuery["publish"],
+			expectErr: false,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "",
+				times:        1,
+			},
+			cassandraPublishData: &mockCassandraData{
+				outputErr: nil,
+				times:     1,
+			},
+			cassandraGetData: &mockCassandraData{
+				outputParam: &model_cassandra.Quiz{},
+				times:       1,
+			},
+			redisSetData: &mockRedisData{
+				err:   redis.NewError("something bad happened!"),
+				times: 1,
+			},
+		}, {
+			name:      "success",
+			path:      "/publish/success/",
+			quizId:    gocql.TimeUUID().String(),
+			query:     testQuizQuery["publish"],
+			expectErr: false,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "",
+				times:        1,
+			},
+			cassandraPublishData: &mockCassandraData{
+				outputErr: nil,
+				times:     1,
+			},
+			cassandraGetData: &mockCassandraData{
+				outputParam: &model_cassandra.Quiz{},
+				times:       1,
+			},
+			redisSetData: &mockRedisData{times: 1},
+		},
+		// ----- test cases end ----- //
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockCassandra := mocks.NewMockCassandra(mockCtrl)
+			mockRedis := mocks.NewMockRedis(mockCtrl)
+			mockGrading := mocks.NewMockGrading(mockCtrl) // Not called.
+
+			mockAuth.EXPECT().ValidateJWT(gomock.Any()).Return(
+				testCase.authValidateJWTData.outputParam1,
+				testCase.authValidateJWTData.outputParam2,
+				testCase.authValidateJWTData.outputErr,
+			).Times(testCase.authValidateJWTData.times)
+
+			gomock.InOrder(
+				// Publish.
+				mockCassandra.EXPECT().Execute(gomock.Any(), gomock.Any()).Return(
+					testCase.cassandraPublishData.outputParam,
+					testCase.cassandraPublishData.outputErr,
+				).Times(testCase.cassandraPublishData.times),
+				// View.
+				mockCassandra.EXPECT().Execute(gomock.Any(), gomock.Any()).Return(
+					testCase.cassandraGetData.outputParam,
+					testCase.cassandraGetData.outputErr,
+				).Times(testCase.cassandraGetData.times),
+			)
+
+			mockRedis.EXPECT().Set(gomock.Any(), gomock.Any()).Return(
+				testCase.redisSetData.err,
+			).Times(testCase.redisSetData.times)
+
+			// Endpoint setup for test.
+			router.POST(testCase.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockCassandra, mockGrading, zapLogger))
+
+			req, _ := http.NewRequest("POST", testCase.path, bytes.NewBufferString(fmt.Sprintf(testCase.query, testCase.quizId)))
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", "some auth token")
+			w := httptest.NewRecorder()
+			router.ServeHTTP(w, req)
+
+			// Verify responses
+			require.Equal(t, http.StatusOK, w.Code, "expected status codes do not match")
+
+			response := map[string]any{}
+			require.NoError(t, json.Unmarshal(w.Body.Bytes(), &response), "failed to unmarshal response body")
+
+			// Error is expected check to ensure one is set.
+			if testCase.expectErr {
+				verifyErrorReturned(t, response)
+			} else {
+				// Quiz ID is expected.
+				data, ok := response["data"]
+				require.True(t, ok, "data key expected but not set")
+				quizID := data.(map[string]any)["publishQuiz"].(string)
+				require.Contains(t, quizID, testCase.quizId, "actual and expected quiz ids did not match")
 			}
 		})
 	}

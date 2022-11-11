@@ -81,7 +81,51 @@ func (r *mutationResolver) UpdateQuiz(ctx context.Context, quizID string, quiz m
 
 // PublishQuiz is the resolver for the publishQuiz field.
 func (r *mutationResolver) PublishQuiz(ctx context.Context, quizID string) (string, error) {
-	panic(fmt.Errorf("not implemented: PublishQuiz - publishQuiz"))
+	var err error
+	var username string
+	var quizId gocql.UUID
+	var response any
+	var quiz *model_cassandra.Quiz
+
+	if quizId, err = gocql.ParseUUID(quizID); err != nil {
+		return "", errors.New("invalid quiz id supplied, must be a valid UUID")
+	}
+
+	// Get username from JWT.
+	if username, _, err = AuthorizationCheck(r.Auth, r.Logger, r.AuthHeaderKey, ctx); err != nil {
+		return "", err
+	}
+
+	// Publish quiz record in database.
+	request := model_cassandra.QuizMutateRequest{
+		Username: username,
+		QuizID:   quizId,
+	}
+	if _, err = r.DB.Execute(cassandra.PublishQuizQuery, &request); err != nil {
+		return "", err
+	}
+
+	// Success message should be set here because publishing succeeded.
+	// Any failures below this point are cache related and should be logged but not propagated to the end user.
+	returnMsg := fmt.Sprintf("published quiz with id %s", quizId.String())
+
+	// Place quiz in cache.
+	// [1] Retrieve the quiz from Cassandra.
+	// [2] Place into Redis.
+
+	// Get quiz record from database.
+	if response, err = r.DB.Execute(cassandra.ReadQuizQuery, quizId); err != nil {
+		r.Logger.Error("error retrieving quiz from database to be placed in cache post publishing", zap.Error(err))
+		return returnMsg, nil
+	}
+	quiz = response.(*model_cassandra.Quiz)
+
+	if err = r.Cache.Set(quizId.String(), quiz); err != nil {
+		r.Logger.Error("error placing quiz in cache after publishing", zap.Error(err))
+		return returnMsg, nil
+	}
+
+	return returnMsg, nil
 }
 
 // DeleteQuiz is the resolver for the deleteQuiz field.
