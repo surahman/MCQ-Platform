@@ -61,7 +61,7 @@ type ComplexityRoot struct {
 		RefreshToken func(childComplexity int) int
 		RegisterUser func(childComplexity int, input *model_cassandra.UserAccount) int
 		TakeQuiz     func(childComplexity int, quizID string, input model_cassandra.QuizResponse) int
-		UpdateQuiz   func(childComplexity int, input model_cassandra.QuizCore) int
+		UpdateQuiz   func(childComplexity int, quizID string, quiz model_cassandra.QuizCore) int
 	}
 
 	Query struct {
@@ -96,7 +96,7 @@ type MutationResolver interface {
 	LoginUser(ctx context.Context, input model_cassandra.UserLoginCredentials) (*model_http.JWTAuthResponse, error)
 	RefreshToken(ctx context.Context) (*model_http.JWTAuthResponse, error)
 	CreateQuiz(ctx context.Context, input model_cassandra.QuizCore) (string, error)
-	UpdateQuiz(ctx context.Context, input model_cassandra.QuizCore) (string, error)
+	UpdateQuiz(ctx context.Context, quizID string, quiz model_cassandra.QuizCore) (string, error)
 	PublishQuiz(ctx context.Context, quizID string) (string, error)
 	DeleteQuiz(ctx context.Context, quizID string) (string, error)
 	TakeQuiz(ctx context.Context, quizID string, input model_cassandra.QuizResponse) (float64, error)
@@ -246,7 +246,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateQuiz(childComplexity, args["input"].(model_cassandra.QuizCore)), true
+		return e.complexity.Mutation.UpdateQuiz(childComplexity, args["quizID"].(string), args["quiz"].(model_cassandra.QuizCore)), true
 
 	case "Query.viewQuiz":
 		if e.complexity.Query.ViewQuiz == nil {
@@ -461,7 +461,7 @@ extend type Mutation {
     createQuiz(input: QuizCreate!): String!
 
     # Request to update a quiz. Only unpublished quizzes can be updated.
-    updateQuiz(input: QuizCreate!): String!
+    updateQuiz(quizID: String!, quiz: QuizCreate!): String!
 
     # Request to publish a quiz.
     publishQuiz(quizID: String!): String!
@@ -656,15 +656,24 @@ func (ec *executionContext) field_Mutation_takeQuiz_args(ctx context.Context, ra
 func (ec *executionContext) field_Mutation_updateQuiz_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model_cassandra.QuizCore
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNQuizCreate2githubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋcassandraᚐQuizCore(ctx, tmp)
+	var arg0 string
+	if tmp, ok := rawArgs["quizID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quizID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["input"] = arg0
+	args["quizID"] = arg0
+	var arg1 model_cassandra.QuizCore
+	if tmp, ok := rawArgs["quiz"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quiz"))
+		arg1, err = ec.unmarshalNQuizCreate2githubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋcassandraᚐQuizCore(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["quiz"] = arg1
 	return args, nil
 }
 
@@ -1170,7 +1179,7 @@ func (ec *executionContext) _Mutation_updateQuiz(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateQuiz(rctx, fc.Args["input"].(model_cassandra.QuizCore))
+		return ec.resolvers.Mutation().UpdateQuiz(rctx, fc.Args["quizID"].(string), fc.Args["quiz"].(model_cassandra.QuizCore))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

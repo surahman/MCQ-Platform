@@ -31,6 +31,12 @@ func getQuizzesQuery() map[string]string {
 		"create_invalid": `{
     "query": "mutation { createQuiz(input: { Title: \"Sample quiz title\" MarkingType: \"Negative\" Questions: [ { Description: \"Sample quiz description\" Asset: \"http://url-of-asset.com/asset.txt\" Options: [\"Option 1\", \"Option 2\", \"Option 3\"] Answers: [2] } { Description: \"This question only has one option and is invalid\" Asset: \"http://url-of-another-asset.com/img.jpg\" Options: [\"Another opt 1\"] Answers: [0] } ] } )}"
 }`,
+		"update_valid": `{
+    "query": "mutation { updateQuiz( quizID: \"%s\" quiz: { Title: \"Sample quiz title\" MarkingType: \"Negative\" Questions: [ { Description: \"Sample quiz description\" Asset: \"http://url-of-asset.com/asset.txt\" Options: [\"Option 1\", \"Option 2\", \"Option 3\"] Answers: [2] } { Description: \"Another question\" Asset: \"http://url-of-another-asset.com/img.jpg\" Options: [\"Another opt 1\", \"Another opt 2\"] Answers: [1] } ] } )}"
+}`,
+		"update_invalid": `{
+    "query": "mutation { updateQuiz( quizID: \"%s\" quiz: { Title: \"\" MarkingType: \"\" Questions: [ { Description: \"\" Asset: \"\" Options: [\"\", \"\", \"\"] Answers: [] } { Description: \"\" Asset: \"\" Options: [\"\", \"\"] Answers: [] } ] } )}"
+}`,
 	}
 
 }

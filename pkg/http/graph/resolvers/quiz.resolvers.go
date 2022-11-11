@@ -5,6 +5,7 @@ package graphql_resolvers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/gocql/gocql"
@@ -43,8 +44,36 @@ func (r *mutationResolver) CreateQuiz(ctx context.Context, input model_cassandra
 }
 
 // UpdateQuiz is the resolver for the updateQuiz field.
-func (r *mutationResolver) UpdateQuiz(ctx context.Context, input model_cassandra.QuizCore) (string, error) {
-	panic(fmt.Errorf("not implemented: UpdateQuiz - updateQuiz"))
+func (r *mutationResolver) UpdateQuiz(ctx context.Context, quizID string, quiz model_cassandra.QuizCore) (string, error) {
+	var err error
+	var username string
+	var quizUUID gocql.UUID
+
+	if quizUUID, err = gocql.ParseUUID(quizID); err != nil {
+		return "", errors.New("invalid quiz id supplied, must be a valid UUID")
+	}
+
+	if username, _, err = AuthorizationCheck(r.Auth, r.Logger, r.AuthHeaderKey, ctx); err != nil {
+		return "", err
+	}
+
+	if err = validator.ValidateStruct(&quiz); err != nil {
+		return "", err
+	}
+
+	// Prepare quiz by adding username and provided quiz UUID, then insert record.
+	updateRequest := model_cassandra.QuizMutateRequest{
+		Username: username,
+		QuizID:   quizUUID,
+		Quiz: &model_cassandra.Quiz{
+			QuizCore: &quiz,
+		},
+	}
+	if _, err = r.DB.Execute(cassandra.UpdateQuizQuery, &updateRequest); err != nil {
+		return "", err
+	}
+
+	return quizUUID.String(), nil
 }
 
 // PublishQuiz is the resolver for the publishQuiz field.
