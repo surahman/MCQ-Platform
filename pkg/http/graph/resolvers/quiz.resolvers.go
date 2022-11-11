@@ -7,13 +7,39 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gocql/gocql"
+	"github.com/surahman/mcq-platform/pkg/cassandra"
 	graphql_generated "github.com/surahman/mcq-platform/pkg/http/graph/generated"
 	model_cassandra "github.com/surahman/mcq-platform/pkg/model/cassandra"
+	"github.com/surahman/mcq-platform/pkg/validator"
 )
 
 // CreateQuiz is the resolver for the createQuiz field.
 func (r *mutationResolver) CreateQuiz(ctx context.Context, input model_cassandra.QuizCore) (string, error) {
-	panic(fmt.Errorf("not implemented: CreateQuiz - createQuiz"))
+	var err error
+	var username string
+
+	if username, _, err = AuthorizationCheck(r.Auth, r.Logger, r.AuthHeaderKey, ctx); err != nil {
+		return "", err
+	}
+
+	if err = validator.ValidateStruct(&input); err != nil {
+		return "", err
+	}
+
+	// Prepare quiz by adding username and generating quiz id, then insert record.
+	quiz := model_cassandra.Quiz{
+		QuizCore:    &input,
+		QuizID:      gocql.TimeUUID(),
+		Author:      username,
+		IsPublished: false,
+		IsDeleted:   false,
+	}
+	if _, err = r.DB.Execute(cassandra.CreateQuizQuery, &quiz); err != nil {
+		return "", err
+	}
+
+	return quiz.QuizID.String(), nil
 }
 
 // UpdateQuiz is the resolver for the updateQuiz field.
