@@ -46,6 +46,9 @@ func getQuizzesQuery() map[string]string {
 		"publish": `{
 	"query": "mutation { publishQuiz(quizID:\"%s\")}"
 }`,
+		"take": `{
+    "query": "mutation { takeQuiz( quizID:\"%s\" input: { Responses: %v } ) { Username Author Score QuizResponse QuizID }}"
+}`,
 	}
 
 }

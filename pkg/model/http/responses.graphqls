@@ -15,5 +15,5 @@ input QuizResponse {
 # Requests that might alter the state of data in the database.
 extend type Mutation {
     # Request to submit responses to a quiz for marking.
-    takeQuiz(quizID: String!, input: QuizResponse!): Float!
+    takeQuiz(quizID: String!, input: QuizResponse!): Response!
 }

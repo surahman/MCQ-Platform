@@ -5,15 +5,66 @@ package graphql_resolvers
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
+	"github.com/gocql/gocql"
+	"github.com/surahman/mcq-platform/pkg/cassandra"
+	http_common "github.com/surahman/mcq-platform/pkg/http"
 	graphql_generated "github.com/surahman/mcq-platform/pkg/http/graph/generated"
 	model_cassandra "github.com/surahman/mcq-platform/pkg/model/cassandra"
+	"github.com/surahman/mcq-platform/pkg/validator"
 )
 
 // TakeQuiz is the resolver for the takeQuiz field.
-func (r *mutationResolver) TakeQuiz(ctx context.Context, quizID string, input model_cassandra.QuizResponse) (float64, error) {
-	panic(fmt.Errorf("not implemented: TakeQuiz - takeQuiz"))
+func (r *mutationResolver) TakeQuiz(ctx context.Context, quizID string, input model_cassandra.QuizResponse) (*model_cassandra.Response, error) {
+	var err error
+	var username string
+	var quiz *model_cassandra.Quiz
+	var quizId gocql.UUID
+	var score float64
+
+	if quizId, err = gocql.ParseUUID(quizID); err != nil {
+		return nil, errors.New("invalid quiz id supplied, must be a valid UUID")
+	}
+
+	// Get username from JWT.
+	if username, _, err = AuthorizationCheck(r.Auth, r.Logger, r.AuthHeaderKey, ctx); err != nil {
+		return nil, err
+	}
+
+	if err = validator.ValidateStruct(&input); err != nil {
+		return nil, err
+	}
+
+	// Get quiz:
+	// [1] Cache call.
+	// [2] Cache miss: read from the database and store it in the cache.
+	if quiz, err = http_common.GetQuiz(quizId, r.DB, r.Cache); err != nil {
+		return nil, err
+	}
+
+	// Check to see if the quiz is deleted or unpublished.
+	if !quiz.IsPublished || quiz.IsDeleted {
+		return nil, err
+	}
+
+	// Grade the quizResponse.
+	if score, err = r.Grading.Grade(&input, quiz.QuizCore); err != nil {
+		return nil, err
+	}
+
+	// Insert updated record.
+	response := model_cassandra.Response{
+		Username:     username,
+		Score:        score,
+		QuizResponse: &input,
+		QuizID:       quizId,
+	}
+	if _, err = r.DB.Execute(cassandra.CreateResponseQuery, &response); err != nil {
+		return nil, err
+	}
+
+	return &response, nil
 }
 
 // QuizResponse is the resolver for the QuizResponse field.

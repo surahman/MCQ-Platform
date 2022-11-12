@@ -99,7 +99,7 @@ type MutationResolver interface {
 	UpdateQuiz(ctx context.Context, quizID string, quiz model_cassandra.QuizCore) (string, error)
 	PublishQuiz(ctx context.Context, quizID string) (string, error)
 	DeleteQuiz(ctx context.Context, quizID string) (string, error)
-	TakeQuiz(ctx context.Context, quizID string, input model_cassandra.QuizResponse) (float64, error)
+	TakeQuiz(ctx context.Context, quizID string, input model_cassandra.QuizResponse) (*model_cassandra.Response, error)
 }
 type QueryResolver interface {
 	ViewQuiz(ctx context.Context, quizID string) (*model_cassandra.QuizCore, error)
@@ -492,7 +492,7 @@ input QuizResponse {
 # Requests that might alter the state of data in the database.
 extend type Mutation {
     # Request to submit responses to a quiz for marking.
-    takeQuiz(quizID: String!, input: QuizResponse!): Float!
+    takeQuiz(quizID: String!, input: QuizResponse!): Response!
 }`, BuiltIn: false},
 	{Name: "../../../model/http/scalars.graphqls", Input: `scalar Int32
 scalar Int64
@@ -1356,9 +1356,9 @@ func (ec *executionContext) _Mutation_takeQuiz(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.(float64)
+	res := resTmp.(*model_cassandra.Response)
 	fc.Result = res
-	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+	return ec.marshalNResponse2ᚖgithubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋcassandraᚐResponse(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_takeQuiz(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1368,7 +1368,19 @@ func (ec *executionContext) fieldContext_Mutation_takeQuiz(ctx context.Context, 
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
+			switch field.Name {
+			case "Username":
+				return ec.fieldContext_Response_Username(ctx, field)
+			case "Author":
+				return ec.fieldContext_Response_Author(ctx, field)
+			case "Score":
+				return ec.fieldContext_Response_Score(ctx, field)
+			case "QuizResponse":
+				return ec.fieldContext_Response_QuizResponse(ctx, field)
+			case "QuizID":
+				return ec.fieldContext_Response_QuizID(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Response", field.Name)
 		},
 	}
 	defer func() {
@@ -5090,6 +5102,20 @@ func (ec *executionContext) unmarshalNQuizCreate2githubᚗcomᚋsurahmanᚋmcq�
 func (ec *executionContext) unmarshalNQuizResponse2githubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋcassandraᚐQuizResponse(ctx context.Context, v interface{}) (model_cassandra.QuizResponse, error) {
 	res, err := ec.unmarshalInputQuizResponse(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNResponse2githubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋcassandraᚐResponse(ctx context.Context, sel ast.SelectionSet, v model_cassandra.Response) graphql.Marshaler {
+	return ec._Response(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNResponse2ᚖgithubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋcassandraᚐResponse(ctx context.Context, sel ast.SelectionSet, v *model_cassandra.Response) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Response(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
