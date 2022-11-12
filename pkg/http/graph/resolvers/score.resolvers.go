@@ -5,6 +5,7 @@ package graphql_resolvers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	graphql_generated "github.com/surahman/mcq-platform/pkg/http/graph/generated"
@@ -14,7 +15,10 @@ import (
 
 // QuizID is the resolver for the QuizID field.
 func (r *metadataResolver) QuizID(ctx context.Context, obj *model_http.Metadata) (string, error) {
-	panic(fmt.Errorf("not implemented: QuizID - QuizID"))
+	if obj == nil {
+		return "", errors.New("invalid quiz id supplied")
+	}
+	return obj.QuizID.String(), nil
 }
 
 // GetScore is the resolver for the getScore field.
