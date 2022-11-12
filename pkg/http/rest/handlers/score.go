@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gocql/gocql"
 	"github.com/surahman/mcq-platform/pkg/auth"
 	"github.com/surahman/mcq-platform/pkg/cassandra"
+	http_common "github.com/surahman/mcq-platform/pkg/http"
 	"github.com/surahman/mcq-platform/pkg/logger"
 	"github.com/surahman/mcq-platform/pkg/model/cassandra"
 	"github.com/surahman/mcq-platform/pkg/model/http"
@@ -162,7 +162,7 @@ func GetStatsPage(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra)
 		}
 
 		// Prepare stats page request for database.
-		if statRequest, err = prepareStatsRequest(auth, quizId, context.Query("pageCursor"), context.Query("pageSize")); err != nil {
+		if statRequest, err = http_common.PrepareStatsRequest(auth, quizId, context.Query("pageCursor"), context.Query("pageSize")); err != nil {
 			context.AbortWithStatusJSON(http.StatusBadRequest, &model_http.Error{Message: "malformed query request", Payload: err.Error()})
 			return
 		}
@@ -192,27 +192,6 @@ func GetStatsPage(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra)
 
 		context.JSON(http.StatusOK, restResponse)
 	}
-}
-
-// prepareStatsRequest will prepare the paged statistics request for the database query.
-func prepareStatsRequest(auth auth.Auth, quizId gocql.UUID, cursor string, size string) (req *model_cassandra.StatsRequest, err error) {
-	req = &model_cassandra.StatsRequest{QuizID: quizId}
-
-	if req.PageSize, err = strconv.Atoi(size); err != nil {
-		return nil, fmt.Errorf("failed to convert page size: %s", err.Error())
-	}
-	if req.PageSize < 1 {
-		req.PageSize = 10
-	}
-
-	// Null cursor must be set if there was no cursor in the URI.
-	if len(cursor) != 0 {
-		if req.PageCursor, err = auth.DecryptFromString(cursor); err != nil {
-			return nil, fmt.Errorf("failed to decrypt page cursor: %s", err.Error())
-		}
-	}
-
-	return
 }
 
 // prepareStatsResponse will prepare a http response from a database stats response. It will generate a link to the next
