@@ -15,16 +15,12 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/surahman/mcq-platform/pkg/cassandra"
 	"github.com/surahman/mcq-platform/pkg/mocks"
-	model_cassandra "github.com/surahman/mcq-platform/pkg/model/cassandra"
+	"github.com/surahman/mcq-platform/pkg/model/cassandra"
 	"github.com/surahman/mcq-platform/pkg/model/http"
 )
 
 func TestMutationResolver_RegisterUser(t *testing.T) {
 	router := getRouter()
-
-	registerUserQuery := `{
-    "query": "mutation { registerUser(input: { firstname: \"%s\", lastname:\"%s\", email: \"%s\", userLoginCredentials: { username:\"%s\", password: \"%s\" } }) { token, expires, threshold }}"
-}`
 
 	testCases := []struct {
 		name                string
@@ -39,7 +35,7 @@ func TestMutationResolver_RegisterUser(t *testing.T) {
 		{
 			name:      "empty user",
 			path:      "/register/empty-user",
-			user:      fmt.Sprintf(registerUserQuery, "", "", "", "", ""),
+			user:      fmt.Sprintf(testUserQuery["register"], "", "", "", "", ""),
 			expectErr: true,
 			authHashData: &mockAuthData{
 				outputParam1: "",
@@ -54,7 +50,7 @@ func TestMutationResolver_RegisterUser(t *testing.T) {
 		}, {
 			name: "valid user",
 			path: "/register/valid-user",
-			user: fmt.Sprintf(registerUserQuery, "first name", "last name", "email@address.com", "username999", "password999"),
+			user: fmt.Sprintf(testUserQuery["register"], "first name", "last name", "email@address.com", "username999", "password999"),
 			authHashData: &mockAuthData{
 				outputParam1: "hashed password",
 				times:        1,
@@ -73,7 +69,7 @@ func TestMutationResolver_RegisterUser(t *testing.T) {
 		}, {
 			name:      "password hash failure",
 			path:      "/register/pwd-hash-failure",
-			user:      fmt.Sprintf(registerUserQuery, "first name", "last name", "email@address.com", "username999", "password999"),
+			user:      fmt.Sprintf(testUserQuery["register"], "first name", "last name", "email@address.com", "username999", "password999"),
 			expectErr: true,
 			authHashData: &mockAuthData{
 				outputParam1: "hashed password",
@@ -89,7 +85,7 @@ func TestMutationResolver_RegisterUser(t *testing.T) {
 		}, {
 			name:      "database failure",
 			path:      "/register/database-failure",
-			user:      fmt.Sprintf(registerUserQuery, "first name", "last name", "email@address.com", "username999", "password999"),
+			user:      fmt.Sprintf(testUserQuery["register"], "first name", "last name", "email@address.com", "username999", "password999"),
 			expectErr: true,
 			authHashData: &mockAuthData{
 				outputParam1: "hashed password",
@@ -105,7 +101,7 @@ func TestMutationResolver_RegisterUser(t *testing.T) {
 		}, {
 			name:      "auth token failure",
 			path:      "/register/auth-token-failure",
-			user:      fmt.Sprintf(registerUserQuery, "first name", "last name", "email@address.com", "username999", "password999"),
+			user:      fmt.Sprintf(testUserQuery["register"], "first name", "last name", "email@address.com", "username999", "password999"),
 			expectErr: true,
 			authHashData: &mockAuthData{
 				outputParam1: "hashed password",
@@ -174,10 +170,6 @@ func TestMutationResolver_RegisterUser(t *testing.T) {
 func TestMutationResolver_LoginUser(t *testing.T) {
 	router := getRouter()
 
-	loginUserQuery := `{
-    "query": "mutation { loginUser(input: { username:\"%s\", password: \"%s\" }) { token, expires, threshold }}"
-}`
-
 	testCases := []struct {
 		name              string
 		path              string
@@ -191,7 +183,7 @@ func TestMutationResolver_LoginUser(t *testing.T) {
 		{
 			name:      "empty user",
 			path:      "/login/empty-user",
-			user:      fmt.Sprintf(loginUserQuery, "", ""),
+			user:      fmt.Sprintf(testUserQuery["login"], "", ""),
 			expectErr: true,
 			cassandraReadData: &mockCassandraData{
 				times: 0,
@@ -206,7 +198,7 @@ func TestMutationResolver_LoginUser(t *testing.T) {
 		}, {
 			name:      "valid user",
 			path:      "/login/valid-user",
-			user:      fmt.Sprintf(loginUserQuery, "username999", "password999"),
+			user:      fmt.Sprintf(testUserQuery["login"], "username999", "password999"),
 			expectErr: false,
 			cassandraReadData: &mockCassandraData{
 				outputParam: testUserData["username1"],
@@ -226,7 +218,7 @@ func TestMutationResolver_LoginUser(t *testing.T) {
 		}, {
 			name:      "database failure",
 			path:      "/login/database-failure",
-			user:      fmt.Sprintf(loginUserQuery, "username999", "password999"),
+			user:      fmt.Sprintf(testUserQuery["login"], "username999", "password999"),
 			expectErr: true,
 			cassandraReadData: &mockCassandraData{
 				outputErr: &cassandra.Error{Status: http.StatusNotFound},
@@ -242,7 +234,7 @@ func TestMutationResolver_LoginUser(t *testing.T) {
 		}, {
 			name:      "password check failure",
 			path:      "/login/pwd-check-failure",
-			user:      fmt.Sprintf(loginUserQuery, "username999", "password999"),
+			user:      fmt.Sprintf(testUserQuery["login"], "username999", "password999"),
 			expectErr: true,
 			cassandraReadData: &mockCassandraData{
 				outputParam: testUserData["username1"],
@@ -258,7 +250,7 @@ func TestMutationResolver_LoginUser(t *testing.T) {
 		}, {
 			name:      "auth token failure",
 			path:      "/login/auth-token-failure",
-			user:      fmt.Sprintf(loginUserQuery, "username999", "password999"),
+			user:      fmt.Sprintf(testUserQuery["login"], "username999", "password999"),
 			expectErr: true,
 			authCheckPwdData: &mockAuthData{
 				times: 1,
@@ -274,7 +266,7 @@ func TestMutationResolver_LoginUser(t *testing.T) {
 		}, {
 			name:      "deleted user",
 			path:      "/login/deleted-user",
-			user:      fmt.Sprintf(loginUserQuery, "username999", "password999"),
+			user:      fmt.Sprintf(testUserQuery["login"], "username999", "password999"),
 			expectErr: true,
 			cassandraReadData: &mockCassandraData{
 				outputParam: &model_cassandra.User{
@@ -347,8 +339,6 @@ func TestMutationResolver_RefreshToken(t *testing.T) {
 	// Configure router and middleware that loads the Gin context for the resolvers.
 	router := getRouter()
 	router.Use(GinContextToContextMiddleware())
-
-	refreshTokenQuery := `{ "query": "mutation { refreshToken() { token expires threshold }}" }`
 
 	testCases := []struct {
 		name                 string
@@ -549,7 +539,7 @@ func TestMutationResolver_RefreshToken(t *testing.T) {
 			// Endpoint setup for test.
 			router.POST(testCase.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockCassandra, mockGrading, zapLogger))
 
-			req, _ := http.NewRequest("POST", testCase.path, bytes.NewBufferString(refreshTokenQuery))
+			req, _ := http.NewRequest("POST", testCase.path, bytes.NewBufferString(testUserQuery["refresh"]))
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("Authorization", "some valid auth token goes here")
 			w := httptest.NewRecorder()
@@ -577,10 +567,6 @@ func TestMutationResolver_DeleteUser(t *testing.T) {
 	router := getRouter()
 	router.Use(GinContextToContextMiddleware())
 
-	deleteUserQuery := `{
-  "query": "mutation { deleteUser(input: { username: \"%s\" password: \"%s\" confirmation:\"I understand the consequences, delete my user account %s\" })}"
-}`
-
 	testCases := []struct {
 		name                string
 		path                string
@@ -595,7 +581,7 @@ func TestMutationResolver_DeleteUser(t *testing.T) {
 		{
 			name:      "empty request",
 			path:      "/delete/empty-request",
-			query:     fmt.Sprintf(deleteUserQuery, "", "", ""),
+			query:     fmt.Sprintf(testUserQuery["delete"], "", "", ""),
 			expectErr: true,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "",
@@ -613,7 +599,7 @@ func TestMutationResolver_DeleteUser(t *testing.T) {
 		}, {
 			name:      "valid token",
 			path:      "/delete/valid-request",
-			query:     fmt.Sprintf(deleteUserQuery, "username1", "password", "username1"),
+			query:     fmt.Sprintf(testUserQuery["delete"], "username1", "password", "username1"),
 			expectErr: false,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "username1",
@@ -632,7 +618,7 @@ func TestMutationResolver_DeleteUser(t *testing.T) {
 		}, {
 			name:      "invalid token",
 			path:      "/delete/invalid-token-request",
-			query:     fmt.Sprintf(deleteUserQuery, "username1", "password", "username1"),
+			query:     fmt.Sprintf(testUserQuery["delete"], "username1", "password", "username1"),
 			expectErr: true,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "username1",
@@ -652,7 +638,7 @@ func TestMutationResolver_DeleteUser(t *testing.T) {
 		}, {
 			name:      "token and request username mismatch",
 			path:      "/delete/token-and-request-username-mismatch",
-			query:     fmt.Sprintf(deleteUserQuery, "username1", "password", "username1"),
+			query:     fmt.Sprintf(testUserQuery["delete"], "username1", "password", "username1"),
 			expectErr: true,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "username mismatch",
@@ -670,7 +656,7 @@ func TestMutationResolver_DeleteUser(t *testing.T) {
 		}, {
 			name:      "db read failure",
 			path:      "/delete/db-read-failure",
-			query:     fmt.Sprintf(deleteUserQuery, "username1", "password", "username1"),
+			query:     fmt.Sprintf(testUserQuery["delete"], "username1", "password", "username1"),
 			expectErr: true,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "username1",
@@ -690,7 +676,7 @@ func TestMutationResolver_DeleteUser(t *testing.T) {
 		}, {
 			name:      "already deleted",
 			path:      "/delete/already-deleted",
-			query:     fmt.Sprintf(deleteUserQuery, "username1", "password", "username1"),
+			query:     fmt.Sprintf(testUserQuery["delete"], "username1", "password", "username1"),
 			expectErr: true,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "username1",
@@ -711,7 +697,7 @@ func TestMutationResolver_DeleteUser(t *testing.T) {
 		}, {
 			name:      "db delete failure",
 			path:      "/delete/db-delete-failure",
-			query:     fmt.Sprintf(deleteUserQuery, "username1", "password", "username1"),
+			query:     fmt.Sprintf(testUserQuery["delete"], "username1", "password", "username1"),
 			expectErr: true,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "username1",
@@ -731,7 +717,7 @@ func TestMutationResolver_DeleteUser(t *testing.T) {
 		}, {
 			name:      "bad deletion confirmation",
 			path:      "/delete/bad-deletion-confirmation",
-			query:     fmt.Sprintf(deleteUserQuery, "username1", "password", "incorrect and incomplete confirmation"),
+			query:     fmt.Sprintf(testUserQuery["delete"], "username1", "password", "incorrect and incomplete confirmation"),
 			expectErr: true,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "username1",
@@ -749,7 +735,7 @@ func TestMutationResolver_DeleteUser(t *testing.T) {
 		}, {
 			name:      "invalid password",
 			path:      "/delete/valid-password",
-			query:     fmt.Sprintf(deleteUserQuery, "username1", "incorrect password", "username1"),
+			query:     fmt.Sprintf(testUserQuery["delete"], "username1", "incorrect password", "username1"),
 			expectErr: true,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "username1",

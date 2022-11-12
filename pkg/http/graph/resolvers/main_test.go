@@ -19,11 +19,20 @@ import (
 // zapLogger is the Zap logger used strictly for the test suite in this package.
 var zapLogger *logger.Logger
 
+// testQuizData is the test quiz data.
+var testAuthHeaderKey = "Authorization"
+
 // testUserData is the test user account data.
 var testUserData = cassandra.GetTestUsers()
 
+// testQuizData is the test user account data.
+var testQuizData = cassandra.GetTestQuizzes()
+
 // testQuizData is the test quiz data.
-var testAuthHeaderKey = "Authorization"
+var testUserQuery = getUsersQuery()
+
+// testQuizData is the test quiz data.
+var testQuizQuery = getQuizzesQuery()
 
 func TestMain(m *testing.M) {
 	var err error

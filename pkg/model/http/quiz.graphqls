@@ -10,7 +10,7 @@ type Question {
     Description: String!
     Asset: String!
     Options: [String!]!
-    Answers: [Int32!]!
+    Answers: [Int32!]
 }
 
 # Request data to create a quiz.
@@ -34,7 +34,7 @@ extend type Mutation {
     createQuiz(input: QuizCreate!): String!
 
     # Request to update a quiz. Only unpublished quizzes can be updated.
-    updateQuiz(input: QuizCreate!): String!
+    updateQuiz(quizID: String!, quiz: QuizCreate!): String!
 
     # Request to publish a quiz.
     publishQuiz(quizID: String!): String!
