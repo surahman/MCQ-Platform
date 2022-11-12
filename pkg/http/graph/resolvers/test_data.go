@@ -1,6 +1,6 @@
 package graphql_resolvers
 
-// getUsersQuery is a map of test user data.
+// getUsersQuery is a map of test user queries.
 func getUsersQuery() map[string]string {
 	return map[string]string{
 		"register": `{
@@ -19,7 +19,7 @@ func getUsersQuery() map[string]string {
 	}
 }
 
-// getQuizzesQuery is a map of test quiz data.
+// getQuizzesQuery is a map of test quiz queries.
 func getQuizzesQuery() map[string]string {
 	return map[string]string{
 		"create_empty": `{
@@ -51,4 +51,13 @@ func getQuizzesQuery() map[string]string {
 }`,
 	}
 
+}
+
+// getScoresQuery is a map of test scores queries.
+func getScoresQuery() map[string]string {
+	return map[string]string{
+		"score": `{
+  	"query": "query { getScore(quizID:\"%s\") { Username Author Score QuizResponse QuizID }}"
+}`,
+	}
 }

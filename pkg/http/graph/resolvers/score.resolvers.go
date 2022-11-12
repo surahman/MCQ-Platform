@@ -8,6 +8,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/gocql/gocql"
+	"github.com/surahman/mcq-platform/pkg/cassandra"
 	graphql_generated "github.com/surahman/mcq-platform/pkg/http/graph/generated"
 	model_cassandra "github.com/surahman/mcq-platform/pkg/model/cassandra"
 	model_http "github.com/surahman/mcq-platform/pkg/model/http"
@@ -23,7 +25,32 @@ func (r *metadataResolver) QuizID(ctx context.Context, obj *model_http.Metadata)
 
 // GetScore is the resolver for the getScore field.
 func (r *queryResolver) GetScore(ctx context.Context, quizID string) (*model_cassandra.Response, error) {
-	panic(fmt.Errorf("not implemented: GetScore - getScore"))
+	var err error
+	var dbRecord any
+	var response *model_cassandra.Response
+	var username string
+	var quizId gocql.UUID
+
+	if quizId, err = gocql.ParseUUID(quizID); err != nil {
+		return nil, errors.New("invalid quiz id supplied, must be a valid UUID")
+	}
+
+	// Get username from JWT.
+	if username, _, err = AuthorizationCheck(r.Auth, r.Logger, r.AuthHeaderKey, ctx); err != nil {
+		return nil, err
+	}
+
+	// Get scorecard record from database.
+	scoreRequest := &model_cassandra.QuizMutateRequest{
+		Username: username,
+		QuizID:   quizId,
+	}
+	if dbRecord, err = r.DB.Execute(cassandra.ReadResponseQuery, scoreRequest); err != nil {
+		return nil, err
+	}
+	response = dbRecord.(*model_cassandra.Response)
+
+	return response, nil
 }
 
 // GetStats is the resolver for the getStats field.
