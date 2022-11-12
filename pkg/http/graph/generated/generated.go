@@ -37,6 +37,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	Metadata() MetadataResolver
 	Mutation() MutationResolver
 	Query() QueryResolver
 	Response() ResponseResolver
@@ -52,6 +53,11 @@ type ComplexityRoot struct {
 		Token     func(childComplexity int) int
 	}
 
+	Metadata struct {
+		NumRecords func(childComplexity int) int
+		QuizID     func(childComplexity int) int
+	}
+
 	Mutation struct {
 		CreateQuiz   func(childComplexity int, input model_cassandra.QuizCore) int
 		DeleteQuiz   func(childComplexity int, quizID string) int
@@ -64,7 +70,14 @@ type ComplexityRoot struct {
 		UpdateQuiz   func(childComplexity int, quizID string, quiz model_cassandra.QuizCore) int
 	}
 
+	NextPage struct {
+		Cursor   func(childComplexity int) int
+		PageSize func(childComplexity int) int
+	}
+
 	Query struct {
+		GetScore func(childComplexity int, quizID string) int
+		GetStats func(childComplexity int, quizID string, pageSize *int, cursor *string) int
 		ViewQuiz func(childComplexity int, quizID string) int
 	}
 
@@ -88,8 +101,17 @@ type ComplexityRoot struct {
 		Score        func(childComplexity int) int
 		Username     func(childComplexity int) int
 	}
+
+	StatsResponse struct {
+		Metadata func(childComplexity int) int
+		NextPage func(childComplexity int) int
+		Records  func(childComplexity int) int
+	}
 }
 
+type MetadataResolver interface {
+	QuizID(ctx context.Context, obj *model_http.Metadata) (string, error)
+}
 type MutationResolver interface {
 	RegisterUser(ctx context.Context, input *model_cassandra.UserAccount) (*model_http.JWTAuthResponse, error)
 	DeleteUser(ctx context.Context, input model_http.DeleteUserRequest) (string, error)
@@ -103,6 +125,8 @@ type MutationResolver interface {
 }
 type QueryResolver interface {
 	ViewQuiz(ctx context.Context, quizID string) (*model_cassandra.QuizCore, error)
+	GetScore(ctx context.Context, quizID string) (*model_cassandra.Response, error)
+	GetStats(ctx context.Context, quizID string, pageSize *int, cursor *string) (*model_http.StatsResponseGraphQL, error)
 }
 type ResponseResolver interface {
 	QuizResponse(ctx context.Context, obj *model_cassandra.Response) ([][]int32, error)
@@ -144,6 +168,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.JWTAuthResponse.Token(childComplexity), true
+
+	case "Metadata.NumRecords":
+		if e.complexity.Metadata.NumRecords == nil {
+			break
+		}
+
+		return e.complexity.Metadata.NumRecords(childComplexity), true
+
+	case "Metadata.QuizID":
+		if e.complexity.Metadata.QuizID == nil {
+			break
+		}
+
+		return e.complexity.Metadata.QuizID(childComplexity), true
 
 	case "Mutation.createQuiz":
 		if e.complexity.Mutation.CreateQuiz == nil {
@@ -248,6 +286,44 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UpdateQuiz(childComplexity, args["quizID"].(string), args["quiz"].(model_cassandra.QuizCore)), true
 
+	case "NextPage.Cursor":
+		if e.complexity.NextPage.Cursor == nil {
+			break
+		}
+
+		return e.complexity.NextPage.Cursor(childComplexity), true
+
+	case "NextPage.PageSize":
+		if e.complexity.NextPage.PageSize == nil {
+			break
+		}
+
+		return e.complexity.NextPage.PageSize(childComplexity), true
+
+	case "Query.getScore":
+		if e.complexity.Query.GetScore == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getScore_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetScore(childComplexity, args["quizID"].(string)), true
+
+	case "Query.getStats":
+		if e.complexity.Query.GetStats == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getStats_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetStats(childComplexity, args["quizID"].(string), args["pageSize"].(*int), args["cursor"].(*string)), true
+
 	case "Query.viewQuiz":
 		if e.complexity.Query.ViewQuiz == nil {
 			break
@@ -343,6 +419,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Response.Username(childComplexity), true
+
+	case "StatsResponse.Metadata":
+		if e.complexity.StatsResponse.Metadata == nil {
+			break
+		}
+
+		return e.complexity.StatsResponse.Metadata(childComplexity), true
+
+	case "StatsResponse.NextPage":
+		if e.complexity.StatsResponse.NextPage == nil {
+			break
+		}
+
+		return e.complexity.StatsResponse.NextPage(childComplexity), true
+
+	case "StatsResponse.Records":
+		if e.complexity.StatsResponse.Records == nil {
+			break
+		}
+
+		return e.complexity.StatsResponse.Records(childComplexity), true
 
 	}
 	return 0, false
@@ -497,6 +594,33 @@ extend type Mutation {
 	{Name: "../../../model/http/scalars.graphqls", Input: `scalar Int32
 scalar Int64
 `, BuiltIn: false},
+	{Name: "../../../model/http/score.graphqls", Input: `# StatsResponse is returned to the end user as a page of statistics from the database.
+type StatsResponse {
+    Records: [Response]!
+    Metadata: Metadata!
+    NextPage: NextPage
+}
+
+# Metadata is the metadata about the quiz request.
+type Metadata {
+    QuizID: String!
+    NumRecords: Int!
+}
+
+# Links contains links information about the next page of requests.
+type NextPage {
+    PageSize: Int!
+    Cursor: String!
+}
+
+# Requests that wil not alter the state of data in the database.
+extend type Query {
+    # Retrieve a single score for a user.
+    getScore(quizID: String!): Response!
+
+    # Retrieve a page of quiz statistics if authorized.
+    getStats(quizID: String!, pageSize: Int, cursor: String): StatsResponse!
+}`, BuiltIn: false},
 	{Name: "../../../model/http/user.graphqls", Input: `# User account information.
 input UserAccount {
     firstname: String!
@@ -692,6 +816,54 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_getScore_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["quizID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quizID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["quizID"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getStats_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["quizID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quizID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["quizID"] = arg0
+	var arg1 *int
+	if tmp, ok := rawArgs["pageSize"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pageSize"))
+		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pageSize"] = arg1
+	var arg2 *string
+	if tmp, ok := rawArgs["cursor"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cursor"))
+		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["cursor"] = arg2
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_viewQuiz_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -872,6 +1044,94 @@ func (ec *executionContext) fieldContext_JWTAuthResponse_threshold(ctx context.C
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Metadata_QuizID(ctx context.Context, field graphql.CollectedField, obj *model_http.Metadata) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Metadata_QuizID(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Metadata().QuizID(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Metadata_QuizID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Metadata",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Metadata_NumRecords(ctx context.Context, field graphql.CollectedField, obj *model_http.Metadata) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Metadata_NumRecords(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NumRecords, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Metadata_NumRecords(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Metadata",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -1397,6 +1657,94 @@ func (ec *executionContext) fieldContext_Mutation_takeQuiz(ctx context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _NextPage_PageSize(ctx context.Context, field graphql.CollectedField, obj *model_http.NextPage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NextPage_PageSize(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PageSize, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NextPage_PageSize(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NextPage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NextPage_Cursor(ctx context.Context, field graphql.CollectedField, obj *model_http.NextPage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NextPage_Cursor(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Cursor, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NextPage_Cursor(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NextPage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_viewQuiz(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_viewQuiz(ctx, field)
 	if err != nil {
@@ -1454,6 +1802,136 @@ func (ec *executionContext) fieldContext_Query_viewQuiz(ctx context.Context, fie
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_viewQuiz_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getScore(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getScore(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetScore(rctx, fc.Args["quizID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model_cassandra.Response)
+	fc.Result = res
+	return ec.marshalNResponse2ᚖgithubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋcassandraᚐResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getScore(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "Username":
+				return ec.fieldContext_Response_Username(ctx, field)
+			case "Author":
+				return ec.fieldContext_Response_Author(ctx, field)
+			case "Score":
+				return ec.fieldContext_Response_Score(ctx, field)
+			case "QuizResponse":
+				return ec.fieldContext_Response_QuizResponse(ctx, field)
+			case "QuizID":
+				return ec.fieldContext_Response_QuizID(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Response", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getScore_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getStats(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getStats(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetStats(rctx, fc.Args["quizID"].(string), fc.Args["pageSize"].(*int), fc.Args["cursor"].(*string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model_http.StatsResponseGraphQL)
+	fc.Result = res
+	return ec.marshalNStatsResponse2ᚖgithubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋhttpᚐStatsResponseGraphQL(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getStats(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "Records":
+				return ec.fieldContext_StatsResponse_Records(ctx, field)
+			case "Metadata":
+				return ec.fieldContext_StatsResponse_Metadata(ctx, field)
+			case "NextPage":
+				return ec.fieldContext_StatsResponse_NextPage(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type StatsResponse", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getStats_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -2119,6 +2597,159 @@ func (ec *executionContext) fieldContext_Response_QuizID(ctx context.Context, fi
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _StatsResponse_Records(ctx context.Context, field graphql.CollectedField, obj *model_http.StatsResponseGraphQL) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_StatsResponse_Records(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Records, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model_cassandra.Response)
+	fc.Result = res
+	return ec.marshalNResponse2ᚕᚖgithubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋcassandraᚐResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_StatsResponse_Records(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "StatsResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "Username":
+				return ec.fieldContext_Response_Username(ctx, field)
+			case "Author":
+				return ec.fieldContext_Response_Author(ctx, field)
+			case "Score":
+				return ec.fieldContext_Response_Score(ctx, field)
+			case "QuizResponse":
+				return ec.fieldContext_Response_QuizResponse(ctx, field)
+			case "QuizID":
+				return ec.fieldContext_Response_QuizID(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Response", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _StatsResponse_Metadata(ctx context.Context, field graphql.CollectedField, obj *model_http.StatsResponseGraphQL) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_StatsResponse_Metadata(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Metadata, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model_http.Metadata)
+	fc.Result = res
+	return ec.marshalNMetadata2githubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋhttpᚐMetadata(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_StatsResponse_Metadata(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "StatsResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "QuizID":
+				return ec.fieldContext_Metadata_QuizID(ctx, field)
+			case "NumRecords":
+				return ec.fieldContext_Metadata_NumRecords(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Metadata", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _StatsResponse_NextPage(ctx context.Context, field graphql.CollectedField, obj *model_http.StatsResponseGraphQL) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_StatsResponse_NextPage(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NextPage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(model_http.NextPage)
+	fc.Result = res
+	return ec.marshalONextPage2githubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋhttpᚐNextPage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_StatsResponse_NextPage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "StatsResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "PageSize":
+				return ec.fieldContext_NextPage_PageSize(ctx, field)
+			case "Cursor":
+				return ec.fieldContext_NextPage_Cursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type NextPage", field.Name)
 		},
 	}
 	return fc, nil
@@ -4203,6 +4834,54 @@ func (ec *executionContext) _JWTAuthResponse(ctx context.Context, sel ast.Select
 	return out
 }
 
+var metadataImplementors = []string{"Metadata"}
+
+func (ec *executionContext) _Metadata(ctx context.Context, sel ast.SelectionSet, obj *model_http.Metadata) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, metadataImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Metadata")
+		case "QuizID":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Metadata_QuizID(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "NumRecords":
+
+			out.Values[i] = ec._Metadata_NumRecords(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var mutationImplementors = []string{"Mutation"}
 
 func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -4314,6 +4993,41 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 	return out
 }
 
+var nextPageImplementors = []string{"NextPage"}
+
+func (ec *executionContext) _NextPage(ctx context.Context, sel ast.SelectionSet, obj *model_http.NextPage) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, nextPageImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("NextPage")
+		case "PageSize":
+
+			out.Values[i] = ec._NextPage_PageSize(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "Cursor":
+
+			out.Values[i] = ec._NextPage_Cursor(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var queryImplementors = []string{"Query"}
 
 func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -4343,6 +5057,52 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_viewQuiz(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "getScore":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getScore(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "getStats":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getStats(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -4538,6 +5298,45 @@ func (ec *executionContext) _Response(ctx context.Context, sel ast.SelectionSet,
 				return innerFunc(ctx)
 
 			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var statsResponseImplementors = []string{"StatsResponse"}
+
+func (ec *executionContext) _StatsResponse(ctx context.Context, sel ast.SelectionSet, obj *model_http.StatsResponseGraphQL) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, statsResponseImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("StatsResponse")
+		case "Records":
+
+			out.Values[i] = ec._StatsResponse_Records(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "Metadata":
+
+			out.Values[i] = ec._StatsResponse_Metadata(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "NextPage":
+
+			out.Values[i] = ec._StatsResponse_NextPage(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4902,6 +5701,21 @@ func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.S
 	return graphql.WrapContextMarshaler(ctx, res)
 }
 
+func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
+	res, err := graphql.UnmarshalInt(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
+	res := graphql.MarshalInt(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) unmarshalNInt322int32(ctx context.Context, v interface{}) (int32, error) {
 	res, err := graphql.UnmarshalInt32(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -5002,6 +5816,10 @@ func (ec *executionContext) marshalNJWTAuthResponse2ᚖgithubᚗcomᚋsurahman�
 		return graphql.Null
 	}
 	return ec._JWTAuthResponse(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNMetadata2githubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋhttpᚐMetadata(ctx context.Context, sel ast.SelectionSet, v model_http.Metadata) graphql.Marshaler {
+	return ec._Metadata(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNQuestion2ᚕᚖgithubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋcassandraᚐQuestionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model_cassandra.Question) graphql.Marshaler {
@@ -5108,6 +5926,44 @@ func (ec *executionContext) marshalNResponse2githubᚗcomᚋsurahmanᚋmcqᚑpla
 	return ec._Response(ctx, sel, &v)
 }
 
+func (ec *executionContext) marshalNResponse2ᚕᚖgithubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋcassandraᚐResponse(ctx context.Context, sel ast.SelectionSet, v []*model_cassandra.Response) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOResponse2ᚖgithubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋcassandraᚐResponse(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
 func (ec *executionContext) marshalNResponse2ᚖgithubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋcassandraᚐResponse(ctx context.Context, sel ast.SelectionSet, v *model_cassandra.Response) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -5116,6 +5972,20 @@ func (ec *executionContext) marshalNResponse2ᚖgithubᚗcomᚋsurahmanᚋmcqᚑ
 		return graphql.Null
 	}
 	return ec._Response(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNStatsResponse2githubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋhttpᚐStatsResponseGraphQL(ctx context.Context, sel ast.SelectionSet, v model_http.StatsResponseGraphQL) graphql.Marshaler {
+	return ec._StatsResponse(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNStatsResponse2ᚖgithubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋhttpᚐStatsResponseGraphQL(ctx context.Context, sel ast.SelectionSet, v *model_http.StatsResponseGraphQL) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._StatsResponse(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
@@ -5449,6 +6319,22 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
+func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalInt(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.SelectionSet, v *int) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalInt(*v)
+	return res
+}
+
 func (ec *executionContext) unmarshalOInt322ᚕint32ᚄ(ctx context.Context, v interface{}) ([]int32, error) {
 	if v == nil {
 		return nil, nil
@@ -5485,6 +6371,17 @@ func (ec *executionContext) marshalOInt322ᚕint32ᚄ(ctx context.Context, sel a
 	}
 
 	return ret
+}
+
+func (ec *executionContext) marshalONextPage2githubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋhttpᚐNextPage(ctx context.Context, sel ast.SelectionSet, v model_http.NextPage) graphql.Marshaler {
+	return ec._NextPage(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOResponse2ᚖgithubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋcassandraᚐResponse(ctx context.Context, sel ast.SelectionSet, v *model_cassandra.Response) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Response(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {

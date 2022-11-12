@@ -32,14 +32,30 @@ type DeleteUserRequest struct {
 	Confirmation string `json:"confirmation" yaml:"confirmation" validate:"required"`
 }
 
+// Metadata contains information on the statistics request.
+type Metadata struct {
+	QuizID     gocql.UUID `json:"quiz_id"`
+	NumRecords int        `json:"num_records"`
+}
+
 // StatsResponse is a paginated response to a request for statistics for a specific quiz.
 type StatsResponse struct {
 	Records  []*model_cassandra.Response `json:"records"`
-	Metadata struct {
-		QuizID     gocql.UUID `json:"quiz_id"`
-		NumRecords int        `json:"num_records"`
-	} `json:"metadata,omitempty"`
-	Links struct {
+	Metadata `json:"metadata,omitempty"`
+	Links    struct {
 		NextPage string `json:"next_page"`
 	} `json:"links,omitempty"`
+}
+
+// NextPage is information required to access the next page of data from a GraphQL statistics request.
+type NextPage struct {
+	Cursor   string `json:"next_page"`
+	PageSize int    `json:"page_size"`
+}
+
+// StatsResponseGraphQL is a paginated GraphQL response to a request for statistics for a specific quiz.
+type StatsResponseGraphQL struct {
+	Records  []*model_cassandra.Response `json:"records"`
+	Metadata `json:"metadata,omitempty"`
+	NextPage `json:"next_page,omitempty"`
 }
