@@ -10,7 +10,6 @@ import (
 	"strconv"
 
 	"github.com/gocql/gocql"
-	"github.com/surahman/mcq-platform/pkg/auth"
 	"github.com/surahman/mcq-platform/pkg/cassandra"
 	http_common "github.com/surahman/mcq-platform/pkg/http"
 	graphql_generated "github.com/surahman/mcq-platform/pkg/http/graph/generated"
@@ -100,9 +99,3 @@ func (r *queryResolver) GetStats(ctx context.Context, quizID string, pageSize *i
 func (r *Resolver) Metadata() graphql_generated.MetadataResolver { return &metadataResolver{r} }
 
 type metadataResolver struct{ *Resolver }
-
-// prepareStatsResponse will prepare the GraphQL response struct.
-func prepareStatsResponse(auth auth.Auth, dbResponse *model_cassandra.StatsResponse, quizId gocql.UUID) (response *model_http.StatsResponseGraphQL, err error) {
-
-	return
-}

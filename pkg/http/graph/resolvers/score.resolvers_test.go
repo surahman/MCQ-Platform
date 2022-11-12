@@ -190,7 +190,3 @@ func TestQueryResolver_GetScore(t *testing.T) {
 func TestQueryResolver_GetStats(t *testing.T) {
 
 }
-
-func TestQueryResolver_prepareStatsResponse(t *testing.T) {
-	
-}

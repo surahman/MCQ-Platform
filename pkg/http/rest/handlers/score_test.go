@@ -443,7 +443,7 @@ func TestGetStatsPage(t *testing.T) {
 		{
 			name:           "bad uuid",
 			path:           "/stats-page/bad-uuid/",
-			quizId:         "pace palm",
+			quizId:         "face palm",
 			querySegment:   "?pageCursor=PaGeCuRs0R==&pageSize=3",
 			expectedLen:    0,
 			expectedStatus: http.StatusBadRequest,
