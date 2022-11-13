@@ -619,7 +619,7 @@ extend type Query {
     getScore(quizID: String!): Response!
 
     # Retrieve a page of quiz statistics if authorized.
-    getStats(quizID: String!, pageSize: Int, cursor: String): StatsResponse!
+    getStats(quizID: String!, pageSize: Int = 0, cursor: String = ""): StatsResponse!
 }`, BuiltIn: false},
 	{Name: "../../../model/http/user.graphqls", Input: `# User account information.
 input UserAccount {

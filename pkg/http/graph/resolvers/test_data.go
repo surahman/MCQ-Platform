@@ -59,5 +59,14 @@ func getScoresQuery() map[string]string {
 		"score": `{
   	"query": "query { getScore(quizID:\"%s\") { Username Author Score QuizResponse QuizID }}"
 }`,
+		"stats": `{
+    "query": "query { getStats(quizID:\"%s\", pageSize: %d, cursor:\"%s\") { Records { Username Author Score QuizResponse QuizID } Metadata { QuizID NumRecords } NextPage { PageSize Cursor } }}"
+}`,
+		"stats_quiz_id": `{
+    "query": "query { getStats(quizID:\"%s\") { Records { Username Author Score QuizResponse QuizID } Metadata { QuizID NumRecords } NextPage { PageSize Cursor } }}"
+}`,
+		"stats_page_size": `{
+    "query": "query { getStats(quizID:\"%s\", pageSize: %d) { Records { Username Author Score QuizResponse QuizID } Metadata { QuizID NumRecords } NextPage { PageSize Cursor } }}"
+}`,
 	}
 }
