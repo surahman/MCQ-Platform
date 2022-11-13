@@ -1,20 +1,20 @@
 # StatsResponse is returned to the end user as a page of statistics from the database.
 type StatsResponse {
-    Records: [Response]!
-    Metadata: Metadata!
-    NextPage: NextPage
+    records: [Response]!
+    metadata: Metadata!
+    nextPage: NextPage
 }
 
 # Metadata is the metadata about the quiz request.
 type Metadata {
-    QuizID: String!
-    NumRecords: Int!
+    quizID: String!
+    numRecords: Int!
 }
 
 # Links contains links information about the next page of requests.
 type NextPage {
-    PageSize: Int!
-    Cursor: String!
+    pageSize: Int!
+    cursor: String!
 }
 
 # Requests that wil not alter the state of data in the database.

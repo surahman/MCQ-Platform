@@ -1,31 +1,31 @@
 # QuizCore is the complete quiz that is sent to the backend when a quiz is created/updated or to the end users.
 type QuizCore {
-    Title: String!
-    MarkingType: String!
-    Questions: [Question!]!
+    title: String!
+    markingType: String!
+    questions: [Question!]!
 }
 
 # Question is a single question of a quiz.
 type Question {
-    Description: String!
-    Asset: String!
-    Options: [String!]!
-    Answers: [Int32!]
+    description: String!
+    asset: String!
+    options: [String!]!
+    answers: [Int32!]
 }
 
 # Request data to create a quiz.
 input QuizCreate {
-    Title: String!
-    MarkingType: String!
-    Questions: [QuestionCreate!]!
+    title: String!
+    markingType: String!
+    questions: [QuestionCreate!]!
 }
 
 # Component for the create quiz request.
 input QuestionCreate {
-    Description: String!
-    Asset: String!
-    Options: [String!]!
-    Answers: [Int32!]!
+    description: String!
+    asset: String!
+    options: [String!]!
+    answers: [Int32!]!
 }
 
 # Requests that might alter the state of data in the database.

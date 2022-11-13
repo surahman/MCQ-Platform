@@ -169,14 +169,14 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.JWTAuthResponse.Token(childComplexity), true
 
-	case "Metadata.NumRecords":
+	case "Metadata.numRecords":
 		if e.complexity.Metadata.NumRecords == nil {
 			break
 		}
 
 		return e.complexity.Metadata.NumRecords(childComplexity), true
 
-	case "Metadata.QuizID":
+	case "Metadata.quizID":
 		if e.complexity.Metadata.QuizID == nil {
 			break
 		}
@@ -286,14 +286,14 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UpdateQuiz(childComplexity, args["quizID"].(string), args["quiz"].(model_cassandra.QuizCore)), true
 
-	case "NextPage.Cursor":
+	case "NextPage.cursor":
 		if e.complexity.NextPage.Cursor == nil {
 			break
 		}
 
 		return e.complexity.NextPage.Cursor(childComplexity), true
 
-	case "NextPage.PageSize":
+	case "NextPage.pageSize":
 		if e.complexity.NextPage.PageSize == nil {
 			break
 		}
@@ -336,105 +336,105 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.ViewQuiz(childComplexity, args["quizID"].(string)), true
 
-	case "Question.Answers":
+	case "Question.answers":
 		if e.complexity.Question.Answers == nil {
 			break
 		}
 
 		return e.complexity.Question.Answers(childComplexity), true
 
-	case "Question.Asset":
+	case "Question.asset":
 		if e.complexity.Question.Asset == nil {
 			break
 		}
 
 		return e.complexity.Question.Asset(childComplexity), true
 
-	case "Question.Description":
+	case "Question.description":
 		if e.complexity.Question.Description == nil {
 			break
 		}
 
 		return e.complexity.Question.Description(childComplexity), true
 
-	case "Question.Options":
+	case "Question.options":
 		if e.complexity.Question.Options == nil {
 			break
 		}
 
 		return e.complexity.Question.Options(childComplexity), true
 
-	case "QuizCore.MarkingType":
+	case "QuizCore.markingType":
 		if e.complexity.QuizCore.MarkingType == nil {
 			break
 		}
 
 		return e.complexity.QuizCore.MarkingType(childComplexity), true
 
-	case "QuizCore.Questions":
+	case "QuizCore.questions":
 		if e.complexity.QuizCore.Questions == nil {
 			break
 		}
 
 		return e.complexity.QuizCore.Questions(childComplexity), true
 
-	case "QuizCore.Title":
+	case "QuizCore.title":
 		if e.complexity.QuizCore.Title == nil {
 			break
 		}
 
 		return e.complexity.QuizCore.Title(childComplexity), true
 
-	case "Response.Author":
+	case "Response.author":
 		if e.complexity.Response.Author == nil {
 			break
 		}
 
 		return e.complexity.Response.Author(childComplexity), true
 
-	case "Response.QuizID":
+	case "Response.quizID":
 		if e.complexity.Response.QuizID == nil {
 			break
 		}
 
 		return e.complexity.Response.QuizID(childComplexity), true
 
-	case "Response.QuizResponse":
+	case "Response.quizResponse":
 		if e.complexity.Response.QuizResponse == nil {
 			break
 		}
 
 		return e.complexity.Response.QuizResponse(childComplexity), true
 
-	case "Response.Score":
+	case "Response.score":
 		if e.complexity.Response.Score == nil {
 			break
 		}
 
 		return e.complexity.Response.Score(childComplexity), true
 
-	case "Response.Username":
+	case "Response.username":
 		if e.complexity.Response.Username == nil {
 			break
 		}
 
 		return e.complexity.Response.Username(childComplexity), true
 
-	case "StatsResponse.Metadata":
+	case "StatsResponse.metadata":
 		if e.complexity.StatsResponse.Metadata == nil {
 			break
 		}
 
 		return e.complexity.StatsResponse.Metadata(childComplexity), true
 
-	case "StatsResponse.NextPage":
+	case "StatsResponse.nextPage":
 		if e.complexity.StatsResponse.NextPage == nil {
 			break
 		}
 
 		return e.complexity.StatsResponse.NextPage(childComplexity), true
 
-	case "StatsResponse.Records":
+	case "StatsResponse.records":
 		if e.complexity.StatsResponse.Records == nil {
 			break
 		}
@@ -524,32 +524,32 @@ type JWTAuthResponse {
 `, BuiltIn: false},
 	{Name: "../../../model/http/quiz.graphqls", Input: `# QuizCore is the complete quiz that is sent to the backend when a quiz is created/updated or to the end users.
 type QuizCore {
-    Title: String!
-    MarkingType: String!
-    Questions: [Question!]!
+    title: String!
+    markingType: String!
+    questions: [Question!]!
 }
 
 # Question is a single question of a quiz.
 type Question {
-    Description: String!
-    Asset: String!
-    Options: [String!]!
-    Answers: [Int32!]
+    description: String!
+    asset: String!
+    options: [String!]!
+    answers: [Int32!]
 }
 
 # Request data to create a quiz.
 input QuizCreate {
-    Title: String!
-    MarkingType: String!
-    Questions: [QuestionCreate!]!
+    title: String!
+    markingType: String!
+    questions: [QuestionCreate!]!
 }
 
 # Component for the create quiz request.
 input QuestionCreate {
-    Description: String!
-    Asset: String!
-    Options: [String!]!
-    Answers: [Int32!]!
+    description: String!
+    asset: String!
+    options: [String!]!
+    answers: [Int32!]!
 }
 
 # Requests that might alter the state of data in the database.
@@ -574,16 +574,16 @@ type Query {
 }`, BuiltIn: false},
 	{Name: "../../../model/http/responses.graphqls", Input: `# Response represents a response to a quiz and is a row in responses table.
 type Response {
-    Username: String!
-    Author: String!
-    Score:Float!
-    QuizResponse: [[Int32!]]!
-    QuizID: String!
+    username: String!
+    author: String!
+    score:Float!
+    quizResponse: [[Int32!]]!
+    quizID: String!
 }
 
 # The answer card to a quiz. The rows indices are the question numbers and the columns indices are the selected option numbers.
 input QuizResponse {
-    Responses: [[Int32!]]!
+    responses: [[Int32!]]!
 }
 
 # Requests that might alter the state of data in the database.
@@ -596,21 +596,21 @@ scalar Int64
 `, BuiltIn: false},
 	{Name: "../../../model/http/score.graphqls", Input: `# StatsResponse is returned to the end user as a page of statistics from the database.
 type StatsResponse {
-    Records: [Response]!
-    Metadata: Metadata!
-    NextPage: NextPage
+    records: [Response]!
+    metadata: Metadata!
+    nextPage: NextPage
 }
 
 # Metadata is the metadata about the quiz request.
 type Metadata {
-    QuizID: String!
-    NumRecords: Int!
+    quizID: String!
+    numRecords: Int!
 }
 
 # Links contains links information about the next page of requests.
 type NextPage {
-    PageSize: Int!
-    Cursor: String!
+    pageSize: Int!
+    cursor: String!
 }
 
 # Requests that wil not alter the state of data in the database.
@@ -1049,8 +1049,8 @@ func (ec *executionContext) fieldContext_JWTAuthResponse_threshold(ctx context.C
 	return fc, nil
 }
 
-func (ec *executionContext) _Metadata_QuizID(ctx context.Context, field graphql.CollectedField, obj *model_http.Metadata) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Metadata_QuizID(ctx, field)
+func (ec *executionContext) _Metadata_quizID(ctx context.Context, field graphql.CollectedField, obj *model_http.Metadata) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Metadata_quizID(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1080,7 +1080,7 @@ func (ec *executionContext) _Metadata_QuizID(ctx context.Context, field graphql.
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Metadata_QuizID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Metadata_quizID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Metadata",
 		Field:      field,
@@ -1093,8 +1093,8 @@ func (ec *executionContext) fieldContext_Metadata_QuizID(ctx context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _Metadata_NumRecords(ctx context.Context, field graphql.CollectedField, obj *model_http.Metadata) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Metadata_NumRecords(ctx, field)
+func (ec *executionContext) _Metadata_numRecords(ctx context.Context, field graphql.CollectedField, obj *model_http.Metadata) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Metadata_numRecords(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1124,7 +1124,7 @@ func (ec *executionContext) _Metadata_NumRecords(ctx context.Context, field grap
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Metadata_NumRecords(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Metadata_numRecords(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Metadata",
 		Field:      field,
@@ -1629,16 +1629,16 @@ func (ec *executionContext) fieldContext_Mutation_takeQuiz(ctx context.Context, 
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "Username":
-				return ec.fieldContext_Response_Username(ctx, field)
-			case "Author":
-				return ec.fieldContext_Response_Author(ctx, field)
-			case "Score":
-				return ec.fieldContext_Response_Score(ctx, field)
-			case "QuizResponse":
-				return ec.fieldContext_Response_QuizResponse(ctx, field)
-			case "QuizID":
-				return ec.fieldContext_Response_QuizID(ctx, field)
+			case "username":
+				return ec.fieldContext_Response_username(ctx, field)
+			case "author":
+				return ec.fieldContext_Response_author(ctx, field)
+			case "score":
+				return ec.fieldContext_Response_score(ctx, field)
+			case "quizResponse":
+				return ec.fieldContext_Response_quizResponse(ctx, field)
+			case "quizID":
+				return ec.fieldContext_Response_quizID(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Response", field.Name)
 		},
@@ -1657,8 +1657,8 @@ func (ec *executionContext) fieldContext_Mutation_takeQuiz(ctx context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _NextPage_PageSize(ctx context.Context, field graphql.CollectedField, obj *model_http.NextPage) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_NextPage_PageSize(ctx, field)
+func (ec *executionContext) _NextPage_pageSize(ctx context.Context, field graphql.CollectedField, obj *model_http.NextPage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NextPage_pageSize(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1688,7 +1688,7 @@ func (ec *executionContext) _NextPage_PageSize(ctx context.Context, field graphq
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_NextPage_PageSize(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_NextPage_pageSize(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "NextPage",
 		Field:      field,
@@ -1701,8 +1701,8 @@ func (ec *executionContext) fieldContext_NextPage_PageSize(ctx context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _NextPage_Cursor(ctx context.Context, field graphql.CollectedField, obj *model_http.NextPage) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_NextPage_Cursor(ctx, field)
+func (ec *executionContext) _NextPage_cursor(ctx context.Context, field graphql.CollectedField, obj *model_http.NextPage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NextPage_cursor(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1732,7 +1732,7 @@ func (ec *executionContext) _NextPage_Cursor(ctx context.Context, field graphql.
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_NextPage_Cursor(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_NextPage_cursor(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "NextPage",
 		Field:      field,
@@ -1784,12 +1784,12 @@ func (ec *executionContext) fieldContext_Query_viewQuiz(ctx context.Context, fie
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "Title":
-				return ec.fieldContext_QuizCore_Title(ctx, field)
-			case "MarkingType":
-				return ec.fieldContext_QuizCore_MarkingType(ctx, field)
-			case "Questions":
-				return ec.fieldContext_QuizCore_Questions(ctx, field)
+			case "title":
+				return ec.fieldContext_QuizCore_title(ctx, field)
+			case "markingType":
+				return ec.fieldContext_QuizCore_markingType(ctx, field)
+			case "questions":
+				return ec.fieldContext_QuizCore_questions(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type QuizCore", field.Name)
 		},
@@ -1847,16 +1847,16 @@ func (ec *executionContext) fieldContext_Query_getScore(ctx context.Context, fie
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "Username":
-				return ec.fieldContext_Response_Username(ctx, field)
-			case "Author":
-				return ec.fieldContext_Response_Author(ctx, field)
-			case "Score":
-				return ec.fieldContext_Response_Score(ctx, field)
-			case "QuizResponse":
-				return ec.fieldContext_Response_QuizResponse(ctx, field)
-			case "QuizID":
-				return ec.fieldContext_Response_QuizID(ctx, field)
+			case "username":
+				return ec.fieldContext_Response_username(ctx, field)
+			case "author":
+				return ec.fieldContext_Response_author(ctx, field)
+			case "score":
+				return ec.fieldContext_Response_score(ctx, field)
+			case "quizResponse":
+				return ec.fieldContext_Response_quizResponse(ctx, field)
+			case "quizID":
+				return ec.fieldContext_Response_quizID(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Response", field.Name)
 		},
@@ -1914,12 +1914,12 @@ func (ec *executionContext) fieldContext_Query_getStats(ctx context.Context, fie
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "Records":
-				return ec.fieldContext_StatsResponse_Records(ctx, field)
-			case "Metadata":
-				return ec.fieldContext_StatsResponse_Metadata(ctx, field)
-			case "NextPage":
-				return ec.fieldContext_StatsResponse_NextPage(ctx, field)
+			case "records":
+				return ec.fieldContext_StatsResponse_records(ctx, field)
+			case "metadata":
+				return ec.fieldContext_StatsResponse_metadata(ctx, field)
+			case "nextPage":
+				return ec.fieldContext_StatsResponse_nextPage(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type StatsResponse", field.Name)
 		},
@@ -2067,8 +2067,8 @@ func (ec *executionContext) fieldContext_Query___schema(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Question_Description(ctx context.Context, field graphql.CollectedField, obj *model_cassandra.Question) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Question_Description(ctx, field)
+func (ec *executionContext) _Question_description(ctx context.Context, field graphql.CollectedField, obj *model_cassandra.Question) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Question_description(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2098,7 +2098,7 @@ func (ec *executionContext) _Question_Description(ctx context.Context, field gra
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Question_Description(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Question_description(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Question",
 		Field:      field,
@@ -2111,8 +2111,8 @@ func (ec *executionContext) fieldContext_Question_Description(ctx context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _Question_Asset(ctx context.Context, field graphql.CollectedField, obj *model_cassandra.Question) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Question_Asset(ctx, field)
+func (ec *executionContext) _Question_asset(ctx context.Context, field graphql.CollectedField, obj *model_cassandra.Question) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Question_asset(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2142,7 +2142,7 @@ func (ec *executionContext) _Question_Asset(ctx context.Context, field graphql.C
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Question_Asset(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Question_asset(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Question",
 		Field:      field,
@@ -2155,8 +2155,8 @@ func (ec *executionContext) fieldContext_Question_Asset(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Question_Options(ctx context.Context, field graphql.CollectedField, obj *model_cassandra.Question) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Question_Options(ctx, field)
+func (ec *executionContext) _Question_options(ctx context.Context, field graphql.CollectedField, obj *model_cassandra.Question) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Question_options(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2186,7 +2186,7 @@ func (ec *executionContext) _Question_Options(ctx context.Context, field graphql
 	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Question_Options(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Question_options(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Question",
 		Field:      field,
@@ -2199,8 +2199,8 @@ func (ec *executionContext) fieldContext_Question_Options(ctx context.Context, f
 	return fc, nil
 }
 
-func (ec *executionContext) _Question_Answers(ctx context.Context, field graphql.CollectedField, obj *model_cassandra.Question) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Question_Answers(ctx, field)
+func (ec *executionContext) _Question_answers(ctx context.Context, field graphql.CollectedField, obj *model_cassandra.Question) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Question_answers(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2227,7 +2227,7 @@ func (ec *executionContext) _Question_Answers(ctx context.Context, field graphql
 	return ec.marshalOInt322ᚕint32ᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Question_Answers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Question_answers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Question",
 		Field:      field,
@@ -2240,8 +2240,8 @@ func (ec *executionContext) fieldContext_Question_Answers(ctx context.Context, f
 	return fc, nil
 }
 
-func (ec *executionContext) _QuizCore_Title(ctx context.Context, field graphql.CollectedField, obj *model_cassandra.QuizCore) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_QuizCore_Title(ctx, field)
+func (ec *executionContext) _QuizCore_title(ctx context.Context, field graphql.CollectedField, obj *model_cassandra.QuizCore) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_QuizCore_title(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2271,7 +2271,7 @@ func (ec *executionContext) _QuizCore_Title(ctx context.Context, field graphql.C
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_QuizCore_Title(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_QuizCore_title(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "QuizCore",
 		Field:      field,
@@ -2284,8 +2284,8 @@ func (ec *executionContext) fieldContext_QuizCore_Title(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _QuizCore_MarkingType(ctx context.Context, field graphql.CollectedField, obj *model_cassandra.QuizCore) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_QuizCore_MarkingType(ctx, field)
+func (ec *executionContext) _QuizCore_markingType(ctx context.Context, field graphql.CollectedField, obj *model_cassandra.QuizCore) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_QuizCore_markingType(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2315,7 +2315,7 @@ func (ec *executionContext) _QuizCore_MarkingType(ctx context.Context, field gra
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_QuizCore_MarkingType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_QuizCore_markingType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "QuizCore",
 		Field:      field,
@@ -2328,8 +2328,8 @@ func (ec *executionContext) fieldContext_QuizCore_MarkingType(ctx context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _QuizCore_Questions(ctx context.Context, field graphql.CollectedField, obj *model_cassandra.QuizCore) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_QuizCore_Questions(ctx, field)
+func (ec *executionContext) _QuizCore_questions(ctx context.Context, field graphql.CollectedField, obj *model_cassandra.QuizCore) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_QuizCore_questions(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2359,7 +2359,7 @@ func (ec *executionContext) _QuizCore_Questions(ctx context.Context, field graph
 	return ec.marshalNQuestion2ᚕᚖgithubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋcassandraᚐQuestionᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_QuizCore_Questions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_QuizCore_questions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "QuizCore",
 		Field:      field,
@@ -2367,14 +2367,14 @@ func (ec *executionContext) fieldContext_QuizCore_Questions(ctx context.Context,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "Description":
-				return ec.fieldContext_Question_Description(ctx, field)
-			case "Asset":
-				return ec.fieldContext_Question_Asset(ctx, field)
-			case "Options":
-				return ec.fieldContext_Question_Options(ctx, field)
-			case "Answers":
-				return ec.fieldContext_Question_Answers(ctx, field)
+			case "description":
+				return ec.fieldContext_Question_description(ctx, field)
+			case "asset":
+				return ec.fieldContext_Question_asset(ctx, field)
+			case "options":
+				return ec.fieldContext_Question_options(ctx, field)
+			case "answers":
+				return ec.fieldContext_Question_answers(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Question", field.Name)
 		},
@@ -2382,8 +2382,8 @@ func (ec *executionContext) fieldContext_QuizCore_Questions(ctx context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _Response_Username(ctx context.Context, field graphql.CollectedField, obj *model_cassandra.Response) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Response_Username(ctx, field)
+func (ec *executionContext) _Response_username(ctx context.Context, field graphql.CollectedField, obj *model_cassandra.Response) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Response_username(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2413,7 +2413,7 @@ func (ec *executionContext) _Response_Username(ctx context.Context, field graphq
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Response_Username(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Response_username(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Response",
 		Field:      field,
@@ -2426,8 +2426,8 @@ func (ec *executionContext) fieldContext_Response_Username(ctx context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _Response_Author(ctx context.Context, field graphql.CollectedField, obj *model_cassandra.Response) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Response_Author(ctx, field)
+func (ec *executionContext) _Response_author(ctx context.Context, field graphql.CollectedField, obj *model_cassandra.Response) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Response_author(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2457,7 +2457,7 @@ func (ec *executionContext) _Response_Author(ctx context.Context, field graphql.
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Response_Author(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Response_author(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Response",
 		Field:      field,
@@ -2470,8 +2470,8 @@ func (ec *executionContext) fieldContext_Response_Author(ctx context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _Response_Score(ctx context.Context, field graphql.CollectedField, obj *model_cassandra.Response) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Response_Score(ctx, field)
+func (ec *executionContext) _Response_score(ctx context.Context, field graphql.CollectedField, obj *model_cassandra.Response) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Response_score(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2501,7 +2501,7 @@ func (ec *executionContext) _Response_Score(ctx context.Context, field graphql.C
 	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Response_Score(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Response_score(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Response",
 		Field:      field,
@@ -2514,8 +2514,8 @@ func (ec *executionContext) fieldContext_Response_Score(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Response_QuizResponse(ctx context.Context, field graphql.CollectedField, obj *model_cassandra.Response) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Response_QuizResponse(ctx, field)
+func (ec *executionContext) _Response_quizResponse(ctx context.Context, field graphql.CollectedField, obj *model_cassandra.Response) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Response_quizResponse(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2545,7 +2545,7 @@ func (ec *executionContext) _Response_QuizResponse(ctx context.Context, field gr
 	return ec.marshalNInt322ᚕᚕint32(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Response_QuizResponse(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Response_quizResponse(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Response",
 		Field:      field,
@@ -2558,8 +2558,8 @@ func (ec *executionContext) fieldContext_Response_QuizResponse(ctx context.Conte
 	return fc, nil
 }
 
-func (ec *executionContext) _Response_QuizID(ctx context.Context, field graphql.CollectedField, obj *model_cassandra.Response) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Response_QuizID(ctx, field)
+func (ec *executionContext) _Response_quizID(ctx context.Context, field graphql.CollectedField, obj *model_cassandra.Response) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Response_quizID(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2589,7 +2589,7 @@ func (ec *executionContext) _Response_QuizID(ctx context.Context, field graphql.
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Response_QuizID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Response_quizID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Response",
 		Field:      field,
@@ -2602,8 +2602,8 @@ func (ec *executionContext) fieldContext_Response_QuizID(ctx context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _StatsResponse_Records(ctx context.Context, field graphql.CollectedField, obj *model_http.StatsResponseGraphQL) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_StatsResponse_Records(ctx, field)
+func (ec *executionContext) _StatsResponse_records(ctx context.Context, field graphql.CollectedField, obj *model_http.StatsResponseGraphQL) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_StatsResponse_records(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2633,7 +2633,7 @@ func (ec *executionContext) _StatsResponse_Records(ctx context.Context, field gr
 	return ec.marshalNResponse2ᚕᚖgithubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋcassandraᚐResponse(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_StatsResponse_Records(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_StatsResponse_records(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "StatsResponse",
 		Field:      field,
@@ -2641,16 +2641,16 @@ func (ec *executionContext) fieldContext_StatsResponse_Records(ctx context.Conte
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "Username":
-				return ec.fieldContext_Response_Username(ctx, field)
-			case "Author":
-				return ec.fieldContext_Response_Author(ctx, field)
-			case "Score":
-				return ec.fieldContext_Response_Score(ctx, field)
-			case "QuizResponse":
-				return ec.fieldContext_Response_QuizResponse(ctx, field)
-			case "QuizID":
-				return ec.fieldContext_Response_QuizID(ctx, field)
+			case "username":
+				return ec.fieldContext_Response_username(ctx, field)
+			case "author":
+				return ec.fieldContext_Response_author(ctx, field)
+			case "score":
+				return ec.fieldContext_Response_score(ctx, field)
+			case "quizResponse":
+				return ec.fieldContext_Response_quizResponse(ctx, field)
+			case "quizID":
+				return ec.fieldContext_Response_quizID(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Response", field.Name)
 		},
@@ -2658,8 +2658,8 @@ func (ec *executionContext) fieldContext_StatsResponse_Records(ctx context.Conte
 	return fc, nil
 }
 
-func (ec *executionContext) _StatsResponse_Metadata(ctx context.Context, field graphql.CollectedField, obj *model_http.StatsResponseGraphQL) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_StatsResponse_Metadata(ctx, field)
+func (ec *executionContext) _StatsResponse_metadata(ctx context.Context, field graphql.CollectedField, obj *model_http.StatsResponseGraphQL) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_StatsResponse_metadata(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2689,7 +2689,7 @@ func (ec *executionContext) _StatsResponse_Metadata(ctx context.Context, field g
 	return ec.marshalNMetadata2githubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋhttpᚐMetadata(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_StatsResponse_Metadata(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_StatsResponse_metadata(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "StatsResponse",
 		Field:      field,
@@ -2697,10 +2697,10 @@ func (ec *executionContext) fieldContext_StatsResponse_Metadata(ctx context.Cont
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "QuizID":
-				return ec.fieldContext_Metadata_QuizID(ctx, field)
-			case "NumRecords":
-				return ec.fieldContext_Metadata_NumRecords(ctx, field)
+			case "quizID":
+				return ec.fieldContext_Metadata_quizID(ctx, field)
+			case "numRecords":
+				return ec.fieldContext_Metadata_numRecords(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Metadata", field.Name)
 		},
@@ -2708,8 +2708,8 @@ func (ec *executionContext) fieldContext_StatsResponse_Metadata(ctx context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _StatsResponse_NextPage(ctx context.Context, field graphql.CollectedField, obj *model_http.StatsResponseGraphQL) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_StatsResponse_NextPage(ctx, field)
+func (ec *executionContext) _StatsResponse_nextPage(ctx context.Context, field graphql.CollectedField, obj *model_http.StatsResponseGraphQL) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_StatsResponse_nextPage(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2736,7 +2736,7 @@ func (ec *executionContext) _StatsResponse_NextPage(ctx context.Context, field g
 	return ec.marshalONextPage2githubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋhttpᚐNextPage(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_StatsResponse_NextPage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_StatsResponse_nextPage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "StatsResponse",
 		Field:      field,
@@ -2744,10 +2744,10 @@ func (ec *executionContext) fieldContext_StatsResponse_NextPage(ctx context.Cont
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "PageSize":
-				return ec.fieldContext_NextPage_PageSize(ctx, field)
-			case "Cursor":
-				return ec.fieldContext_NextPage_Cursor(ctx, field)
+			case "pageSize":
+				return ec.fieldContext_NextPage_pageSize(ctx, field)
+			case "cursor":
+				return ec.fieldContext_NextPage_cursor(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type NextPage", field.Name)
 		},
@@ -4579,41 +4579,41 @@ func (ec *executionContext) unmarshalInputQuestionCreate(ctx context.Context, ob
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"Description", "Asset", "Options", "Answers"}
+	fieldsInOrder := [...]string{"description", "asset", "options", "answers"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "Description":
+		case "description":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Description"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
 			it.Description, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
-		case "Asset":
+		case "asset":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Asset"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("asset"))
 			it.Asset, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
-		case "Options":
+		case "options":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Options"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("options"))
 			it.Options, err = ec.unmarshalNString2ᚕstringᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
-		case "Answers":
+		case "answers":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Answers"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("answers"))
 			it.Answers, err = ec.unmarshalNInt322ᚕint32ᚄ(ctx, v)
 			if err != nil {
 				return it, err
@@ -4631,33 +4631,33 @@ func (ec *executionContext) unmarshalInputQuizCreate(ctx context.Context, obj in
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"Title", "MarkingType", "Questions"}
+	fieldsInOrder := [...]string{"title", "markingType", "questions"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "Title":
+		case "title":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Title"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("title"))
 			it.Title, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
-		case "MarkingType":
+		case "markingType":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("MarkingType"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("markingType"))
 			it.MarkingType, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
-		case "Questions":
+		case "questions":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Questions"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("questions"))
 			it.Questions, err = ec.unmarshalNQuestionCreate2ᚕᚖgithubᚗcomᚋsurahmanᚋmcqᚑplatformᚋpkgᚋmodelᚋcassandraᚐQuestionᚄ(ctx, v)
 			if err != nil {
 				return it, err
@@ -4675,17 +4675,17 @@ func (ec *executionContext) unmarshalInputQuizResponse(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"Responses"}
+	fieldsInOrder := [...]string{"responses"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "Responses":
+		case "responses":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Responses"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("responses"))
 			it.Responses, err = ec.unmarshalNInt322ᚕᚕint32(ctx, v)
 			if err != nil {
 				return it, err
@@ -4844,7 +4844,7 @@ func (ec *executionContext) _Metadata(ctx context.Context, sel ast.SelectionSet,
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Metadata")
-		case "QuizID":
+		case "quizID":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -4853,7 +4853,7 @@ func (ec *executionContext) _Metadata(ctx context.Context, sel ast.SelectionSet,
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Metadata_QuizID(ctx, field, obj)
+				res = ec._Metadata_quizID(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -4864,9 +4864,9 @@ func (ec *executionContext) _Metadata(ctx context.Context, sel ast.SelectionSet,
 				return innerFunc(ctx)
 
 			})
-		case "NumRecords":
+		case "numRecords":
 
-			out.Values[i] = ec._Metadata_NumRecords(ctx, field, obj)
+			out.Values[i] = ec._Metadata_numRecords(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
@@ -5003,16 +5003,16 @@ func (ec *executionContext) _NextPage(ctx context.Context, sel ast.SelectionSet,
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("NextPage")
-		case "PageSize":
+		case "pageSize":
 
-			out.Values[i] = ec._NextPage_PageSize(ctx, field, obj)
+			out.Values[i] = ec._NextPage_pageSize(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "Cursor":
+		case "cursor":
 
-			out.Values[i] = ec._NextPage_Cursor(ctx, field, obj)
+			out.Values[i] = ec._NextPage_cursor(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -5149,30 +5149,30 @@ func (ec *executionContext) _Question(ctx context.Context, sel ast.SelectionSet,
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Question")
-		case "Description":
+		case "description":
 
-			out.Values[i] = ec._Question_Description(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "Asset":
-
-			out.Values[i] = ec._Question_Asset(ctx, field, obj)
+			out.Values[i] = ec._Question_description(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "Options":
+		case "asset":
 
-			out.Values[i] = ec._Question_Options(ctx, field, obj)
+			out.Values[i] = ec._Question_asset(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "Answers":
+		case "options":
 
-			out.Values[i] = ec._Question_Answers(ctx, field, obj)
+			out.Values[i] = ec._Question_options(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "answers":
+
+			out.Values[i] = ec._Question_answers(ctx, field, obj)
 
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -5195,23 +5195,23 @@ func (ec *executionContext) _QuizCore(ctx context.Context, sel ast.SelectionSet,
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("QuizCore")
-		case "Title":
+		case "title":
 
-			out.Values[i] = ec._QuizCore_Title(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "MarkingType":
-
-			out.Values[i] = ec._QuizCore_MarkingType(ctx, field, obj)
+			out.Values[i] = ec._QuizCore_title(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "Questions":
+		case "markingType":
 
-			out.Values[i] = ec._QuizCore_Questions(ctx, field, obj)
+			out.Values[i] = ec._QuizCore_markingType(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "questions":
+
+			out.Values[i] = ec._QuizCore_questions(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -5237,28 +5237,28 @@ func (ec *executionContext) _Response(ctx context.Context, sel ast.SelectionSet,
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Response")
-		case "Username":
+		case "username":
 
-			out.Values[i] = ec._Response_Username(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "Author":
-
-			out.Values[i] = ec._Response_Author(ctx, field, obj)
+			out.Values[i] = ec._Response_username(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "Score":
+		case "author":
 
-			out.Values[i] = ec._Response_Score(ctx, field, obj)
+			out.Values[i] = ec._Response_author(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "QuizResponse":
+		case "score":
+
+			out.Values[i] = ec._Response_score(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "quizResponse":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -5267,7 +5267,7 @@ func (ec *executionContext) _Response(ctx context.Context, sel ast.SelectionSet,
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Response_QuizResponse(ctx, field, obj)
+				res = ec._Response_quizResponse(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -5278,7 +5278,7 @@ func (ec *executionContext) _Response(ctx context.Context, sel ast.SelectionSet,
 				return innerFunc(ctx)
 
 			})
-		case "QuizID":
+		case "quizID":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -5287,7 +5287,7 @@ func (ec *executionContext) _Response(ctx context.Context, sel ast.SelectionSet,
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Response_QuizID(ctx, field, obj)
+				res = ec._Response_quizID(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -5319,23 +5319,23 @@ func (ec *executionContext) _StatsResponse(ctx context.Context, sel ast.Selectio
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("StatsResponse")
-		case "Records":
+		case "records":
 
-			out.Values[i] = ec._StatsResponse_Records(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "Metadata":
-
-			out.Values[i] = ec._StatsResponse_Metadata(ctx, field, obj)
+			out.Values[i] = ec._StatsResponse_records(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "NextPage":
+		case "metadata":
 
-			out.Values[i] = ec._StatsResponse_NextPage(ctx, field, obj)
+			out.Values[i] = ec._StatsResponse_metadata(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "nextPage":
+
+			out.Values[i] = ec._StatsResponse_nextPage(ctx, field, obj)
 
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))

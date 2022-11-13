@@ -177,10 +177,10 @@ func TestQueryResolver_GetScore(t *testing.T) {
 
 				responseMap := data.(map[string]any)["getScore"]
 
-				actualScore := responseMap.(map[string]any)["Score"].(float64)
+				actualScore := responseMap.(map[string]any)["score"].(float64)
 				require.InDelta(t, expectedResponse.Score, actualScore, 0.01, "returned score mismatch")
 
-				actualUUID := responseMap.(map[string]any)["QuizID"]
+				actualUUID := responseMap.(map[string]any)["quizID"]
 				require.Equal(t, expectedResponse.QuizID.String(), actualUUID, "quiz id mismatch")
 			}
 		})
@@ -466,8 +466,12 @@ func TestQueryResolver_GetStats(t *testing.T) {
 				// Quiz ID is expected.
 				data, ok := response["data"]
 				require.True(t, ok, "data key expected but not set")
-				statsMap := data.(map[string]any)["getStats"]
-				_ = statsMap
+
+				statsResponse := model_http.StatsResponseGraphQL{}
+				jsonBytes, err := json.Marshal(data.(map[string]any)["getStats"])
+				require.NoError(t, err, "failed to generate JSON byte array")
+				require.NoError(t, json.Unmarshal(jsonBytes, &statsResponse), "failed to unmarshall to stats response")
+				_ = statsResponse
 			}
 		})
 	}
