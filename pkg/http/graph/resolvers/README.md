@@ -348,16 +348,17 @@ _Response:_ A success response containing the scorecard.
 
 ```json
 {
-  "message": "score card",
-  "payload": {
-    "username": "username1",
-    "author": "username1",
-    "score": 0.6666666666666666,
-    "responses": [
-      [0, 1, 2],
-      [1, 3]
-    ],
-    "quiz_id": "74522665-4d8a-11ed-b4cb-305a3a460e3e"
+  "data": {
+    "getScore": {
+      "username": "username1",
+      "author": "username999",
+      "score": 0.6666666666666666,
+      "quizResponse": [
+        [0, 1, 2],
+        [1, 3 ]
+      ],
+      "quizID": "74522665-4d8a-11ed-b4cb-305a3a460e3e"
+    }
   }
 }
 ```
@@ -409,32 +410,49 @@ accessed by appending updating the query to include the returned `nextPage.curso
 
 ```json
 {
-  "records": [
-    {
-      "username": "username4",
-      "score": 0.4444,
-      "responses": [[0, 1, 2], [1, 3]],
-      "quiz_id": "0a704c4b-4ea2-11ed-bd5a-305a3a460e3e"
-    },
-    {
-      "username": "username6",
-      "score": 0.7777,
-      "responses": [[0, 1, 2], [1, 3]],
-      "quiz_id": "0a704c4b-4ea2-11ed-bd5a-305a3a460e3e"
-    },
-    {
-      "username": "username5",
-      "score": 0.5555,
-      "responses": [[0, 1, 2], [1, 3]],
-      "quiz_id": "0a704c4b-4ea2-11ed-bd5a-305a3a460e3e"
+  "data": {
+    "getStats": {
+      "records": [
+        {
+          "username": "username4",
+          "author": "username1",
+          "score": 0.4444,
+          "quizResponse": [
+            [0, 1, 2],
+            [1, 3]
+          ],
+          "quizID": "0a704c4b-4ea2-11ed-bd5a-305a3a460e3e"
+        },
+        {
+          "username": "username6",
+          "author": "username1",
+          "score": 0.7777,
+          "quizResponse": [
+            [0, 1, 2],
+            [1, 3]
+          ],
+          "quizID": "0a704c4b-4ea2-11ed-bd5a-305a3a460e3e"
+        },
+        {
+          "username": "username5",
+          "author": "username1",
+          "score": 0.5555,
+          "quizResponse": [
+            [0, 1, 2 ],
+            [1, 3]
+          ],
+          "quizID": "0a704c4b-4ea2-11ed-bd5a-305a3a460e3e"
+        }
+      ],
+      "metadata": {
+        "quizID": "0a704c4b-4ea2-11ed-bd5a-305a3a460e3e",
+        "numRecords": 3
+      },
+      "nextPage": {
+        "pageSize": 3,
+        "cursor": "fJV60mayZXn19umNhYtwH8wpxDWsQBJPRjoeqCMtpWQizZbf2WGqaN4FKwxUL8LeLj0JLOMeQjPOyuGiTB8d5h303A=="
+      }
     }
-  ],
-  "metadata": {
-    "quiz_id": "0a704c4b-4ea2-11ed-bd5a-305a3a460e3e",
-    "num_records": 3
-  },
-  "links": {
-    "next_page": "?pageCursor=GnkrBKWMAmEVbB0okIP4Mr0lzU_TAX3yifbc6Fa8lIBOPbF30YOoTKyHOjVosFSnnYF8_3LQ8hQwqa6f6sJpvFbd9A==&pageSize=3"
   }
 }
 ```
@@ -446,7 +464,7 @@ query {
   getStats(
       quizID:"0a704c4b-4ea2-11ed-bd5a-305a3a460e3e"
       pageSize: 3
-      cursor:"GnkrBKWMAmEVbB0okIP4Mr0lzU_TAX3yifbc6Fa8lIBOPbF30YOoTKyHOjVosFSnnYF8_3LQ8hQwqa6f6sJpvFbd9A") {
+      cursor:"fJV60mayZXn19umNhYtwH8wpxDWsQBJPRjoeqCMtpWQizZbf2WGqaN4FKwxUL8LeLj0JLOMeQjPOyuGiTB8d5h303A==") {
     records {
       username
       author
