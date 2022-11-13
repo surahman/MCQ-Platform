@@ -192,10 +192,15 @@ func TestQueryResolver_GetStats(t *testing.T) {
 	router := getRouter()
 	router.Use(GinContextToContextMiddleware())
 
+	quizUUID := gocql.TimeUUID().String()
+
 	testCases := []struct {
 		name                string
 		path                string
 		query               string
+		expectCursor        string
+		expectPageSize      int
+		expectNumRecords    int
 		expectErr           bool
 		authValidateJWTData *mockAuthData
 		authDecryptData     *mockAuthData
@@ -223,7 +228,7 @@ func TestQueryResolver_GetStats(t *testing.T) {
 		}, {
 			name:      "empty token",
 			path:      "/stats-page/empty-token/",
-			query:     fmt.Sprintf(testScoresQuery["stats"], gocql.TimeUUID().String(), 3, "PaGeCuRs0R"),
+			query:     fmt.Sprintf(testScoresQuery["stats"], quizUUID, 3, "PaGeCuRs0R"),
 			expectErr: true,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "",
@@ -241,7 +246,7 @@ func TestQueryResolver_GetStats(t *testing.T) {
 		}, {
 			name:      "db read invalid user",
 			path:      "/stats-page/failed-db-read-invalid-user/",
-			query:     fmt.Sprintf(testScoresQuery["stats"], gocql.TimeUUID().String(), 3, "PaGeCuRs0R"),
+			query:     fmt.Sprintf(testScoresQuery["stats"], quizUUID, 3, "PaGeCuRs0R"),
 			expectErr: true,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "expected-username",
@@ -261,7 +266,7 @@ func TestQueryResolver_GetStats(t *testing.T) {
 		}, {
 			name:      "db read no records",
 			path:      "/stats-page/failed-db-read-no-records/",
-			query:     fmt.Sprintf(testScoresQuery["stats"], gocql.TimeUUID().String(), 3, "PaGeCuRs0R"),
+			query:     fmt.Sprintf(testScoresQuery["stats"], quizUUID, 3, "PaGeCuRs0R"),
 			expectErr: true,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "expected-username",
@@ -279,10 +284,11 @@ func TestQueryResolver_GetStats(t *testing.T) {
 				times:        0,
 			},
 		}, {
-			name:      "db quiz read valid user invalid page size",
-			path:      "/stats-page/failed-db-quiz-read-valid-user-invalid-page-size/",
-			query:     fmt.Sprintf(testScoresQuery["stats"], gocql.TimeUUID().String(), -1, "PaGeCuRs0R"),
-			expectErr: false,
+			name:             "db quiz read valid user invalid page size",
+			path:             "/stats-page/failed-db-quiz-read-valid-user-invalid-page-size/",
+			query:            fmt.Sprintf(testScoresQuery["stats"], quizUUID, -1, "PaGeCuRs0R"),
+			expectNumRecords: 1,
+			expectErr:        false,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "expected-username",
 				times:        1,
@@ -303,7 +309,7 @@ func TestQueryResolver_GetStats(t *testing.T) {
 		}, {
 			name:      "db stat read failure",
 			path:      "/stats-page/db-stat-read-failure/",
-			query:     fmt.Sprintf(testScoresQuery["stats"], gocql.TimeUUID().String(), 3, "PaGeCuRs0R"),
+			query:     fmt.Sprintf(testScoresQuery["stats"], quizUUID, 3, "PaGeCuRs0R"),
 			expectErr: true,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "expected-username",
@@ -323,7 +329,7 @@ func TestQueryResolver_GetStats(t *testing.T) {
 		}, {
 			name:      "prepare response failure",
 			path:      "/stats-page/prepare-response-failure/",
-			query:     fmt.Sprintf(testScoresQuery["stats"], gocql.TimeUUID().String(), 3, "PaGeCuRs0R"),
+			query:     fmt.Sprintf(testScoresQuery["stats"], quizUUID, 3, "PaGeCuRs0R"),
 			expectErr: true,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "expected-username",
@@ -342,10 +348,13 @@ func TestQueryResolver_GetStats(t *testing.T) {
 				times:        1,
 			},
 		}, {
-			name:      "success",
-			path:      "/stats-page/success/",
-			query:     fmt.Sprintf(testScoresQuery["stats"], gocql.TimeUUID().String(), 3, "PaGeCuRs0R"),
-			expectErr: false,
+			name:             "success",
+			path:             "/stats-page/success/",
+			query:            fmt.Sprintf(testScoresQuery["stats"], quizUUID, 3, "PaGeCuRs0R"),
+			expectCursor:     "tHisIsAnEnCrYPtEdCUrS0r",
+			expectPageSize:   3,
+			expectNumRecords: 3,
+			expectErr:        false,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "expected-username",
 				times:        1,
@@ -364,10 +373,12 @@ func TestQueryResolver_GetStats(t *testing.T) {
 				times:        1,
 			},
 		}, {
-			name:      "success no cursor",
-			path:      "/stats-page/success-no-cursor/",
-			query:     fmt.Sprintf(testScoresQuery["stats_page_size"], gocql.TimeUUID().String(), 3),
-			expectErr: false,
+			name:             "success no cursor",
+			path:             "/stats-page/success-no-cursor/",
+			query:            fmt.Sprintf(testScoresQuery["stats_page_size"], quizUUID, 3),
+			expectPageSize:   0,
+			expectNumRecords: 3,
+			expectErr:        false,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "expected-username",
 				times:        1,
@@ -386,10 +397,13 @@ func TestQueryResolver_GetStats(t *testing.T) {
 				times:        0,
 			},
 		}, {
-			name:      "success quiz id only",
-			path:      "/stats-page/success-quiz-id-only/",
-			query:     fmt.Sprintf(testScoresQuery["stats_quiz_id"], gocql.TimeUUID().String()),
-			expectErr: false,
+			name:             "success quiz id only",
+			path:             "/stats-page/success-quiz-id-only/",
+			query:            fmt.Sprintf(testScoresQuery["stats_quiz_id"], quizUUID),
+			expectCursor:     "tHisIsAnEnCrYPtEdCUrS0r",
+			expectPageSize:   7,
+			expectNumRecords: 3,
+			expectErr:        false,
 			authValidateJWTData: &mockAuthData{
 				outputParam1: "expected-username",
 				times:        1,
@@ -397,12 +411,53 @@ func TestQueryResolver_GetStats(t *testing.T) {
 			authDecryptData: &mockAuthData{times: 0},
 			cassandraStatsData: &mockCassandraData{
 				outputParam: &model_cassandra.StatsResponse{
-					PageCursor: []byte{},
+					PageCursor: []byte("cursor to next page"),
 					Records:    []*model_cassandra.Response{{Author: "expected-username"}, {}, {}},
-					PageSize:   3,
+					PageSize:   7,
 				},
 				times: 1,
 			},
+			authEncryptData: &mockAuthData{
+				outputParam1: "tHisIsAnEnCrYPtEdCUrS0r",
+				times:        1,
+			},
+		}, {
+			name:      "cursor encryption failure",
+			path:      "/stats-page/cursor-encryption-failure/",
+			query:     fmt.Sprintf(testScoresQuery["stats_quiz_id"], quizUUID),
+			expectErr: true,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "expected-username",
+				times:        1,
+			},
+			authDecryptData: &mockAuthData{times: 0},
+			cassandraStatsData: &mockCassandraData{
+				outputParam: &model_cassandra.StatsResponse{
+					PageCursor: []byte("cursor to next page"),
+					Records:    []*model_cassandra.Response{{Author: "expected-username"}, {}, {}},
+					PageSize:   7,
+				},
+				times: 1,
+			},
+			authEncryptData: &mockAuthData{
+				outputParam1: "tHisIsAnEnCrYPtEdCUrS0r",
+				outputErr:    errors.New("encrypting cursor failed"),
+				times:        1,
+			},
+		}, {
+			name:      "cursor decryption failure",
+			path:      "/stats-page/cursor-decryption-failure/",
+			query:     fmt.Sprintf(testScoresQuery["stats"], quizUUID, 3, "PaGeCuRs0R"),
+			expectErr: true,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "expected-username",
+				times:        1,
+			},
+			authDecryptData: &mockAuthData{
+				outputErr: errors.New("decrypting cursor failed"),
+				times:     1,
+			},
+			cassandraStatsData: &mockCassandraData{times: 0},
 			authEncryptData: &mockAuthData{
 				outputParam1: "",
 				times:        0,
@@ -467,11 +522,20 @@ func TestQueryResolver_GetStats(t *testing.T) {
 				data, ok := response["data"]
 				require.True(t, ok, "data key expected but not set")
 
-				statsResponse := model_http.StatsResponseGraphQL{}
-				jsonBytes, err := json.Marshal(data.(map[string]any)["getStats"])
-				require.NoError(t, err, "failed to generate JSON byte array")
-				require.NoError(t, json.Unmarshal(jsonBytes, &statsResponse), "failed to unmarshall to stats response")
-				_ = statsResponse
+				statsResponse := data.(map[string]any)["getStats"].(map[string]any)
+
+				metadata := statsResponse["metadata"].(map[string]any)
+				quizID := metadata["quizID"].(string)
+				require.Equal(t, quizUUID, quizID, "quiz id did not match expected")
+				numRecords := int(metadata["numRecords"].(float64))
+				require.Equal(t, testCase.expectNumRecords, numRecords, "record count does not match expected")
+
+				nextPage := statsResponse["nextPage"].(map[string]any)
+				pageSize := int(nextPage["pageSize"].(float64))
+				require.Equal(t, testCase.expectPageSize, pageSize, "page size does not match expected")
+				cursor := nextPage["cursor"].(string)
+				require.Equal(t, testCase.expectCursor, cursor, "cursor does not match expected")
+
 			}
 		})
 	}

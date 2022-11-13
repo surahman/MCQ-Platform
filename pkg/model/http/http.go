@@ -56,6 +56,6 @@ type NextPage struct {
 // StatsResponseGraphQL is a paginated GraphQL response to a request for statistics for a specific quiz.
 type StatsResponseGraphQL struct {
 	Records  []*model_cassandra.Response `json:"records"`
-	Metadata `json:"metadata"`
-	NextPage `json:"next_page"`
+	Metadata `json:"metadata,omitempty"`
+	NextPage `json:"next_page,omitempty"`
 }
