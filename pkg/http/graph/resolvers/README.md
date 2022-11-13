@@ -23,7 +23,7 @@ The GraphQL API schema can be tested and reviewed through the GraphQL Playground
 - [Score Mutations and Queries](#score-mutations-and-queries)
     - [Score](#score)
     - [Stats - _Paginated_](#stats---paginated)
-- [Healthcheck Endpoint `/health`](#healthcheck-endpoint-health)
+- [Healthcheck Query](#healthcheck-query)
 
 <br/>
 
@@ -486,13 +486,19 @@ query {
 
 <br/>
 
-### Healthcheck Endpoint `/health`
+### Healthcheck Query.
 
 The health check endpoint is exposed to facilitate liveness checks on the service. The check will verify whether the
 service is connected to all the ancillary services and responds appropriately.
 
 This check is essential for load balancers and container orchestrators to determine whether to route traffic or restart
 the container.
+
+```graphql
+query {
+  healthcheck()
+}
+```
 
 _Healthy Response:_ OK
 
