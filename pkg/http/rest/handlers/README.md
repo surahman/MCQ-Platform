@@ -235,7 +235,7 @@ in the payload. Please see the [`grading`](../../../grading) package for details
 
 ### Score Endpoints `/score/`
 
-#### Test
+#### Score
 
 A user may request the score for a quiz they have already taken, whether the quiz is deleted or not.
 
@@ -248,6 +248,7 @@ _Response:_ A success response containing a message with the scorecard in the pa
   "message": "score card",
   "payload": {
     "username": "username1",
+    "author": "username1",
     "score": 0.6666666666666666,
     "responses": [
       [0, 1, 2],
@@ -273,24 +274,28 @@ _Response:_ A success response containing a message with the scorecards in the p
   "payload": [
     {
       "username": "username4",
+      "author": "username1",
       "score": 0.4444,
       "responses": [ [0, 1, 2], [1, 3] ],
       "quiz_id": "0a704c4b-4ea2-11ed-bd5a-305a3a460e3e"
     },
     {
       "username": "username3",
+      "author": "username1",
       "score": 0.1111,
       "responses": [ [0, 1, 2], [1, 3] ],
       "quiz_id": "0a704c4b-4ea2-11ed-bd5a-305a3a460e3e"
     },
     {
       "username": "username2",
+      "author": "username1",
       "score": 0.2222,
       "responses": [ [0, 1, 2], [1, 3] ],
       "quiz_id": "0a704c4b-4ea2-11ed-bd5a-305a3a460e3e"
     },
     {
       "username": "username1",
+      "author": "username1",
       "score": 0.6666666666666666,
       "responses": [ [0, 1, 2], [1, 3] ],
       "quiz_id": "0a704c4b-4ea2-11ed-bd5a-305a3a460e3e"
@@ -328,18 +333,21 @@ with the `Quiz ID` in the path.
   "records": [
     {
       "username": "username4",
+      "author": "username1",
       "score": 0.4444,
       "responses": [[0, 1, 2], [1, 3]],
       "quiz_id": "0a704c4b-4ea2-11ed-bd5a-305a3a460e3e"
     },
     {
       "username": "username6",
+      "author": "username1",
       "score": 0.7777,
       "responses": [[0, 1, 2], [1, 3]],
       "quiz_id": "0a704c4b-4ea2-11ed-bd5a-305a3a460e3e"
     },
     {
       "username": "username5",
+      "author": "username1",
       "score": 0.5555,
       "responses": [[0, 1, 2], [1, 3]],
       "quiz_id": "0a704c4b-4ea2-11ed-bd5a-305a3a460e3e"
