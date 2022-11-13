@@ -1,31 +1,11 @@
-# HTTP REST API Endpoints
+# HTTP GraphQL API Endpoints
 
-The REST API schema can be tested and reviewed through the Swagger UI that is exposed when the server is started.
+The GraphQL API schema can be tested and reviewed through the GraphQL Playground that is exposed when the server is started.
 
 <br/>
 
 ## Table of contents
 
-- [Authorization Response](#authorization-response)
-- [Error Response](#error-response)
-- [Success Response](#success-response)
-- [User Endpoints `/user/`](#user-endpoints-user)
-  - [Register](#register)
-  - [Login](#login)
-  - [Refresh](#refresh)
-  - [Delete](#delete)
-- [Quiz Endpoints `/quiz/`](#quiz-endpoints-quiz)
-  - [Create](#create)
-  - [View](#view)
-  - [Update](#update)
-  - [Delete](#delete)
-  - [Publish](#publish)
-  - [Take](#take)
-- [Score Endpoints `/score/`](#score-endpoints-score)
-  - [Test](#test)
-  - [Stats](#stats)
-  - [Stats - _Paginated_](#stats---paginated)
-- [Healthcheck Endpoint `/health`](#healthcheck-endpoint-health)
 
 <br/>
 
@@ -46,48 +26,46 @@ The returned token schema is below.
 
 <br/>
 
-### Error Response
+### Authorization
 
-There is a generic error response with a message and optional payload. If there is a validation error of some sort the
-details of the failures will be enclosed within the payload section of the response.
+A valid JSON Web Token must be included in the header in the HTTP request for all endpoints that require authorization.
+The `Authorization` header key is customizable through the GraphQL endpoint configurations.
+
+The following `queries` and `mutations` do not require authorization:
+- Register User: `registerUser`
+- Login User: `loginUser`
 
 ```json
 {
-  "message": "message string",
-  "payload": "string or JSON object"
+  "Authorization":
+  "JSON Web Token goes here"
 }
 ```
 
 <br/>
 
-### Success Response
-
-A successful request _may_ result in a response object when appropriate. In such an event, a message and an optional
-payload will be returned.
-
-```json
-{
-  "message": "message string",
-  "payload": "string or JSON object"
-}
-```
-
-<br/>
-
-### User Endpoints `/user/`
+### User Mutations
 
 #### Register
 
 _Request:_ All fields are required.
 _Response:_ A valid JWT will be returned as an authorization response. 
 
-```json
-{
-  "email": "string",
-  "first_name": "string",
-  "last_name": "string",
-  "password": "string",
-  "username": "string"
+```graphql
+mutation {
+  registerUser(input: {
+    firstname: "first name"
+    lastname: "last name"
+    email: "email@address.com",
+    userLoginCredentials: {
+      username:"someusername",
+      password: "somepassword"
+    }
+  }) {
+  token,
+  expires,
+  threshold
+  }
 }
 ```
 
@@ -96,10 +74,16 @@ _Response:_ A valid JWT will be returned as an authorization response.
 _Request:_ All fields are required. 
 _Response:_ A valid JWT will be returned as an authorization response. 
 
-```json
-{
-  "password": "string",
-  "username": "string"
+```graphql
+mutation {
+  loginUser(input: {
+    username:"someusername",
+    password: "somepassword"
+  }) {
+    token,
+    expires,
+    threshold
+  }
 }
 ```
 
@@ -108,10 +92,13 @@ _Response:_ A valid JWT will be returned as an authorization response.
 _Request:_ A valid JWT must be provided in the request header and will be validated with a fresh token issued against it. 
 _Response:_ A valid JWT will be returned as an authorization response. 
 
-```json
-{
-  "expires": "expiration time string",
-  "token": "token string"
+```graphql
+mutation {
+  refreshToken() {
+    token
+    expires
+    threshold
+  }
 }
 ```
 
@@ -122,17 +109,19 @@ _Request:_ All fields are required and a valid JWT must be provided in the heade
            account **USERNAME HERE**`
 _Response:_ A confirmation message will be returned as a success response. 
 
-```json
-{
-  "confirmation": "I understand the consequences, delete my user account <USERNAME HERE>",
-  "password": "password string",
-  "username": "username string"
+```graphql
+mutation {
+  deleteUser(input: {
+    username: "someusername"
+    password: "somepassword"
+    confirmation: "I understand the consequences, delete my user account <USERNAME HERE>"
+  })
 }
 ```
 
 <br/>
 
-### Quiz Endpoints `/quiz/`
+### Quiz Mutations and Queries
 
 #### Create
 
@@ -143,25 +132,30 @@ _Request:_ All fields except `asset` are required.
 - Answer must be fewer than the number of options. Each number in the answer is an index to an option and must be in the range [0, 4].
 - Every question has an optional asset that is a URL Encoded URI.
 
-_Response:_ A success response containing the `quiz id` in the payload.
+_Response:_ A success response containing the `quiz id` in the response.
 
-```json
-{
-  "marking_type": "One of: None, Binary, Negative, or Non-negative",
-  "questions": [
+```graphql
+mutation {
+  createQuiz(input:
     {
-      "asset": "URL encoded URI of asset",
-      "description": "actual question here",
-      "options": ["option 1", "option 2", "option 3", "option 4", "option 5"],
-      "answers": [0,1,2,3,4]
-    },{
-      "asset": "URL encoded URI of asset",
-      "description": "actual question here",
-      "options": ["option 1", "option 2", "option 3", "option 4", "option 5"],
-      "answers": [0,1,2,3,4]
+      title: "The title of the quiz"
+      markingType: "One of: None, Binary, Negative, or Non-negative",
+      questions: [
+        {
+          description: "actual question here"
+          asset: "URL encoded URI of asset"
+          options: ["option 1", "option 2", "option 3", "option 4", "option 5"]
+          answers: [0,1,2,3,4]
+        }
+        {
+          description: "actual question here"
+          asset: "URL encoded URI of asset"
+          options: ["option 1", "option 2", "option 3", "option 4", "option 5"]
+          answers: [0,1,2,3,4]
+        }
+      ]
     }
-  ],
-  "title": "The title of the quiz"
+  )
 }
 ```
 
@@ -171,9 +165,24 @@ Only quizzes neither published nor deleted may be viewed by non-authors. Authors
 unpublished quizzes. Answer keys will only be returned to requesters who are the quiz's authors. The username of the
 requester is extracted from their JWT.
 
-_Request:_ The Quiz ID must be supplied in the request the URL.
+_Request:_ The Quiz ID must be supplied in the query.
 
-_Response:_ A success response containing the `quiz id` in the message and the quiz in the payload.
+_Response:_ A success response containing the quiz.
+
+```graphql
+query {
+  viewQuiz(quizID: "QUIZ UUID HERE"){
+    Title
+    MarkingType
+    Questions {
+      Description
+      Asset
+      Options
+      Answers
+    }
+  }
+}
+```
 
 #### Update
 
@@ -188,38 +197,78 @@ updates, to the API.
 _Request:_ The Quiz ID must be supplied in the request the URL along with the contents of the `QuizCore` in the request
 body.
 
-_Response:_ A success response containing a confirmation message and the `quiz id` in the payload.
+_Response:_ A success response containing a confirmation message and the `quiz id.
+
+```graphql
+mutation {
+  updateQuiz(
+    quizID: "76079156-6172-11ed-a471-305a3a460e3e"
+    quiz:
+    {
+      title: "The title of the quiz"
+      markingType: "One of: None, Binary, Negative, or Non-negative",
+      questions: [
+        {
+          description: "actual question here"
+          asset: "URL encoded URI of asset"
+          options: ["option 1", "option 2", "option 3", "option 4", "option 5"]
+          answers: [0,1,2,3,4]
+        }
+        {
+          description: "actual question here"
+          asset: "URL encoded URI of asset"
+          options: ["option 1", "option 2", "option 3", "option 4", "option 5"]
+          answers: [0,1,2,3,4]
+        }
+      ]
+    }
+  )
+}
+```
 
 #### Delete
 
 Only the authors of a quiz may mark it as deleted. Once deleted, a quiz will be set to unpublished and will no longer
 be eligible for publishing and editing. The quiz will remain in the database and can only be viewed by the author.
 
-_Request:_ The Quiz ID must be supplied in the request URL.
+_Request:_ The Quiz ID must be supplied in the request.
 
-_Response:_ A success response containing a confirmation message and the `quiz id` in the payload.
+_Response:_ A success response containing a confirmation message and the `quiz id`.
+
+```graphql
+mutation {
+  deleteQuiz(quizID:"QUIZ UUID HERE")
+}
+```
+
 
 #### Publish
 
 Only the authors of a quiz may mark it as published. Once published, a quiz will be generally available to all users and
 will no longer be eligible for editing. The quiz can be made unavailable by deleting it.
 
-_Request:_ The Quiz ID must be supplied in the request URL.
+_Request:_ The Quiz ID must be supplied in the request.
 
-_Response:_ A success response containing a confirmation message and the `quiz id` in the payload.
+_Response:_ A success response containing a confirmation message and the `quiz id`.
+
+```graphql
+mutation {
+  publishQuiz(quizID:"QUIZ UUID HERE")
+}
+```
 
 #### Take
 
 Any registered user is allowed to take or submit answers to a quiz that is published and has not been deleted yet. A
 user may only take a quiz once.
 
-_Request:_ The Quiz ID must be supplied in the request URL. The responses are provided in a two-dimensional array of
+_Request:_ The Quiz ID must be supplied in the request. The responses are provided in a two-dimensional array of
 integers in the request body. The questions and answers are zero-indexed. The answers for each question must be supplied
 in the row number corresponding to the question number. To select options for a question, the user must specify the
 indices of the options in the questions row array.
 
-_Response:_ A success response containing a confirmation message with the `quiz id` as well as the score, if applicable,
-in the payload. Please see the [`grading`](../../../grading) package for details on marking.
+_Response:_ A success response containing the score, if applicable. Please see the [`grading`](../../../grading) package
+for details on marking.
 
 ```json
 {
@@ -231,17 +280,33 @@ in the payload. Please see the [`grading`](../../../grading) package for details
 }
 ```
 
+```graphql
+
+```
+
 <br/>
 
-### Score Endpoints `/score/`
+### Score Mutations and Queries
 
 #### Take
 
 A user may request the score for a quiz they have already taken, whether the quiz is deleted or not.
 
-_Request:_ The Quiz ID must be supplied in the request URL.
+_Request:_ The Quiz ID must be supplied in the request.
 
-_Response:_ A success response containing a message with the scorecard in the payload. An example response is below.
+```graphql
+query {
+  getScore(quizID:"QUIZ UUID HERE") {
+    username
+    author
+    score
+    quizResponse
+    quizID
+  }
+}
+```
+
+_Response:_ A success response containing the scorecard.
 
 ```json
 {
@@ -255,47 +320,6 @@ _Response:_ A success response containing a message with the scorecard in the pa
     ],
     "quiz_id": "74522665-4d8a-11ed-b4cb-305a3a460e3e"
   }
-}
-```
-
-#### Stats
-
-An author of a quiz may request all the scorecards for their quiz. The scorecards will contain the `username`s, `score`s,
-as well as `answers` that all users have submitted for the quiz.
-
-_Request:_ The Quiz ID must be supplied in the request URL.
-
-_Response:_ A success response containing a message with the scorecards in the payload. An example response is below.
-
-```json
-{
-  "message": "score cards",
-  "payload": [
-    {
-      "username": "username4",
-      "score": 0.4444,
-      "responses": [ [0, 1, 2], [1, 3] ],
-      "quiz_id": "0a704c4b-4ea2-11ed-bd5a-305a3a460e3e"
-    },
-    {
-      "username": "username3",
-      "score": 0.1111,
-      "responses": [ [0, 1, 2], [1, 3] ],
-      "quiz_id": "0a704c4b-4ea2-11ed-bd5a-305a3a460e3e"
-    },
-    {
-      "username": "username2",
-      "score": 0.2222,
-      "responses": [ [0, 1, 2], [1, 3] ],
-      "quiz_id": "0a704c4b-4ea2-11ed-bd5a-305a3a460e3e"
-    },
-    {
-      "username": "username1",
-      "score": 0.6666666666666666,
-      "responses": [ [0, 1, 2], [1, 3] ],
-      "quiz_id": "0a704c4b-4ea2-11ed-bd5a-305a3a460e3e"
-    }
-  ]
 }
 ```
 
@@ -314,10 +338,33 @@ It is critical to consider that adding or removing rows in other queries may aff
 paginated query into the same table. Since paged queries rely on a cursor to a read position in the database table
 returned results from a paged query may return duplicated or missed records between pages.
 
-_Request:_ The `Quiz ID` must be supplied in the request URL. The encrypted and Base64 URL encoded page cursor is provided
+_Request:_ The `Quiz ID` must be supplied in the request. The encrypted and Base64 URL encoded page cursor is provided
 with the query parameter `pageCursor`. The maximum number of records to retrieve in a request is set via the `pageSize`
 query parameter. The first request sent to this endpoint should only include the `pageSize`. The subsequent responses will
 have the query string link generated automatically.
+
+```graphql
+query {
+  getStats(quizID:"QUIZ UUID HERE", pageSize: 3, cursor: "CURSOR TO NEXT PAGE HERE") {
+    records {
+      username
+      author
+      score
+      quizResponse
+      quizID
+    }
+    metadata {
+      quizID
+      numRecords
+    }
+    nextPage {
+      pageSize
+      cursor
+    }
+  }
+}
+```
+
 
 _Response:_ A paged statistics response will be returned on a successful request. The following page of data can be
 accessed by appending the query string in the `Links.NextPage` to the base request URI that consists of the endpoint URI

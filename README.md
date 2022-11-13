@@ -41,7 +41,8 @@ across availability zones.
       authorization using the returned rows.
 - [x] Redis Cache: To improve the performance of the API, published tests should be cached with an eager write to cache, 
       and lazy loading to the cache on misses.
-- [ ] GraphQL: Essential for performance on bandwidth restricted connections.
+- [x] GraphQL: Essential for performance on bandwidth restricted connections.
+- [ ] GraphQL Complexity: Maximum depth complexity must be added for security to help mitigate against malicious requests.
 
 <br/>
 
