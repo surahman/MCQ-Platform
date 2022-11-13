@@ -1,19 +1,19 @@
 # Response represents a response to a quiz and is a row in responses table.
 type Response {
-    Username: String!
-    Author: String!
-    Score:Float!
-    QuizResponse: [[Int32!]]!
-    QuizID: String!
+    username: String!
+    author: String!
+    score:Float!
+    quizResponse: [[Int32!]]!
+    quizID: String!
 }
 
 # The answer card to a quiz. The rows indices are the question numbers and the columns indices are the selected option numbers.
 input QuizResponse {
-    Responses: [[Int32!]]!
+    responses: [[Int32!]]!
 }
 
 # Requests that might alter the state of data in the database.
 extend type Mutation {
     # Request to submit responses to a quiz for marking.
-    takeQuiz(quizID: String!, input: QuizResponse!): Float!
+    takeQuiz(quizID: String!, input: QuizResponse!): Response!
 }

@@ -67,3 +67,5 @@ models:
   QuizCreate:
     model:
       - model_cassandra.QuizCore
+  StatsResponse:
+    model: model_http.StatsResponseGraphQL

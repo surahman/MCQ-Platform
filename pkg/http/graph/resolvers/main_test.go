@@ -28,11 +28,14 @@ var testUserData = cassandra.GetTestUsers()
 // testQuizData is the test user account data.
 var testQuizData = cassandra.GetTestQuizzes()
 
-// testQuizData is the test quiz data.
+// testQuizData is the test user queries.
 var testUserQuery = getUsersQuery()
 
-// testQuizData is the test quiz data.
+// testQuizData is the test quiz queries.
 var testQuizQuery = getQuizzesQuery()
+
+// testScoresQuery is the test scores queries.
+var testScoresQuery = getScoresQuery()
 
 func TestMain(m *testing.M) {
 	var err error
