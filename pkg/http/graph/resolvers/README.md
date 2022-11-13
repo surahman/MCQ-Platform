@@ -6,6 +6,24 @@ The GraphQL API schema can be tested and reviewed through the GraphQL Playground
 
 ## Table of contents
 
+- [Authorization Response](#authorization-response)
+- [Authorization](#authorization)
+- [User Mutations](#user-mutations)
+    - [Register](#register)
+    - [Login](#login)
+    - [Refresh](#refresh)
+    - [Delete](#delete)
+- [Quiz Mutations and Queries](#quiz-mutations-and-queries)
+    - [Create](#create)
+    - [View](#view)
+    - [Update](#update)
+    - [Delete](#delete)
+    - [Publish](#publish)
+    - [Take](#take)
+- [Score Mutations and Queries](#score-mutations-and-queries)
+    - [Score](#score)
+    - [Stats - _Paginated_](#stats---paginated)
+- [Healthcheck Endpoint `/health`](#healthcheck-endpoint-health)
 
 <br/>
 
@@ -49,7 +67,6 @@ The following `queries` and `mutations` do not require authorization:
 #### Register
 
 _Request:_ All fields are required.
-_Response:_ A valid JWT will be returned as an authorization response. 
 
 ```graphql
 mutation {
@@ -69,10 +86,12 @@ mutation {
 }
 ```
 
+_Response:_ A valid JWT will be returned as an authorization response. 
+
+
 #### Login
 
-_Request:_ All fields are required. 
-_Response:_ A valid JWT will be returned as an authorization response. 
+_Request:_ All fields are required.
 
 ```graphql
 mutation {
@@ -87,10 +106,12 @@ mutation {
 }
 ```
 
+_Response:_ A valid JWT will be returned as an authorization response. 
+
+
 #### Refresh
 
-_Request:_ A valid JWT must be provided in the request header and will be validated with a fresh token issued against it. 
-_Response:_ A valid JWT will be returned as an authorization response. 
+_Request:_ A valid JWT must be provided in the request header and will be validated with a fresh token issued against it.
 
 ```graphql
 mutation {
@@ -102,12 +123,14 @@ mutation {
 }
 ```
 
+_Response:_ A valid JWT will be returned as an authorization response. 
+
+
 #### Delete
 
 _Request:_ All fields are required and a valid JWT must be provided in the header. The user must supply their login
            credentials as well as complete the confirmation message `I understand the consequences, delete my user
            account **USERNAME HERE**`
-_Response:_ A confirmation message will be returned as a success response. 
 
 ```graphql
 mutation {
@@ -118,6 +141,9 @@ mutation {
   })
 }
 ```
+
+_Response:_ A confirmation message will be returned as a success response. 
+
 
 <br/>
 
@@ -131,8 +157,6 @@ _Request:_ All fields except `asset` are required.
 - 1 to 5 options are permitted per `question`.
 - Answer must be fewer than the number of options. Each number in the answer is an index to an option and must be in the range [0, 4].
 - Every question has an optional asset that is a URL Encoded URI.
-
-_Response:_ A success response containing the `quiz id` in the response.
 
 ```graphql
 mutation {
@@ -159,6 +183,9 @@ mutation {
 }
 ```
 
+_Response:_ A success response containing the `quiz id` in the response.
+
+
 #### View
 
 Only quizzes neither published nor deleted may be viewed by non-authors. Authors of quizzes can view both deleted and
@@ -166,8 +193,6 @@ unpublished quizzes. Answer keys will only be returned to requesters who are the
 requester is extracted from their JWT.
 
 _Request:_ The Quiz ID must be supplied in the query.
-
-_Response:_ A success response containing the quiz.
 
 ```graphql
 query {
@@ -184,6 +209,9 @@ query {
 }
 ```
 
+_Response:_ A success response containing the quiz.
+
+
 #### Update
 
 Updates to a quiz can only be made by the author of the quiz. The username of the requester is extracted from their JWT.
@@ -196,8 +224,6 @@ updates, to the API.
 
 _Request:_ The Quiz ID must be supplied in the request the URL along with the contents of the `QuizCore` in the request
 body.
-
-_Response:_ A success response containing a confirmation message and the `quiz id.
 
 ```graphql
 mutation {
@@ -226,6 +252,9 @@ mutation {
 }
 ```
 
+_Response:_ A success response containing a confirmation message and the `quiz id.
+
+
 #### Delete
 
 Only the authors of a quiz may mark it as deleted. Once deleted, a quiz will be set to unpublished and will no longer
@@ -233,13 +262,13 @@ be eligible for publishing and editing. The quiz will remain in the database and
 
 _Request:_ The Quiz ID must be supplied in the request.
 
-_Response:_ A success response containing a confirmation message and the `quiz id`.
-
 ```graphql
 mutation {
   deleteQuiz(quizID:"QUIZ UUID HERE")
 }
 ```
+
+_Response:_ A success response containing a confirmation message and the `quiz id`.
 
 
 #### Publish
@@ -249,13 +278,14 @@ will no longer be eligible for editing. The quiz can be made unavailable by dele
 
 _Request:_ The Quiz ID must be supplied in the request.
 
-_Response:_ A success response containing a confirmation message and the `quiz id`.
-
 ```graphql
 mutation {
   publishQuiz(quizID:"QUIZ UUID HERE")
 }
 ```
+
+_Response:_ A success response containing a confirmation message and the `quiz id`.
+
 
 #### Take
 
@@ -267,28 +297,36 @@ integers in the request body. The questions and answers are zero-indexed. The an
 in the row number corresponding to the question number. To select options for a question, the user must specify the
 indices of the options in the questions row array.
 
-_Response:_ A success response containing the score, if applicable. Please see the [`grading`](../../../grading) package
-for details on marking.
-
-```json
-{
-  "responses": [
-    [0, 1, 2, 3, 4 ],
-    [1, 3],
-    [1, 2, 4]
-  ]
+```graphql
+mutation {
+  takeQuiz(
+    quizID:"76079156-6172-11ed-a471-305a3a460e3e"
+    input: {
+      responses: [
+          [0, 1, 2, 3, 4 ],
+          [1, 3],
+          [1, 2, 4]
+      ]
+    }
+  ) {
+    username
+    author
+    score
+    quizResponse
+    quizID
+  }
 }
 ```
 
-```graphql
+_Response:_ A success response containing the score, if applicable. Please see the [`grading`](../../../grading) package
+for details on marking.
 
-```
 
 <br/>
 
 ### Score Mutations and Queries
 
-#### Take
+#### Score
 
 A user may request the score for a quiz they have already taken, whether the quiz is deleted or not.
 
@@ -313,6 +351,7 @@ _Response:_ A success response containing the scorecard.
   "message": "score card",
   "payload": {
     "username": "username1",
+    "author": "username1",
     "score": 0.6666666666666666,
     "responses": [
       [0, 1, 2],
@@ -339,9 +378,9 @@ paginated query into the same table. Since paged queries rely on a cursor to a r
 returned results from a paged query may return duplicated or missed records between pages.
 
 _Request:_ The `Quiz ID` must be supplied in the request. The encrypted and Base64 URL encoded page cursor is provided
-with the query parameter `pageCursor`. The maximum number of records to retrieve in a request is set via the `pageSize`
-query parameter. The first request sent to this endpoint should only include the `pageSize`. The subsequent responses will
-have the query string link generated automatically.
+with the query parameter `cursor`. The maximum number of records to retrieve in a request is set via the `pageSize`
+query parameter. The first request sent to this endpoint should only include the `pageSize`. The subsequent responses
+will include the `cursor` and optional `pageSize` to be used to access subsequent pages of data.
 
 ```graphql
 query {
@@ -365,10 +404,8 @@ query {
 }
 ```
 
-
 _Response:_ A paged statistics response will be returned on a successful request. The following page of data can be
-accessed by appending the query string in the `Links.NextPage` to the base request URI that consists of the endpoint URI
-with the `Quiz ID` in the path.
+accessed by appending updating the query to include the returned `nextPage.cursor` and the `nextPage.pageSize`.
 
 ```json
 {
@@ -402,9 +439,32 @@ with the `Quiz ID` in the path.
 }
 ```
 
-To access the next page of data using the example above we would follow the URI below:
+To access the next page of data using the example above we would use the query below:
 
-localhost:44243/api/rest/v1/0a704c4b-4ea2-11ed-bd5a-305a3a460e3e?pageCursor=GnkrBKWMAmEVbB0okIP4Mr0lzU_TAX3yifbc6Fa8lIBOPbF30YOoTKyHOjVosFSnnYF8_3LQ8hQwqa6f6sJpvFbd9A==&pageSize=3
+```graphql
+query {
+  getStats(
+      quizID:"0a704c4b-4ea2-11ed-bd5a-305a3a460e3e"
+      pageSize: 3
+      cursor:"GnkrBKWMAmEVbB0okIP4Mr0lzU_TAX3yifbc6Fa8lIBOPbF30YOoTKyHOjVosFSnnYF8_3LQ8hQwqa6f6sJpvFbd9A") {
+    records {
+      username
+      author
+      score
+      quizResponse
+      quizID
+    }
+    metadata {
+      quizID
+      numRecords
+    }
+    nextPage {
+      pageSize
+      cursor
+    }
+  }
+}
+```
 
 <br/>
 
@@ -416,6 +476,6 @@ service is connected to all the ancillary services and responds appropriately.
 This check is essential for load balancers and container orchestrators to determine whether to route traffic or restart
 the container.
 
-_Healthy Response:_ HTTP 200 OK
+_Healthy Response:_ OK
 
-_Unhealthy Response:_ HTTP 503 Service Unavailable
+_Unhealthy Response:_ Service Unavailable <reason here>
