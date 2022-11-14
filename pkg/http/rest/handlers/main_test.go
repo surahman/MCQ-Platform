@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/surahman/mcq-platform/pkg/cassandra"
 	"github.com/surahman/mcq-platform/pkg/logger"
-	"github.com/surahman/mcq-platform/pkg/model/cassandra"
 	"go.uber.org/zap"
 )
 
@@ -60,40 +59,4 @@ func tearDown() (err error) {
 func getRouter() *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	return gin.Default()
-}
-
-// mockAuthData is the parameter data for Auth mocking that is used in the test grid.
-type mockAuthData struct {
-	inputParam1  string
-	inputParam2  string
-	outputParam1 any
-	outputParam2 int64
-	outputErr    error
-	times        int
-}
-
-// mockCassandraData is the parameter data for Cassandra mocking that is used in the test grid.
-type mockCassandraData struct {
-	inputFunc   func(cassandra.Cassandra, any) (any, error)
-	inputParam  any
-	outputParam any
-	outputErr   error
-	times       int
-}
-
-// mockGraderData is the parameter data for Grader mocking that is used in the test grid.
-type mockGraderData struct {
-	inputQuizResp *model_cassandra.QuizResponse
-	inputQuiz     *model_cassandra.Quiz
-	outputParam   float64
-	outputErr     error
-	times         int
-}
-
-// mockRedisData is the parameter data for Redis mocking that is used in the test grid.
-type mockRedisData struct {
-	param1 any
-	param2 any
-	err    error
-	times  int
 }

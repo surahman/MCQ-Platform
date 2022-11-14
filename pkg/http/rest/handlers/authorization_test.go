@@ -8,6 +8,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	http_common "github.com/surahman/mcq-platform/pkg/http"
 	"github.com/surahman/mcq-platform/pkg/mocks"
 )
 
@@ -28,7 +29,7 @@ func TestAuthMiddleware_Handler(t *testing.T) {
 		path                string
 		token               string
 		expectedStatus      int
-		authValidateJWTData *mockAuthData
+		authValidateJWTData *http_common.MockAuthData
 	}{
 		// ----- test cases start ----- //
 		{
@@ -36,33 +37,33 @@ func TestAuthMiddleware_Handler(t *testing.T) {
 			path:           "/no-token",
 			token:          "",
 			expectedStatus: http.StatusUnauthorized,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "",
-				outputParam2: int64(-1),
-				outputErr:    nil,
-				times:        0,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "",
+				OutputParam2: int64(-1),
+				OutputErr:    nil,
+				Times:        0,
 			},
 		}, {
 			name:           "invalid token",
 			path:           "/invalid-token",
 			token:          "invalid-token",
 			expectedStatus: http.StatusForbidden,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "",
-				outputParam2: int64(-1),
-				outputErr:    errors.New("JWT validation failure"),
-				times:        1,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "",
+				OutputParam2: int64(-1),
+				OutputErr:    errors.New("JWT validation failure"),
+				Times:        1,
 			},
 		}, {
 			name:           "valid token",
 			path:           "/valid-token",
 			token:          "valid-token",
 			expectedStatus: http.StatusOK,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "",
-				outputParam2: int64(-1),
-				outputErr:    nil,
-				times:        1,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "",
+				OutputParam2: int64(-1),
+				OutputErr:    nil,
+				Times:        1,
 			},
 		},
 		// ----- test cases end ----- //
@@ -75,10 +76,10 @@ func TestAuthMiddleware_Handler(t *testing.T) {
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 
 			mockAuth.EXPECT().ValidateJWT(gomock.Any()).Return(
-				testCase.authValidateJWTData.outputParam1,
-				testCase.authValidateJWTData.outputParam2,
-				testCase.authValidateJWTData.outputErr,
-			).Times(testCase.authValidateJWTData.times)
+				testCase.authValidateJWTData.OutputParam1,
+				testCase.authValidateJWTData.OutputParam2,
+				testCase.authValidateJWTData.OutputErr,
+			).Times(testCase.authValidateJWTData.Times)
 
 			// Endpoint setup for test.
 			router.POST(testCase.path, AuthMiddleware(mockAuth, "Authorization"))
