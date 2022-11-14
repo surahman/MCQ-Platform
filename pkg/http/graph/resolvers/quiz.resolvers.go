@@ -133,6 +133,7 @@ func (r *mutationResolver) DeleteQuiz(ctx context.Context, quizID string) (strin
 	var err error
 	var username string
 	var quizId gocql.UUID
+	var cachedQuiz model_cassandra.Quiz
 
 	if quizId, err = gocql.ParseUUID(quizID); err != nil {
 		return "", errors.New("invalid quiz id supplied, must be a valid UUID")
@@ -146,9 +147,25 @@ func (r *mutationResolver) DeleteQuiz(ctx context.Context, quizID string) (strin
 	// Evict from cache, if present.
 	// This step must be executed before deletion to ensure the end user is able to reattempt the command in the event of failure.
 	// It must not be the case that data marked as deleted remains in the cache till LRU eviction or TTL expiration.
-	if err = r.Cache.Del(quizId.String()); err != nil && err.(*redis.Error).Code != redis.ErrorCacheMiss {
+	// [1] If quiz is in cache.
+	// [2] If error is not a cache miss raise an error.
+	// [3] If individual requesting deletion is the author.
+	// [4] Then evict from cache.
+	err = r.Cache.Get(quizId.String(), &cachedQuiz)
+	if err != nil && err.(*redis.Error).Code != redis.ErrorCacheMiss {
 		r.Logger.Error("failed to evict data from cache", zap.Error(err))
 		return "", errors.New("please retry the command at a later time")
+	}
+	if err == nil {
+		// Check authorization.
+		if username != cachedQuiz.Author {
+			return "", errors.New("unauthorized")
+		}
+		// Attempt to remove from cache. There should be no cache miss here so an error must cause a failure.
+		if err = r.Cache.Del(quizId.String()); err != nil {
+			r.Logger.Error("failed to evict data from cache", zap.Error(err))
+			return "", errors.New("please retry the command at a later time")
+		}
 	}
 
 	// Delete quiz record from database.
