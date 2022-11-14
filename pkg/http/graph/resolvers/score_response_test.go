@@ -6,6 +6,7 @@ import (
 	"github.com/gocql/gocql"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	http_common "github.com/surahman/mcq-platform/pkg/http"
 	"github.com/surahman/mcq-platform/pkg/mocks"
 	"github.com/surahman/mcq-platform/pkg/model/cassandra"
 )
@@ -19,7 +20,7 @@ func TestQueryResolver_prepareStatsResponse(t *testing.T) {
 		expectedCursor   []byte
 		expectedPageSize int
 		dbResponse       *model_cassandra.StatsResponse
-		mockAuthData     *mockAuthData
+		mockAuthData     *http_common.MockAuthData
 		expectErr        require.ErrorAssertionFunc
 		expectNil        require.ValueAssertionFunc
 	}{
@@ -34,7 +35,7 @@ func TestQueryResolver_prepareStatsResponse(t *testing.T) {
 				Records:    nil,
 				PageSize:   0,
 			},
-			mockAuthData: &mockAuthData{times: 0, outputParam1: ""},
+			mockAuthData: &http_common.MockAuthData{Times: 0, OutputParam1: ""},
 			expectErr:    require.NoError,
 			expectNil:    require.NotNil,
 		}, {
@@ -47,7 +48,7 @@ func TestQueryResolver_prepareStatsResponse(t *testing.T) {
 				Records:    nil,
 				PageSize:   0,
 			},
-			mockAuthData: &mockAuthData{times: 0, outputParam1: ""},
+			mockAuthData: &http_common.MockAuthData{Times: 0, OutputParam1: ""},
 			expectErr:    require.NoError,
 			expectNil:    require.NotNil,
 		}, {
@@ -60,7 +61,7 @@ func TestQueryResolver_prepareStatsResponse(t *testing.T) {
 				Records:    nil,
 				PageSize:   0,
 			},
-			mockAuthData: &mockAuthData{times: 1, outputParam1: encryptedCursor},
+			mockAuthData: &http_common.MockAuthData{Times: 1, OutputParam1: encryptedCursor},
 			expectErr:    require.NoError,
 			expectNil:    require.NotNil,
 		}, {
@@ -73,7 +74,7 @@ func TestQueryResolver_prepareStatsResponse(t *testing.T) {
 				Records:    nil,
 				PageSize:   1,
 			},
-			mockAuthData: &mockAuthData{times: 0, outputParam1: ""},
+			mockAuthData: &http_common.MockAuthData{Times: 0, OutputParam1: ""},
 			expectErr:    require.NoError,
 			expectNil:    require.NotNil,
 		}, {
@@ -86,7 +87,7 @@ func TestQueryResolver_prepareStatsResponse(t *testing.T) {
 				Records:    nil,
 				PageSize:   3,
 			},
-			mockAuthData: &mockAuthData{times: 1, outputParam1: encryptedCursor},
+			mockAuthData: &http_common.MockAuthData{Times: 1, OutputParam1: encryptedCursor},
 			expectErr:    require.NoError,
 			expectNil:    require.NotNil,
 		},
@@ -100,9 +101,9 @@ func TestQueryResolver_prepareStatsResponse(t *testing.T) {
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 
 			mockAuth.EXPECT().EncryptToString(gomock.Any()).Return(
-				testCase.mockAuthData.outputParam1,
-				testCase.mockAuthData.outputErr,
-			).Times(testCase.mockAuthData.times)
+				testCase.mockAuthData.OutputParam1,
+				testCase.mockAuthData.OutputErr,
+			).Times(testCase.mockAuthData.Times)
 
 			req, err := prepareStatsResponse(mockAuth, testCase.dbResponse, testCase.quizId)
 			testCase.expectErr(t, err, "error expectation condition failed")

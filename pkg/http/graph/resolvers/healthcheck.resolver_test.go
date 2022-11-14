@@ -11,6 +11,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"github.com/surahman/mcq-platform/pkg/cassandra"
+	http_common "github.com/surahman/mcq-platform/pkg/http"
 	"github.com/surahman/mcq-platform/pkg/mocks"
 )
 
@@ -24,8 +25,8 @@ func TestQueryResolver_Healthcheck(t *testing.T) {
 		path                string
 		expectedMsg         string
 		expectErr           bool
-		cassandraHealthData *mockCassandraData
-		redisHealthData     *mockRedisData
+		cassandraHealthData *http_common.MockCassandraData
+		redisHealthData     *http_common.MockRedisData
 	}{
 		// ----- test cases start ----- //
 		{
@@ -33,31 +34,31 @@ func TestQueryResolver_Healthcheck(t *testing.T) {
 			path:        "/healthcheck/cassandra-failure",
 			expectedMsg: "Cassandra",
 			expectErr:   true,
-			cassandraHealthData: &mockCassandraData{
-				outputErr: &cassandra.Error{
+			cassandraHealthData: &http_common.MockCassandraData{
+				OutputErr: &cassandra.Error{
 					Message: "Cassandra failure",
 					Status:  http.StatusInternalServerError,
 				},
-				times: 1,
+				Times: 1,
 			},
-			redisHealthData: &mockRedisData{times: 0},
+			redisHealthData: &http_common.MockRedisData{Times: 0},
 		}, {
 			name:                "redis failure",
 			path:                "/healthcheck/redis-failure",
 			expectedMsg:         "Redis",
 			expectErr:           true,
-			cassandraHealthData: &mockCassandraData{times: 1},
-			redisHealthData: &mockRedisData{
-				err:   errors.New("Redis failure"),
-				times: 1,
+			cassandraHealthData: &http_common.MockCassandraData{Times: 1},
+			redisHealthData: &http_common.MockRedisData{
+				Err:   errors.New("Redis failure"),
+				Times: 1,
 			},
 		}, {
 			name:                "success",
 			path:                "/healthcheck/success",
 			expectedMsg:         "healthy",
 			expectErr:           false,
-			cassandraHealthData: &mockCassandraData{times: 1},
-			redisHealthData:     &mockRedisData{times: 1},
+			cassandraHealthData: &http_common.MockCassandraData{Times: 1},
+			redisHealthData:     &http_common.MockRedisData{Times: 1},
 		},
 		// ----- test cases end ----- //
 	}
@@ -72,13 +73,13 @@ func TestQueryResolver_Healthcheck(t *testing.T) {
 			mockGrading := mocks.NewMockGrading(mockCtrl) // Not called.
 
 			mockCassandra.EXPECT().Execute(gomock.Any(), gomock.Any()).Return(
-				testCase.cassandraHealthData.outputParam,
-				testCase.cassandraHealthData.outputErr,
-			).Times(testCase.cassandraHealthData.times)
+				testCase.cassandraHealthData.OutputParam,
+				testCase.cassandraHealthData.OutputErr,
+			).Times(testCase.cassandraHealthData.Times)
 
 			mockRedis.EXPECT().Healthcheck().Return(
-				testCase.redisHealthData.err,
-			).Times(testCase.redisHealthData.times)
+				testCase.redisHealthData.Err,
+			).Times(testCase.redisHealthData.Times)
 
 			// Endpoint setup for test.
 			router.POST(testCase.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockCassandra, mockGrading, zapLogger))
