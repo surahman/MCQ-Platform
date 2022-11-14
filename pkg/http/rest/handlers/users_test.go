@@ -22,7 +22,7 @@ import (
 )
 
 func TestRegisterUser(t *testing.T) {
-	router := getRouter()
+	router := http_common.GetTestRouter()
 
 	testCases := []struct {
 		name                string
@@ -155,7 +155,7 @@ func TestRegisterUser(t *testing.T) {
 }
 
 func TestLoginUser(t *testing.T) {
-	router := getRouter()
+	router := http_common.GetTestRouter()
 
 	testCases := []struct {
 		name              string
@@ -307,7 +307,7 @@ func TestLoginUser(t *testing.T) {
 }
 
 func TestLoginRefresh(t *testing.T) {
-	router := getRouter()
+	router := http_common.GetTestRouter()
 
 	testCases := []struct {
 		name                 string
@@ -505,7 +505,7 @@ func TestLoginRefresh(t *testing.T) {
 }
 
 func TestDeleteUser(t *testing.T) {
-	router := getRouter()
+	router := http_common.GetTestRouter()
 
 	testCases := []struct {
 		name                string

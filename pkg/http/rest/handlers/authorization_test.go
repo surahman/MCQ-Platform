@@ -22,7 +22,7 @@ func TestAuthMiddleware(t *testing.T) {
 }
 
 func TestAuthMiddleware_Handler(t *testing.T) {
-	router := getRouter()
+	router := http_common.GetTestRouter()
 
 	testCases := []struct {
 		name                string

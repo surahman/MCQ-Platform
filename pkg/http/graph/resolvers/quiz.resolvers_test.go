@@ -21,7 +21,7 @@ import (
 
 func TestMutationResolver_CreateQuiz(t *testing.T) {
 	// Configure router and middleware that loads the Gin context for the resolvers.
-	router := getRouter()
+	router := http_common.GetTestRouter()
 	router.Use(GinContextToContextMiddleware())
 
 	testCases := []struct {
@@ -178,7 +178,7 @@ func TestMutationResolver_CreateQuiz(t *testing.T) {
 
 func TestMutationResolver_UpdateQuiz(t *testing.T) {
 	// Configure router and middleware that loads the Gin context for the resolvers.
-	router := getRouter()
+	router := http_common.GetTestRouter()
 	router.Use(GinContextToContextMiddleware())
 
 	testCases := []struct {
@@ -339,7 +339,7 @@ func TestMutationResolver_UpdateQuiz(t *testing.T) {
 
 func TestQueryResolver_ViewQuiz(t *testing.T) {
 	// Configure router and middleware that loads the Gin context for the resolvers.
-	router := getRouter()
+	router := http_common.GetTestRouter()
 	router.Use(GinContextToContextMiddleware())
 
 	testCases := []struct {
@@ -706,7 +706,7 @@ func TestQueryResolver_ViewQuiz(t *testing.T) {
 
 func TestMutationResolver_DeleteQuiz(t *testing.T) {
 	// Configure router and middleware that loads the Gin context for the resolvers.
-	router := getRouter()
+	router := http_common.GetTestRouter()
 	router.Use(GinContextToContextMiddleware())
 
 	testCases := []struct {
@@ -1004,7 +1004,7 @@ func TestMutationResolver_DeleteQuiz(t *testing.T) {
 
 func TestMutationResolver_PublishQuiz(t *testing.T) {
 	// Configure router and middleware that loads the Gin context for the resolvers.
-	router := getRouter()
+	router := http_common.GetTestRouter()
 	router.Use(GinContextToContextMiddleware())
 
 	testCases := []struct {

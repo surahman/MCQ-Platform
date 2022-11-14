@@ -18,7 +18,7 @@ import (
 )
 
 func TestGetScore(t *testing.T) {
-	router := getRouter()
+	router := http_common.GetTestRouter()
 
 	testCases := []struct {
 		name                string
@@ -135,7 +135,7 @@ func TestGetScore(t *testing.T) {
 }
 
 func TestGetStats(t *testing.T) {
-	router := getRouter()
+	router := http_common.GetTestRouter()
 
 	testCases := []struct {
 		name                string
@@ -426,7 +426,7 @@ func TestPrepareStatsResponse(t *testing.T) {
 }
 
 func TestGetStatsPage(t *testing.T) {
-	router := getRouter()
+	router := http_common.GetTestRouter()
 	testCases := []struct {
 		name                string
 		path                string

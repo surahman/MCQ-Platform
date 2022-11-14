@@ -1,6 +1,7 @@
 package http
 
 import (
+	"github.com/gin-gonic/gin"
 	"github.com/surahman/mcq-platform/pkg/cassandra"
 	"github.com/surahman/mcq-platform/pkg/model/cassandra"
 )
@@ -39,4 +40,10 @@ type MockRedisData struct {
 	Param2 any
 	Err    error
 	Times  int
+}
+
+// GetTestRouter creates a gin router testing instance.
+func GetTestRouter() *gin.Engine {
+	gin.SetMode(gin.TestMode)
+	return gin.Default()
 }

@@ -110,7 +110,7 @@ func TestResponseResolver_QuizID(t *testing.T) {
 
 func TestMutationResolver_TakeQuiz(t *testing.T) {
 	// Configure router and middleware that loads the Gin context for the resolvers.
-	router := getRouter()
+	router := http_common.GetTestRouter()
 	router.Use(GinContextToContextMiddleware())
 
 	testCases := []struct {

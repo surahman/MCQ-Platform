@@ -5,7 +5,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/gin-gonic/gin"
 	"github.com/surahman/mcq-platform/pkg/cassandra"
 	"github.com/surahman/mcq-platform/pkg/logger"
 	"go.uber.org/zap"
@@ -53,10 +52,4 @@ func setup() (err error) {
 // tearDown will delete the test clusters keyspace.
 func tearDown() (err error) {
 	return
-}
-
-// getRouter creates a gin router testing instance.
-func getRouter() *gin.Engine {
-	gin.SetMode(gin.TestMode)
-	return gin.Default()
 }

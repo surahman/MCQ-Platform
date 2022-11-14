@@ -54,7 +54,7 @@ func TestMetadataResolver_QuizID(t *testing.T) {
 
 func TestQueryResolver_GetScore(t *testing.T) {
 	// Configure router and middleware that loads the Gin context for the resolvers.
-	router := getRouter()
+	router := http_common.GetTestRouter()
 	router.Use(GinContextToContextMiddleware())
 
 	quizUUID := gocql.TimeUUID()
@@ -190,7 +190,7 @@ func TestQueryResolver_GetScore(t *testing.T) {
 
 func TestQueryResolver_GetStats(t *testing.T) {
 	// Configure router and middleware that loads the Gin context for the resolvers.
-	router := getRouter()
+	router := http_common.GetTestRouter()
 	router.Use(GinContextToContextMiddleware())
 
 	quizUUID := gocql.TimeUUID().String()

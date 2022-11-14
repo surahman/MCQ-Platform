@@ -7,6 +7,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	http_common "github.com/surahman/mcq-platform/pkg/http"
 	"github.com/surahman/mcq-platform/pkg/mocks"
 )
 
@@ -30,7 +31,7 @@ func TestPlaygroundHandler(t *testing.T) {
 }
 
 func TestGinContextToContextMiddleware(t *testing.T) {
-	router := getRouter()
+	router := http_common.GetTestRouter()
 	router.POST("/middleware-test", GinContextToContextMiddleware())
 	req, _ := http.NewRequest("POST", "/middleware-test", nil)
 	w := httptest.NewRecorder()

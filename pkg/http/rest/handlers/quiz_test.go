@@ -20,7 +20,7 @@ import (
 )
 
 func TestCreateQuiz(t *testing.T) {
-	router := getRouter()
+	router := http_common.GetTestRouter()
 
 	testCases := []struct {
 		name                string
@@ -167,7 +167,7 @@ func TestCreateQuiz(t *testing.T) {
 }
 
 func TestViewQuiz(t *testing.T) {
-	router := getRouter()
+	router := http_common.GetTestRouter()
 
 	testCases := []struct {
 		name                string
@@ -515,7 +515,7 @@ func TestViewQuiz(t *testing.T) {
 }
 
 func TestDeleteQuiz(t *testing.T) {
-	router := getRouter()
+	router := http_common.GetTestRouter()
 
 	testCases := []struct {
 		name                string
@@ -792,7 +792,7 @@ func TestDeleteQuiz(t *testing.T) {
 }
 
 func TestPublishQuiz(t *testing.T) {
-	router := getRouter()
+	router := http_common.GetTestRouter()
 
 	testCases := []struct {
 		name                 string
@@ -989,7 +989,7 @@ func TestPublishQuiz(t *testing.T) {
 }
 
 func TestUpdateQuiz(t *testing.T) {
-	router := getRouter()
+	router := http_common.GetTestRouter()
 
 	testCases := []struct {
 		name                string
@@ -1136,7 +1136,7 @@ func TestUpdateQuiz(t *testing.T) {
 }
 
 func TestTakeQuiz(t *testing.T) {
-	router := getRouter()
+	router := http_common.GetTestRouter()
 
 	testCases := []struct {
 		name                string

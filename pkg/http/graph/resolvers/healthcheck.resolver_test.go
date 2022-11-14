@@ -16,7 +16,7 @@ import (
 )
 
 func TestQueryResolver_Healthcheck(t *testing.T) {
-	router := getRouter()
+	router := http_common.GetTestRouter()
 
 	query := getHealthcheckQuery()
 

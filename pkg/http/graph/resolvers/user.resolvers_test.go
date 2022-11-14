@@ -21,7 +21,7 @@ import (
 )
 
 func TestMutationResolver_RegisterUser(t *testing.T) {
-	router := getRouter()
+	router := http_common.GetTestRouter()
 
 	testCases := []struct {
 		name                string
@@ -169,7 +169,7 @@ func TestMutationResolver_RegisterUser(t *testing.T) {
 }
 
 func TestMutationResolver_LoginUser(t *testing.T) {
-	router := getRouter()
+	router := http_common.GetTestRouter()
 
 	testCases := []struct {
 		name              string
@@ -338,7 +338,7 @@ func TestMutationResolver_LoginUser(t *testing.T) {
 
 func TestMutationResolver_RefreshToken(t *testing.T) {
 	// Configure router and middleware that loads the Gin context for the resolvers.
-	router := getRouter()
+	router := http_common.GetTestRouter()
 	router.Use(GinContextToContextMiddleware())
 
 	testCases := []struct {
@@ -565,7 +565,7 @@ func TestMutationResolver_RefreshToken(t *testing.T) {
 
 func TestMutationResolver_DeleteUser(t *testing.T) {
 	// Configure router and middleware that loads the Gin context for the resolvers.
-	router := getRouter()
+	router := http_common.GetTestRouter()
 	router.Use(GinContextToContextMiddleware())
 
 	testCases := []struct {

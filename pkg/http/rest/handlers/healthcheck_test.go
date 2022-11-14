@@ -16,7 +16,7 @@ import (
 )
 
 func TestHealthcheck(t *testing.T) {
-	router := getRouter()
+	router := http_common.GetTestRouter()
 
 	testCases := []struct {
 		name                string
