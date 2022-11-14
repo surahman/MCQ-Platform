@@ -76,9 +76,10 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		GetScore func(childComplexity int, quizID string) int
-		GetStats func(childComplexity int, quizID string, pageSize *int, cursor *string) int
-		ViewQuiz func(childComplexity int, quizID string) int
+		GetScore    func(childComplexity int, quizID string) int
+		GetStats    func(childComplexity int, quizID string, pageSize *int, cursor *string) int
+		Healthcheck func(childComplexity int) int
+		ViewQuiz    func(childComplexity int, quizID string) int
 	}
 
 	Question struct {
@@ -125,6 +126,7 @@ type MutationResolver interface {
 }
 type QueryResolver interface {
 	ViewQuiz(ctx context.Context, quizID string) (*model_cassandra.QuizCore, error)
+	Healthcheck(ctx context.Context) (string, error)
 	GetScore(ctx context.Context, quizID string) (*model_cassandra.Response, error)
 	GetStats(ctx context.Context, quizID string, pageSize *int, cursor *string) (*model_http.StatsResponseGraphQL, error)
 }
@@ -324,6 +326,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.GetStats(childComplexity, args["quizID"].(string), args["pageSize"].(*int), args["cursor"].(*string)), true
 
+	case "Query.healthcheck":
+		if e.complexity.Query.Healthcheck == nil {
+			break
+		}
+
+		return e.complexity.Query.Healthcheck(childComplexity), true
+
 	case "Query.viewQuiz":
 		if e.complexity.Query.ViewQuiz == nil {
 			break
@@ -522,6 +531,9 @@ type JWTAuthResponse {
     threshold: Int64!
 }
 `, BuiltIn: false},
+	{Name: "../../../model/http/healthcheck.graphqls", Input: `extend type Query {
+    healthcheck: String!
+}`, BuiltIn: false},
 	{Name: "../../../model/http/quiz.graphqls", Input: `# QuizCore is the complete quiz that is sent to the backend when a quiz is created/updated or to the end users.
 type QuizCore {
     title: String!
@@ -1804,6 +1816,50 @@ func (ec *executionContext) fieldContext_Query_viewQuiz(ctx context.Context, fie
 	if fc.Args, err = ec.field_Query_viewQuiz_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_healthcheck(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_healthcheck(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Healthcheck(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_healthcheck(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
 	}
 	return fc, nil
 }
@@ -5057,6 +5113,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_viewQuiz(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "healthcheck":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_healthcheck(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}

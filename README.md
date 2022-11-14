@@ -100,19 +100,19 @@ To review the REST API request and response formats please see the readme in the
 package. The REST API server does also provide a Swagger UI to examine and test the API calls with details on request
 formats.
 
-Using the provided default configurations it can be accessed through
+The Swagger UI can be accessed using the provided default configurations through
 [http://localhost:44243/swagger/index.html](http://localhost:44243/swagger/index.html).
 
 ### GraphQL
 
-GraphQL has been exposed through an HTTP endpoint. [`graphql`](pkg/http/graph) package. The schema for the GraphQL queries
+GraphQL has been exposed through an HTTP endpoint [`graphql`](pkg/http/graph) package. The schema for the GraphQL queries
 and mutations can be found in [`model_http`](pkg/model/http).
 
 To review the GraphQL API request and response formats please see the readme in the [`graphql_resolvers`](pkg/http/graph/resolvers)
 package. The GraphQL server does also provide a Playground to examine and test the API calls with details on request
 formats.
 
-Using the provided default configurations it can be accessed through
+The Playground can be accessed using the provided default configurations through
 [http://localhost:44255/api/graphql/v1/playground](http://localhost:44255/api/graphql/v1/playground).
 
 <br/>

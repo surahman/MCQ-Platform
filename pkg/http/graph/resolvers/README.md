@@ -52,6 +52,7 @@ The `Authorization` header key is customizable through the GraphQL endpoint conf
 The following `queries` and `mutations` do not require authorization:
 - Register User: `registerUser`
 - Login User: `loginUser`
+- Healthcheck: `healthcheck`
 
 ```json
 {
@@ -500,6 +501,28 @@ query {
 }
 ```
 
-_Healthy Response:_ OK
+_Healthy Response:_
 
-_Unhealthy Response:_ Service Unavailable <reason here>
+```graphql
+{
+  "data": {
+    "healthcheck": "OK"
+  }
+}
+```
+
+_Unhealthy Response:_
+
+```graphql
+{
+  "errors": [
+    {
+      "message": "[Cassandra|Redis] healthcheck failed",
+      "path": [
+        "healthcheck"
+      ]
+    }
+  ],
+  "data": null
+}
+```
