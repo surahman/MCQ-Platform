@@ -18,14 +18,14 @@ func (r *queryResolver) Healthcheck(ctx context.Context) (string, error) {
 	if _, err := r.DB.Execute(cassandra.HealthcheckQuery, nil); err != nil {
 		msg := "Cassandra healthcheck failed"
 		r.Logger.Warn(msg, zap.Error(err))
-		return "Service Unavailable", errors.New(msg)
+		return "", errors.New(msg)
 	}
 
 	// Cache health.
 	if err := r.Cache.Healthcheck(); err != nil {
 		msg := "Redis healthcheck failed"
 		r.Logger.Warn(msg, zap.Error(err))
-		return "Service Unavailable", errors.New(msg)
+		return "", errors.New(msg)
 	}
 
 	return "OK", nil

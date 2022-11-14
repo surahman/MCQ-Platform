@@ -501,6 +501,28 @@ query {
 }
 ```
 
-_Healthy Response:_ `OK`
+_Healthy Response:_
 
-_Unhealthy Response:_ `Service Unavailable` with reason in error.
+```graphql
+{
+  "data": {
+    "healthcheck": "OK"
+  }
+}
+```
+
+_Unhealthy Response:_
+
+```graphql
+{
+  "errors": [
+    {
+      "message": "[Cassandra|Redis] healthcheck failed",
+      "path": [
+        "healthcheck"
+      ]
+    }
+  ],
+  "data": null
+}
+```
