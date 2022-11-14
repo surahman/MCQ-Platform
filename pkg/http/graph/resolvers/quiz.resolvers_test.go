@@ -738,8 +738,7 @@ func TestMutationResolver_DeleteQuiz(t *testing.T) {
 				times: 0,
 			},
 			cassandraDeleteData: &mockCassandraData{
-				outputErr: nil,
-				times:     0,
+				times: 0,
 			},
 		}, {
 			name:      "invalid quiz id",
@@ -882,8 +881,7 @@ func TestMutationResolver_DeleteQuiz(t *testing.T) {
 				times: 1,
 			},
 			cassandraDeleteData: &mockCassandraData{
-				outputErr: nil,
-				times:     1,
+				times: 1,
 			},
 		}, {
 			name:      "success - cache miss",
@@ -907,8 +905,7 @@ func TestMutationResolver_DeleteQuiz(t *testing.T) {
 				times: 0,
 			},
 			cassandraDeleteData: &mockCassandraData{
-				outputErr: nil,
-				times:     1,
+				times: 1,
 			},
 		}, {
 			name:      "cache get failure",
@@ -932,8 +929,7 @@ func TestMutationResolver_DeleteQuiz(t *testing.T) {
 				times: 0,
 			},
 			cassandraDeleteData: &mockCassandraData{
-				outputErr: nil,
-				times:     0,
+				times: 0,
 			},
 		},
 		// ----- test cases end ----- //
