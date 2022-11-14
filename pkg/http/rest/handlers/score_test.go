@@ -11,6 +11,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"github.com/surahman/mcq-platform/pkg/cassandra"
+	http_common "github.com/surahman/mcq-platform/pkg/http"
 	"github.com/surahman/mcq-platform/pkg/mocks"
 	"github.com/surahman/mcq-platform/pkg/model/cassandra"
 	"github.com/surahman/mcq-platform/pkg/model/http"
@@ -24,8 +25,8 @@ func TestGetScore(t *testing.T) {
 		path                string
 		quizId              string
 		expectedStatus      int
-		authValidateJWTData *mockAuthData
-		cassandraReadData   *mockCassandraData
+		authValidateJWTData *http_common.MockAuthData
+		cassandraReadData   *http_common.MockCassandraData
 	}{
 		// ----- test cases start ----- //
 		{
@@ -33,59 +34,59 @@ func TestGetScore(t *testing.T) {
 			path:           "/score/empty-token/",
 			quizId:         gocql.TimeUUID().String(),
 			expectedStatus: http.StatusInternalServerError,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "",
-				outputErr:    errors.New("invalid token"),
-				times:        1,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "",
+				OutputErr:    errors.New("invalid token"),
+				Times:        1,
 			},
-			cassandraReadData: &mockCassandraData{
-				times: 0,
+			cassandraReadData: &http_common.MockCassandraData{
+				Times: 0,
 			},
 		}, {
 			name:           "invalid quiz id",
 			path:           "/score/invalid-quiz-id",
 			quizId:         "not a valid uuid",
 			expectedStatus: http.StatusBadRequest,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "",
-				times:        0,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "",
+				Times:        0,
 			},
-			cassandraReadData: &mockCassandraData{
-				times: 0,
+			cassandraReadData: &http_common.MockCassandraData{
+				Times: 0,
 			},
 		}, {
 			name:           "db read not found",
 			path:           "/score/db-read-not-found/",
 			quizId:         gocql.TimeUUID().String(),
 			expectedStatus: http.StatusNotFound,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "",
-				times:        1,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "",
+				Times:        1,
 			},
-			cassandraReadData: &mockCassandraData{
-				outputErr: &cassandra.Error{
+			cassandraReadData: &http_common.MockCassandraData{
+				OutputErr: &cassandra.Error{
 					Message: "",
 					Status:  http.StatusNotFound,
 				},
-				times: 1,
+				Times: 1,
 			},
 		}, {
 			name:           "success",
 			path:           "/score/success/",
 			quizId:         gocql.TimeUUID().String(),
 			expectedStatus: http.StatusOK,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "",
-				times:        1,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "",
+				Times:        1,
 			},
-			cassandraReadData: &mockCassandraData{
-				outputParam: &model_cassandra.Response{
+			cassandraReadData: &http_common.MockCassandraData{
+				OutputParam: &model_cassandra.Response{
 					Username:     "mock response card",
 					Score:        99.99,
 					QuizResponse: nil,
 					QuizID:       gocql.TimeUUID(),
 				},
-				times: 1,
+				Times: 1,
 			},
 		},
 		// ----- test cases end ----- //
@@ -99,15 +100,15 @@ func TestGetScore(t *testing.T) {
 			mockCassandra := mocks.NewMockCassandra(mockCtrl)
 
 			mockCassandra.EXPECT().Execute(gomock.Any(), gomock.Any()).Return(
-				testCase.cassandraReadData.outputParam,
-				testCase.cassandraReadData.outputErr,
-			).Times(testCase.cassandraReadData.times)
+				testCase.cassandraReadData.OutputParam,
+				testCase.cassandraReadData.OutputErr,
+			).Times(testCase.cassandraReadData.Times)
 
 			mockAuth.EXPECT().ValidateJWT(gomock.Any()).Return(
-				testCase.authValidateJWTData.outputParam1,
-				testCase.authValidateJWTData.outputParam2,
-				testCase.authValidateJWTData.outputErr,
-			).Times(testCase.authValidateJWTData.times)
+				testCase.authValidateJWTData.OutputParam1,
+				testCase.authValidateJWTData.OutputParam2,
+				testCase.authValidateJWTData.OutputErr,
+			).Times(testCase.authValidateJWTData.Times)
 
 			// Endpoint setup for test.
 			router.GET(testCase.path+":quiz_id", GetScore(zapLogger, mockAuth, mockCassandra))
@@ -142,8 +143,8 @@ func TestGetStats(t *testing.T) {
 		quizId              string
 		expectedLen         int
 		expectedStatus      int
-		authValidateJWTData *mockAuthData
-		cassandraStatsData  *mockCassandraData
+		authValidateJWTData *http_common.MockAuthData
+		cassandraStatsData  *http_common.MockCassandraData
 	}{
 		// ----- test cases start ----- //
 		{
@@ -151,41 +152,41 @@ func TestGetStats(t *testing.T) {
 			path:           "/stats/empty-token/",
 			quizId:         gocql.TimeUUID().String(),
 			expectedStatus: http.StatusInternalServerError,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "",
-				outputErr:    errors.New("invalid token"),
-				times:        1,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "",
+				OutputErr:    errors.New("invalid token"),
+				Times:        1,
 			},
-			cassandraStatsData: &mockCassandraData{
-				times: 0,
+			cassandraStatsData: &http_common.MockCassandraData{
+				Times: 0,
 			},
 		}, {
 			name:           "invalid quiz id",
 			path:           "/stats/invalid-quiz-id",
 			quizId:         "not a valid uuid",
 			expectedStatus: http.StatusBadRequest,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "",
-				times:        0,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "",
+				Times:        0,
 			},
-			cassandraStatsData: &mockCassandraData{
-				times: 0,
+			cassandraStatsData: &http_common.MockCassandraData{
+				Times: 0,
 			},
 		}, {
 			name:           "db score not found",
 			path:           "/stats/db-score-not-found/",
 			quizId:         gocql.TimeUUID().String(),
 			expectedStatus: http.StatusNotFound,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "expected username",
-				times:        1,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "expected username",
+				Times:        1,
 			},
-			cassandraStatsData: &mockCassandraData{
-				outputErr: &cassandra.Error{
+			cassandraStatsData: &http_common.MockCassandraData{
+				OutputErr: &cassandra.Error{
 					Message: "scorecard not found",
 					Status:  http.StatusNotFound,
 				},
-				times: 1,
+				Times: 1,
 			},
 		}, {
 			name:           "success",
@@ -193,12 +194,12 @@ func TestGetStats(t *testing.T) {
 			quizId:         gocql.TimeUUID().String(),
 			expectedLen:    3,
 			expectedStatus: http.StatusOK,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "expected username",
-				times:        1,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "expected username",
+				Times:        1,
 			},
-			cassandraStatsData: &mockCassandraData{
-				outputParam: []*model_cassandra.Response{
+			cassandraStatsData: &http_common.MockCassandraData{
+				OutputParam: []*model_cassandra.Response{
 					{
 						Username: "username 1",
 						Author:   "expected username",
@@ -216,7 +217,7 @@ func TestGetStats(t *testing.T) {
 						QuizID:   gocql.TimeUUID(),
 					},
 				},
-				times: 1,
+				Times: 1,
 			},
 		}, {
 			name:           "not authorized",
@@ -224,12 +225,12 @@ func TestGetStats(t *testing.T) {
 			quizId:         gocql.TimeUUID().String(),
 			expectedLen:    3,
 			expectedStatus: http.StatusForbidden,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "expected username",
-				times:        1,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "expected username",
+				Times:        1,
 			},
-			cassandraStatsData: &mockCassandraData{
-				outputParam: []*model_cassandra.Response{
+			cassandraStatsData: &http_common.MockCassandraData{
+				OutputParam: []*model_cassandra.Response{
 					{
 						Username: "username 1",
 						Author:   "not the author",
@@ -247,7 +248,7 @@ func TestGetStats(t *testing.T) {
 						QuizID:   gocql.TimeUUID(),
 					},
 				},
-				times: 1,
+				Times: 1,
 			},
 		}, {
 			name:           "success no responses",
@@ -255,13 +256,13 @@ func TestGetStats(t *testing.T) {
 			quizId:         gocql.TimeUUID().String(),
 			expectedLen:    0,
 			expectedStatus: http.StatusNotFound,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "expected username",
-				times:        1,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "expected username",
+				Times:        1,
 			},
-			cassandraStatsData: &mockCassandraData{
-				outputParam: []*model_cassandra.Response{},
-				times:       1,
+			cassandraStatsData: &http_common.MockCassandraData{
+				OutputParam: []*model_cassandra.Response{},
+				Times:       1,
 			},
 		},
 		// ----- test cases end ----- //
@@ -275,15 +276,15 @@ func TestGetStats(t *testing.T) {
 			mockCassandra := mocks.NewMockCassandra(mockCtrl)
 
 			mockCassandra.EXPECT().Execute(gomock.Any(), gomock.Any()).Return(
-				testCase.cassandraStatsData.outputParam,
-				testCase.cassandraStatsData.outputErr,
-			).Times(testCase.cassandraStatsData.times)
+				testCase.cassandraStatsData.OutputParam,
+				testCase.cassandraStatsData.OutputErr,
+			).Times(testCase.cassandraStatsData.Times)
 
 			mockAuth.EXPECT().ValidateJWT(gomock.Any()).Return(
-				testCase.authValidateJWTData.outputParam1,
-				testCase.authValidateJWTData.outputParam2,
-				testCase.authValidateJWTData.outputErr,
-			).Times(testCase.authValidateJWTData.times)
+				testCase.authValidateJWTData.OutputParam1,
+				testCase.authValidateJWTData.OutputParam2,
+				testCase.authValidateJWTData.OutputErr,
+			).Times(testCase.authValidateJWTData.Times)
 
 			// Endpoint setup for test.
 			router.GET(testCase.path+":quiz_id", GetStats(zapLogger, mockAuth, mockCassandra))
@@ -318,7 +319,7 @@ func TestPrepareStatsResponse(t *testing.T) {
 		name            string
 		quizId          gocql.UUID
 		dbResponse      *model_cassandra.StatsResponse
-		mockAuthData    *mockAuthData
+		mockAuthData    *http_common.MockAuthData
 		expectErr       require.ErrorAssertionFunc
 		expectNil       require.ValueAssertionFunc
 		expectEmptyLink require.BoolAssertionFunc
@@ -334,7 +335,7 @@ func TestPrepareStatsResponse(t *testing.T) {
 				Records:    nil,
 				PageSize:   0,
 			},
-			mockAuthData:    &mockAuthData{times: 0, outputParam1: ""},
+			mockAuthData:    &http_common.MockAuthData{Times: 0, OutputParam1: ""},
 			expectErr:       require.NoError,
 			expectNil:       require.NotNil,
 			expectEmptyLink: require.True,
@@ -348,7 +349,7 @@ func TestPrepareStatsResponse(t *testing.T) {
 				Records:    nil,
 				PageSize:   0,
 			},
-			mockAuthData:    &mockAuthData{times: 0, outputParam1: ""},
+			mockAuthData:    &http_common.MockAuthData{Times: 0, OutputParam1: ""},
 			expectErr:       require.NoError,
 			expectNil:       require.NotNil,
 			expectEmptyLink: require.True,
@@ -362,7 +363,7 @@ func TestPrepareStatsResponse(t *testing.T) {
 				Records:    nil,
 				PageSize:   0,
 			},
-			mockAuthData:    &mockAuthData{times: 1, outputParam1: ""},
+			mockAuthData:    &http_common.MockAuthData{Times: 1, OutputParam1: ""},
 			expectErr:       require.NoError,
 			expectNil:       require.NotNil,
 			expectEmptyLink: require.False,
@@ -376,7 +377,7 @@ func TestPrepareStatsResponse(t *testing.T) {
 				Records:    nil,
 				PageSize:   1,
 			},
-			mockAuthData:    &mockAuthData{times: 0, outputParam1: ""},
+			mockAuthData:    &http_common.MockAuthData{Times: 0, OutputParam1: ""},
 			expectErr:       require.NoError,
 			expectNil:       require.NotNil,
 			expectEmptyLink: require.True,
@@ -390,7 +391,7 @@ func TestPrepareStatsResponse(t *testing.T) {
 				Records:    nil,
 				PageSize:   3,
 			},
-			mockAuthData:    &mockAuthData{times: 1, outputParam1: ""},
+			mockAuthData:    &http_common.MockAuthData{Times: 1, OutputParam1: ""},
 			expectErr:       require.NoError,
 			expectNil:       require.NotNil,
 			expectEmptyLink: require.False,
@@ -407,9 +408,9 @@ func TestPrepareStatsResponse(t *testing.T) {
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 
 			mockAuth.EXPECT().EncryptToString(gomock.Any()).Return(
-				testCase.mockAuthData.outputParam1,
-				testCase.mockAuthData.outputErr,
-			).Times(testCase.mockAuthData.times)
+				testCase.mockAuthData.OutputParam1,
+				testCase.mockAuthData.OutputErr,
+			).Times(testCase.mockAuthData.Times)
 
 			req, err := prepareStatsResponse(mockAuth, testCase.dbResponse, testCase.quizId)
 			testCase.expectErr(t, err, "error expectation condition failed")
@@ -434,10 +435,10 @@ func TestGetStatsPage(t *testing.T) {
 		expectedLen         int
 		expectedStatus      int
 		expectLink          require.BoolAssertionFunc
-		authValidateJWTData *mockAuthData
-		authDecryptData     *mockAuthData
-		cassandraStatsData  *mockCassandraData
-		authEncryptData     *mockAuthData
+		authValidateJWTData *http_common.MockAuthData
+		authDecryptData     *http_common.MockAuthData
+		cassandraStatsData  *http_common.MockCassandraData
+		authEncryptData     *http_common.MockAuthData
 	}{
 		// ----- test cases start ----- //
 		{
@@ -448,17 +449,17 @@ func TestGetStatsPage(t *testing.T) {
 			expectedLen:    0,
 			expectedStatus: http.StatusBadRequest,
 			expectLink:     require.False,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "",
-				times:        0,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "",
+				Times:        0,
 			},
-			authDecryptData: &mockAuthData{times: 0},
-			cassandraStatsData: &mockCassandraData{
-				times: 0,
+			authDecryptData: &http_common.MockAuthData{Times: 0},
+			cassandraStatsData: &http_common.MockCassandraData{
+				Times: 0,
 			},
-			authEncryptData: &mockAuthData{
-				outputParam1: "",
-				times:        0,
+			authEncryptData: &http_common.MockAuthData{
+				OutputParam1: "",
+				Times:        0,
 			},
 		}, {
 			name:           "empty token",
@@ -468,18 +469,18 @@ func TestGetStatsPage(t *testing.T) {
 			expectedLen:    0,
 			expectedStatus: http.StatusInternalServerError,
 			expectLink:     require.False,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "",
-				outputErr:    errors.New("invalid token"),
-				times:        1,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "",
+				OutputErr:    errors.New("invalid token"),
+				Times:        1,
 			},
-			authDecryptData: &mockAuthData{times: 0},
-			cassandraStatsData: &mockCassandraData{
-				times: 0,
+			authDecryptData: &http_common.MockAuthData{Times: 0},
+			cassandraStatsData: &http_common.MockCassandraData{
+				Times: 0,
 			},
-			authEncryptData: &mockAuthData{
-				outputParam1: "",
-				times:        0,
+			authEncryptData: &http_common.MockAuthData{
+				OutputParam1: "",
+				Times:        0,
 			},
 		}, {
 			name:           "db read invalid user",
@@ -489,20 +490,20 @@ func TestGetStatsPage(t *testing.T) {
 			expectedLen:    0,
 			expectedStatus: http.StatusForbidden,
 			expectLink:     require.False,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "expected-username",
-				times:        1,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "expected-username",
+				Times:        1,
 			},
-			authDecryptData: &mockAuthData{times: 1},
-			cassandraStatsData: &mockCassandraData{
-				outputParam: &model_cassandra.StatsResponse{
+			authDecryptData: &http_common.MockAuthData{Times: 1},
+			cassandraStatsData: &http_common.MockCassandraData{
+				OutputParam: &model_cassandra.StatsResponse{
 					Records: []*model_cassandra.Response{{Author: "UNexpected-username"}},
 				},
-				times: 1,
+				Times: 1,
 			},
-			authEncryptData: &mockAuthData{
-				outputParam1: "",
-				times:        0,
+			authEncryptData: &http_common.MockAuthData{
+				OutputParam1: "",
+				Times:        0,
 			},
 		}, {
 			name:           "db read no records",
@@ -512,20 +513,20 @@ func TestGetStatsPage(t *testing.T) {
 			expectedLen:    0,
 			expectedStatus: http.StatusNotFound,
 			expectLink:     require.False,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "expected-username",
-				times:        1,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "expected-username",
+				Times:        1,
 			},
-			authDecryptData: &mockAuthData{times: 1},
-			cassandraStatsData: &mockCassandraData{
-				outputParam: &model_cassandra.StatsResponse{
+			authDecryptData: &http_common.MockAuthData{Times: 1},
+			cassandraStatsData: &http_common.MockCassandraData{
+				OutputParam: &model_cassandra.StatsResponse{
 					Records: []*model_cassandra.Response{},
 				},
-				times: 1,
+				Times: 1,
 			},
-			authEncryptData: &mockAuthData{
-				outputParam1: "",
-				times:        0,
+			authEncryptData: &http_common.MockAuthData{
+				OutputParam1: "",
+				Times:        0,
 			},
 		}, {
 			name:           "db quiz read valid user invalid page size",
@@ -535,19 +536,19 @@ func TestGetStatsPage(t *testing.T) {
 			expectedLen:    0,
 			expectedStatus: http.StatusBadRequest,
 			expectLink:     require.False,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "expected-username",
-				times:        1,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "expected-username",
+				Times:        1,
 			},
-			authDecryptData: &mockAuthData{times: 0},
-			cassandraStatsData: &mockCassandraData{
-				outputParam: &model_cassandra.StatsResponse{
+			authDecryptData: &http_common.MockAuthData{Times: 0},
+			cassandraStatsData: &http_common.MockCassandraData{
+				OutputParam: &model_cassandra.StatsResponse{
 					Records: []*model_cassandra.Response{{Author: "expected-username"}}},
-				times: 0,
+				Times: 0,
 			},
-			authEncryptData: &mockAuthData{
-				outputParam1: "",
-				times:        0,
+			authEncryptData: &http_common.MockAuthData{
+				OutputParam1: "",
+				Times:        0,
 			},
 		}, {
 			name:           "db stat read failure",
@@ -557,20 +558,20 @@ func TestGetStatsPage(t *testing.T) {
 			expectedLen:    0,
 			expectedStatus: http.StatusInternalServerError,
 			expectLink:     require.False,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "expected-username",
-				times:        1,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "expected-username",
+				Times:        1,
 			},
-			authDecryptData: &mockAuthData{times: 1},
-			cassandraStatsData: &mockCassandraData{
-				outputErr: &cassandra.Error{
+			authDecryptData: &http_common.MockAuthData{Times: 1},
+			cassandraStatsData: &http_common.MockCassandraData{
+				OutputErr: &cassandra.Error{
 					Status: http.StatusInternalServerError,
 				},
-				times: 1,
+				Times: 1,
 			},
-			authEncryptData: &mockAuthData{
-				outputParam1: "",
-				times:        0,
+			authEncryptData: &http_common.MockAuthData{
+				OutputParam1: "",
+				Times:        0,
 			},
 		}, {
 			name:           "prepare response failure",
@@ -580,21 +581,21 @@ func TestGetStatsPage(t *testing.T) {
 			expectedLen:    0,
 			expectedStatus: http.StatusInternalServerError,
 			expectLink:     require.False,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "expected-username",
-				times:        1,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "expected-username",
+				Times:        1,
 			},
-			authDecryptData: &mockAuthData{times: 1},
-			cassandraStatsData: &mockCassandraData{
-				outputParam: &model_cassandra.StatsResponse{
+			authDecryptData: &http_common.MockAuthData{Times: 1},
+			cassandraStatsData: &http_common.MockCassandraData{
+				OutputParam: &model_cassandra.StatsResponse{
 					PageCursor: []byte{1},
 					Records:    []*model_cassandra.Response{{Author: "expected-username"}}},
-				times: 1,
+				Times: 1,
 			},
-			authEncryptData: &mockAuthData{
-				outputParam1: "",
-				outputErr:    errors.New("encrypt failure"),
-				times:        1,
+			authEncryptData: &http_common.MockAuthData{
+				OutputParam1: "",
+				OutputErr:    errors.New("encrypt failure"),
+				Times:        1,
 			},
 		}, {
 			name:           "success",
@@ -604,22 +605,22 @@ func TestGetStatsPage(t *testing.T) {
 			expectedLen:    3,
 			expectedStatus: http.StatusOK,
 			expectLink:     require.True,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "expected-username",
-				times:        1,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "expected-username",
+				Times:        1,
 			},
-			authDecryptData: &mockAuthData{times: 1},
-			cassandraStatsData: &mockCassandraData{
-				outputParam: &model_cassandra.StatsResponse{
+			authDecryptData: &http_common.MockAuthData{Times: 1},
+			cassandraStatsData: &http_common.MockCassandraData{
+				OutputParam: &model_cassandra.StatsResponse{
 					PageCursor: []byte("cursor to next page"),
 					Records:    []*model_cassandra.Response{{Author: "expected-username"}, {}, {}},
 					PageSize:   3,
 				},
-				times: 1,
+				Times: 1,
 			},
-			authEncryptData: &mockAuthData{
-				outputParam1: "tHisIsAnEnCrYPtEdCUrS0r",
-				times:        1,
+			authEncryptData: &http_common.MockAuthData{
+				OutputParam1: "tHisIsAnEnCrYPtEdCUrS0r",
+				Times:        1,
 			},
 		}, {
 			name:           "success no cursor",
@@ -629,22 +630,22 @@ func TestGetStatsPage(t *testing.T) {
 			expectedLen:    3,
 			expectedStatus: http.StatusOK,
 			expectLink:     require.False,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "expected-username",
-				times:        1,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "expected-username",
+				Times:        1,
 			},
-			authDecryptData: &mockAuthData{times: 0},
-			cassandraStatsData: &mockCassandraData{
-				outputParam: &model_cassandra.StatsResponse{
+			authDecryptData: &http_common.MockAuthData{Times: 0},
+			cassandraStatsData: &http_common.MockCassandraData{
+				OutputParam: &model_cassandra.StatsResponse{
 					PageCursor: []byte{},
 					Records:    []*model_cassandra.Response{{Author: "expected-username"}, {}, {}},
 					PageSize:   3,
 				},
-				times: 1,
+				Times: 1,
 			},
-			authEncryptData: &mockAuthData{
-				outputParam1: "",
-				times:        0,
+			authEncryptData: &http_common.MockAuthData{
+				OutputParam1: "",
+				Times:        0,
 			},
 		},
 		// ----- test cases end ----- //
@@ -660,25 +661,25 @@ func TestGetStatsPage(t *testing.T) {
 			gomock.InOrder(
 				// Validate JWT.
 				mockAuth.EXPECT().ValidateJWT(gomock.Any()).Return(
-					testCase.authValidateJWTData.outputParam1,
-					testCase.authValidateJWTData.outputParam2,
-					testCase.authValidateJWTData.outputErr,
-				).Times(testCase.authValidateJWTData.times),
+					testCase.authValidateJWTData.OutputParam1,
+					testCase.authValidateJWTData.OutputParam2,
+					testCase.authValidateJWTData.OutputErr,
+				).Times(testCase.authValidateJWTData.Times),
 				// Decrypt cursor page.
 				mockAuth.EXPECT().DecryptFromString(gomock.Any()).Return(
-					testCase.authDecryptData.outputParam1,
-					testCase.authDecryptData.outputErr,
-				).Times(testCase.authDecryptData.times),
+					testCase.authDecryptData.OutputParam1,
+					testCase.authDecryptData.OutputErr,
+				).Times(testCase.authDecryptData.Times),
 				// Get stats.
 				mockCassandra.EXPECT().Execute(gomock.Any(), gomock.Any()).Return(
-					testCase.cassandraStatsData.outputParam,
-					testCase.cassandraStatsData.outputErr,
-				).Times(testCase.cassandraStatsData.times),
+					testCase.cassandraStatsData.OutputParam,
+					testCase.cassandraStatsData.OutputErr,
+				).Times(testCase.cassandraStatsData.Times),
 				// Encrypt cursor page.
 				mockAuth.EXPECT().EncryptToString(gomock.Any()).Return(
-					testCase.authEncryptData.outputParam1,
-					testCase.authEncryptData.outputErr,
-				).Times(testCase.authEncryptData.times),
+					testCase.authEncryptData.OutputParam1,
+					testCase.authEncryptData.OutputErr,
+				).Times(testCase.authEncryptData.Times),
 			)
 
 			// Endpoint setup for test.
