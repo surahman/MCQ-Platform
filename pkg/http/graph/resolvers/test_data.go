@@ -70,3 +70,10 @@ func getScoresQuery() map[string]string {
 }`,
 	}
 }
+
+// getHealthcheckQuery is the health check query.
+func getHealthcheckQuery() string {
+	return `{
+		"query": "query { healthcheck() }"
+	}`
+}

@@ -52,6 +52,7 @@ The `Authorization` header key is customizable through the GraphQL endpoint conf
 The following `queries` and `mutations` do not require authorization:
 - Register User: `registerUser`
 - Login User: `loginUser`
+- Healthcheck: `healthcheck`
 
 ```json
 {
@@ -500,6 +501,6 @@ query {
 }
 ```
 
-_Healthy Response:_ OK
+_Healthy Response:_ `OK`
 
-_Unhealthy Response:_ Service Unavailable <reason here>
+_Unhealthy Response:_ `Service Unavailable` with reason in error.
