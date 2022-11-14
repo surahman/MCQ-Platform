@@ -715,6 +715,7 @@ func TestMutationResolver_DeleteQuiz(t *testing.T) {
 		query               string
 		expectErr           bool
 		authValidateJWTData *mockAuthData
+		redisGetData        *mockRedisData
 		redisDeleteData     *mockRedisData
 		cassandraDeleteData *mockCassandraData
 	}{
@@ -729,6 +730,9 @@ func TestMutationResolver_DeleteQuiz(t *testing.T) {
 				outputParam1: "",
 				outputErr:    errors.New("invalid token"),
 				times:        1,
+			},
+			redisGetData: &mockRedisData{
+				times: 0,
 			},
 			redisDeleteData: &mockRedisData{
 				times: 0,
@@ -747,6 +751,9 @@ func TestMutationResolver_DeleteQuiz(t *testing.T) {
 				outputParam1: "",
 				times:        0,
 			},
+			redisGetData: &mockRedisData{
+				times: 0,
+			},
 			redisDeleteData: &mockRedisData{
 				times: 0,
 			},
@@ -760,8 +767,14 @@ func TestMutationResolver_DeleteQuiz(t *testing.T) {
 			query:     testQuizQuery["delete"],
 			expectErr: true,
 			authValidateJWTData: &mockAuthData{
-				outputParam1: "",
+				outputParam1: "expected username",
 				times:        1,
+			},
+			redisGetData: &mockRedisData{
+				param1: model_cassandra.Quiz{
+					Author: "expected username",
+				},
+				times: 1,
 			},
 			redisDeleteData: &mockRedisData{
 				err: &redis.Error{
@@ -774,14 +787,46 @@ func TestMutationResolver_DeleteQuiz(t *testing.T) {
 				times: 0,
 			},
 		}, {
+			name:      "cache failure - unauthorized",
+			path:      "/delete/cache-failure-unauthorized",
+			quizId:    gocql.TimeUUID().String(),
+			query:     testQuizQuery["delete"],
+			expectErr: true,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "expected username",
+				times:        1,
+			},
+			redisGetData: &mockRedisData{
+				param1: model_cassandra.Quiz{
+					Author: "not owner",
+				},
+				times: 1,
+			},
+			redisDeleteData: &mockRedisData{
+				err: &redis.Error{
+					Message: "some error not dealing with a cache miss",
+					Code:    redis.ErrorUnknown,
+				},
+				times: 0,
+			},
+			cassandraDeleteData: &mockCassandraData{
+				times: 0,
+			},
+		}, {
 			name:      "db failure",
 			path:      "/delete/db-failure/",
 			quizId:    gocql.TimeUUID().String(),
 			query:     testQuizQuery["delete"],
 			expectErr: true,
 			authValidateJWTData: &mockAuthData{
-				outputParam1: "",
+				outputParam1: "expected username",
 				times:        1,
+			},
+			redisGetData: &mockRedisData{
+				param1: model_cassandra.Quiz{
+					Author: "expected username",
+				},
+				times: 1,
 			},
 			redisDeleteData: &mockRedisData{
 				times: 1,
@@ -795,16 +840,24 @@ func TestMutationResolver_DeleteQuiz(t *testing.T) {
 			},
 		}, {
 			name:      "db unauthorized",
-			path:      "/delete/db- unauthorized/",
+			path:      "/delete/db-unauthorized/",
 			quizId:    gocql.TimeUUID().String(),
 			query:     testQuizQuery["delete"],
 			expectErr: true,
 			authValidateJWTData: &mockAuthData{
-				outputParam1: "",
+				outputParam1: "expected username",
 				times:        1,
 			},
-			redisDeleteData: &mockRedisData{
+			redisGetData: &mockRedisData{
+				param1: model_cassandra.Quiz{},
+				err: &redis.Error{
+					Message: "cache miss",
+					Code:    redis.ErrorCacheMiss,
+				},
 				times: 1,
+			},
+			redisDeleteData: &mockRedisData{
+				times: 0,
 			},
 			cassandraDeleteData: &mockCassandraData{
 				outputErr: &cassandra.Error{
@@ -820,8 +873,14 @@ func TestMutationResolver_DeleteQuiz(t *testing.T) {
 			query:     testQuizQuery["delete"],
 			expectErr: false,
 			authValidateJWTData: &mockAuthData{
-				outputParam1: "not owner",
+				outputParam1: "expected username",
 				times:        1,
+			},
+			redisGetData: &mockRedisData{
+				param1: model_cassandra.Quiz{
+					Author: "expected username",
+				},
+				times: 1,
 			},
 			redisDeleteData: &mockRedisData{
 				times: 1,
@@ -837,19 +896,48 @@ func TestMutationResolver_DeleteQuiz(t *testing.T) {
 			query:     testQuizQuery["delete"],
 			expectErr: false,
 			authValidateJWTData: &mockAuthData{
-				outputParam1: "not owner",
+				outputParam1: "expected owner",
 				times:        1,
 			},
-			redisDeleteData: &mockRedisData{
+			redisGetData: &mockRedisData{
+				param1: model_cassandra.Quiz{},
 				err: &redis.Error{
-					Message: "unable to locate key on Redis cluster",
+					Message: "cache miss",
 					Code:    redis.ErrorCacheMiss,
 				},
 				times: 1,
 			},
+			redisDeleteData: &mockRedisData{
+				times: 0,
+			},
 			cassandraDeleteData: &mockCassandraData{
 				outputErr: nil,
 				times:     1,
+			},
+		}, {
+			name:      "cache get failure",
+			path:      "/delete/cache-get-failure/",
+			quizId:    gocql.TimeUUID().String(),
+			query:     testQuizQuery["delete"],
+			expectErr: true,
+			authValidateJWTData: &mockAuthData{
+				outputParam1: "expected owner",
+				times:        1,
+			},
+			redisGetData: &mockRedisData{
+				param1: model_cassandra.Quiz{},
+				err: &redis.Error{
+					Message: "cache failure",
+					Code:    redis.ErrorUnknown,
+				},
+				times: 1,
+			},
+			redisDeleteData: &mockRedisData{
+				times: 0,
+			},
+			cassandraDeleteData: &mockCassandraData{
+				outputErr: nil,
+				times:     0,
 			},
 		},
 		// ----- test cases end ----- //
@@ -871,6 +959,14 @@ func TestMutationResolver_DeleteQuiz(t *testing.T) {
 					testCase.authValidateJWTData.outputParam2,
 					testCase.authValidateJWTData.outputErr,
 				).Times(testCase.authValidateJWTData.times),
+
+				// Cache delete.
+				mockRedis.EXPECT().Get(gomock.Any(), gomock.Any()).SetArg(
+					1,
+					testCase.redisGetData.param1,
+				).Return(
+					testCase.redisGetData.err,
+				).Times(testCase.redisGetData.times),
 
 				// Cache delete.
 				mockRedis.EXPECT().Del(gomock.Any()).Return(
