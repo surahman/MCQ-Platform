@@ -215,6 +215,7 @@ func DeleteQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, c
 		var err error
 		var username string
 		var quizId gocql.UUID
+		var cachedQuiz model_cassandra.Quiz
 
 		if quizId, err = gocql.ParseUUID(context.Param("quiz_id")); err != nil {
 			context.AbortWithStatusJSON(http.StatusBadRequest, &model_http.Error{Message: "invalid quiz id supplied, must be a valid UUID"})
@@ -231,10 +232,28 @@ func DeleteQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, c
 		// Evict from cache, if present.
 		// This step must be executed before deletion to ensure the end user is able to reattempt the command in the event of failure.
 		// It must not be the case that data marked as deleted remains in the cache till LRU eviction or TTL expiration.
-		if err = cache.Del(quizId.String()); err != nil && err.(*redis.Error).Code != redis.ErrorCacheMiss {
+		// [1] If quiz is in cache.
+		// [2] If error is not a cache miss raise an error.
+		// [3] If individual requesting deletion is the author.
+		// [4] Then evict from cache.
+		err = cache.Get(quizId.String(), &cachedQuiz)
+		if err != nil && err.(*redis.Error).Code != redis.ErrorCacheMiss {
 			logger.Error("failed to evict data from cache", zap.Error(err))
 			context.AbortWithStatusJSON(http.StatusInternalServerError, &model_http.Error{Message: "please retry the command at a later time"})
 			return
+		}
+		if err == nil {
+			// Check authorization.
+			if username != cachedQuiz.Author {
+				context.AbortWithStatusJSON(http.StatusForbidden, &model_http.Error{Message: "unauthorized"})
+				return
+			}
+			// Attempt to remove from cache. There should be no cache miss here so an error must cause a failure.
+			if err = cache.Del(quizId.String()); err != nil {
+				logger.Error("failed to evict data from cache", zap.Error(err))
+				context.AbortWithStatusJSON(http.StatusInternalServerError, &model_http.Error{Message: "please retry the command at a later time"})
+				return
+			}
 		}
 
 		// Delete quiz record from database.

@@ -803,10 +803,6 @@ func TestMutationResolver_DeleteQuiz(t *testing.T) {
 				times: 1,
 			},
 			redisDeleteData: &mockRedisData{
-				err: &redis.Error{
-					Message: "some error not dealing with a cache miss",
-					Code:    redis.ErrorUnknown,
-				},
 				times: 0,
 			},
 			cassandraDeleteData: &mockCassandraData{
