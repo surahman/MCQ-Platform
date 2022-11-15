@@ -24,10 +24,10 @@ import (
 // @Produce     json
 // @Security    ApiKeyAuth
 // @Param       quiz_id path     string             true "The Test ID for the requested scorecard."
-// @Success     200     {object} model_rest.Success "Score will be in the payload"
-// @Failure     400     {object} model_rest.Error   "Error message with any available details in payload"
-// @Failure     404     {object} model_rest.Error   "Error message with any available details in payload"
-// @Failure     500     {object} model_rest.Error   "Error message with any available details in payload"
+// @Success     200     {object} model_http.Success "Score will be in the payload"
+// @Failure     400     {object} model_http.Error   "Error message with any available details in payload"
+// @Failure     404     {object} model_http.Error   "Error message with any available details in payload"
+// @Failure     500     {object} model_http.Error   "Error message with any available details in payload"
 // @Router      /score/test/{quiz_id} [get]
 func GetScore(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc {
 	return func(context *gin.Context) {
@@ -74,11 +74,11 @@ func GetScore(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin
 // @Produce     json
 // @Security    ApiKeyAuth
 // @Param       quiz_id path     string             true "The Test ID for the requested statistics."
-// @Success     200     {object} model_rest.Success "Statistics will be in the payload"
-// @Failure     400     {object} model_rest.Error   "Error message with any available details in payload"
-// @Failure     403     {object} model_rest.Error   "Error message with any available details in payload"
-// @Failure     404     {object} model_rest.Error   "Error message with any available details in payload"
-// @Failure     500     {object} model_rest.Error   "Error message with any available details in payload"
+// @Success     200     {object} model_http.Success "Statistics will be in the payload"
+// @Failure     400     {object} model_http.Error   "Error message with any available details in payload"
+// @Failure     403     {object} model_http.Error   "Error message with any available details in payload"
+// @Failure     404     {object} model_http.Error   "Error message with any available details in payload"
+// @Failure     500     {object} model_http.Error   "Error message with any available details in payload"
 // @Router      /score/stats/{quiz_id} [get]
 func GetStats(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc {
 	return func(context *gin.Context) {
@@ -134,11 +134,11 @@ func GetStats(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin
 // @Param       quiz_id    path     string                   true  "The Test ID for the requested statistics."
 // @Param       pageCursor query    string                   false "The page cursor into the query results records."
 // @Param       pageSize   query    int                      false "The number of records to retrieve on this page."
-// @Success     200        {object} model_rest.StatsResponse "A page of statistics data"
-// @Failure     400        {object} model_rest.Error         "Error message with any available details in payload"
-// @Failure     403        {object} model_rest.Error         "Error message with any available details in payload"
-// @Failure     404        {object} model_rest.Error         "Error message with any available details in payload"
-// @Failure     500        {object} model_rest.Error         "Error message with any available details in payload"
+// @Success     200        {object} model_http.StatsResponse "A page of statistics data"
+// @Failure     400        {object} model_http.Error         "Error message with any available details in payload"
+// @Failure     403        {object} model_http.Error         "Error message with any available details in payload"
+// @Failure     404        {object} model_http.Error         "Error message with any available details in payload"
+// @Failure     500        {object} model_http.Error         "Error message with any available details in payload"
 // @Router      /score/stats-paged/{quiz_id} [get]
 func GetStatsPage(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc {
 	return func(context *gin.Context) {

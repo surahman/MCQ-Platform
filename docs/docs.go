@@ -45,13 +45,13 @@ const docTemplate = `{
                     "200": {
                         "description": "message: healthy",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Success"
+                            "$ref": "#/definitions/model_http.Success"
                         }
                     },
                     "503": {
                         "description": "error message with any available details",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     }
                 }
@@ -91,25 +91,25 @@ const docTemplate = `{
                     "200": {
                         "description": "The message will contain the Quiz ID of the newly generated quiz",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Success"
+                            "$ref": "#/definitions/model_http.Success"
                         }
                     },
                     "400": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "409": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "500": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     }
                 }
@@ -144,19 +144,19 @@ const docTemplate = `{
                     "200": {
                         "description": "The message will contain a confirmation of deletion",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Success"
+                            "$ref": "#/definitions/model_http.Success"
                         }
                     },
                     "403": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "500": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     }
                 }
@@ -191,19 +191,19 @@ const docTemplate = `{
                     "200": {
                         "description": "The message will contain a confirmation of publishing",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Success"
+                            "$ref": "#/definitions/model_http.Success"
                         }
                     },
                     "403": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "500": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     }
                 }
@@ -250,25 +250,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Score will be in the payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Success"
+                            "$ref": "#/definitions/model_http.Success"
                         }
                     },
                     "400": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "403": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "500": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     }
                 }
@@ -315,25 +315,25 @@ const docTemplate = `{
                     "200": {
                         "description": "The message will contain a confirmation of the update",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Success"
+                            "$ref": "#/definitions/model_http.Success"
                         }
                     },
                     "400": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "403": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "500": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     }
                 }
@@ -368,25 +368,25 @@ const docTemplate = `{
                     "200": {
                         "description": "The message will contain the quiz ID and the payload will contain the quiz",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Success"
+                            "$ref": "#/definitions/model_http.Success"
                         }
                     },
                     "403": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "404": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "500": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     }
                 }
@@ -433,31 +433,31 @@ const docTemplate = `{
                     "200": {
                         "description": "A page of statistics data",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.StatsResponse"
+                            "$ref": "#/definitions/model_http.StatsResponse"
                         }
                     },
                     "400": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "403": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "404": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "500": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     }
                 }
@@ -492,31 +492,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Statistics will be in the payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Success"
+                            "$ref": "#/definitions/model_http.Success"
                         }
                     },
                     "400": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "403": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "404": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "500": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     }
                 }
@@ -551,25 +551,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Score will be in the payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Success"
+                            "$ref": "#/definitions/model_http.Success"
                         }
                     },
                     "400": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "404": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "500": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     }
                 }
@@ -601,7 +601,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model_rest.DeleteUserRequest"
+                            "$ref": "#/definitions/model_http.DeleteUserRequest"
                         }
                     }
                 ],
@@ -609,25 +609,25 @@ const docTemplate = `{
                     "200": {
                         "description": "message with a confirmation of a deleted user account",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Success"
+                            "$ref": "#/definitions/model_http.Success"
                         }
                     },
                     "400": {
                         "description": "error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "409": {
                         "description": "error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "500": {
                         "description": "error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     }
                 }
@@ -662,25 +662,25 @@ const docTemplate = `{
                     "200": {
                         "description": "JWT in the api-key",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.JWTAuthResponse"
+                            "$ref": "#/definitions/model_http.JWTAuthResponse"
                         }
                     },
                     "400": {
                         "description": "error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "403": {
                         "description": "error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "500": {
                         "description": "error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     }
                 }
@@ -706,31 +706,31 @@ const docTemplate = `{
                     "200": {
                         "description": "A new valid JWT",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.JWTAuthResponse"
+                            "$ref": "#/definitions/model_http.JWTAuthResponse"
                         }
                     },
                     "400": {
                         "description": "error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "403": {
                         "description": "error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "500": {
                         "description": "error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "510": {
                         "description": "error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     }
                 }
@@ -765,25 +765,25 @@ const docTemplate = `{
                     "200": {
                         "description": "a valid JWT token for the new account",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.JWTAuthResponse"
+                            "$ref": "#/definitions/model_http.JWTAuthResponse"
                         }
                     },
                     "400": {
                         "description": "error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "409": {
                         "description": "error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "500": {
                         "description": "error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     }
                 }
@@ -963,7 +963,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model_rest.DeleteUserRequest": {
+        "model_http.DeleteUserRequest": {
             "type": "object",
             "required": [
                 "confirmation",
@@ -985,7 +985,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model_rest.Error": {
+        "model_http.Error": {
             "type": "object",
             "properties": {
                 "message": {
@@ -994,7 +994,7 @@ const docTemplate = `{
                 "payload": {}
             }
         },
-        "model_rest.JWTAuthResponse": {
+        "model_http.JWTAuthResponse": {
             "type": "object",
             "required": [
                 "expires",
@@ -1016,7 +1016,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model_rest.StatsResponse": {
+        "model_http.StatsResponse": {
             "type": "object",
             "properties": {
                 "links": {
@@ -1027,16 +1027,11 @@ const docTemplate = `{
                         }
                     }
                 },
-                "metadata": {
-                    "type": "object",
-                    "properties": {
-                        "num_records": {
-                            "type": "integer"
-                        },
-                        "quiz_id": {
-                            "type": "string"
-                        }
-                    }
+                "num_records": {
+                    "type": "integer"
+                },
+                "quiz_id": {
+                    "type": "string"
                 },
                 "records": {
                     "type": "array",
@@ -1046,7 +1041,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model_rest.Success": {
+        "model_http.Success": {
             "type": "object",
             "properties": {
                 "message": {
@@ -1067,7 +1062,7 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "1.1.0",
+	Version:          "1.5.0",
 	Host:             "localhost:44243",
 	BasePath:         "/api/rest/v1",
 	Schemes:          []string{"http"},
