@@ -21,7 +21,7 @@
             "name": "GPL-3.0",
             "url": "https://opensource.org/licenses/GPL-3.0"
         },
-        "version": "1.1.0"
+        "version": "1.5.0"
     },
     "host": "localhost:44243",
     "basePath": "/api/rest/v1",
@@ -41,13 +41,13 @@
                     "200": {
                         "description": "message: healthy",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Success"
+                            "$ref": "#/definitions/model_http.Success"
                         }
                     },
                     "503": {
                         "description": "error message with any available details",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     }
                 }
@@ -87,25 +87,25 @@
                     "200": {
                         "description": "The message will contain the Quiz ID of the newly generated quiz",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Success"
+                            "$ref": "#/definitions/model_http.Success"
                         }
                     },
                     "400": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "409": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "500": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     }
                 }
@@ -140,19 +140,19 @@
                     "200": {
                         "description": "The message will contain a confirmation of deletion",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Success"
+                            "$ref": "#/definitions/model_http.Success"
                         }
                     },
                     "403": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "500": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     }
                 }
@@ -187,19 +187,19 @@
                     "200": {
                         "description": "The message will contain a confirmation of publishing",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Success"
+                            "$ref": "#/definitions/model_http.Success"
                         }
                     },
                     "403": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "500": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     }
                 }
@@ -246,25 +246,25 @@
                     "200": {
                         "description": "Score will be in the payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Success"
+                            "$ref": "#/definitions/model_http.Success"
                         }
                     },
                     "400": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "403": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "500": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     }
                 }
@@ -311,25 +311,25 @@
                     "200": {
                         "description": "The message will contain a confirmation of the update",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Success"
+                            "$ref": "#/definitions/model_http.Success"
                         }
                     },
                     "400": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "403": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "500": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     }
                 }
@@ -364,25 +364,25 @@
                     "200": {
                         "description": "The message will contain the quiz ID and the payload will contain the quiz",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Success"
+                            "$ref": "#/definitions/model_http.Success"
                         }
                     },
                     "403": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "404": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "500": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     }
                 }
@@ -429,31 +429,31 @@
                     "200": {
                         "description": "A page of statistics data",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.StatsResponse"
+                            "$ref": "#/definitions/model_http.StatsResponse"
                         }
                     },
                     "400": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "403": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "404": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "500": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     }
                 }
@@ -488,31 +488,31 @@
                     "200": {
                         "description": "Statistics will be in the payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Success"
+                            "$ref": "#/definitions/model_http.Success"
                         }
                     },
                     "400": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "403": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "404": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "500": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     }
                 }
@@ -547,25 +547,25 @@
                     "200": {
                         "description": "Score will be in the payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Success"
+                            "$ref": "#/definitions/model_http.Success"
                         }
                     },
                     "400": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "404": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "500": {
                         "description": "Error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     }
                 }
@@ -597,7 +597,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model_rest.DeleteUserRequest"
+                            "$ref": "#/definitions/model_http.DeleteUserRequest"
                         }
                     }
                 ],
@@ -605,25 +605,25 @@
                     "200": {
                         "description": "message with a confirmation of a deleted user account",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Success"
+                            "$ref": "#/definitions/model_http.Success"
                         }
                     },
                     "400": {
                         "description": "error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "409": {
                         "description": "error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "500": {
                         "description": "error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     }
                 }
@@ -658,25 +658,25 @@
                     "200": {
                         "description": "JWT in the api-key",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.JWTAuthResponse"
+                            "$ref": "#/definitions/model_http.JWTAuthResponse"
                         }
                     },
                     "400": {
                         "description": "error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "403": {
                         "description": "error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "500": {
                         "description": "error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     }
                 }
@@ -702,31 +702,31 @@
                     "200": {
                         "description": "A new valid JWT",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.JWTAuthResponse"
+                            "$ref": "#/definitions/model_http.JWTAuthResponse"
                         }
                     },
                     "400": {
                         "description": "error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "403": {
                         "description": "error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "500": {
                         "description": "error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "510": {
                         "description": "error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     }
                 }
@@ -761,25 +761,25 @@
                     "200": {
                         "description": "a valid JWT token for the new account",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.JWTAuthResponse"
+                            "$ref": "#/definitions/model_http.JWTAuthResponse"
                         }
                     },
                     "400": {
                         "description": "error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "409": {
                         "description": "error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     },
                     "500": {
                         "description": "error message with any available details in payload",
                         "schema": {
-                            "$ref": "#/definitions/model_rest.Error"
+                            "$ref": "#/definitions/model_http.Error"
                         }
                     }
                 }
@@ -959,7 +959,7 @@
                 }
             }
         },
-        "model_rest.DeleteUserRequest": {
+        "model_http.DeleteUserRequest": {
             "type": "object",
             "required": [
                 "confirmation",
@@ -981,7 +981,7 @@
                 }
             }
         },
-        "model_rest.Error": {
+        "model_http.Error": {
             "type": "object",
             "properties": {
                 "message": {
@@ -990,7 +990,7 @@
                 "payload": {}
             }
         },
-        "model_rest.JWTAuthResponse": {
+        "model_http.JWTAuthResponse": {
             "type": "object",
             "required": [
                 "expires",
@@ -1012,7 +1012,7 @@
                 }
             }
         },
-        "model_rest.StatsResponse": {
+        "model_http.StatsResponse": {
             "type": "object",
             "properties": {
                 "links": {
@@ -1023,16 +1023,11 @@
                         }
                     }
                 },
-                "metadata": {
-                    "type": "object",
-                    "properties": {
-                        "num_records": {
-                            "type": "integer"
-                        },
-                        "quiz_id": {
-                            "type": "string"
-                        }
-                    }
+                "num_records": {
+                    "type": "integer"
+                },
+                "quiz_id": {
+                    "type": "string"
                 },
                 "records": {
                     "type": "array",
@@ -1042,7 +1037,7 @@
                 }
             }
         },
-        "model_rest.Success": {
+        "model_http.Success": {
             "type": "object",
             "properties": {
                 "message": {

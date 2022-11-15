@@ -25,10 +25,10 @@ import (
 // @Accept      json
 // @Produce     json
 // @Param       user body     model_cassandra.UserAccount true "Username, password, first and last name, email address of user"
-// @Success     200  {object} model_rest.JWTAuthResponse  "a valid JWT token for the new account"
-// @Failure     400  {object} model_rest.Error            "error message with any available details in payload"
-// @Failure     409  {object} model_rest.Error            "error message with any available details in payload"
-// @Failure     500  {object} model_rest.Error            "error message with any available details in payload"
+// @Success     200  {object} model_http.JWTAuthResponse  "a valid JWT token for the new account"
+// @Failure     400  {object} model_http.Error            "error message with any available details in payload"
+// @Failure     409  {object} model_http.Error            "error message with any available details in payload"
+// @Failure     500  {object} model_http.Error            "error message with any available details in payload"
 // @Router      /user/register [post]
 func RegisterUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc {
 	return func(context *gin.Context) {
@@ -75,10 +75,10 @@ func RegisterUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra)
 // @Accept      json
 // @Produce     json
 // @Param       credentials body     model_cassandra.UserLoginCredentials true "Username and password to login with"
-// @Success     200         {object} model_rest.JWTAuthResponse           "JWT in the api-key"
-// @Failure     400         {object} model_rest.Error                     "error message with any available details in payload"
-// @Failure     403         {object} model_rest.Error                     "error message with any available details in payload"
-// @Failure     500         {object} model_rest.Error                     "error message with any available details in payload"
+// @Success     200         {object} model_http.JWTAuthResponse           "JWT in the api-key"
+// @Failure     400         {object} model_http.Error                     "error message with any available details in payload"
+// @Failure     403         {object} model_http.Error                     "error message with any available details in payload"
+// @Failure     500         {object} model_http.Error                     "error message with any available details in payload"
 // @Router      /user/login [post]
 func LoginUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc {
 	return func(context *gin.Context) {
@@ -125,11 +125,11 @@ func LoginUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gi
 // @Id          loginRefresh
 // @Produce     json
 // @Security    ApiKeyAuth
-// @Success     200 {object} model_rest.JWTAuthResponse "A new valid JWT"
-// @Failure     400 {object} model_rest.Error           "error message with any available details in payload"
-// @Failure     403 {object} model_rest.Error           "error message with any available details in payload"
-// @Failure     500 {object} model_rest.Error           "error message with any available details in payload"
-// @Failure     510 {object} model_rest.Error           "error message with any available details in payload"
+// @Success     200 {object} model_http.JWTAuthResponse "A new valid JWT"
+// @Failure     400 {object} model_http.Error           "error message with any available details in payload"
+// @Failure     403 {object} model_http.Error           "error message with any available details in payload"
+// @Failure     500 {object} model_http.Error           "error message with any available details in payload"
+// @Failure     510 {object} model_http.Error           "error message with any available details in payload"
 // @Router      /user/refresh [post]
 func LoginRefresh(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, authHeaderKey string) gin.HandlerFunc {
 	return func(context *gin.Context) {
@@ -181,11 +181,11 @@ func LoginRefresh(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra,
 // @Accept      json
 // @Produce     json
 // @Security    ApiKeyAuth
-// @Param       request body     model_rest.DeleteUserRequest true "The request payload for deleting an account"
-// @Success     200     {object} model_rest.Success           "message with a confirmation of a deleted user account"
-// @Failure     400     {object} model_rest.Error             "error message with any available details in payload"
-// @Failure     409     {object} model_rest.Error             "error message with any available details in payload"
-// @Failure     500     {object} model_rest.Error             "error message with any available details in payload"
+// @Param       request body     model_http.DeleteUserRequest true "The request payload for deleting an account"
+// @Success     200     {object} model_http.Success           "message with a confirmation of a deleted user account"
+// @Failure     400     {object} model_http.Error             "error message with any available details in payload"
+// @Failure     409     {object} model_http.Error             "error message with any available details in payload"
+// @Failure     500     {object} model_http.Error             "error message with any available details in payload"
 // @Router      /user/delete [delete]
 func DeleteUser(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, authHeaderKey string) gin.HandlerFunc {
 	return func(context *gin.Context) {

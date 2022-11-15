@@ -17,8 +17,8 @@ import (
 // @Tags        health healthcheck liveness
 // @Id          healthcheck
 // @Produce     json
-// @Success     200 {object} model_rest.Success "message: healthy"
-// @Failure     503 {object} model_rest.Error   "error message with any available details"
+// @Success     200 {object} model_http.Success "message: healthy"
+// @Failure     503 {object} model_http.Error   "error message with any available details"
 // @Router      /health [get]
 func Healthcheck(logger *logger.Logger, db cassandra.Cassandra, cache redis.Redis) gin.HandlerFunc {
 	return func(context *gin.Context) {
