@@ -117,21 +117,23 @@
 				
 				<option value="file30">github.com/surahman/mcq-platform/pkg/http/rest/testdata.go (100.0%)</option>
 				
-				<option value="file31">github.com/surahman/mcq-platform/pkg/logger/config.go (78.9%)</option>
+				<option value="file31">github.com/surahman/mcq-platform/pkg/http/test_helpers.go (0.0%)</option>
 				
-				<option value="file32">github.com/surahman/mcq-platform/pkg/logger/logger.go (73.6%)</option>
+				<option value="file32">github.com/surahman/mcq-platform/pkg/logger/config.go (78.9%)</option>
 				
-				<option value="file33">github.com/surahman/mcq-platform/pkg/logger/testdata.go (100.0%)</option>
+				<option value="file33">github.com/surahman/mcq-platform/pkg/logger/logger.go (73.6%)</option>
 				
-				<option value="file34">github.com/surahman/mcq-platform/pkg/redis/config.go (93.8%)</option>
+				<option value="file34">github.com/surahman/mcq-platform/pkg/logger/testdata.go (100.0%)</option>
 				
-				<option value="file35">github.com/surahman/mcq-platform/pkg/redis/error.go (100.0%)</option>
+				<option value="file35">github.com/surahman/mcq-platform/pkg/redis/config.go (93.8%)</option>
 				
-				<option value="file36">github.com/surahman/mcq-platform/pkg/redis/redis.go (88.7%)</option>
+				<option value="file36">github.com/surahman/mcq-platform/pkg/redis/error.go (100.0%)</option>
 				
-				<option value="file37">github.com/surahman/mcq-platform/pkg/redis/testdata.go (100.0%)</option>
+				<option value="file37">github.com/surahman/mcq-platform/pkg/redis/redis.go (88.7%)</option>
 				
-				<option value="file38">github.com/surahman/mcq-platform/pkg/validator/validator.go (72.0%)</option>
+				<option value="file38">github.com/surahman/mcq-platform/pkg/redis/testdata.go (100.0%)</option>
+				
+				<option value="file39">github.com/surahman/mcq-platform/pkg/validator/validator.go (72.0%)</option>
 				
 				</select>
 			</div>
@@ -4183,7 +4185,58 @@ server:
 }</span>
 </pre>
 		
-		<pre class="file" id="file31" style="display: none">package logger
+		<pre class="file" id="file31" style="display: none">package http
+
+import (
+        "github.com/gin-gonic/gin"
+        "github.com/surahman/mcq-platform/pkg/cassandra"
+        "github.com/surahman/mcq-platform/pkg/model/cassandra"
+)
+
+// MockAuthData is the parameter data for Auth mocking that is used in the test grid.
+type MockAuthData struct {
+        InputParam1  string
+        InputParam2  string
+        OutputParam1 any
+        OutputParam2 int64
+        OutputErr    error
+        Times        int
+}
+
+// MockCassandraData is the parameter data for Cassandra mocking that is used in the test grid.
+type MockCassandraData struct {
+        InputFunc   func(cassandra.Cassandra, any) (any, error)
+        InputParam  any
+        OutputParam any
+        OutputErr   error
+        Times       int
+}
+
+// MockGraderData is the parameter data for Grader mocking that is used in the test grid.
+type MockGraderData struct {
+        InputQuizResp *model_cassandra.QuizResponse
+        InputQuiz     *model_cassandra.Quiz
+        OutputParam   float64
+        OutputErr     error
+        Times         int
+}
+
+// MockRedisData is the parameter data for Redis mocking that is used in the test grid.
+type MockRedisData struct {
+        Param1 any
+        Param2 any
+        Err    error
+        Times  int
+}
+
+// GetTestRouter creates a gin router testing instance.
+func GetTestRouter() *gin.Engine <span class="cov0" title="0">{
+        gin.SetMode(gin.TestMode)
+        return gin.Default()
+}</span>
+</pre>
+		
+		<pre class="file" id="file32" style="display: none">package logger
 
 import (
         "github.com/spf13/afero"
@@ -4262,7 +4315,7 @@ func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="13">
 }
 </pre>
 		
-		<pre class="file" id="file32" style="display: none">package logger
+		<pre class="file" id="file33" style="display: none">package logger
 
 import (
         "errors"
@@ -4401,7 +4454,7 @@ func NewTestLogger() (logger *Logger, err error) <span class="cov1" title="1">{
 }
 </pre>
 		
-		<pre class="file" id="file33" style="display: none">package logger
+		<pre class="file" id="file34" style="display: none">package logger
 
 // configTestData will return a map of test data containing valid and invalid logger configs.
 func configTestData() map[string]string <span class="cov8" title="1">{
@@ -4447,7 +4500,7 @@ encoder_config:
 }</span>
 </pre>
 		
-		<pre class="file" id="file34" style="display: none">package redis
+		<pre class="file" id="file35" style="display: none">package redis
 
 import (
         "github.com/spf13/afero"
@@ -4508,7 +4561,7 @@ func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="13">
 }
 </pre>
 		
-		<pre class="file" id="file35" style="display: none">package redis
+		<pre class="file" id="file36" style="display: none">package redis
 
 // Error codes.
 const (
@@ -4556,7 +4609,7 @@ func (e *Error) errorCacheDel() *Error <span class="cov1" title="1">{
 }</span>
 </pre>
 		
-		<pre class="file" id="file36" style="display: none">package redis
+		<pre class="file" id="file37" style="display: none">package redis
 
 import (
         "bytes"
@@ -4728,7 +4781,7 @@ func (r *redisImpl) Del(keys ...string) error <span class="cov6" title="4">{
 }
 </pre>
 		
-		<pre class="file" id="file37" style="display: none">package redis
+		<pre class="file" id="file38" style="display: none">package redis
 
 // configTestData will return a map of test data containing valid and invalid Cassandra configs.
 func configTestData() map[string]string <span class="cov8" title="1">{
@@ -4850,7 +4903,7 @@ data:
 }</span>
 </pre>
 		
-		<pre class="file" id="file38" style="display: none">package validator
+		<pre class="file" id="file39" style="display: none">package validator
 
 import (
         "bytes"

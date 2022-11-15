@@ -9,6 +9,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
+	http_common "github.com/surahman/mcq-platform/pkg/http"
 	"github.com/surahman/mcq-platform/pkg/mocks"
 )
 
@@ -63,7 +64,7 @@ func TestAuthorizationCheck(t *testing.T) {
 		expectedMsg         string
 		expectErr           require.ErrorAssertionFunc
 		ctx                 context.Context
-		authValidateJWTData *mockAuthData
+		authValidateJWTData *http_common.MockAuthData
 	}{
 		// ----- test cases start ----- //
 		{
@@ -71,54 +72,54 @@ func TestAuthorizationCheck(t *testing.T) {
 			expectedMsg: "information not found",
 			expectErr:   require.Error,
 			ctx:         context.TODO(),
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "",
-				outputParam2: int64(-1),
-				outputErr:    nil,
-				times:        0,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "",
+				OutputParam2: int64(-1),
+				OutputErr:    nil,
+				Times:        0,
 			},
 		}, {
 			name:        "incorrect context",
 			expectedMsg: "information malformed",
 			expectErr:   require.Error,
 			ctx:         context.WithValue(context.TODO(), "GinContextKey", context.TODO()),
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "",
-				outputParam2: int64(-1),
-				outputErr:    nil,
-				times:        0,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "",
+				OutputParam2: int64(-1),
+				OutputErr:    nil,
+				Times:        0,
 			},
 		}, {
 			name:        "no token",
 			expectedMsg: "does not contain",
 			expectErr:   require.Error,
 			ctx:         context.WithValue(context.TODO(), "GinContextKey", ginCtxNoAuth),
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "",
-				outputParam2: int64(-1),
-				outputErr:    nil,
-				times:        0,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "",
+				OutputParam2: int64(-1),
+				OutputErr:    nil,
+				Times:        0,
 			},
 		}, {
 			name:        "no token",
 			expectedMsg: "failed to authenticate token",
 			expectErr:   require.Error,
 			ctx:         context.WithValue(context.TODO(), "GinContextKey", ginCtxAuth),
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "",
-				outputParam2: int64(-1),
-				outputErr:    errors.New("failed to authenticate token"),
-				times:        1,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "",
+				OutputParam2: int64(-1),
+				OutputErr:    errors.New("failed to authenticate token"),
+				Times:        1,
 			},
 		}, {
 			name:      "success",
 			expectErr: require.NoError,
 			ctx:       context.WithValue(context.TODO(), "GinContextKey", ginCtxAuth),
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "successful token refresh",
-				outputParam2: int64(999),
-				outputErr:    nil,
-				times:        1,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "successful token refresh",
+				OutputParam2: int64(999),
+				OutputErr:    nil,
+				Times:        1,
 			},
 		},
 		// ----- test cases end ----- //
@@ -131,15 +132,15 @@ func TestAuthorizationCheck(t *testing.T) {
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 
 			mockAuth.EXPECT().ValidateJWT(gomock.Any()).Return(
-				testCase.authValidateJWTData.outputParam1,
-				testCase.authValidateJWTData.outputParam2,
-				testCase.authValidateJWTData.outputErr,
-			).Times(testCase.authValidateJWTData.times)
+				testCase.authValidateJWTData.OutputParam1,
+				testCase.authValidateJWTData.OutputParam2,
+				testCase.authValidateJWTData.OutputErr,
+			).Times(testCase.authValidateJWTData.Times)
 
 			username, expiresAt, err := AuthorizationCheck(mockAuth, zapLogger, testAuthHeaderKey, testCase.ctx)
 
-			require.Equal(t, testCase.authValidateJWTData.outputParam1, username, "expected username does not match")
-			require.Equal(t, testCase.authValidateJWTData.outputParam2, expiresAt, "expected expiration time does not match")
+			require.Equal(t, testCase.authValidateJWTData.OutputParam1, username, "expected username does not match")
+			require.Equal(t, testCase.authValidateJWTData.OutputParam2, expiresAt, "expected expiration time does not match")
 
 			testCase.expectErr(t, err, "error expectation failed")
 			if err != nil {

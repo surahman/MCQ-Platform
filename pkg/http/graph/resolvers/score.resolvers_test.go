@@ -14,6 +14,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"github.com/surahman/mcq-platform/pkg/cassandra"
+	http_common "github.com/surahman/mcq-platform/pkg/http"
 	"github.com/surahman/mcq-platform/pkg/mocks"
 	model_cassandra "github.com/surahman/mcq-platform/pkg/model/cassandra"
 	"github.com/surahman/mcq-platform/pkg/model/http"
@@ -53,7 +54,7 @@ func TestMetadataResolver_QuizID(t *testing.T) {
 
 func TestQueryResolver_GetScore(t *testing.T) {
 	// Configure router and middleware that loads the Gin context for the resolvers.
-	router := getRouter()
+	router := http_common.GetTestRouter()
 	router.Use(GinContextToContextMiddleware())
 
 	quizUUID := gocql.TimeUUID()
@@ -63,8 +64,8 @@ func TestQueryResolver_GetScore(t *testing.T) {
 		path                string
 		quizId              string
 		expectErr           bool
-		authValidateJWTData *mockAuthData
-		cassandraReadData   *mockCassandraData
+		authValidateJWTData *http_common.MockAuthData
+		cassandraReadData   *http_common.MockCassandraData
 	}{
 		// ----- test cases start ----- //
 		{
@@ -72,59 +73,59 @@ func TestQueryResolver_GetScore(t *testing.T) {
 			path:      "/score/empty-token/",
 			quizId:    quizUUID.String(),
 			expectErr: true,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "",
-				outputErr:    errors.New("invalid token"),
-				times:        1,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "",
+				OutputErr:    errors.New("invalid token"),
+				Times:        1,
 			},
-			cassandraReadData: &mockCassandraData{
-				times: 0,
+			cassandraReadData: &http_common.MockCassandraData{
+				Times: 0,
 			},
 		}, {
 			name:      "invalid quiz id",
 			path:      "/score/invalid-quiz-id",
 			quizId:    "not a valid uuid",
 			expectErr: true,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "",
-				times:        0,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "",
+				Times:        0,
 			},
-			cassandraReadData: &mockCassandraData{
-				times: 0,
+			cassandraReadData: &http_common.MockCassandraData{
+				Times: 0,
 			},
 		}, {
 			name:      "db read not found",
 			path:      "/score/db-read-not-found/",
 			quizId:    quizUUID.String(),
 			expectErr: true,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "",
-				times:        1,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "",
+				Times:        1,
 			},
-			cassandraReadData: &mockCassandraData{
-				outputErr: &cassandra.Error{
+			cassandraReadData: &http_common.MockCassandraData{
+				OutputErr: &cassandra.Error{
 					Message: "",
 					Status:  http.StatusNotFound,
 				},
-				times: 1,
+				Times: 1,
 			},
 		}, {
 			name:      "success",
 			path:      "/score/success/",
 			quizId:    quizUUID.String(),
 			expectErr: false,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "",
-				times:        1,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "",
+				Times:        1,
 			},
-			cassandraReadData: &mockCassandraData{
-				outputParam: &model_cassandra.Response{
+			cassandraReadData: &http_common.MockCassandraData{
+				OutputParam: &model_cassandra.Response{
 					Username:     "mock response card",
 					Score:        99.99,
 					QuizResponse: nil,
 					QuizID:       quizUUID,
 				},
-				times: 1,
+				Times: 1,
 			},
 		},
 		// ----- test cases end ----- //
@@ -140,15 +141,15 @@ func TestQueryResolver_GetScore(t *testing.T) {
 			mockGrader := mocks.NewMockGrading(mockCtrl) // Not called.
 
 			mockCassandra.EXPECT().Execute(gomock.Any(), gomock.Any()).Return(
-				testCase.cassandraReadData.outputParam,
-				testCase.cassandraReadData.outputErr,
-			).Times(testCase.cassandraReadData.times)
+				testCase.cassandraReadData.OutputParam,
+				testCase.cassandraReadData.OutputErr,
+			).Times(testCase.cassandraReadData.Times)
 
 			mockAuth.EXPECT().ValidateJWT(gomock.Any()).Return(
-				testCase.authValidateJWTData.outputParam1,
-				testCase.authValidateJWTData.outputParam2,
-				testCase.authValidateJWTData.outputErr,
-			).Times(testCase.authValidateJWTData.times)
+				testCase.authValidateJWTData.OutputParam1,
+				testCase.authValidateJWTData.OutputParam2,
+				testCase.authValidateJWTData.OutputErr,
+			).Times(testCase.authValidateJWTData.Times)
 
 			// Endpoint setup for test.
 			router.POST(testCase.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockCassandra, mockGrader, zapLogger))
@@ -170,7 +171,7 @@ func TestQueryResolver_GetScore(t *testing.T) {
 				verifyErrorReturned(t, response)
 			} else {
 				// Quiz ID is expected.
-				expectedResponse := testCase.cassandraReadData.outputParam.(*model_cassandra.Response)
+				expectedResponse := testCase.cassandraReadData.OutputParam.(*model_cassandra.Response)
 
 				data, ok := response["data"]
 				require.True(t, ok, "data key expected but not set")
@@ -189,7 +190,7 @@ func TestQueryResolver_GetScore(t *testing.T) {
 
 func TestQueryResolver_GetStats(t *testing.T) {
 	// Configure router and middleware that loads the Gin context for the resolvers.
-	router := getRouter()
+	router := http_common.GetTestRouter()
 	router.Use(GinContextToContextMiddleware())
 
 	quizUUID := gocql.TimeUUID().String()
@@ -202,10 +203,10 @@ func TestQueryResolver_GetStats(t *testing.T) {
 		expectPageSize      int
 		expectNumRecords    int
 		expectErr           bool
-		authValidateJWTData *mockAuthData
-		authDecryptData     *mockAuthData
-		cassandraStatsData  *mockCassandraData
-		authEncryptData     *mockAuthData
+		authValidateJWTData *http_common.MockAuthData
+		authDecryptData     *http_common.MockAuthData
+		cassandraStatsData  *http_common.MockCassandraData
+		authEncryptData     *http_common.MockAuthData
 	}{
 		// ----- test cases start ----- //
 		{
@@ -213,75 +214,75 @@ func TestQueryResolver_GetStats(t *testing.T) {
 			path:      "/stats-page/bad-uuid/",
 			query:     fmt.Sprintf(testScoresQuery["stats"], "face palm", 3, "PaGeCuRs0R"),
 			expectErr: true,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "",
-				times:        0,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "",
+				Times:        0,
 			},
-			authDecryptData: &mockAuthData{times: 0},
-			cassandraStatsData: &mockCassandraData{
-				times: 0,
+			authDecryptData: &http_common.MockAuthData{Times: 0},
+			cassandraStatsData: &http_common.MockCassandraData{
+				Times: 0,
 			},
-			authEncryptData: &mockAuthData{
-				outputParam1: "",
-				times:        0,
+			authEncryptData: &http_common.MockAuthData{
+				OutputParam1: "",
+				Times:        0,
 			},
 		}, {
 			name:      "empty token",
 			path:      "/stats-page/empty-token/",
 			query:     fmt.Sprintf(testScoresQuery["stats"], quizUUID, 3, "PaGeCuRs0R"),
 			expectErr: true,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "",
-				outputErr:    errors.New("invalid token"),
-				times:        1,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "",
+				OutputErr:    errors.New("invalid token"),
+				Times:        1,
 			},
-			authDecryptData: &mockAuthData{times: 0},
-			cassandraStatsData: &mockCassandraData{
-				times: 0,
+			authDecryptData: &http_common.MockAuthData{Times: 0},
+			cassandraStatsData: &http_common.MockCassandraData{
+				Times: 0,
 			},
-			authEncryptData: &mockAuthData{
-				outputParam1: "",
-				times:        0,
+			authEncryptData: &http_common.MockAuthData{
+				OutputParam1: "",
+				Times:        0,
 			},
 		}, {
 			name:      "db read invalid user",
 			path:      "/stats-page/failed-db-read-invalid-user/",
 			query:     fmt.Sprintf(testScoresQuery["stats"], quizUUID, 3, "PaGeCuRs0R"),
 			expectErr: true,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "expected-username",
-				times:        1,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "expected-username",
+				Times:        1,
 			},
-			authDecryptData: &mockAuthData{times: 1},
-			cassandraStatsData: &mockCassandraData{
-				outputParam: &model_cassandra.StatsResponse{
+			authDecryptData: &http_common.MockAuthData{Times: 1},
+			cassandraStatsData: &http_common.MockCassandraData{
+				OutputParam: &model_cassandra.StatsResponse{
 					Records: []*model_cassandra.Response{{Author: "UNexpected-username"}},
 				},
-				times: 1,
+				Times: 1,
 			},
-			authEncryptData: &mockAuthData{
-				outputParam1: "",
-				times:        0,
+			authEncryptData: &http_common.MockAuthData{
+				OutputParam1: "",
+				Times:        0,
 			},
 		}, {
 			name:      "db read no records",
 			path:      "/stats-page/failed-db-read-no-records/",
 			query:     fmt.Sprintf(testScoresQuery["stats"], quizUUID, 3, "PaGeCuRs0R"),
 			expectErr: true,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "expected-username",
-				times:        1,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "expected-username",
+				Times:        1,
 			},
-			authDecryptData: &mockAuthData{times: 1},
-			cassandraStatsData: &mockCassandraData{
-				outputParam: &model_cassandra.StatsResponse{
+			authDecryptData: &http_common.MockAuthData{Times: 1},
+			cassandraStatsData: &http_common.MockCassandraData{
+				OutputParam: &model_cassandra.StatsResponse{
 					Records: []*model_cassandra.Response{},
 				},
-				times: 1,
+				Times: 1,
 			},
-			authEncryptData: &mockAuthData{
-				outputParam1: "",
-				times:        0,
+			authEncryptData: &http_common.MockAuthData{
+				OutputParam1: "",
+				Times:        0,
 			},
 		}, {
 			name:             "db quiz read valid user invalid page size",
@@ -289,63 +290,63 @@ func TestQueryResolver_GetStats(t *testing.T) {
 			query:            fmt.Sprintf(testScoresQuery["stats"], quizUUID, -1, "PaGeCuRs0R"),
 			expectNumRecords: 1,
 			expectErr:        false,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "expected-username",
-				times:        1,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "expected-username",
+				Times:        1,
 			},
-			authDecryptData: &mockAuthData{
-				outputParam1: []byte("PaGeCuRs0R"),
-				times:        1,
+			authDecryptData: &http_common.MockAuthData{
+				OutputParam1: []byte("PaGeCuRs0R"),
+				Times:        1,
 			},
-			cassandraStatsData: &mockCassandraData{
-				outputParam: &model_cassandra.StatsResponse{
+			cassandraStatsData: &http_common.MockCassandraData{
+				OutputParam: &model_cassandra.StatsResponse{
 					Records: []*model_cassandra.Response{{Author: "expected-username"}}},
-				times: 1,
+				Times: 1,
 			},
-			authEncryptData: &mockAuthData{
-				outputParam1: "",
-				times:        0,
+			authEncryptData: &http_common.MockAuthData{
+				OutputParam1: "",
+				Times:        0,
 			},
 		}, {
 			name:      "db stat read failure",
 			path:      "/stats-page/db-stat-read-failure/",
 			query:     fmt.Sprintf(testScoresQuery["stats"], quizUUID, 3, "PaGeCuRs0R"),
 			expectErr: true,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "expected-username",
-				times:        1,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "expected-username",
+				Times:        1,
 			},
-			authDecryptData: &mockAuthData{times: 1},
-			cassandraStatsData: &mockCassandraData{
-				outputErr: &cassandra.Error{
+			authDecryptData: &http_common.MockAuthData{Times: 1},
+			cassandraStatsData: &http_common.MockCassandraData{
+				OutputErr: &cassandra.Error{
 					Status: http.StatusInternalServerError,
 				},
-				times: 1,
+				Times: 1,
 			},
-			authEncryptData: &mockAuthData{
-				outputParam1: "",
-				times:        0,
+			authEncryptData: &http_common.MockAuthData{
+				OutputParam1: "",
+				Times:        0,
 			},
 		}, {
 			name:      "prepare response failure",
 			path:      "/stats-page/prepare-response-failure/",
 			query:     fmt.Sprintf(testScoresQuery["stats"], quizUUID, 3, "PaGeCuRs0R"),
 			expectErr: true,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "expected-username",
-				times:        1,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "expected-username",
+				Times:        1,
 			},
-			authDecryptData: &mockAuthData{times: 1},
-			cassandraStatsData: &mockCassandraData{
-				outputParam: &model_cassandra.StatsResponse{
+			authDecryptData: &http_common.MockAuthData{Times: 1},
+			cassandraStatsData: &http_common.MockCassandraData{
+				OutputParam: &model_cassandra.StatsResponse{
 					PageCursor: []byte{1},
 					Records:    []*model_cassandra.Response{{Author: "expected-username"}}},
-				times: 1,
+				Times: 1,
 			},
-			authEncryptData: &mockAuthData{
-				outputParam1: "",
-				outputErr:    errors.New("encrypt failure"),
-				times:        1,
+			authEncryptData: &http_common.MockAuthData{
+				OutputParam1: "",
+				OutputErr:    errors.New("encrypt failure"),
+				Times:        1,
 			},
 		}, {
 			name:             "success",
@@ -355,22 +356,22 @@ func TestQueryResolver_GetStats(t *testing.T) {
 			expectPageSize:   3,
 			expectNumRecords: 3,
 			expectErr:        false,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "expected-username",
-				times:        1,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "expected-username",
+				Times:        1,
 			},
-			authDecryptData: &mockAuthData{times: 1},
-			cassandraStatsData: &mockCassandraData{
-				outputParam: &model_cassandra.StatsResponse{
+			authDecryptData: &http_common.MockAuthData{Times: 1},
+			cassandraStatsData: &http_common.MockCassandraData{
+				OutputParam: &model_cassandra.StatsResponse{
 					PageCursor: []byte("cursor to next page"),
 					Records:    []*model_cassandra.Response{{Author: "expected-username"}, {}, {}},
 					PageSize:   3,
 				},
-				times: 1,
+				Times: 1,
 			},
-			authEncryptData: &mockAuthData{
-				outputParam1: "tHisIsAnEnCrYPtEdCUrS0r",
-				times:        1,
+			authEncryptData: &http_common.MockAuthData{
+				OutputParam1: "tHisIsAnEnCrYPtEdCUrS0r",
+				Times:        1,
 			},
 		}, {
 			name:             "success no cursor",
@@ -379,22 +380,22 @@ func TestQueryResolver_GetStats(t *testing.T) {
 			expectPageSize:   0,
 			expectNumRecords: 3,
 			expectErr:        false,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "expected-username",
-				times:        1,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "expected-username",
+				Times:        1,
 			},
-			authDecryptData: &mockAuthData{times: 0},
-			cassandraStatsData: &mockCassandraData{
-				outputParam: &model_cassandra.StatsResponse{
+			authDecryptData: &http_common.MockAuthData{Times: 0},
+			cassandraStatsData: &http_common.MockCassandraData{
+				OutputParam: &model_cassandra.StatsResponse{
 					PageCursor: []byte{},
 					Records:    []*model_cassandra.Response{{Author: "expected-username"}, {}, {}},
 					PageSize:   3,
 				},
-				times: 1,
+				Times: 1,
 			},
-			authEncryptData: &mockAuthData{
-				outputParam1: "",
-				times:        0,
+			authEncryptData: &http_common.MockAuthData{
+				OutputParam1: "",
+				Times:        0,
 			},
 		}, {
 			name:             "success quiz id only",
@@ -404,63 +405,63 @@ func TestQueryResolver_GetStats(t *testing.T) {
 			expectPageSize:   7,
 			expectNumRecords: 3,
 			expectErr:        false,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "expected-username",
-				times:        1,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "expected-username",
+				Times:        1,
 			},
-			authDecryptData: &mockAuthData{times: 0},
-			cassandraStatsData: &mockCassandraData{
-				outputParam: &model_cassandra.StatsResponse{
+			authDecryptData: &http_common.MockAuthData{Times: 0},
+			cassandraStatsData: &http_common.MockCassandraData{
+				OutputParam: &model_cassandra.StatsResponse{
 					PageCursor: []byte("cursor to next page"),
 					Records:    []*model_cassandra.Response{{Author: "expected-username"}, {}, {}},
 					PageSize:   7,
 				},
-				times: 1,
+				Times: 1,
 			},
-			authEncryptData: &mockAuthData{
-				outputParam1: "tHisIsAnEnCrYPtEdCUrS0r",
-				times:        1,
+			authEncryptData: &http_common.MockAuthData{
+				OutputParam1: "tHisIsAnEnCrYPtEdCUrS0r",
+				Times:        1,
 			},
 		}, {
 			name:      "cursor encryption failure",
 			path:      "/stats-page/cursor-encryption-failure/",
 			query:     fmt.Sprintf(testScoresQuery["stats_quiz_id"], quizUUID),
 			expectErr: true,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "expected-username",
-				times:        1,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "expected-username",
+				Times:        1,
 			},
-			authDecryptData: &mockAuthData{times: 0},
-			cassandraStatsData: &mockCassandraData{
-				outputParam: &model_cassandra.StatsResponse{
+			authDecryptData: &http_common.MockAuthData{Times: 0},
+			cassandraStatsData: &http_common.MockCassandraData{
+				OutputParam: &model_cassandra.StatsResponse{
 					PageCursor: []byte("cursor to next page"),
 					Records:    []*model_cassandra.Response{{Author: "expected-username"}, {}, {}},
 					PageSize:   7,
 				},
-				times: 1,
+				Times: 1,
 			},
-			authEncryptData: &mockAuthData{
-				outputParam1: "tHisIsAnEnCrYPtEdCUrS0r",
-				outputErr:    errors.New("encrypting cursor failed"),
-				times:        1,
+			authEncryptData: &http_common.MockAuthData{
+				OutputParam1: "tHisIsAnEnCrYPtEdCUrS0r",
+				OutputErr:    errors.New("encrypting cursor failed"),
+				Times:        1,
 			},
 		}, {
 			name:      "cursor decryption failure",
 			path:      "/stats-page/cursor-decryption-failure/",
 			query:     fmt.Sprintf(testScoresQuery["stats"], quizUUID, 3, "PaGeCuRs0R"),
 			expectErr: true,
-			authValidateJWTData: &mockAuthData{
-				outputParam1: "expected-username",
-				times:        1,
+			authValidateJWTData: &http_common.MockAuthData{
+				OutputParam1: "expected-username",
+				Times:        1,
 			},
-			authDecryptData: &mockAuthData{
-				outputErr: errors.New("decrypting cursor failed"),
-				times:     1,
+			authDecryptData: &http_common.MockAuthData{
+				OutputErr: errors.New("decrypting cursor failed"),
+				Times:     1,
 			},
-			cassandraStatsData: &mockCassandraData{times: 0},
-			authEncryptData: &mockAuthData{
-				outputParam1: "",
-				times:        0,
+			cassandraStatsData: &http_common.MockCassandraData{Times: 0},
+			authEncryptData: &http_common.MockAuthData{
+				OutputParam1: "",
+				Times:        0,
 			},
 		},
 		// ----- test cases end ----- //
@@ -478,25 +479,25 @@ func TestQueryResolver_GetStats(t *testing.T) {
 			gomock.InOrder(
 				// Validate JWT.
 				mockAuth.EXPECT().ValidateJWT(gomock.Any()).Return(
-					testCase.authValidateJWTData.outputParam1,
-					testCase.authValidateJWTData.outputParam2,
-					testCase.authValidateJWTData.outputErr,
-				).Times(testCase.authValidateJWTData.times),
+					testCase.authValidateJWTData.OutputParam1,
+					testCase.authValidateJWTData.OutputParam2,
+					testCase.authValidateJWTData.OutputErr,
+				).Times(testCase.authValidateJWTData.Times),
 				// Decrypt cursor page.
 				mockAuth.EXPECT().DecryptFromString(gomock.Any()).Return(
-					testCase.authDecryptData.outputParam1,
-					testCase.authDecryptData.outputErr,
-				).Times(testCase.authDecryptData.times),
+					testCase.authDecryptData.OutputParam1,
+					testCase.authDecryptData.OutputErr,
+				).Times(testCase.authDecryptData.Times),
 				// Get stats.
 				mockCassandra.EXPECT().Execute(gomock.Any(), gomock.Any()).Return(
-					testCase.cassandraStatsData.outputParam,
-					testCase.cassandraStatsData.outputErr,
-				).Times(testCase.cassandraStatsData.times),
+					testCase.cassandraStatsData.OutputParam,
+					testCase.cassandraStatsData.OutputErr,
+				).Times(testCase.cassandraStatsData.Times),
 				// Encrypt cursor page.
 				mockAuth.EXPECT().EncryptToString(gomock.Any()).Return(
-					testCase.authEncryptData.outputParam1,
-					testCase.authEncryptData.outputErr,
-				).Times(testCase.authEncryptData.times),
+					testCase.authEncryptData.OutputParam1,
+					testCase.authEncryptData.OutputErr,
+				).Times(testCase.authEncryptData.Times),
 			)
 
 			// Endpoint setup for test.

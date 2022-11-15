@@ -19,103 +19,103 @@ func TestGetQuiz(t *testing.T) {
 	testCases := []struct {
 		name              string
 		quiz              *model_cassandra.Quiz
-		redisGetData      *mockRedisData
-		cassandraReadData *mockCassandraData
-		redisSetData      *mockRedisData
+		redisGetData      *MockRedisData
+		cassandraReadData *MockCassandraData
+		redisSetData      *MockRedisData
 		expectErr         require.ErrorAssertionFunc
 	}{
 		// ----- test cases start ----- //
 		{
 			name: "not found",
 			quiz: &model_cassandra.Quiz{QuizID: gocql.TimeUUID()},
-			redisGetData: &mockRedisData{
-				err: &redis.Error{
+			redisGetData: &MockRedisData{
+				Err: &redis.Error{
 					Message: "cache miss",
 					Code:    redis.ErrorCacheMiss,
 				},
-				times: 1,
+				Times: 1,
 			},
-			cassandraReadData: &mockCassandraData{
-				outputParam: nil,
-				outputErr: &cassandra.Error{
+			cassandraReadData: &MockCassandraData{
+				OutputParam: nil,
+				OutputErr: &cassandra.Error{
 					Message: "not found",
 					Status:  http.StatusNotFound,
 				},
-				times: 1,
+				Times: 1,
 			},
-			redisSetData: &mockRedisData{
-				times: 0,
+			redisSetData: &MockRedisData{
+				Times: 0,
 			},
 			expectErr: require.Error,
 		}, {
 			name: "cache hit",
 			quiz: &model_cassandra.Quiz{},
-			redisGetData: &mockRedisData{
-				times: 1,
+			redisGetData: &MockRedisData{
+				Times: 1,
 			},
-			cassandraReadData: &mockCassandraData{
-				times: 0,
+			cassandraReadData: &MockCassandraData{
+				Times: 0,
 			},
-			redisSetData: &mockRedisData{
-				times: 0,
+			redisSetData: &MockRedisData{
+				Times: 0,
 			},
 			expectErr: require.NoError,
 		}, {
 			name: "cache miss, db read success, cache store success",
 			quiz: testQuizData["myPubQuiz"],
-			redisGetData: &mockRedisData{
-				err: &redis.Error{
+			redisGetData: &MockRedisData{
+				Err: &redis.Error{
 					Message: "cache miss",
 					Code:    redis.ErrorCacheMiss,
 				},
-				times: 1,
+				Times: 1,
 			},
-			cassandraReadData: &mockCassandraData{
-				outputParam: testQuizData["myPubQuiz"],
-				times:       1,
+			cassandraReadData: &MockCassandraData{
+				OutputParam: testQuizData["myPubQuiz"],
+				Times:       1,
 			},
-			redisSetData: &mockRedisData{
-				times: 1,
+			redisSetData: &MockRedisData{
+				Times: 1,
 			},
 			expectErr: require.NoError,
 		}, {
 			name: "cache miss, db read success, cache set failure",
 			quiz: testQuizData["myPubQuiz"],
-			redisGetData: &mockRedisData{
-				err: &redis.Error{
+			redisGetData: &MockRedisData{
+				Err: &redis.Error{
 					Message: "cache miss",
 					Code:    redis.ErrorCacheMiss,
 				},
-				times: 1,
+				Times: 1,
 			},
-			cassandraReadData: &mockCassandraData{
-				outputParam: testQuizData["myPubQuiz"],
-				times:       1,
+			cassandraReadData: &MockCassandraData{
+				OutputParam: testQuizData["myPubQuiz"],
+				Times:       1,
 			},
-			redisSetData: &mockRedisData{
-				err: &redis.Error{
+			redisSetData: &MockRedisData{
+				Err: &redis.Error{
 					Message: "cache failure",
 					Code:    redis.ErrorUnknown,
 				},
-				times: 1,
+				Times: 1,
 			},
 			expectErr: require.NoError,
 		}, {
 			name: "cache miss, db read success, not published",
 			quiz: testQuizData["myNoPubQuiz"],
-			redisGetData: &mockRedisData{
-				err: &redis.Error{
+			redisGetData: &MockRedisData{
+				Err: &redis.Error{
 					Message: "cache miss",
 					Code:    redis.ErrorCacheMiss,
 				},
-				times: 1,
+				Times: 1,
 			},
-			cassandraReadData: &mockCassandraData{
-				outputParam: testQuizData["myNoPubQuiz"],
-				times:       1,
+			cassandraReadData: &MockCassandraData{
+				OutputParam: testQuizData["myNoPubQuiz"],
+				Times:       1,
 			},
-			redisSetData: &mockRedisData{
-				times: 0,
+			redisSetData: &MockRedisData{
+				Times: 0,
 			},
 			expectErr: require.NoError,
 		},
@@ -132,17 +132,17 @@ func TestGetQuiz(t *testing.T) {
 			gomock.InOrder(
 				// Cache call.
 				mockRedis.EXPECT().Get(gomock.Any(), gomock.Any()).Return(
-					testCase.redisGetData.err,
-				).Times(testCase.redisGetData.times),
+					testCase.redisGetData.Err,
+				).Times(testCase.redisGetData.Times),
 				// Cassandra read.
 				mockCassandra.EXPECT().Execute(gomock.Any(), gomock.Any()).Return(
-					testCase.cassandraReadData.outputParam,
-					testCase.cassandraReadData.outputErr,
-				).Times(testCase.cassandraReadData.times),
+					testCase.cassandraReadData.OutputParam,
+					testCase.cassandraReadData.OutputErr,
+				).Times(testCase.cassandraReadData.Times),
 				// Cache set.
 				mockRedis.EXPECT().Set(gomock.Any(), gomock.Any()).Return(
-					testCase.redisSetData.err,
-				).Times(testCase.redisSetData.times),
+					testCase.redisSetData.Err,
+				).Times(testCase.redisSetData.Times),
 			)
 
 			actual, err := GetQuiz(testCase.quiz.QuizID, mockCassandra, mockRedis)
@@ -163,7 +163,7 @@ func TestPrepareStatsRequest(t *testing.T) {
 		pageCursor      string
 		pageSize        string
 		quizId          gocql.UUID
-		mockAuthData    *mockAuthData
+		mockAuthData    *MockAuthData
 		expectPageSize  int
 		expectErr       require.ErrorAssertionFunc
 		expectNil       require.ValueAssertionFunc
@@ -175,7 +175,7 @@ func TestPrepareStatsRequest(t *testing.T) {
 			pageCursor:   "some page cursor string",
 			pageSize:     "this should be a natural number",
 			quizId:       gocql.TimeUUID(),
-			mockAuthData: &mockAuthData{times: 0},
+			mockAuthData: &MockAuthData{Times: 0},
 			expectErr:    require.Error,
 			expectNil:    require.Nil,
 		}, {
@@ -183,10 +183,10 @@ func TestPrepareStatsRequest(t *testing.T) {
 			pageCursor: "some page cursor string",
 			pageSize:   "3",
 			quizId:     gocql.TimeUUID(),
-			mockAuthData: &mockAuthData{
-				times:        1,
-				outputParam1: nil,
-				outputErr:    fmt.Errorf("failure decrypting"),
+			mockAuthData: &MockAuthData{
+				Times:        1,
+				OutputParam1: nil,
+				OutputErr:    fmt.Errorf("failure decrypting"),
 			},
 			expectErr: require.Error,
 			expectNil: require.Nil,
@@ -195,9 +195,9 @@ func TestPrepareStatsRequest(t *testing.T) {
 			pageCursor: "some page cursor string",
 			pageSize:   "0",
 			quizId:     gocql.TimeUUID(),
-			mockAuthData: &mockAuthData{
-				times:        1,
-				outputParam1: []byte{1},
+			mockAuthData: &MockAuthData{
+				Times:        1,
+				OutputParam1: []byte{1},
 			},
 			expectPageSize:  10,
 			expectErr:       require.NoError,
@@ -208,7 +208,7 @@ func TestPrepareStatsRequest(t *testing.T) {
 			pageCursor:      "",
 			pageSize:        "3",
 			quizId:          gocql.TimeUUID(),
-			mockAuthData:    &mockAuthData{times: 0},
+			mockAuthData:    &MockAuthData{Times: 0},
 			expectPageSize:  3,
 			expectErr:       require.NoError,
 			expectNil:       require.NotNil,
@@ -218,9 +218,9 @@ func TestPrepareStatsRequest(t *testing.T) {
 			pageCursor: "some page cursor string",
 			pageSize:   "3",
 			quizId:     gocql.TimeUUID(),
-			mockAuthData: &mockAuthData{
-				times:        1,
-				outputParam1: []byte{1},
+			mockAuthData: &MockAuthData{
+				Times:        1,
+				OutputParam1: []byte{1},
 			},
 			expectPageSize:  3,
 			expectErr:       require.NoError,
@@ -237,9 +237,9 @@ func TestPrepareStatsRequest(t *testing.T) {
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 
 			mockAuth.EXPECT().DecryptFromString(gomock.Any()).Return(
-				testCase.mockAuthData.outputParam1,
-				testCase.mockAuthData.outputErr,
-			).Times(testCase.mockAuthData.times)
+				testCase.mockAuthData.OutputParam1,
+				testCase.mockAuthData.OutputErr,
+			).Times(testCase.mockAuthData.Times)
 
 			req, err := PrepareStatsRequest(mockAuth, testCase.quizId, testCase.pageCursor, testCase.pageSize)
 			testCase.expectErr(t, err, "error expectation condition failed")
