@@ -11,6 +11,7 @@ const (
 	loggerConfigFileName    = "LoggerConfig.yaml"
 	authConfigFileName      = "AuthConfig.yaml"
 	restConfigFileName      = "HTTPRESTConfig.yaml"
+	graphqlConfigFileName   = "GraphQLConfig.yaml"
 	redisConfigFileName     = "RedisConfig.yaml"
 
 	// Environment variables
@@ -19,6 +20,7 @@ const (
 	githubCIKey     = "GITHUB_ACTIONS_CI"
 	authPrefix      = "AUTH"
 	restPrefix      = "REST"
+	graphqlPrefix   = "GRAPHQL"
 	redisPrefix     = "REDIS"
 
 	// Misc.
@@ -62,6 +64,11 @@ func GetHTTPRESTFileName() string {
 	return restConfigFileName
 }
 
+// GetGraphQLFileName returns the HTTP GraphQL endpoint configuration file name.
+func GetGraphQLFileName() string {
+	return graphqlConfigFileName
+}
+
 // GetRedisFileName returns the Redis cluster configuration file name.
 func GetRedisFileName() string {
 	return redisConfigFileName
@@ -85,6 +92,11 @@ func GetAuthPrefix() string {
 // GetHTTPRESTPrefix returns the environment variable prefix for the HTTP REST endpoint.
 func GetHTTPRESTPrefix() string {
 	return restPrefix
+}
+
+// GetGraphQLPrefix returns the environment variable prefix for the HTTP GraphQL endpoint.
+func GetGraphQLPrefix() string {
+	return graphqlPrefix
 }
 
 // GetRedisPrefix returns the environment variable prefix for the Redis cluster.

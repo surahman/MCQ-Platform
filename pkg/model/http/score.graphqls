@@ -1,0 +1,27 @@
+# StatsResponse is returned to the end user as a page of statistics from the database.
+type StatsResponse {
+    records: [Response]!
+    metadata: Metadata!
+    nextPage: NextPage
+}
+
+# Metadata is the metadata about the quiz request.
+type Metadata {
+    quizID: String!
+    numRecords: Int!
+}
+
+# Links contains links information about the next page of requests.
+type NextPage {
+    pageSize: Int!
+    cursor: String!
+}
+
+# Requests that wil not alter the state of data in the database.
+extend type Query {
+    # Retrieve a single score for a user.
+    getScore(quizID: String!): Response!
+
+    # Retrieve a page of quiz statistics if authorized.
+    getStats(quizID: String!, pageSize: Int = 0, cursor: String = ""): StatsResponse!
+}

@@ -9,6 +9,29 @@ below.
 
 <br/>
 
+:warning: **_Transport Layer Security_** :warning:
+
+Encryption is vital to help safeguard against theft of login credentials and JSON Web Tokens.
+
+In a production environment, `TLS` would be the only HTTP protocol over which the API endpoints would be exposed. Setting
+up the `TLS`/`SSL` certificated for a Dockerized demonstration environment is unnecessary and complicates the tester's
+experience.
+
+Other methods like envelope encryption of payloads add an extra layer of security, but these add an excessive overhead for
+the use case and workloads here.
+
+<br/>
+
+:warning: **_Protocols_** :warning:
+
+This demonstration environment will launch both the `HTTP REST` as well as the `GraphQL` over `HTTP` endpoints. This is
+unsuitable for a production environment.
+
+Ideally, each of these protocol endpoints would be exposed in its own clusters with auto-scaling, load balancing, and
+across availability zones.
+
+<br/>
+
 **_TODO:_** _There are a number of items that I will complete as time permits:_
 
 - [x] REST API `score/stats` response pagination: The response to a stats request could contain far too many records to 
@@ -18,7 +41,9 @@ below.
       authorization using the returned rows.
 - [x] Redis Cache: To improve the performance of the API, published tests should be cached with an eager write to cache, 
       and lazy loading to the cache on misses.
-- [ ] GraphQL: Essential for performance on bandwidth restricted connections.
+- [x] GraphQL: Essential for performance on bandwidth restricted connections.
+- [ ] GraphQL Depth Limits and Complexity: Maximum depth and complexity must be added for security to help mitigate 
+      against malicious requests.
 
 <br/>
 
@@ -75,9 +100,20 @@ To review the REST API request and response formats please see the readme in the
 package. The REST API server does also provide a Swagger UI to examine and test the API calls with details on request
 formats.
 
+The Swagger UI can be accessed using the provided default configurations through
+[http://localhost:44243/swagger/index.html](http://localhost:44243/swagger/index.html).
+
 ### GraphQL
 
-Coming soon.
+GraphQL has been exposed through an HTTP endpoint [`graphql`](pkg/http/graph) package. The schema for the GraphQL queries
+and mutations can be found in [`model_http`](pkg/model/http).
+
+To review the GraphQL API request and response formats please see the readme in the [`graphql_resolvers`](pkg/http/graph/resolvers)
+package. The GraphQL server does also provide a Playground to examine and test the API calls with details on request
+formats.
+
+The Playground can be accessed using the provided default configurations through
+[http://localhost:44255/api/graphql/v1/playground](http://localhost:44255/api/graphql/v1/playground).
 
 <br/>
 
