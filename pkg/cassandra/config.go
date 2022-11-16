@@ -2,9 +2,8 @@ package cassandra
 
 import (
 	"github.com/spf13/afero"
-	"github.com/spf13/viper"
+	"github.com/surahman/mcq-platform/pkg/config_loader"
 	"github.com/surahman/mcq-platform/pkg/constants"
-	"github.com/surahman/mcq-platform/pkg/validator"
 )
 
 // config is the configuration container for connecting to the Cassandra cluster
@@ -33,27 +32,5 @@ func newConfig() *config {
 
 // Load will attempt to load configurations from a file on a file system and then overwrite values using environment variables.
 func (cfg *config) Load(fs afero.Fs) (err error) {
-	viper.SetFs(fs)
-	viper.SetConfigName(constants.GetCassandraFileName())
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath(constants.GetEtcDir())
-	viper.AddConfigPath(constants.GetHomeDir())
-	viper.AddConfigPath(constants.GetBaseDir())
-
-	viper.SetEnvPrefix(constants.GetCassandraPrefix())
-	viper.AutomaticEnv()
-
-	if err = viper.ReadInConfig(); err != nil {
-		return
-	}
-
-	if err = viper.Unmarshal(cfg); err != nil {
-		return
-	}
-
-	if err = validator.ValidateStruct(cfg); err != nil {
-		return
-	}
-
-	return
+	return config_loader.ConfigLoader(fs, cfg, constants.GetCassandraFileName(), constants.GetCassandraPrefix(), "yaml")
 }
