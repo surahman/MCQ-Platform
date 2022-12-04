@@ -120,7 +120,34 @@ The Playground can be accessed using the provided default configurations through
 
 <br/>
 
+# Make Executables
+
+Please provide the `ARCH=` variable with `linux` or `darwin` as needed.
+
+**_Build_**
+```bash
+make build ARCH=linux
+```
+
+**_Clean_**
+```bash
+make clean
+```
+
+<br/>
+
 # Docker Containers
+
+### Microservice Container
+To build the container for deployment in a Kubernetes cluster please run the `docker build` command
+with the required parameters. Please also review the configuration files in the [configs](configs)
+folder and appropriately adjust the ports exposed in the container.
+
+<br/>
+
+### Data Tier Containers
+
+To spin-up the Cassandra and Redis containers please use the commands below.
 
 Create containers:
 ```bash
@@ -132,11 +159,22 @@ Destroy containers:
 docker compose down
 ```
 
+List Containers and Check Health:
+```bash
+docker ps
+```
+
+Get IP Addresses:
+```bash
+docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' cassandra
+```
+
+
 **Cassandra:**
 - Username : `admin`
 - Password : `root`
 - Keyspace: `mcq_platform`
-- 
+
 **Redis:**
 - Password : `root`
 - Database: `0`, the default database
