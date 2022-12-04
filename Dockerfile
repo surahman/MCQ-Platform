@@ -8,7 +8,7 @@
 ## Build
 FROM golang:1.18-alpine AS build
 
-RUN apk update && apk --no-cache --update add build-base
+RUN apk update && apk --no-cache --update add make
 
 WORKDIR /build
 
