@@ -25,13 +25,19 @@ COPY --from=build /build/MCQPlatform-linux /MCQPlatform-linux
 COPY --from=build /build/configs /etc/MCQ_Platform.conf/
 
 
-# Please set the LHS to match the port you would like exposed externally and the RHS to match the
-# internal HTTP ports as set in the configuration YAML files.
-
-# HTTP REST endpoint.
-EXPOSE 44243:44243
-# HTTP GraphQL endpoint.
-EXPOSE 44255:44255
+# Port list:
+# Please set these ports according to the configurations in the YAML files in /configs directory.
+# 1) HTTP REST
+# 2) HTTP GraphQL
+# 3) Cassandra
+# 4) Cassandra
+# 5) Redis-node-0
+# 6) Redis-node-1
+# 7) Redis-node-2
+# 8) Redis-node-3
+# 9) Redis-node-4
+# 10) Redis-node-5
+EXPOSE 44243 44255 7000 9042 6379 6380 6381 6382 6383 6384
 
 # Launch application.
 ENTRYPOINT ["./MCQPlatform-linux"]
