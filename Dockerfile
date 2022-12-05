@@ -39,5 +39,8 @@ COPY --from=build /build/configs /etc/MCQ_Platform.conf/
 # 10) Redis-node-5
 EXPOSE 44243 44255 7000 9042 6379 6380 6381 6382 6383 6384
 
+# Run Gin Web Framework in production mode.
+ENV GIN_MODE=release
+
 # Launch application.
 ENTRYPOINT ["./MCQPlatform-linux"]
