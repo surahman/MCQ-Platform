@@ -131,12 +131,10 @@ func (c *cassandraImpl) createSessionRetry(cluster *gocql.ClusterConfig) (err er
 		c.logger.Info(fmt.Sprintf("Attempting connection to Cassandra cluster in %s...", waitTime), zap.String("attempt", strconv.Itoa(attempt)))
 		time.Sleep(waitTime)
 		if c.session, err = cluster.CreateSession(); err == nil {
-			break
+			return
 		}
 	}
-	if err != nil {
-		c.logger.Error("unable to establish connection to Cassandra cluster", zap.Error(err))
-	}
+	c.logger.Error("unable to establish connection to Cassandra cluster", zap.Error(err))
 	return
 }
 
