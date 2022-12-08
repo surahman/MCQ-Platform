@@ -2,6 +2,7 @@ package cassandra
 
 import (
 	"fmt"
+	"github.com/surahman/mcq-platform/pkg/validator"
 	"reflect"
 	"testing"
 
@@ -16,59 +17,75 @@ func TestCassandraConfigs_Load(t *testing.T) {
 	keyspaceKey := fmt.Sprintf("%s_KEYSPACE.REPLICATION_CLASS", constants.GetCassandraPrefix())
 
 	testCases := []struct {
-		name      string
-		input     string
-		envValue  string
-		expectErr require.ErrorAssertionFunc
+		name         string
+		input        string
+		envValue     string
+		expectErrCnt int
+		expectErr    require.ErrorAssertionFunc
 	}{
 		// ----- test cases start ----- //
 		{
-			"empty - etc dir",
-			cassandraConfigTestData["empty"],
-			xid.New().String(),
-			require.Error,
+			name:         "empty - etc dir",
+			input:        cassandraConfigTestData["empty"],
+			envValue:     xid.New().String(),
+			expectErrCnt: 10,
+			expectErr:    require.Error,
 		},
 		{
-			"valid - etc dir",
-			cassandraConfigTestData["valid"],
-			xid.New().String(),
-			require.NoError,
+			name:         "valid - etc dir",
+			input:        cassandraConfigTestData["valid"],
+			envValue:     xid.New().String(),
+			expectErrCnt: 0,
+			expectErr:    require.NoError,
 		},
 		{
-			"no password - etc dir",
-			cassandraConfigTestData["password_empty"],
-			xid.New().String(),
-			require.Error,
+			name:         "no password - etc dir",
+			input:        cassandraConfigTestData["password_empty"],
+			envValue:     xid.New().String(),
+			expectErrCnt: 1,
+			expectErr:    require.Error,
 		},
 		{
-			"no username - etc dir",
-			cassandraConfigTestData["username_empty"],
-			xid.New().String(),
-			require.Error,
+			name:         "no username - etc dir",
+			input:        cassandraConfigTestData["username_empty"],
+			envValue:     xid.New().String(),
+			expectErrCnt: 1,
+			expectErr:    require.Error,
 		},
 		{
-			"no keyspace - etc dir",
-			cassandraConfigTestData["keyspace_empty"],
-			xid.New().String(),
-			require.Error,
+			name:         "no keyspace - etc dir",
+			input:        cassandraConfigTestData["keyspace_empty"],
+			envValue:     xid.New().String(),
+			expectErrCnt: 1,
+			expectErr:    require.Error,
 		},
 		{
-			"no consistency - etc dir",
-			cassandraConfigTestData["consistency_missing"],
-			xid.New().String(),
-			require.Error,
+			name:         "no consistency - etc dir",
+			input:        cassandraConfigTestData["consistency_missing"],
+			envValue:     xid.New().String(),
+			expectErrCnt: 1,
+			expectErr:    require.Error,
 		},
 		{
-			"no ip - etc dir",
-			cassandraConfigTestData["ip_empty"],
-			xid.New().String(),
-			require.Error,
+			name:         "no ip - etc dir",
+			input:        cassandraConfigTestData["ip_empty"],
+			envValue:     xid.New().String(),
+			expectErrCnt: 1,
+			expectErr:    require.Error,
 		},
 		{
-			"timeout zero - etc dir",
-			cassandraConfigTestData["timeout_zero"],
-			xid.New().String(),
-			require.Error,
+			name:         "timeout zero - etc dir",
+			input:        cassandraConfigTestData["timeout_zero"],
+			envValue:     xid.New().String(),
+			expectErrCnt: 1,
+			expectErr:    require.Error,
+		},
+		{
+			name:         "invalid max connection attempts - etc dir",
+			input:        cassandraConfigTestData["invalid_min_max_conn_attempts"],
+			envValue:     xid.New().String(),
+			expectErrCnt: 1,
+			expectErr:    require.Error,
 		},
 		// ----- test cases end ----- //
 	}
@@ -85,6 +102,8 @@ func TestCassandraConfigs_Load(t *testing.T) {
 			testCase.expectErr(t, err)
 
 			if err != nil {
+				errorList := err.(*validator.ErrorValidation).Errors
+				require.Equalf(t, testCase.expectErrCnt, len(errorList), "expected error count does not match: %v", errorList)
 				return
 			}
 
