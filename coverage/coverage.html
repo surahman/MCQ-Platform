@@ -61,7 +61,7 @@
 				
 				<option value="file2">github.com/surahman/mcq-platform/pkg/auth/testdata.go (100.0%)</option>
 				
-				<option value="file3">github.com/surahman/mcq-platform/pkg/cassandra/cassandra.go (85.4%)</option>
+				<option value="file3">github.com/surahman/mcq-platform/pkg/cassandra/cassandra.go (85.1%)</option>
 				
 				<option value="file4">github.com/surahman/mcq-platform/pkg/cassandra/cassandra_queries.go (85.2%)</option>
 				
@@ -69,7 +69,7 @@
 				
 				<option value="file6">github.com/surahman/mcq-platform/pkg/cassandra/error.go (91.7%)</option>
 				
-				<option value="file7">github.com/surahman/mcq-platform/pkg/cassandra/testdata.go (86.8%)</option>
+				<option value="file7">github.com/surahman/mcq-platform/pkg/cassandra/testdata.go (83.7%)</option>
 				
 				<option value="file8">github.com/surahman/mcq-platform/pkg/config_loader/config_loader.go (86.7%)</option>
 				
@@ -133,7 +133,7 @@
 				
 				<option value="file38">github.com/surahman/mcq-platform/pkg/redis/error.go (100.0%)</option>
 				
-				<option value="file39">github.com/surahman/mcq-platform/pkg/redis/redis.go (89.8%)</option>
+				<option value="file39">github.com/surahman/mcq-platform/pkg/redis/redis.go (89.7%)</option>
 				
 				<option value="file40">github.com/surahman/mcq-platform/pkg/redis/testdata.go (100.0%)</option>
 				
@@ -565,19 +565,18 @@ general:
 		<pre class="file" id="file3" style="display: none">package cassandra
 
 import (
-    "encoding/base64"
-    "errors"
-    "fmt"
-    "math"
-    "strconv"
-    "time"
+        "encoding/base64"
+        "errors"
+        "fmt"
+        "math"
+        "strconv"
+        "time"
 
-    "github.com/gocql/gocql"
-    "github.com/spf13/afero"
-    "github.com/surahman/mcq-platform/pkg/constants"
-    "github.com/surahman/mcq-platform/pkg/logger"
-    "go.uber.org/zap"
-    "golang.org/x/crypto/blake2b"
+        "github.com/gocql/gocql"
+        "github.com/spf13/afero"
+        "github.com/surahman/mcq-platform/pkg/logger"
+        "go.uber.org/zap"
+        "golang.org/x/crypto/blake2b"
 )
 
 // Mock Cassandra interface stub generation.
@@ -585,14 +584,14 @@ import (
 
 // Cassandra is the interface through which the cluster can be accessed. Created to support mock testing.
 type Cassandra interface {
-    // Open will create a connection pool and establish a connection to the database backend.
-    Open() error
+        // Open will create a connection pool and establish a connection to the database backend.
+        Open() error
 
-    // Close will shut down the connection pool and ensure that the connection to the database backend is terminated correctly.
-    Close() error
+        // Close will shut down the connection pool and ensure that the connection to the database backend is terminated correctly.
+        Close() error
 
-    // Execute will execute statements or run a lightweight transaction on the database backend, leveraging the connection pool.
-    Execute(func(Cassandra, any) (any, error), any) (any, error)
+        // Execute will execute statements or run a lightweight transaction on the database backend, leveraging the connection pool.
+        Execute(func(Cassandra, any) (any, error), any) (any, error)
 }
 
 // Check to ensure the Cassandra interface has been implemented.
@@ -600,112 +599,111 @@ var _ Cassandra = &amp;cassandraImpl{}
 
 // CassandraImpl implements the Cassandra interface and contains the logic to interface with the cluster.
 type cassandraImpl struct {
-    conf    *config
-    session *gocql.Session
-    logger  *logger.Logger
+        conf    *config
+        session *gocql.Session
+        logger  *logger.Logger
 }
 
 // NewCassandra will create a new Cassandra configuration by loading it.
 func NewCassandra(fs *afero.Fs, logger *logger.Logger) (Cassandra, error) <span class="cov4" title="7">{
-    if fs == nil || logger == nil </span><span class="cov3" title="3">{
-        return nil, errors.New("nil file system of logger supplied")
-    }</span>
-    <span class="cov3" title="4">return newCassandraImpl(fs, logger)</span>
+        if fs == nil || logger == nil </span><span class="cov3" title="3">{
+                return nil, errors.New("nil file system of logger supplied")
+        }</span>
+        <span class="cov3" title="4">return newCassandraImpl(fs, logger)</span>
 }
 
 // newCassandraImpl will create a new CassandraImpl configuration and load it from disk.
 func newCassandraImpl(fs *afero.Fs, logger *logger.Logger) (c *cassandraImpl, err error) <span class="cov4" title="7">{
-    c = &amp;cassandraImpl{conf: newConfig(), logger: logger}
-    if err = c.conf.Load(*fs); err != nil </span><span class="cov1" title="1">{
-        c.logger.Error("failed to load Cassandra configurations from disk", zap.Error(err))
-        return nil, err
-    }</span>
-    <span class="cov4" title="6">return</span>
+        c = &amp;cassandraImpl{conf: newConfig(), logger: logger}
+        if err = c.conf.Load(*fs); err != nil </span><span class="cov1" title="1">{
+                c.logger.Error("failed to load Cassandra configurations from disk", zap.Error(err))
+                return nil, err
+        }</span>
+        <span class="cov4" title="6">return</span>
 }
 
 // Open will start a database connection pool and establish a connection.
 func (c *cassandraImpl) Open() (err error) <span class="cov3" title="3">{
-    // Stop connection leaks.
-    if err = c.verifySession(); err == nil </span><span class="cov1" title="1">{
-        c.logger.Warn("session to cluster is already established")
-        return errors.New("session to cluster is already established")
-    }</span>
+        // Stop connection leaks.
+        if err = c.verifySession(); err == nil </span><span class="cov1" title="1">{
+                c.logger.Warn("session to cluster is already established")
+                return errors.New("session to cluster is already established")
+        }</span>
 
-    // Configure connection.
-    <span class="cov2" title="2">var cluster *gocql.ClusterConfig
-    cluster, err = c.configureCluster()
-    if err != nil </span><span class="cov0" title="0">{
-        c.logger.Error("failed to configure connection to Cassandra cluster", zap.Error(err))
-        return
-    }</span>
+        // Configure connection.
+        <span class="cov2" title="2">var cluster *gocql.ClusterConfig
+        cluster, err = c.configureCluster()
+        if err != nil </span><span class="cov0" title="0">{
+                c.logger.Error("failed to configure connection to Cassandra cluster", zap.Error(err))
+                return
+        }</span>
 
-    // Session connection pool.
-    <span class="cov2" title="2">if err = c.createSessionRetry(cluster); err != nil </span><span class="cov0" title="0">{
-        return
-    }</span>
+        // Session connection pool.
+        <span class="cov2" title="2">if err = c.createSessionRetry(cluster); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
 
-    <span class="cov2" title="2">return</span>
+        <span class="cov2" title="2">return</span>
 }
 
 // Close the CassandraImpl cluster connection.
 func (c *cassandraImpl) Close() error <span class="cov3" title="4">{
-    if err := c.verifySession(); err != nil </span><span class="cov2" title="2">{
-        return err
-    }</span>
-    <span class="cov2" title="2">c.session.Close()
-    return nil</span>
+        if err := c.verifySession(); err != nil </span><span class="cov2" title="2">{
+                return err
+        }</span>
+        <span class="cov2" title="2">c.session.Close()
+        return nil</span>
 }
 
 // Execute wraps the methods that create, read, update, and delete records from tables on the Cassandra cluster.
 func (c *cassandraImpl) Execute(request func(Cassandra, any) (any, error), params any) (any, error) <span class="cov10" title="117">{
-    return request(c, params)
+        return request(c, params)
 }</span>
 
 // configureCluster will configure the settings for the Cassandra cluster.
 func (c *cassandraImpl) configureCluster() (cluster *gocql.ClusterConfig, err error) <span class="cov3" title="3">{
-    cluster = gocql.NewCluster(c.conf.Connection.ClusterIP...)
-    cluster.ProtoVersion = c.conf.Connection.ProtoVersion
-    cluster.ConnectTimeout = time.Duration(c.conf.Connection.Timeout) * time.Second
-    cluster.Timeout = time.Duration(c.conf.Connection.Timeout) * time.Second
-    if cluster.Consistency, err = gocql.ParseConsistencyWrapper(c.conf.Connection.Consistency); err != nil </span><span class="cov0" title="0">{
-        c.logger.Error("failed to parse Cassandra consistency level provided in user configs", zap.Error(err))
-        return nil, err
-    }</span>
-    <span class="cov3" title="3">cluster.Keyspace = c.conf.Keyspace.Name
+        cluster = gocql.NewCluster(c.conf.Connection.ClusterIP...)
+        cluster.ProtoVersion = c.conf.Connection.ProtoVersion
+        cluster.ConnectTimeout = time.Duration(c.conf.Connection.Timeout) * time.Second
+        cluster.Timeout = time.Duration(c.conf.Connection.Timeout) * time.Second
+        if cluster.Consistency, err = gocql.ParseConsistencyWrapper(c.conf.Connection.Consistency); err != nil </span><span class="cov0" title="0">{
+                c.logger.Error("failed to parse Cassandra consistency level provided in user configs", zap.Error(err))
+                return nil, err
+        }</span>
+        <span class="cov3" title="3">cluster.Keyspace = c.conf.Keyspace.Name
 
-    // Configure authentication.
-    cluster.Authenticator = gocql.PasswordAuthenticator{Username: c.conf.Authentication.Username, Password: c.conf.Authentication.Password}
+        // Configure authentication.
+        cluster.Authenticator = gocql.PasswordAuthenticator{Username: c.conf.Authentication.Username, Password: c.conf.Authentication.Password}
 
-    return</span>
+        return</span>
 }
 
 // verifySession will check to see if a session is established.
 func (c *cassandraImpl) verifySession() error <span class="cov4" title="8">{
-    if c.session == nil || c.session.Closed() </span><span class="cov4" title="5">{
-        return errors.New("no session established")
-    }</span>
-    <span class="cov3" title="3">return nil</span>
+        if c.session == nil || c.session.Closed() </span><span class="cov4" title="5">{
+                return errors.New("no session established")
+        }</span>
+        <span class="cov3" title="3">return nil</span>
 }
 
 // createSessionRetry will attempt to open the connection using binary exponential back-off and stop on the first success or fail after the last one.
 func (c *cassandraImpl) createSessionRetry(cluster *gocql.ClusterConfig) (err error) <span class="cov3" title="4">{
-    maxAttempts := constants.GetCassandraMaxConnectRetries()
-    for attempt := 1; attempt &lt;= maxAttempts; attempt++ </span><span class="cov3" title="4">{
-        waitTime := time.Duration(math.Pow(2, float64(attempt))) * time.Second
-        c.logger.Info(fmt.Sprintf("Attempting connection to Cassandra cluster in %s...", waitTime), zap.String("attempt", strconv.Itoa(attempt)))
-        time.Sleep(waitTime)
-        if c.session, err = cluster.CreateSession(); err == nil </span><span class="cov3" title="4">{
-            return
-        }</span>
-    }
-    <span class="cov0" title="0">c.logger.Error("unable to establish connection to Cassandra cluster", zap.Error(err))
-    return</span>
+        for attempt := 1; attempt &lt;= c.conf.Connection.MaxConnAttempts; attempt++ </span><span class="cov3" title="4">{
+                waitTime := time.Duration(math.Pow(2, float64(attempt))) * time.Second
+                c.logger.Info(fmt.Sprintf("Attempting connection to Cassandra cluster in %s...", waitTime), zap.String("attempt", strconv.Itoa(attempt)))
+                time.Sleep(waitTime)
+                if c.session, err = cluster.CreateSession(); err == nil </span><span class="cov3" title="4">{
+                        return
+                }</span>
+        }
+        <span class="cov0" title="0">c.logger.Error("unable to establish connection to Cassandra cluster", zap.Error(err))
+        return</span>
 }
 
 // blake2b256 will create a hash from an input string. This hash is used to create the Account ID for a user.
 func blake2b256(data string) string <span class="cov7" title="35">{
-    hash := blake2b.Sum256([]byte(data))
-    return base64.URLEncoding.EncodeToString(hash[:])
+        hash := blake2b.Sum256([]byte(data))
+        return base64.URLEncoding.EncodeToString(hash[:])
 }</span>
 </pre>
 		
@@ -1083,10 +1081,11 @@ type config struct {
                 ReplicationFactor int    `json:"replication_factor,omitempty" yaml:"replication_factor,omitempty" mapstructure:"replication_factor" validate:"required,numeric,min=1"`
         } `json:"keyspace,omitempty" yaml:"keyspace,omitempty" mapstructure:"keyspace"`
         Connection struct {
-                Consistency  string   `json:"consistency,omitempty" yaml:"consistency,omitempty" mapstructure:"consistency" validate:"required"`
-                ClusterIP    []string `json:"cluster_ip,omitempty" yaml:"cluster_ip,omitempty" mapstructure:"cluster_ip" validate:"required,min=1"`
-                ProtoVersion int      `json:"proto_version,omitempty" yaml:"proto_version,omitempty" mapstructure:"proto_version" validate:"required,numeric,min=4"`
-                Timeout      int      `json:"timeout,omitempty" yaml:"timeout,omitempty" mapstructure:"timeout" validate:"required,numeric,min=1"`
+                Consistency     string   `json:"consistency,omitempty" yaml:"consistency,omitempty" mapstructure:"consistency" validate:"required"`
+                ClusterIP       []string `json:"cluster_ip,omitempty" yaml:"cluster_ip,omitempty" mapstructure:"cluster_ip" validate:"required,min=1"`
+                ProtoVersion    int      `json:"proto_version,omitempty" yaml:"proto_version,omitempty" mapstructure:"proto_version" validate:"required,numeric,min=4"`
+                MaxConnAttempts int      `json:"max_connection_attempts,omitempty" yaml:"max_connection_attempts,omitempty" mapstructure:"max_connection_attempts" validate:"required,min=1"`
+                Timeout         int      `json:"timeout,omitempty" yaml:"timeout,omitempty" mapstructure:"timeout" validate:"required,numeric,min=1"`
         } `json:"connection,omitempty" yaml:"connection,omitempty" mapstructure:"connection"`
 }
 
@@ -1096,7 +1095,7 @@ func newConfig() *config <span class="cov7" title="7">{
 }</span>
 
 // Load will attempt to load configurations from a file on a file system and then overwrite values using environment variables.
-func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="16">{
+func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="17">{
         return config_loader.ConfigLoader(fs, cfg, constants.GetCassandraFileName(), constants.GetCassandraPrefix(), "yaml")
 }</span>
 </pre>
@@ -1169,11 +1168,10 @@ var quizzesUUIDMapping = GetQuizzedUUIDMapping()
 
 // configTestData will return a map of test data containing valid and invalid Cassandra configs.
 func configTestData() map[string]string <span class="cov1" title="1">{
-        testData := make(map[string]string)
+        return map[string]string{
+                "empty": ``,
 
-        testData["empty"] = ``
-
-        testData["valid"] = `
+                "valid": `
 authentication:
   username: admin
   password: root
@@ -1185,9 +1183,10 @@ connection:
   consistency: quorum
   cluster_ip: [127.0.0.1]
   proto_version: 4
-  timeout: 10`
+  timeout: 10
+  max_connection_attempts: 5`,
 
-        testData["valid-ci"] = `
+                "valid-ci": `
 authentication:
   username: cassandra
   password: cassandra
@@ -1199,9 +1198,10 @@ connection:
   consistency: quorum
   cluster_ip: [localhost]
   proto_version: 4
-  timeout: 10`
+  timeout: 10
+  max_connection_attempts: 5`,
 
-        testData["password_empty"] = `
+                "password_empty": `
 authentication:
   username: admin
   password:
@@ -1213,9 +1213,10 @@ connection:
   consistency: quorum
   cluster_ip: [127.0.0.1]
   proto_version: 4
-  timeout: 10`
+  timeout: 10
+  max_connection_attempts: 5`,
 
-        testData["username_empty"] = `
+                "username_empty": `
 authentication:
   username:
   password: root
@@ -1227,9 +1228,10 @@ connection:
   consistency: quorum
   cluster_ip: [127.0.0.1]
   proto_version: 4
-  timeout: 10`
+  timeout: 10
+  max_connection_attempts: 5`,
 
-        testData["keyspace_empty"] = `
+                "keyspace_empty": `
 authentication:
   username: admin
   password: root
@@ -1241,9 +1243,10 @@ connection:
   consistency: quorum
   cluster_ip: [127.0.0.1]
   proto_version: 4
-  timeout: 10`
+  timeout: 10
+  max_connection_attempts: 5`,
 
-        testData["consistency_missing"] = `
+                "consistency_missing": `
 authentication:
   username: admin
   password: root
@@ -1254,9 +1257,10 @@ keyspace:
 connection:
   cluster_ip: [127.0.0.1]
   proto_version: 4
-  timeout: 10`
+  timeout: 10
+  max_connection_attempts: 5`,
 
-        testData["ip_empty"] = `
+                "ip_empty": `
 authentication:
   username: admin
   password: root
@@ -1268,9 +1272,10 @@ connection:
   consistency: quorum
   cluster_ip: []
   proto_version: 4
-  timeout: 10`
+  timeout: 10
+  max_connection_attempts: 5`,
 
-        testData["timeout_zero"] = `
+                "timeout_zero": `
 authentication:
   username: admin
   password: root
@@ -1282,9 +1287,39 @@ connection:
   consistency: quorum
   cluster_ip: [127.0.0.1]
   proto_version: 4
-  timeout: 0`
+  timeout: 0
+  max_connection_attempts: 5`,
 
-        return testData
+                "invalid_min_max_conn_attempts": `
+authentication:
+  username: admin
+  password: root
+keyspace:
+  name: mcq_platform
+  replication_class: SimpleStrategy
+  replication_factor: 3
+connection:
+  consistency: quorum
+  cluster_ip: [127.0.0.1]
+  proto_version: 4
+  timeout: 10
+  max_connection_attempts: 0`,
+
+                "test_suite": `
+authentication:
+  username: admin
+  password: root
+keyspace:
+  name: mcq_platform
+  replication_class: SimpleStrategy
+  replication_factor: 3
+connection:
+  consistency: quorum
+  cluster_ip: [127.0.0.1]
+  proto_version: 4
+  timeout: 10
+  max_connection_attempts: 2`,
+        }
 }</span>
 
 // GetQuizzedUUIDMapping returns a map containing a Quiz title to UUID mapping.
@@ -1588,133 +1623,121 @@ parent_level_2:
 		<pre class="file" id="file10" style="display: none">package constants
 
 const (
-    // Configuration file directories
-    configEtcDir  = "/etc/MCQ_Platform.conf/"
-    configHomeDir = "$HOME/.MCQ_Platform/"
-    configBaseDir = "./configs/"
+        // Configuration file directories
+        configEtcDir  = "/etc/MCQ_Platform.conf/"
+        configHomeDir = "$HOME/.MCQ_Platform/"
+        configBaseDir = "./configs/"
 
-    // Configuration file names
-    cassandraConfigFileName = "CassandraConfig.yaml"
-    loggerConfigFileName    = "LoggerConfig.yaml"
-    authConfigFileName      = "AuthConfig.yaml"
-    restConfigFileName      = "HTTPRESTConfig.yaml"
-    graphqlConfigFileName   = "GraphQLConfig.yaml"
-    redisConfigFileName     = "RedisConfig.yaml"
+        // Configuration file names
+        cassandraConfigFileName = "CassandraConfig.yaml"
+        loggerConfigFileName    = "LoggerConfig.yaml"
+        authConfigFileName      = "AuthConfig.yaml"
+        restConfigFileName      = "HTTPRESTConfig.yaml"
+        graphqlConfigFileName   = "GraphQLConfig.yaml"
+        redisConfigFileName     = "RedisConfig.yaml"
 
-    // Environment variables
-    cassandraPrefix = "CASSANDRA"
-    loggerPrefix    = "LOGGER"
-    githubCIKey     = "GITHUB_ACTIONS_CI"
-    authPrefix      = "AUTH"
-    restPrefix      = "REST"
-    graphqlPrefix   = "GRAPHQL"
-    redisPrefix     = "REDIS"
+        // Environment variables
+        cassandraPrefix = "CASSANDRA"
+        loggerPrefix    = "LOGGER"
+        githubCIKey     = "GITHUB_ACTIONS_CI"
+        authPrefix      = "AUTH"
+        restPrefix      = "REST"
+        graphqlPrefix   = "GRAPHQL"
+        redisPrefix     = "REDIS"
 
-    // Misc.
-    integrationTestKeyspaceSuffix = "_integration_testing"
-    cassandraMaxConnectRetries    = 5
-    redisMaxConnectRetries        = 5
-    deleteUserAccountConfirmation = "I understand the consequences, delete my user account %s"
+        // Misc.
+        integrationTestKeyspaceSuffix = "_integration_testing"
+        deleteUserAccountConfirmation = "I understand the consequences, delete my user account %s"
 )
 
 // GetEtcDir returns the configuration directory in Etc.
 func GetEtcDir() string <span class="cov8" title="1">{
-    return configEtcDir
+        return configEtcDir
 }</span>
 
 // GetHomeDir returns the configuration directory in users home.
 func GetHomeDir() string <span class="cov8" title="1">{
-    return configHomeDir
+        return configHomeDir
 }</span>
 
 // GetBaseDir returns the configuration base directory in the root of the application.
 func GetBaseDir() string <span class="cov8" title="1">{
-    return configBaseDir
+        return configBaseDir
 }</span>
 
 // GetCassandraFileName returns the Cassandra configuration file name.
 func GetCassandraFileName() string <span class="cov8" title="1">{
-    return cassandraConfigFileName
+        return cassandraConfigFileName
 }</span>
 
 // GetLoggerFileName returns the Zap logger configuration file name.
 func GetLoggerFileName() string <span class="cov8" title="1">{
-    return loggerConfigFileName
+        return loggerConfigFileName
 }</span>
 
 // GetAuthFileName returns the authentication configuration file name.
 func GetAuthFileName() string <span class="cov8" title="1">{
-    return authConfigFileName
+        return authConfigFileName
 }</span>
 
 // GetHTTPRESTFileName returns the HTTP REST endpoint configuration file name.
 func GetHTTPRESTFileName() string <span class="cov8" title="1">{
-    return restConfigFileName
+        return restConfigFileName
 }</span>
 
 // GetGraphQLFileName returns the HTTP GraphQL endpoint configuration file name.
 func GetGraphQLFileName() string <span class="cov8" title="1">{
-    return graphqlConfigFileName
+        return graphqlConfigFileName
 }</span>
 
 // GetRedisFileName returns the Redis cluster configuration file name.
 func GetRedisFileName() string <span class="cov8" title="1">{
-    return redisConfigFileName
+        return redisConfigFileName
 }</span>
 
 // GetCassandraPrefix returns the environment variable prefix for Cassandra.
 func GetCassandraPrefix() string <span class="cov8" title="1">{
-    return cassandraPrefix
+        return cassandraPrefix
 }</span>
 
 // GetLoggerPrefix returns the environment variable prefix for the Zap logger.
 func GetLoggerPrefix() string <span class="cov8" title="1">{
-    return loggerPrefix
+        return loggerPrefix
 }</span>
 
 // GetAuthPrefix returns the environment variable prefix for authentication.
 func GetAuthPrefix() string <span class="cov8" title="1">{
-    return authPrefix
+        return authPrefix
 }</span>
 
 // GetHTTPRESTPrefix returns the environment variable prefix for the HTTP REST endpoint.
 func GetHTTPRESTPrefix() string <span class="cov8" title="1">{
-    return restPrefix
+        return restPrefix
 }</span>
 
 // GetGraphQLPrefix returns the environment variable prefix for the HTTP GraphQL endpoint.
 func GetGraphQLPrefix() string <span class="cov8" title="1">{
-    return graphqlPrefix
+        return graphqlPrefix
 }</span>
 
 // GetRedisPrefix returns the environment variable prefix for the Redis cluster.
 func GetRedisPrefix() string <span class="cov8" title="1">{
-    return redisPrefix
+        return redisPrefix
 }</span>
 
 // GetIntegrationTestKeyspaceSuffix is the suffix attached to the clusters keyspace and is used for integration tests.
 func GetIntegrationTestKeyspaceSuffix() string <span class="cov8" title="1">{
-    return integrationTestKeyspaceSuffix
-}</span>
-
-// GetCassandraMaxConnectRetries is the maximum number of attempts to retry connecting to the Cassandra cluster.
-func GetCassandraMaxConnectRetries() int <span class="cov8" title="1">{
-    return cassandraMaxConnectRetries
-}</span>
-
-// GetRedisMaxConnectRetries is the maximum number of attempts to retry connecting to the Redis cluster.
-func GetRedisMaxConnectRetries() int <span class="cov8" title="1">{
-    return redisMaxConnectRetries
+        return integrationTestKeyspaceSuffix
 }</span>
 
 // GetGithubCIKey is the key for the environment variable expected to be present in the GH CI runner.
 func GetGithubCIKey() string <span class="cov8" title="1">{
-    return githubCIKey
+        return githubCIKey
 }</span>
 
 // GetDeleteUserAccountConfirmation is the format string template confirmation message used to delete a user account.
 func GetDeleteUserAccountConfirmation() string <span class="cov8" title="1">{
-    return deleteUserAccountConfirmation
+        return deleteUserAccountConfirmation
 }</span>
 </pre>
 		
@@ -4521,13 +4544,14 @@ type config struct {
                 Password string `json:"password,omitempty" yaml:"password,omitempty" mapstructure:"password" validate:"required"`
         } `json:"authentication,omitempty" yaml:"authentication,omitempty" mapstructure:"authentication"`
         Connection struct {
-                Addrs          []string `json:"addrs,omitempty" yaml:"addrs,omitempty" mapstructure:"addrs" validate:"required,min=1"`
-                MaxRedirects   int      `json:"max_redirects,omitempty" yaml:"max_redirects,omitempty" mapstructure:"max_redirects" validate:"required,min=1"`
-                MaxRetries     int      `json:"max_retries,omitempty" yaml:"max_retries,omitempty" mapstructure:"max_retries" validate:"required,min=1"`
-                PoolSize       int      `json:"pool_size,omitempty" yaml:"pool_size,omitempty" mapstructure:"pool_size" validate:"required,min=1"`
-                MinIdleConns   int      `json:"min_idle_conns,omitempty" yaml:"min_idle_conns,omitempty" mapstructure:"min_idle_conns" validate:"required,min=1"`
-                ReadOnly       bool     `json:"read_only,omitempty" yaml:"read_only,omitempty" mapstructure:"read_only"`
-                RouteByLatency bool     `json:"route_by_latency,omitempty" yaml:"route_by_latency,omitempty" mapstructure:"route_by_latency"`
+                Addrs           []string `json:"addrs,omitempty" yaml:"addrs,omitempty" mapstructure:"addrs" validate:"required,min=1"`
+                MaxConnAttempts int      `json:"max_connection_attempts,omitempty" yaml:"max_connection_attempts,omitempty" mapstructure:"max_connection_attempts" validate:"required,min=1"`
+                MaxRedirects    int      `json:"max_redirects,omitempty" yaml:"max_redirects,omitempty" mapstructure:"max_redirects" validate:"required,min=1"`
+                MaxRetries      int      `json:"max_retries,omitempty" yaml:"max_retries,omitempty" mapstructure:"max_retries" validate:"required,min=1"`
+                PoolSize        int      `json:"pool_size,omitempty" yaml:"pool_size,omitempty" mapstructure:"pool_size" validate:"required,min=1"`
+                MinIdleConns    int      `json:"min_idle_conns,omitempty" yaml:"min_idle_conns,omitempty" mapstructure:"min_idle_conns" validate:"required,min=1"`
+                ReadOnly        bool     `json:"read_only,omitempty" yaml:"read_only,omitempty" mapstructure:"read_only"`
+                RouteByLatency  bool     `json:"route_by_latency,omitempty" yaml:"route_by_latency,omitempty" mapstructure:"route_by_latency"`
         } `json:"connection,omitempty" yaml:"connection,omitempty" mapstructure:"connection"`
         Data struct {
                 TTL int64 `json:"ttl,omitempty" yaml:"ttl,omitempty" mapstructure:"ttl" validate:"omitempty,min=60"`
@@ -4540,7 +4564,7 @@ func newConfig() *config <span class="cov4" title="3">{
 }</span>
 
 // Load will attempt to load configurations from a file on a file system and then overwrite values using environment variables.
-func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="13">{
+func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="14">{
         return config_loader.ConfigLoader(fs, cfg, constants.GetRedisFileName(), constants.GetRedisPrefix(), "yaml")
 }</span>
 </pre>
@@ -4596,20 +4620,19 @@ func (e *Error) errorCacheDel() *Error <span class="cov1" title="1">{
 		<pre class="file" id="file39" style="display: none">package redis
 
 import (
-    "bytes"
-    "context"
-    "encoding/gob"
-    "errors"
-    "fmt"
-    "github.com/surahman/mcq-platform/pkg/constants"
-    "math"
-    "strconv"
-    "time"
+        "bytes"
+        "context"
+        "encoding/gob"
+        "errors"
+        "fmt"
+        "math"
+        "strconv"
+        "time"
 
-    "github.com/go-redis/redis/v9"
-    "github.com/spf13/afero"
-    "github.com/surahman/mcq-platform/pkg/logger"
-    "go.uber.org/zap"
+        "github.com/go-redis/redis/v9"
+        "github.com/spf13/afero"
+        "github.com/surahman/mcq-platform/pkg/logger"
+        "go.uber.org/zap"
 )
 
 // Mock Redis interface stub generation.
@@ -4617,23 +4640,23 @@ import (
 
 // Redis is the interface through which the cluster can be accessed. Created to support mock testing.
 type Redis interface {
-    // Open will create a connection pool and establish a connection to the cache cluster.
-    Open() error
+        // Open will create a connection pool and establish a connection to the cache cluster.
+        Open() error
 
-    // Close will shut down the connection pool and ensure that the connection to the cache cluster is terminated correctly.
-    Close() error
+        // Close will shut down the connection pool and ensure that the connection to the cache cluster is terminated correctly.
+        Close() error
 
-    // Healthcheck will ping all the nodes in the cluster to see if all the shards are reachable.
-    Healthcheck() error
+        // Healthcheck will ping all the nodes in the cluster to see if all the shards are reachable.
+        Healthcheck() error
 
-    // Set will place a key with a given value in the cluster with a TTL, if specified in the configurations.
-    Set(string, any) error
+        // Set will place a key with a given value in the cluster with a TTL, if specified in the configurations.
+        Set(string, any) error
 
-    // Get will retrieve a value associated with a provided key.
-    Get(string, any) error
+        // Get will retrieve a value associated with a provided key.
+        Get(string, any) error
 
-    // Del will remove all keys provided as a set of keys.
-    Del(...string) error
+        // Del will remove all keys provided as a set of keys.
+        Del(...string) error
 }
 
 // Check to ensure the Redis interface has been implemented.
@@ -4641,141 +4664,140 @@ var _ Redis = &amp;redisImpl{}
 
 // redisImpl implements the Redis interface and contains the logic to interface with the cluster.
 type redisImpl struct {
-    conf    *config
-    redisDb *redis.ClusterClient
-    logger  *logger.Logger
+        conf    *config
+        redisDb *redis.ClusterClient
+        logger  *logger.Logger
 }
 
 // NewRedis will create a new Redis configuration by loading it.
-func NewRedis(fs *afero.Fs, logger *logger.Logger) (Redis, error) <span class="cov5" title="4">{
-    if fs == nil || logger == nil </span><span class="cov4" title="3">{
-        return nil, errors.New("nil file system or logger supplied")
-    }</span>
-    <span class="cov1" title="1">return newRedisImpl(fs, logger)</span>
+func NewRedis(fs *afero.Fs, logger *logger.Logger) (Redis, error) <span class="cov6" title="4">{
+        if fs == nil || logger == nil </span><span class="cov4" title="3">{
+                return nil, errors.New("nil file system or logger supplied")
+        }</span>
+        <span class="cov1" title="1">return newRedisImpl(fs, logger)</span>
 }
 
 // newRedisImpl will create a new redisImpl configuration and load it from disk.
 func newRedisImpl(fs *afero.Fs, logger *logger.Logger) (c *redisImpl, err error) <span class="cov4" title="3">{
-    c = &amp;redisImpl{conf: newConfig(), logger: logger}
-    if err = c.conf.Load(*fs); err != nil </span><span class="cov1" title="1">{
-        c.logger.Error("failed to load Redis configurations from disk", zap.Error(err))
-        return nil, err
-    }</span>
-    <span class="cov3" title="2">return</span>
+        c = &amp;redisImpl{conf: newConfig(), logger: logger}
+        if err = c.conf.Load(*fs); err != nil </span><span class="cov1" title="1">{
+                c.logger.Error("failed to load Redis configurations from disk", zap.Error(err))
+                return nil, err
+        }</span>
+        <span class="cov3" title="2">return</span>
 }
 
 // verifySession will check to see if a session is established.
-func (r *redisImpl) verifySession() error <span class="cov9" title="12">{
-    if r.redisDb == nil || r.redisDb.Ping(context.Background()).Err() != nil </span><span class="cov8" title="10">{
-        return errors.New("no session established")
-    }</span>
-    <span class="cov3" title="2">return nil</span>
+func (r *redisImpl) verifySession() error <span class="cov10" title="12">{
+        if r.redisDb == nil || r.redisDb.Ping(context.Background()).Err() != nil </span><span class="cov9" title="10">{
+                return errors.New("no session established")
+        }</span>
+        <span class="cov3" title="2">return nil</span>
 }
 
 // Open will establish a connection to the Redis cache cluster.
-func (r *redisImpl) Open() (err error) <span class="cov7" title="7">{
-    // Stop connection leaks.
-    if err = r.verifySession(); err == nil </span><span class="cov1" title="1">{
-        r.logger.Warn("session to cluster is already established")
-        return errors.New("session to cluster is already established")
-    }</span>
+func (r *redisImpl) Open() (err error) <span class="cov8" title="7">{
+        // Stop connection leaks.
+        if err = r.verifySession(); err == nil </span><span class="cov1" title="1">{
+                r.logger.Warn("session to cluster is already established")
+                return errors.New("session to cluster is already established")
+        }</span>
 
-    <span class="cov7" title="6">r.redisDb = redis.NewClusterClient(&amp;redis.ClusterOptions{
-        Addrs:          r.conf.Connection.Addrs,
-        MaxRedirects:   r.conf.Connection.MaxRedirects,
-        ReadOnly:       r.conf.Connection.ReadOnly,
-        RouteByLatency: r.conf.Connection.RouteByLatency,
-        Password:       r.conf.Authentication.Password,
-        MaxRetries:     r.conf.Connection.MaxRetries,
-        PoolSize:       r.conf.Connection.PoolSize,
-        MinIdleConns:   r.conf.Connection.MinIdleConns,
-    })
+        <span class="cov7" title="6">r.redisDb = redis.NewClusterClient(&amp;redis.ClusterOptions{
+                Addrs:          r.conf.Connection.Addrs,
+                MaxRedirects:   r.conf.Connection.MaxRedirects,
+                ReadOnly:       r.conf.Connection.ReadOnly,
+                RouteByLatency: r.conf.Connection.RouteByLatency,
+                Password:       r.conf.Authentication.Password,
+                MaxRetries:     r.conf.Connection.MaxRetries,
+                PoolSize:       r.conf.Connection.PoolSize,
+                MinIdleConns:   r.conf.Connection.MinIdleConns,
+        })
 
-    return r.createSessionRetry()</span>
+        return r.createSessionRetry()</span>
 }
 
 // Close will terminate a connection to the Redis cache cluster.
 func (r *redisImpl) Close() (err error) <span class="cov4" title="3">{
-    // Check for an open connection.
-    if err = r.verifySession(); err != nil </span><span class="cov3" title="2">{
-        msg := "no session to cluster established to close"
-        r.logger.Warn(msg)
-        return errors.New(msg)
-    }</span>
-    <span class="cov1" title="1">return r.redisDb.Close()</span>
+        // Check for an open connection.
+        if err = r.verifySession(); err != nil </span><span class="cov3" title="2">{
+                msg := "no session to cluster established to close"
+                r.logger.Warn(msg)
+                return errors.New(msg)
+        }</span>
+        <span class="cov1" title="1">return r.redisDb.Close()</span>
 }
 
 // Healthcheck will iterate through all the data shards and attempt to ping them to ensure they are all reachable.
 func (r *redisImpl) Healthcheck() (err error) <span class="cov3" title="2">{
-    err = r.redisDb.ForEachShard(context.Background(), func(ctx context.Context, shard *redis.Client) error </span><span class="cov7" title="6">{
-        return shard.Ping(ctx).Err()
-    }</span>)
-    <span class="cov3" title="2">return</span>
+        err = r.redisDb.ForEachShard(context.Background(), func(ctx context.Context, shard *redis.Client) error </span><span class="cov7" title="6">{
+                return shard.Ping(ctx).Err()
+        }</span>)
+        <span class="cov3" title="2">return</span>
 }
 
 // Set will place a key with a given value in the cluster with a TTL, if specified in the configurations.
 func (r *redisImpl) Set(key string, value any) error <span class="cov3" title="2">{
-    // Write value to byte array.
-    buffer := bytes.Buffer{}
-    encoder := gob.NewEncoder(&amp;buffer)
-    if err := encoder.Encode(value); err != nil </span><span class="cov0" title="0">{
-        return NewError(err.Error())
-    }</span>
+        // Write value to byte array.
+        buffer := bytes.Buffer{}
+        encoder := gob.NewEncoder(&amp;buffer)
+        if err := encoder.Encode(value); err != nil </span><span class="cov0" title="0">{
+                return NewError(err.Error())
+        }</span>
 
-    <span class="cov3" title="2">if err := r.redisDb.Set(context.Background(), key, buffer.Bytes(), time.Duration(r.conf.Data.TTL)*time.Second).Err(); err != nil </span><span class="cov0" title="0">{
-        r.logger.Error("failed to place item in Redis cache", zap.String("key", key), zap.Error(err))
-        return NewError(err.Error()).errorCacheSet()
-    }</span>
-    <span class="cov3" title="2">return nil</span>
+        <span class="cov3" title="2">if err := r.redisDb.Set(context.Background(), key, buffer.Bytes(), time.Duration(r.conf.Data.TTL)*time.Second).Err(); err != nil </span><span class="cov0" title="0">{
+                r.logger.Error("failed to place item in Redis cache", zap.String("key", key), zap.Error(err))
+                return NewError(err.Error()).errorCacheSet()
+        }</span>
+        <span class="cov3" title="2">return nil</span>
 }
 
 // Get will retrieve a value associated with a provided key and write the result into the value parameter.
-func (r *redisImpl) Get(key string, value any) error <span class="cov5" title="4">{
-    var err error
-    var rawData []byte
-    if rawData, err = r.redisDb.Get(context.Background(), key).Bytes(); err != nil </span><span class="cov3" title="2">{
-        return NewError(err.Error()).errorCacheMiss()
-    }</span>
+func (r *redisImpl) Get(key string, value any) error <span class="cov6" title="4">{
+        var err error
+        var rawData []byte
+        if rawData, err = r.redisDb.Get(context.Background(), key).Bytes(); err != nil </span><span class="cov3" title="2">{
+                return NewError(err.Error()).errorCacheMiss()
+        }</span>
 
-    // Convert to struct.
-    <span class="cov3" title="2">decoder := gob.NewDecoder(bytes.NewBuffer(rawData))
-    if err = decoder.Decode(value); err != nil </span><span class="cov0" title="0">{
-        return NewError(err.Error())
-    }</span>
+        // Convert to struct.
+        <span class="cov3" title="2">decoder := gob.NewDecoder(bytes.NewBuffer(rawData))
+        if err = decoder.Decode(value); err != nil </span><span class="cov0" title="0">{
+                return NewError(err.Error())
+        }</span>
 
-    <span class="cov3" title="2">return nil</span>
+        <span class="cov3" title="2">return nil</span>
 }
 
 // Del will remove all keys provided as a list of keys.
-func (r *redisImpl) Del(keys ...string) error <span class="cov5" title="4">{
-    for _, key := range keys </span><span class="cov5" title="4">{
-        intCmd := r.redisDb.Del(context.Background(), key)
-        if err := intCmd.Err(); err != nil </span><span class="cov0" title="0">{
-            r.logger.Error("failed to evict item from Redis cache", zap.String("key", key), zap.Error(err))
-            return NewError(err.Error()).errorCacheDel()
-        }</span>
-        <span class="cov5" title="4">if intCmd.Val() == 0 </span><span class="cov3" title="2">{
-            err := NewError("unable to locate key on Redis cluster").errorCacheMiss()
-            r.logger.Warn("failed to evict item from Redis cache", zap.String("key", key), zap.Error(err))
-            return err
-        }</span>
-    }
-    <span class="cov3" title="2">return nil</span>
+func (r *redisImpl) Del(keys ...string) error <span class="cov6" title="4">{
+        for _, key := range keys </span><span class="cov6" title="4">{
+                intCmd := r.redisDb.Del(context.Background(), key)
+                if err := intCmd.Err(); err != nil </span><span class="cov0" title="0">{
+                        r.logger.Error("failed to evict item from Redis cache", zap.String("key", key), zap.Error(err))
+                        return NewError(err.Error()).errorCacheDel()
+                }</span>
+                <span class="cov6" title="4">if intCmd.Val() == 0 </span><span class="cov3" title="2">{
+                        err := NewError("unable to locate key on Redis cluster").errorCacheMiss()
+                        r.logger.Warn("failed to evict item from Redis cache", zap.String("key", key), zap.Error(err))
+                        return err
+                }</span>
+        }
+        <span class="cov3" title="2">return nil</span>
 }
 
 // createSessionRetry will attempt to open the connection using binary exponential back-off and stop on the first success or fail after the last one.
 func (r *redisImpl) createSessionRetry() (err error) <span class="cov7" title="6">{
-    maxAttempts := constants.GetRedisMaxConnectRetries()
-    for attempt := 1; attempt &lt;= maxAttempts; attempt++ </span><span class="cov10" title="14">{
-        waitTime := time.Duration(math.Pow(2, float64(attempt))) * time.Second
-        r.logger.Info(fmt.Sprintf("Attempting connection to Redis cluster in %s...", waitTime), zap.String("attempt", strconv.Itoa(attempt)))
-        time.Sleep(waitTime)
-        if err = r.redisDb.Ping(context.Background()).Err(); err == nil </span><span class="cov5" title="4">{
-            return
-        }</span>
-    }
-    <span class="cov3" title="2">r.logger.Error("unable to establish connection to Redis cluster", zap.Error(err))
-    return</span>
+        for attempt := 1; attempt &lt;= r.conf.Connection.MaxConnAttempts; attempt++ </span><span class="cov8" title="7">{
+                waitTime := time.Duration(math.Pow(2, float64(attempt))) * time.Second
+                r.logger.Info(fmt.Sprintf("Attempting connection to Redis cluster in %s...", waitTime), zap.String("attempt", strconv.Itoa(attempt)))
+                time.Sleep(waitTime)
+                if err = r.redisDb.Ping(context.Background()).Err(); err == nil </span><span class="cov6" title="4">{
+                        return
+                }</span>
+        }
+        <span class="cov3" title="2">r.logger.Error("unable to establish connection to Redis cluster", zap.Error(err))
+        return</span>
 }
 </pre>
 		
@@ -4791,6 +4813,7 @@ authentication:
   password: root
 connection:
   addrs: [127.0.0.1:6379, 127.0.0.1:6380, 127.0.0.1:6381, 127.0.0.1:6382, 127.0.0.1:6383, 127.0.0.1:6384]
+  max_connection_attempts: 5
   max_redirects: 3
   max_retries: 3
   pool_size: 4
@@ -4805,6 +4828,7 @@ authentication:
   password:
 connection:
   addrs: [127.0.0.1:6379, 127.0.0.1:6380, 127.0.0.1:6381, 127.0.0.1:6382, 127.0.0.1:6383, 127.0.0.1:6384]
+  max_connection_attempts: 5
   max_redirects: 3
   max_retries: 3
   pool_size: 4
@@ -4819,6 +4843,7 @@ authentication:
   password: root
 connection:
   addrs: []
+  max_connection_attempts: 5
   max_redirects: 3
   max_retries: 3
   pool_size: 4
@@ -4833,6 +4858,7 @@ authentication:
   password: root
 connection:
   addrs: [127.0.0.1:6379, 127.0.0.1:6380, 127.0.0.1:6381, 127.0.0.1:6382, 127.0.0.1:6383, 127.0.0.1:6384]
+  max_connection_attempts: 5
   max_redirects: 0
   max_retries: 3
   pool_size: 4
@@ -4847,6 +4873,7 @@ authentication:
   password: root
 connection:
   addrs: [127.0.0.1:6379, 127.0.0.1:6380, 127.0.0.1:6381, 127.0.0.1:6382, 127.0.0.1:6383, 127.0.0.1:6384]
+  max_connection_attempts: 5
   max_redirects: 3
   max_retries: 0
   pool_size: 4
@@ -4861,6 +4888,7 @@ authentication:
   password: root
 connection:
   addrs: [127.0.0.1:6379, 127.0.0.1:6380, 127.0.0.1:6381, 127.0.0.1:6382, 127.0.0.1:6383, 127.0.0.1:6384]
+  max_connection_attempts: 5
   max_redirects: 3
   max_retries: 3
   pool_size: 0
@@ -4875,6 +4903,7 @@ authentication:
   password: root
 connection:
   addrs: [127.0.0.1:6379, 127.0.0.1:6380, 127.0.0.1:6381, 127.0.0.1:6382, 127.0.0.1:6383, 127.0.0.1:6384]
+  max_connection_attempts: 5
   max_redirects: 3
   max_retries: 3
   pool_size: 4
@@ -4889,6 +4918,7 @@ authentication:
   password: root
 connection:
   addrs: [127.0.0.1:6379, 127.0.0.1:6380, 127.0.0.1:6381, 127.0.0.1:6382, 127.0.0.1:6383, 127.0.0.1:6384]
+  max_connection_attempts: 5
   max_redirects: 3
   max_retries: 3
   pool_size: 4
@@ -4897,6 +4927,36 @@ connection:
   route_by_latency: false
 data:
   ttl: 59`,
+
+                "invalid_min_max_conn_attempts": `
+authentication:
+  password: root
+connection:
+  addrs: [127.0.0.1:6379, 127.0.0.1:6380, 127.0.0.1:6381, 127.0.0.1:6382, 127.0.0.1:6383, 127.0.0.1:6384]
+  max_connection_attempts: 0
+  max_redirects: 3
+  max_retries: 3
+  pool_size: 4
+  min_idle_conns: 1
+  read_only: false
+  route_by_latency: false
+data:
+  ttl: 3600`,
+
+                "test_suite": `
+authentication:
+  password: root
+connection:
+  addrs: [127.0.0.1:6379, 127.0.0.1:6380, 127.0.0.1:6381, 127.0.0.1:6382, 127.0.0.1:6383, 127.0.0.1:6384]
+  max_connection_attempts: 2
+  max_redirects: 3
+  max_retries: 3
+  pool_size: 4
+  min_idle_conns: 1
+  read_only: false
+  route_by_latency: false
+data:
+  ttl: 3600`,
         }
 }</span>
 </pre>
