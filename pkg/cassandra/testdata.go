@@ -148,6 +148,21 @@ connection:
   proto_version: 4
   timeout: 10
   max_connection_attempts: 0`,
+
+		"test_suite": `
+authentication:
+  username: admin
+  password: root
+keyspace:
+  name: mcq_platform
+  replication_class: SimpleStrategy
+  replication_factor: 3
+connection:
+  consistency: quorum
+  cluster_ip: [127.0.0.1]
+  proto_version: 4
+  timeout: 10
+  max_connection_attempts: 2`,
 	}
 }
 
