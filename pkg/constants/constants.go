@@ -26,7 +26,6 @@ const (
 	// Misc.
 	integrationTestKeyspaceSuffix = "_integration_testing"
 	cassandraMaxConnectRetries    = 5
-	redisMaxConnectRetries        = 5
 	deleteUserAccountConfirmation = "I understand the consequences, delete my user account %s"
 )
 
@@ -113,11 +112,6 @@ func GetIntegrationTestKeyspaceSuffix() string {
 // GetCassandraMaxConnectRetries is the maximum number of attempts to retry connecting to the Cassandra cluster.
 func GetCassandraMaxConnectRetries() int {
 	return cassandraMaxConnectRetries
-}
-
-// GetRedisMaxConnectRetries is the maximum number of attempts to retry connecting to the Redis cluster.
-func GetRedisMaxConnectRetries() int {
-	return redisMaxConnectRetries
 }
 
 // GetGithubCIKey is the key for the environment variable expected to be present in the GH CI runner.

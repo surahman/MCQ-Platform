@@ -42,10 +42,6 @@ func TestGetCassandraMaxConnectRetries(t *testing.T) {
 	require.Equal(t, cassandraMaxConnectRetries, GetCassandraMaxConnectRetries(), "Incorrect Cassandra connection retries")
 }
 
-func TestGetRedisMaxConnectRetries(t *testing.T) {
-	require.Equal(t, redisMaxConnectRetries, GetRedisMaxConnectRetries(), "Incorrect Redis connection retries")
-}
-
 func TestGetGithubCIKey(t *testing.T) {
 	require.Equal(t, githubCIKey, GetGithubCIKey(), "Incorrect Github CI environment key")
 }
