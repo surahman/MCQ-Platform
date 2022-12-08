@@ -6,7 +6,6 @@ import (
 	"encoding/gob"
 	"errors"
 	"fmt"
-	"github.com/surahman/mcq-platform/pkg/constants"
 	"math"
 	"strconv"
 	"time"
@@ -170,8 +169,7 @@ func (r *redisImpl) Del(keys ...string) error {
 
 // createSessionRetry will attempt to open the connection using binary exponential back-off and stop on the first success or fail after the last one.
 func (r *redisImpl) createSessionRetry() (err error) {
-	maxAttempts := constants.GetRedisMaxConnectRetries()
-	for attempt := 1; attempt <= maxAttempts; attempt++ {
+	for attempt := 1; attempt <= r.conf.Connection.MaxConnAttempts; attempt++ {
 		waitTime := time.Duration(math.Pow(2, float64(attempt))) * time.Second
 		r.logger.Info(fmt.Sprintf("Attempting connection to Redis cluster in %s...", waitTime), zap.String("attempt", strconv.Itoa(attempt)))
 		time.Sleep(waitTime)
