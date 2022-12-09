@@ -5,6 +5,9 @@ import (
 	"context"
 	"encoding/gob"
 	"errors"
+	"fmt"
+	"math"
+	"strconv"
 	"time"
 
 	"github.com/go-redis/redis/v9"
@@ -92,12 +95,7 @@ func (r *redisImpl) Open() (err error) {
 		MinIdleConns:   r.conf.Connection.MinIdleConns,
 	})
 
-	if err = r.redisDb.Ping(context.Background()).Err(); err != nil {
-		r.logger.Error("failed to establish redis cluster connection", zap.Error(err))
-		return
-	}
-
-	return nil
+	return r.createSessionRetry()
 }
 
 // Close will terminate a connection to the Redis cache cluster.
@@ -167,4 +165,18 @@ func (r *redisImpl) Del(keys ...string) error {
 		}
 	}
 	return nil
+}
+
+// createSessionRetry will attempt to open the connection using binary exponential back-off and stop on the first success or fail after the last one.
+func (r *redisImpl) createSessionRetry() (err error) {
+	for attempt := 1; attempt <= r.conf.Connection.MaxConnAttempts; attempt++ {
+		waitTime := time.Duration(math.Pow(2, float64(attempt))) * time.Second
+		r.logger.Info(fmt.Sprintf("Attempting connection to Redis cluster in %s...", waitTime), zap.String("attempt", strconv.Itoa(attempt)))
+		time.Sleep(waitTime)
+		if err = r.redisDb.Ping(context.Background()).Err(); err == nil {
+			return
+		}
+	}
+	r.logger.Error("unable to establish connection to Redis cluster", zap.Error(err))
+	return
 }

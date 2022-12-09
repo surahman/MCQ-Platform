@@ -10,7 +10,6 @@ import (
 
 	"github.com/gocql/gocql"
 	"github.com/spf13/afero"
-	"github.com/surahman/mcq-platform/pkg/constants"
 	"github.com/surahman/mcq-platform/pkg/logger"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/blake2b"
@@ -125,18 +124,15 @@ func (c *cassandraImpl) verifySession() error {
 
 // createSessionRetry will attempt to open the connection using binary exponential back-off and stop on the first success or fail after the last one.
 func (c *cassandraImpl) createSessionRetry(cluster *gocql.ClusterConfig) (err error) {
-	maxAttempts := constants.GetCassandraMaxConnectRetries()
-	for attempt := 1; attempt <= maxAttempts; attempt++ {
+	for attempt := 1; attempt <= c.conf.Connection.MaxConnAttempts; attempt++ {
 		waitTime := time.Duration(math.Pow(2, float64(attempt))) * time.Second
 		c.logger.Info(fmt.Sprintf("Attempting connection to Cassandra cluster in %s...", waitTime), zap.String("attempt", strconv.Itoa(attempt)))
 		time.Sleep(waitTime)
 		if c.session, err = cluster.CreateSession(); err == nil {
-			break
+			return
 		}
 	}
-	if err != nil {
-		c.logger.Error("unable to establish connection to Cassandra cluster", zap.Error(err))
-	}
+	c.logger.Error("unable to establish connection to Cassandra cluster", zap.Error(err))
 	return
 }
 

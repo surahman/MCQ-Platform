@@ -10,3 +10,4 @@ connection:
   cluster_ip: [127.0.0.1]
   proto_version: 4
   timeout: 10
+  max_connection_attempts: 5

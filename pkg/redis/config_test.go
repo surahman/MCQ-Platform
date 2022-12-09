@@ -28,7 +28,7 @@ func TestRedisConfigs_Load(t *testing.T) {
 			name:         "empty - etc dir",
 			input:        redisConfigTestData["empty"],
 			envValue:     xid.New().String(),
-			expectErrCnt: 6,
+			expectErrCnt: 7,
 			expectErr:    require.Error,
 		}, {
 			name:         "valid - etc dir",
@@ -75,6 +75,12 @@ func TestRedisConfigs_Load(t *testing.T) {
 		}, {
 			name:         "invalid min TTL - etc dir",
 			input:        redisConfigTestData["invalid_min_ttl"],
+			envValue:     xid.New().String(),
+			expectErrCnt: 1,
+			expectErr:    require.Error,
+		}, {
+			name:         "invalid max connection attempts - etc dir",
+			input:        redisConfigTestData["invalid_min_max_conn_attempts"],
 			envValue:     xid.New().String(),
 			expectErrCnt: 1,
 			expectErr:    require.Error,

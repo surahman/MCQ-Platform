@@ -38,10 +38,6 @@ func TestGetLoggerPrefix(t *testing.T) {
 	require.Equal(t, loggerPrefix, GetLoggerPrefix(), "Incorrect Zap logger environment prefix")
 }
 
-func TestGetCassandraMaxConnectRetries(t *testing.T) {
-	require.Equal(t, cassandraMaxConnectRetries, GetCassandraMaxConnectRetries(), "Incorrect Cassandra connection retries")
-}
-
 func TestGetGithubCIKey(t *testing.T) {
 	require.Equal(t, githubCIKey, GetGithubCIKey(), "Incorrect Github CI environment key")
 }
