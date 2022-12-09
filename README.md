@@ -75,6 +75,9 @@ A docker-compose file is provided to bring up the necessary services, including 
 keyspace and schema will need to be deployed to the cluster manually. CQL statements to achieve this are located in the
 [`model_cassandra`](pkg/model/cassandra) package.
 
+For details on migrating the database schema please see the Cassandra
+[Schema Migration and Setup](pkg/model/cassandra#schema-migration-and-setup) section.
+
 <br/>
 
 ## Redis
