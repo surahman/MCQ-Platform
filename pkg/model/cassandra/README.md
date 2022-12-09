@@ -4,18 +4,19 @@
 
 - [Case Study and Justification](#case-study-and-justification)
 - [Users Table Schema](#users-table-schema)
-    - [User](#user)
-    - [User Account](#user-account)
-    - [CQL Query](#cql-query)
+  - [User](#user)
+  - [User Account](#user-account)
+  - [CQL Query](#cql-query)
 - [Quizzes Table Schema](#quizzes-table-schema)
-    - [User Defined Type(s)](#user-defined-types)
-        - [Question](#question)
-    - [Quizzes](#quizzes)
-    - [Quiz Core](#quiz-core)
-    - [CQL Query](#cql-query)
+  - [User Defined Type(s)](#user-defined-types)
+    - [Question](#question)
+  - [Quizzes](#quizzes)
+  - [Quiz Core](#quiz-core)
+  - [CQL Query](#cql-query)
 - [Responses Table Schema](#responses-table-schema)
-    - [Responses](#responses)
-    - [CQL Query](#cql-query)
+  - [Responses](#responses)
+  - [CQL Query](#cql-query)
+- [Schema Migration and Setup](#schema-migration-and-setup)
  
 <br/>
 
@@ -146,3 +147,16 @@ HTTP request.
 
 ### CQL Query
 The query to generate the responses table can be found [here](responses.cql).
+
+<br/>
+
+## Schema Migration and Setup
+
+For security reasons, there are no database schema migration tools provided through the binary. This is to avoid deploying a
+payload in a production container that could potentially modify the databases' schema. As an alternative, there are three
+CQL files provided that will need to be deployed either manually or through database migration tooling. The files will need
+to be deployed in the following order:
+
+1. [user.cql](user.cql)
+2. [quiz.cql](quiz.cql)
+3. [responses.cql](responses.cql)
