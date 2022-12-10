@@ -12,6 +12,7 @@ import (
 	"github.com/surahman/mcq-platform/pkg/http/rest"
 	"github.com/surahman/mcq-platform/pkg/logger"
 	"github.com/surahman/mcq-platform/pkg/redis"
+	_ "go.uber.org/automaxprocs"
 	"go.uber.org/zap"
 )
 
