@@ -33,6 +33,7 @@ services:
     environment:
       - 'REDIS_PASSWORD=root'
       - 'REDIS_NODES=redis-node-0 redis-node-1 redis-node-2 redis-node-3 redis-node-4 redis-node-5'
+    command: ["redis-server", "--bind", "redis", "--port", "6379"]
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
       interval: 15s
@@ -44,12 +45,13 @@ services:
     image: docker.io/bitnami/redis-cluster:latest
     restart: always
     ports:
-      - '6380:6379'
+      - '6380:6380'
     volumes:
       - redis-cluster_data-1:/bitnami/redis/data
     environment:
       - 'REDIS_PASSWORD=root'
       - 'REDIS_NODES=redis-node-0 redis-node-1 redis-node-2 redis-node-3 redis-node-4 redis-node-5'
+    command: ["redis-server", "--bind", "redis", "--port", "6380"]
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
       interval: 15s
@@ -61,12 +63,13 @@ services:
     image: docker.io/bitnami/redis-cluster:latest
     restart: always
     ports:
-      - '6381:6379'
+      - '6381:6381'
     volumes:
       - redis-cluster_data-2:/bitnami/redis/data
     environment:
       - 'REDIS_PASSWORD=root'
       - 'REDIS_NODES=redis-node-0 redis-node-1 redis-node-2 redis-node-3 redis-node-4 redis-node-5'
+    command: ["redis-server", "--bind", "redis", "--port", "6381"]
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
       interval: 15s
@@ -78,12 +81,13 @@ services:
     image: docker.io/bitnami/redis-cluster:latest
     restart: always
     ports:
-      - '6382:6379'
+      - '6382:6382'
     volumes:
       - redis-cluster_data-3:/bitnami/redis/data
     environment:
       - 'REDIS_PASSWORD=root'
       - 'REDIS_NODES=redis-node-0 redis-node-1 redis-node-2 redis-node-3 redis-node-4 redis-node-5'
+    command: ["redis-server", "--bind", "redis", "--port", "6382"]
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
       interval: 15s
@@ -95,12 +99,13 @@ services:
     image: docker.io/bitnami/redis-cluster:latest
     restart: always
     ports:
-      - '6383:6379'
+      - '6383:6383'
     volumes:
       - redis-cluster_data-4:/bitnami/redis/data
     environment:
       - 'REDIS_PASSWORD=root'
       - 'REDIS_NODES=redis-node-0 redis-node-1 redis-node-2 redis-node-3 redis-node-4 redis-node-5'
+    command: ["redis-server", "--bind", "redis", "--port", "6383"]
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
       interval: 15s
@@ -112,7 +117,7 @@ services:
     image: docker.io/bitnami/redis-cluster:latest
     restart: always
     ports:
-      - '6384:6379'
+      - '6384:6384'
     volumes:
       - redis-cluster_data-5:/bitnami/redis/data
     depends_on:
@@ -127,6 +132,7 @@ services:
       - 'REDIS_CLUSTER_REPLICAS=1'
       - 'REDIS_NODES=redis-node-0 redis-node-1 redis-node-2 redis-node-3 redis-node-4 redis-node-5'
       - 'REDIS_CLUSTER_CREATOR=yes'
+    command: ["redis-server", "--bind", "redis", "--port", "6384"]
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
       interval: 15s
