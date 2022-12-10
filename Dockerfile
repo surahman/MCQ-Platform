@@ -21,8 +21,10 @@ FROM alpine:latest
 
 WORKDIR /
 
-# Service Configurations.
+# Compiled binary.
 COPY --from=build /build/MCQPlatform-linux /MCQPlatform-linux
+
+# Service Configurations.
 COPY --from=build /build/configs /etc/MCQ_Platform.conf/
 
 # Port list:
