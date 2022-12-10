@@ -67,7 +67,7 @@ func setup() (err error) {
 	}
 
 	conf := config{}
-	if err = yaml.Unmarshal([]byte(redisConfigTestData["valid"]), &conf); err != nil {
+	if err = yaml.Unmarshal([]byte(redisConfigTestData["test_suite"]), &conf); err != nil {
 		return
 	}
 	connection.db = &redisImpl{conf: &conf, logger: zapLogger}

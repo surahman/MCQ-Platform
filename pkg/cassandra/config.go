@@ -2,9 +2,8 @@ package cassandra
 
 import (
 	"github.com/spf13/afero"
-	"github.com/spf13/viper"
+	"github.com/surahman/mcq-platform/pkg/config_loader"
 	"github.com/surahman/mcq-platform/pkg/constants"
-	"github.com/surahman/mcq-platform/pkg/validator"
 )
 
 // config is the configuration container for connecting to the Cassandra cluster
@@ -19,10 +18,11 @@ type config struct {
 		ReplicationFactor int    `json:"replication_factor,omitempty" yaml:"replication_factor,omitempty" mapstructure:"replication_factor" validate:"required,numeric,min=1"`
 	} `json:"keyspace,omitempty" yaml:"keyspace,omitempty" mapstructure:"keyspace"`
 	Connection struct {
-		Consistency  string   `json:"consistency,omitempty" yaml:"consistency,omitempty" mapstructure:"consistency" validate:"required"`
-		ClusterIP    []string `json:"cluster_ip,omitempty" yaml:"cluster_ip,omitempty" mapstructure:"cluster_ip" validate:"required,min=1"`
-		ProtoVersion int      `json:"proto_version,omitempty" yaml:"proto_version,omitempty" mapstructure:"proto_version" validate:"required,numeric,min=4"`
-		Timeout      int      `json:"timeout,omitempty" yaml:"timeout,omitempty" mapstructure:"timeout" validate:"required,numeric,min=1"`
+		Consistency     string   `json:"consistency,omitempty" yaml:"consistency,omitempty" mapstructure:"consistency" validate:"required"`
+		ClusterIP       []string `json:"cluster_ip,omitempty" yaml:"cluster_ip,omitempty" mapstructure:"cluster_ip" validate:"required,min=1"`
+		ProtoVersion    int      `json:"proto_version,omitempty" yaml:"proto_version,omitempty" mapstructure:"proto_version" validate:"required,numeric,min=4"`
+		MaxConnAttempts int      `json:"max_connection_attempts,omitempty" yaml:"max_connection_attempts,omitempty" mapstructure:"max_connection_attempts" validate:"required,min=1"`
+		Timeout         int      `json:"timeout,omitempty" yaml:"timeout,omitempty" mapstructure:"timeout" validate:"required,numeric,min=1"`
 	} `json:"connection,omitempty" yaml:"connection,omitempty" mapstructure:"connection"`
 }
 
@@ -33,27 +33,5 @@ func newConfig() *config {
 
 // Load will attempt to load configurations from a file on a file system and then overwrite values using environment variables.
 func (cfg *config) Load(fs afero.Fs) (err error) {
-	viper.SetFs(fs)
-	viper.SetConfigName(constants.GetCassandraFileName())
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath(constants.GetEtcDir())
-	viper.AddConfigPath(constants.GetHomeDir())
-	viper.AddConfigPath(constants.GetBaseDir())
-
-	viper.SetEnvPrefix(constants.GetCassandraPrefix())
-	viper.AutomaticEnv()
-
-	if err = viper.ReadInConfig(); err != nil {
-		return
-	}
-
-	if err = viper.Unmarshal(cfg); err != nil {
-		return
-	}
-
-	if err = validator.ValidateStruct(cfg); err != nil {
-		return
-	}
-
-	return
+	return config_loader.ConfigLoader(fs, cfg, constants.GetCassandraFileName(), constants.GetCassandraPrefix(), "yaml")
 }

@@ -33,20 +33,21 @@ The configuration loader will search for the configurations in the following ord
 
 The expected file name is `CassandraConfig.yaml`. All the configuration items below are _required_.
 
-| Name                 | Environment Variable Key   | Type         | Description                                                                                   |
-|----------------------|----------------------------|--------------|-----------------------------------------------------------------------------------------------|
-| **_Authentication_** | `CASSANDRA_AUTHENTICATION` |              | **_Parent key for authentication information._**                                              |
-| ↳ username           | ↳ `.USERNAME`              | string       | Username for Cassandra session login.                                                         |
-| ↳ password           | ↳ `.PASSWORD`              | string       | Password for Cassandra session login.                                                         |
-| **_Keyspace_**       | `CASSANDRA_KEYSPACE`       |              | **_Parent key for Keyspace configuration._**                                                  |
-| ↳ name               | ↳ `.NAME`                  | string       | Keyspace name.                                                                                |
-| ↳ replication_class  | ↳ `.REPLICATION_CLASS`     | string       | Data replication strategy.                                                                    |
-| ↳ replication_factor | ↳ `.REPLICATION_FACTOR`    | int          | Data replication factor.                                                                      |
-| **_Connection_**     | `CASSANDRA_CONNECTION`     |              | **_Parent key for connection configuration._**                                                |
-| ↳ consistency        | ↳ `.CONSISTENCY`           | string       | Keyspace name.                                                                                |
-| ↳ cluster_ip         | ↳ `.CLUSTER_IP`            | string array | An array of cluster IPs to bootstrap the connection. May optionally contain the port numbers. |
-| ↳ proto_version      | ↳ `.PROTO_VERSION`         | int          | Connection protocol version.                                                                  |
-| ↳ timeout            | ↳ `.TIMEOUT`               | int          | Connection timeout in seconds.                                                                |
+| Name                      | Environment Variable Key     | Type         | Description                                                                                   |
+|---------------------------|------------------------------|--------------|-----------------------------------------------------------------------------------------------|
+| **_Authentication_**      | `CASSANDRA_AUTHENTICATION`   |              | **_Parent key for authentication information._**                                              |
+| ↳ username                | ↳ `.USERNAME`                | string       | Username for Cassandra session login.                                                         |
+| ↳ password                | ↳ `.PASSWORD`                | string       | Password for Cassandra session login.                                                         |
+| **_Keyspace_**            | `CASSANDRA_KEYSPACE`         |              | **_Parent key for Keyspace configuration._**                                                  |
+| ↳ name                    | ↳ `.NAME`                    | string       | Keyspace name.                                                                                |
+| ↳ replication_class       | ↳ `.REPLICATION_CLASS`       | string       | Data replication strategy.                                                                    |
+| ↳ replication_factor      | ↳ `.REPLICATION_FACTOR`      | int          | Data replication factor.                                                                      |
+| **_Connection_**          | `CASSANDRA_CONNECTION`       |              | **_Parent key for connection configuration._**                                                |
+| ↳ consistency             | ↳ `.CONSISTENCY`             | string       | Keyspace name.                                                                                |
+| ↳ cluster_ip              | ↳ `.CLUSTER_IP`              | string array | An array of cluster IPs to bootstrap the connection. May optionally contain the port numbers. |
+| ↳ proto_version           | ↳ `.PROTO_VERSION`           | int          | Connection protocol version.                                                                  |
+| ↳ timeout                 | ↳ `.TIMEOUT`                 | int          | Connection timeout in seconds.                                                                |
+| ↳ max_connection_attempts | ↳ `.MAX_CONNECTION_ATTEMPTS` | int          | The maximum number of initial connection attempts to Cassandra before failing.                |
 
 :warning: **_Consistency_** :warning:
 
@@ -71,6 +72,7 @@ connection:
   cluster_ip: [127.0.0.1]
   proto_version: 4
   timeout: 10
+  max_connection_attempts: 5
 ```
 
 #### Example Environment Variables

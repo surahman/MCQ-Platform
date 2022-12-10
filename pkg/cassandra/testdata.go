@@ -12,11 +12,10 @@ var quizzesUUIDMapping = GetQuizzedUUIDMapping()
 
 // configTestData will return a map of test data containing valid and invalid Cassandra configs.
 func configTestData() map[string]string {
-	testData := make(map[string]string)
+	return map[string]string{
+		"empty": ``,
 
-	testData["empty"] = ``
-
-	testData["valid"] = `
+		"valid": `
 authentication:
   username: admin
   password: root
@@ -28,9 +27,10 @@ connection:
   consistency: quorum
   cluster_ip: [127.0.0.1]
   proto_version: 4
-  timeout: 10`
+  timeout: 10
+  max_connection_attempts: 5`,
 
-	testData["valid-ci"] = `
+		"valid-ci": `
 authentication:
   username: cassandra
   password: cassandra
@@ -42,9 +42,10 @@ connection:
   consistency: quorum
   cluster_ip: [localhost]
   proto_version: 4
-  timeout: 10`
+  timeout: 10
+  max_connection_attempts: 5`,
 
-	testData["password_empty"] = `
+		"password_empty": `
 authentication:
   username: admin
   password:
@@ -56,9 +57,10 @@ connection:
   consistency: quorum
   cluster_ip: [127.0.0.1]
   proto_version: 4
-  timeout: 10`
+  timeout: 10
+  max_connection_attempts: 5`,
 
-	testData["username_empty"] = `
+		"username_empty": `
 authentication:
   username:
   password: root
@@ -70,9 +72,10 @@ connection:
   consistency: quorum
   cluster_ip: [127.0.0.1]
   proto_version: 4
-  timeout: 10`
+  timeout: 10
+  max_connection_attempts: 5`,
 
-	testData["keyspace_empty"] = `
+		"keyspace_empty": `
 authentication:
   username: admin
   password: root
@@ -84,9 +87,10 @@ connection:
   consistency: quorum
   cluster_ip: [127.0.0.1]
   proto_version: 4
-  timeout: 10`
+  timeout: 10
+  max_connection_attempts: 5`,
 
-	testData["consistency_missing"] = `
+		"consistency_missing": `
 authentication:
   username: admin
   password: root
@@ -97,9 +101,10 @@ keyspace:
 connection:
   cluster_ip: [127.0.0.1]
   proto_version: 4
-  timeout: 10`
+  timeout: 10
+  max_connection_attempts: 5`,
 
-	testData["ip_empty"] = `
+		"ip_empty": `
 authentication:
   username: admin
   password: root
@@ -111,9 +116,10 @@ connection:
   consistency: quorum
   cluster_ip: []
   proto_version: 4
-  timeout: 10`
+  timeout: 10
+  max_connection_attempts: 5`,
 
-	testData["timeout_zero"] = `
+		"timeout_zero": `
 authentication:
   username: admin
   password: root
@@ -125,9 +131,39 @@ connection:
   consistency: quorum
   cluster_ip: [127.0.0.1]
   proto_version: 4
-  timeout: 0`
+  timeout: 0
+  max_connection_attempts: 5`,
 
-	return testData
+		"invalid_min_max_conn_attempts": `
+authentication:
+  username: admin
+  password: root
+keyspace:
+  name: mcq_platform
+  replication_class: SimpleStrategy
+  replication_factor: 3
+connection:
+  consistency: quorum
+  cluster_ip: [127.0.0.1]
+  proto_version: 4
+  timeout: 10
+  max_connection_attempts: 0`,
+
+		"test_suite": `
+authentication:
+  username: admin
+  password: root
+keyspace:
+  name: mcq_platform
+  replication_class: SimpleStrategy
+  replication_factor: 3
+connection:
+  consistency: quorum
+  cluster_ip: [127.0.0.1]
+  proto_version: 4
+  timeout: 10
+  max_connection_attempts: 2`,
+	}
 }
 
 // GetQuizzedUUIDMapping returns a map containing a Quiz title to UUID mapping.

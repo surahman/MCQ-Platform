@@ -1,7 +1,20 @@
 # Redis
 
+Configuration loading is designed for containerization in mind. The container engine and orchestrator can mount volumes
+(secret or regular) as well as set the environment variables as outlined below.
+
+You may set configurations through both files and environment variables. Please note that environment variables will
+override the settings in the configuration files. The configuration files are all expected to be in `YAML` format.
+
+<br/>
+
 ## Table of contents
 
+- [Case Study and Justification](#case-study-and-justification)
+  - [File Location(s)](#file-locations)
+  - [Configuration File](#configuration-file)
+    - [Example Configuration File](#example-configuration-file)
+    - [Example Environment Variables](#example-environment-variables)
 
 <br/>
 
@@ -53,17 +66,43 @@ The configuration loader will search for the configurations in the following ord
 
 The expected file name is `RedisConfig.yaml`. Unless otherwise specified, all the configuration items below are _required_.
 
-| Name                 | Environment Variable Key | Type         | Description                                                                                                          |
-|----------------------|--------------------------|--------------|----------------------------------------------------------------------------------------------------------------------|
-| **_Authentication_** | `REDIS_AUTHENTICATION`   |              | **_Parent key for authentication information._**                                                                     |
-| ↳ password           | ↳ `.PASSWORD`            | string       | Password for Redis session login.                                                                                    |
-| **_Connection_**     | `REDIS_CONNECTION`       |              | **_Parent key for connection configuration._**                                                                       |
-| ↳ addrs              | ↳ `.ADDRS`               | string array | An array of cluster IPs to bootstrap the connection. May optionally contain the port numbers.                        |
-| ↳ max_redirects      | ↳ `.MAX_REDIRECTS`       | int          | The maximum number of retries before giving up.                                                                      |
-| ↳ max_retries        | ↳ `.MAX_RETRIES`         | int          | The maximum number of times to try an operation.                                                                     |
-| ↳ pool_size          | ↳ `.POOL_SIZE`           | int          | The connection pool size on a per cluster basis.                                                                     |
-| ↳ min_idle_conns     | ↳ `.MIN_IDLE_CONNS`      | int          | The number of minimum idle connections per cluster.                                                                  |
-| ↳ read_only          | ↳ `.READ_ONLY`           | bool         | Enables read-only commands on slave nodes. _Optional_                                                                |
-| ↳ route_by_latency   | ↳ `.ROUTE_BY_LATENCY`    | bool         | Allows routing read-only commands to the closest master or slave node. It automatically enables ReadOnly. _Optional_ |
-| **_Data_**           | `REDIS_DATA`             |              | **_Parent key for data configuration._**                                                                             |
-| ↳ ttl                | ↳ `.TTL`                 | int          | The maximum time in seconds tha an item can remain in the cache before it is evicted. _Optional._                    |
+| Name                      | Environment Variable Key     | Type         | Description                                                                                                          |
+|---------------------------|------------------------------|--------------|----------------------------------------------------------------------------------------------------------------------|
+| **_Authentication_**      | `REDIS_AUTHENTICATION`       |              | **_Parent key for authentication information._**                                                                     |
+| ↳ password                | ↳ `.PASSWORD`                | string       | Password for Redis session login.                                                                                    |
+| **_Connection_**          | `REDIS_CONNECTION`           |              | **_Parent key for connection configuration._**                                                                       |
+| ↳ addrs                   | ↳ `.ADDRS`                   | string array | An array of cluster IPs to bootstrap the connection. May optionally contain the port numbers.                        |
+| ↳ max_connection_attempts | ↳ `.MAX_CONNECTION_ATTEMPTS` | int          | The maximum number of initial connection attempts to Redis before failing.                                           |
+| ↳ max_redirects           | ↳ `.MAX_REDIRECTS`           | int          | The maximum number of retries before giving up.                                                                      |
+| ↳ max_retries             | ↳ `.MAX_RETRIES`             | int          | The maximum number of times to try an operation.                                                                     |
+| ↳ pool_size               | ↳ `.POOL_SIZE`               | int          | The connection pool size on a per cluster basis.                                                                     |
+| ↳ min_idle_conns          | ↳ `.MIN_IDLE_CONNS`          | int          | The number of minimum idle connections per cluster.                                                                  |
+| ↳ read_only               | ↳ `.READ_ONLY`               | bool         | Enables read-only commands on slave nodes. _Optional_                                                                |
+| ↳ route_by_latency        | ↳ `.ROUTE_BY_LATENCY`        | bool         | Allows routing read-only commands to the closest master or slave node. It automatically enables ReadOnly. _Optional_ |
+| **_Data_**                | `REDIS_DATA`                 |              | **_Parent key for data configuration._**                                                                             |
+| ↳ ttl                     | ↳ `.TTL`                     | int          | The maximum time in seconds tha an item can remain in the cache before it is evicted. _Optional._                    |
+
+#### Example Configuration File
+
+```yaml
+authentication:
+  password: root
+connection:
+  addrs: [127.0.0.1:6379, 127.0.0.1:6380, 127.0.0.1:6381, 127.0.0.1:6382, 127.0.0.1:6383, 127.0.0.1:6384]
+  max_connection_attempts: 5
+  max_redirects: 3
+  max_retries: 3
+  pool_size: 4
+  min_idle_conns: 1
+  read_only: false
+  route_by_latency: false
+data:
+  ttl: 3600
+```
+
+#### Example Environment Variables
+
+```bash
+export REDIS_AUTHENTICATION.PASSWORD=root
+export REDIS_CONNECTION.TTL=28800
+```

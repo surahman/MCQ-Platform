@@ -25,7 +25,6 @@ const (
 
 	// Misc.
 	integrationTestKeyspaceSuffix = "_integration_testing"
-	cassandraMaxConnectRetries    = 5
 	deleteUserAccountConfirmation = "I understand the consequences, delete my user account %s"
 )
 
@@ -107,11 +106,6 @@ func GetRedisPrefix() string {
 // GetIntegrationTestKeyspaceSuffix is the suffix attached to the clusters keyspace and is used for integration tests.
 func GetIntegrationTestKeyspaceSuffix() string {
 	return integrationTestKeyspaceSuffix
-}
-
-// GetCassandraMaxConnectRetries is the maximum number of attempts to retry connecting to the Cassandra cluster.
-func GetCassandraMaxConnectRetries() int {
-	return cassandraMaxConnectRetries
 }
 
 // GetGithubCIKey is the key for the environment variable expected to be present in the GH CI runner.

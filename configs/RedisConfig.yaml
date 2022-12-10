@@ -2,6 +2,7 @@ authentication:
   password: root
 connection:
   addrs: [127.0.0.1:6379, 127.0.0.1:6380, 127.0.0.1:6381, 127.0.0.1:6382, 127.0.0.1:6383, 127.0.0.1:6384]
+  max_connection_attempts: 5
   max_redirects: 3
   max_retries: 3
   pool_size: 4
