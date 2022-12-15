@@ -44,8 +44,9 @@ func (l *Logger) Init(fs *afero.Fs) (err error) {
 		baseConfig = zap.NewProductionConfig()
 		break
 	default:
-		log.Println("could not select the base constants type")
-		return
+		msg := "could not select the base configuration type"
+		log.Println(msg)
+		return errors.New(msg)
 	}
 
 	// Encoder logger configuration.
@@ -57,8 +58,9 @@ func (l *Logger) Init(fs *afero.Fs) (err error) {
 		encConfig = zap.NewProductionEncoderConfig()
 		break
 	default:
-		log.Println("could not select the base encoder constants type")
-		return
+		msg := "could not select the base encoder configuration type"
+		log.Println(msg)
+		return errors.New(msg)
 	}
 
 	// Merge configurations.
