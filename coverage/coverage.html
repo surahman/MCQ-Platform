@@ -125,7 +125,7 @@
 				
 				<option value="file34">github.com/surahman/mcq-platform/pkg/logger/config.go (100.0%)</option>
 				
-				<option value="file35">github.com/surahman/mcq-platform/pkg/logger/logger.go (73.6%)</option>
+				<option value="file35">github.com/surahman/mcq-platform/pkg/logger/logger.go (70.9%)</option>
 				
 				<option value="file36">github.com/surahman/mcq-platform/pkg/logger/testdata.go (100.0%)</option>
 				
@@ -4132,7 +4132,7 @@ func (s *Server) initialize() <span class="cov0" title="0">{
         s.router = gin.Default()
 
         // @title                      Multiple Choice Question Platform.
-        // @version                    1.5.0
+        // @version                    1.6.1
         // @description                Multiple Choice Question Platform API.
         // @description                This application supports the creation, managing, marking, viewing, retrieving stats, and scores of quizzes.
         //
@@ -4391,8 +4391,9 @@ func (l *Logger) Init(fs *afero.Fs) (err error) <span class="cov8" title="6">{
                 baseConfig = zap.NewProductionConfig()
                 break</span>
         default:<span class="cov0" title="0">
-                log.Println("could not select the base constants type")
-                return</span>
+                msg := "could not select the base configuration type"
+                log.Println(msg)
+                return errors.New(msg)</span>
         }
 
         // Encoder logger configuration.
@@ -4404,8 +4405,9 @@ func (l *Logger) Init(fs *afero.Fs) (err error) <span class="cov8" title="6">{
                 encConfig = zap.NewProductionEncoderConfig()
                 break</span>
         default:<span class="cov0" title="0">
-                log.Println("could not select the base encoder constants type")
-                return</span>
+                msg := "could not select the base encoder configuration type"
+                log.Println(msg)
+                return errors.New(msg)</span>
         }
 
         // Merge configurations.
