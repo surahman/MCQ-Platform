@@ -104,28 +104,28 @@ func (s *Server) Run() {
 func (s *Server) initialize() {
 	s.router = gin.Default()
 
-	// @title                      Multiple Choice Question Platform.
-	// @version                    1.6.1
-	// @description                Multiple Choice Question Platform API.
-	// @description                This application supports the creation, managing, marking, viewing, retrieving stats, and scores of quizzes.
+	//	@title						Multiple Choice Question Platform.
+	//	@version					1.6.2
+	//	@description				Multiple Choice Question Platform API.
+	//	@description				This application supports the creation, managing, marking, viewing, retrieving stats, and scores of quizzes.
 	//
-	// @schemes                    http
-	// @host                       localhost:44243
-	// @BasePath                   /api/rest/v1
+	//	@schemes					http
+	//	@host						localhost:44243
+	//	@BasePath					/api/rest/v1
 	//
-	// @accept                     json
-	// @produce                    json
+	//	@accept						json
+	//	@produce					json
 	//
-	// @contact.name               Saad Ur Rahman
-	// @contact.url                https://www.linkedin.com/in/saad-ur-rahman/
-	// @contact.email              saad.ur.rahman@gmail.com
+	//	@contact.name				Saad Ur Rahman
+	//	@contact.url				https://www.linkedin.com/in/saad-ur-rahman/
+	//	@contact.email				saad.ur.rahman@gmail.com
 	//
-	// @license.name               GPL-3.0
-	// @license.url                https://opensource.org/licenses/GPL-3.0
+	//	@license.name				GPL-3.0
+	//	@license.url				https://opensource.org/licenses/GPL-3.0
 	//
-	// @securityDefinitions.apikey ApiKeyAuth
-	// @in                         header
-	// @name                       Authorization
+	//	@securityDefinitions.apikey	ApiKeyAuth
+	//	@in							header
+	//	@name						Authorization
 
 	s.router.GET(s.conf.Server.SwaggerPath, ginSwagger.WrapHandler(swaggerfiles.Handler))
 

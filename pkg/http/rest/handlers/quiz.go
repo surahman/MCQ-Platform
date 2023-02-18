@@ -18,18 +18,18 @@ import (
 )
 
 // ViewQuiz will retrieve a test using a variable in the URL.
-// @Summary     View a quiz.
-// @Description This endpoint will retrieve a quiz with a provided quiz ID if it is published.
-// @Tags        view test quiz
-// @Id          viewQuiz
-// @Produce     json
-// @Security    ApiKeyAuth
-// @Param       quiz_id path     string             true "The quiz ID for the quiz being requested."
-// @Success     200     {object} model_http.Success "The message will contain the quiz ID and the payload will contain the quiz"
-// @Failure     403     {object} model_http.Error   "Error message with any available details in payload"
-// @Failure     404     {object} model_http.Error   "Error message with any available details in payload"
-// @Failure     500     {object} model_http.Error   "Error message with any available details in payload"
-// @Router      /quiz/view/{quiz_id} [get]
+//	@Summary		View a quiz.
+//	@Description	This endpoint will retrieve a quiz with a provided quiz ID if it is published.
+//	@Tags			view test quiz
+//	@Id				viewQuiz
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			quiz_id	path		string				true	"The quiz ID for the quiz being requested."
+//	@Success		200		{object}	model_http.Success	"The message will contain the quiz ID and the payload will contain the quiz"
+//	@Failure		403		{object}	model_http.Error	"Error message with any available details in payload"
+//	@Failure		404		{object}	model_http.Error	"Error message with any available details in payload"
+//	@Failure		500		{object}	model_http.Error	"Error message with any available details in payload"
+//	@Router			/quiz/view/{quiz_id} [get]
 func ViewQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, cache redis.Redis) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		var err error
@@ -79,20 +79,20 @@ func ViewQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, cac
 }
 
 // CreateQuiz will submit a quiz and write back the GetScore ID.
-// @Summary     Create a quiz.
-// @Description This endpoint will create a quiz with randomly generated Test ID and associate it with the requester.
-// @Description The username will be extracted from the JWT and associated with the Test ID.
-// @Tags        create test quiz
-// @Id          createQuiz
-// @Accept      json
-// @Produce     json
-// @Security    ApiKeyAuth
-// @Param       quiz body     model_cassandra.QuizCore true "The Quiz to be created as unpublished"
-// @Success     200  {object} model_http.Success       "The message will contain the Quiz ID of the newly generated quiz"
-// @Failure     400  {object} model_http.Error         "Error message with any available details in payload"
-// @Failure     409  {object} model_http.Error         "Error message with any available details in payload"
-// @Failure     500  {object} model_http.Error         "Error message with any available details in payload"
-// @Router      /quiz/create/ [post]
+//	@Summary		Create a quiz.
+//	@Description	This endpoint will create a quiz with randomly generated Test ID and associate it with the requester.
+//	@Description	The username will be extracted from the JWT and associated with the Test ID.
+//	@Tags			create test quiz
+//	@Id				createQuiz
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			quiz	body		model_cassandra.QuizCore	true	"The Quiz to be created as unpublished"
+//	@Success		200		{object}	model_http.Success			"The message will contain the Quiz ID of the newly generated quiz"
+//	@Failure		400		{object}	model_http.Error			"Error message with any available details in payload"
+//	@Failure		409		{object}	model_http.Error			"Error message with any available details in payload"
+//	@Failure		500		{object}	model_http.Error			"Error message with any available details in payload"
+//	@Router			/quiz/create/ [post]
 func CreateQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		var err error
@@ -136,20 +136,20 @@ func CreateQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) g
 }
 
 // UpdateQuiz will update a quiz.
-// @Summary     Update a quiz.
-// @Description This endpoint will update a quiz with the provided Test ID if it was created by the requester and is not published.
-// @Tags        update modify test quiz
-// @Id          updateQuiz
-// @Accept      json
-// @Produce     json
-// @Security    ApiKeyAuth
-// @Param       quiz_id path     string                   true "The Test ID for the quiz being updated."
-// @Param       quiz    body     model_cassandra.QuizCore true "The Quiz to replace the one already submitted"
-// @Success     200     {object} model_http.Success       "The message will contain a confirmation of the update"
-// @Failure     400     {object} model_http.Error         "Error message with any available details in payload"
-// @Failure     403     {object} model_http.Error         "Error message with any available details in payload"
-// @Failure     500     {object} model_http.Error         "Error message with any available details in payload"
-// @Router      /quiz/update/{quiz_id} [patch]
+//	@Summary		Update a quiz.
+//	@Description	This endpoint will update a quiz with the provided Test ID if it was created by the requester and is not published.
+//	@Tags			update modify test quiz
+//	@Id				updateQuiz
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			quiz_id	path		string						true	"The Test ID for the quiz being updated."
+//	@Param			quiz	body		model_cassandra.QuizCore	true	"The Quiz to replace the one already submitted"
+//	@Success		200		{object}	model_http.Success			"The message will contain a confirmation of the update"
+//	@Failure		400		{object}	model_http.Error			"Error message with any available details in payload"
+//	@Failure		403		{object}	model_http.Error			"Error message with any available details in payload"
+//	@Failure		500		{object}	model_http.Error			"Error message with any available details in payload"
+//	@Router			/quiz/update/{quiz_id} [patch]
 func UpdateQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		var err error
@@ -199,17 +199,17 @@ func UpdateQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) g
 }
 
 // DeleteQuiz will delete a quiz using a variable in the URL.
-// @Summary     Delete a quiz.
-// @Description This endpoint will mark a quiz as delete if it was created by the requester. The provided Test ID is provided is a path parameter.
-// @Tags        delete remove test quiz
-// @Id          deleteQuiz
-// @Produce     json
-// @Security    ApiKeyAuth
-// @Param       quiz_id path     string             true "The Test ID for the quiz being deleted."
-// @Success     200     {object} model_http.Success "The message will contain a confirmation of deletion"
-// @Failure     403     {object} model_http.Error   "Error message with any available details in payload"
-// @Failure     500     {object} model_http.Error   "Error message with any available details in payload"
-// @Router      /quiz/delete/{quiz_id} [delete]
+//	@Summary		Delete a quiz.
+//	@Description	This endpoint will mark a quiz as delete if it was created by the requester. The provided Test ID is provided is a path parameter.
+//	@Tags			delete remove test quiz
+//	@Id				deleteQuiz
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			quiz_id	path		string				true	"The Test ID for the quiz being deleted."
+//	@Success		200		{object}	model_http.Success	"The message will contain a confirmation of deletion"
+//	@Failure		403		{object}	model_http.Error	"Error message with any available details in payload"
+//	@Failure		500		{object}	model_http.Error	"Error message with any available details in payload"
+//	@Router			/quiz/delete/{quiz_id} [delete]
 func DeleteQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, cache redis.Redis) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		var err error
@@ -272,18 +272,18 @@ func DeleteQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, c
 }
 
 // PublishQuiz will publish a quiz using a variable in the URL.
-// @Summary     Publish a quiz.
-// @Description When a quiz is submitted it is not published by default and is thus unavailable to be taken.
-// @Description This endpoint will publish a quiz with the provided Test ID if it was created by the requester.
-// @Tags        publish test quiz create
-// @Id          publishQuiz
-// @Produce     json
-// @Security    ApiKeyAuth
-// @Param       quiz_id path     string             true "The Test ID for the quiz being published."
-// @Success     200     {object} model_http.Success "The message will contain a confirmation of publishing"
-// @Failure     403     {object} model_http.Error   "Error message with any available details in payload"
-// @Failure     500     {object} model_http.Error   "Error message with any available details in payload"
-// @Router      /quiz/publish/{quiz_id} [patch]
+//	@Summary		Publish a quiz.
+//	@Description	When a quiz is submitted it is not published by default and is thus unavailable to be taken.
+//	@Description	This endpoint will publish a quiz with the provided Test ID if it was created by the requester.
+//	@Tags			publish test quiz create
+//	@Id				publishQuiz
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			quiz_id	path		string				true	"The Test ID for the quiz being published."
+//	@Success		200		{object}	model_http.Success	"The message will contain a confirmation of publishing"
+//	@Failure		403		{object}	model_http.Error	"Error message with any available details in payload"
+//	@Failure		500		{object}	model_http.Error	"Error message with any available details in payload"
+//	@Router			/quiz/publish/{quiz_id} [patch]
 func PublishQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, cache redis.Redis) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		var err error
@@ -338,20 +338,20 @@ func PublishQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, 
 }
 
 // TakeQuiz will submit the answers to a quiz using a variable in the URL.
-// @Summary     Take a quiz.
-// @Description Take a quiz by submitting an answer sheet. The username will be extracted from the JWT and associated with the scorecard.
-// @Tags        take test quiz submit answer
-// @Id          takeQuiz
-// @Accept      json
-// @Produce     json
-// @Security    ApiKeyAuth
-// @Param       quiz_id path     string                       true "The Test ID for the answers being submitted."
-// @Param       answers body     model_cassandra.QuizResponse true "The answer card to be submitted."
-// @Success     200     {object} model_http.Success           "Score will be in the payload"
-// @Failure     400     {object} model_http.Error             "Error message with any available details in payload"
-// @Failure     403     {object} model_http.Error             "Error message with any available details in payload"
-// @Failure     500     {object} model_http.Error             "Error message with any available details in payload"
-// @Router      /quiz/take/{quiz_id} [post]
+//	@Summary		Take a quiz.
+//	@Description	Take a quiz by submitting an answer sheet. The username will be extracted from the JWT and associated with the scorecard.
+//	@Tags			take test quiz submit answer
+//	@Id				takeQuiz
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			quiz_id	path		string							true	"The Test ID for the answers being submitted."
+//	@Param			answers	body		model_cassandra.QuizResponse	true	"The answer card to be submitted."
+//	@Success		200		{object}	model_http.Success				"Score will be in the payload"
+//	@Failure		400		{object}	model_http.Error				"Error message with any available details in payload"
+//	@Failure		403		{object}	model_http.Error				"Error message with any available details in payload"
+//	@Failure		500		{object}	model_http.Error				"Error message with any available details in payload"
+//	@Router			/quiz/take/{quiz_id} [post]
 func TakeQuiz(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra, cache redis.Redis, grader grading.Grading) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		var err error
