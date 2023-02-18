@@ -21,7 +21,7 @@
             "name": "GPL-3.0",
             "url": "https://opensource.org/licenses/GPL-3.0"
         },
-        "version": "1.6.1"
+        "version": "1.6.2"
     },
     "host": "localhost:44243",
     "basePath": "/api/rest/v1",
@@ -1012,6 +1012,17 @@
                 }
             }
         },
+        "model_http.Metadata": {
+            "type": "object",
+            "properties": {
+                "num_records": {
+                    "type": "integer"
+                },
+                "quiz_id": {
+                    "type": "string"
+                }
+            }
+        },
         "model_http.StatsResponse": {
             "type": "object",
             "properties": {
@@ -1023,11 +1034,8 @@
                         }
                     }
                 },
-                "num_records": {
-                    "type": "integer"
-                },
-                "quiz_id": {
-                    "type": "string"
+                "metadata": {
+                    "$ref": "#/definitions/model_http.Metadata"
                 },
                 "records": {
                     "type": "array",

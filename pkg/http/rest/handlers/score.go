@@ -17,18 +17,18 @@ import (
 )
 
 // GetScore will retrieve a test score with the provided test id and the username from the JWT payload.
-// @Summary     Get a user's score.
-// @Description Gets a scorecard for a user. Extracts username from the JWT and Test ID is provided as a path parameter.
-// @Tags        score scores
-// @Id          getScore
-// @Produce     json
-// @Security    ApiKeyAuth
-// @Param       quiz_id path     string             true "The Test ID for the requested scorecard."
-// @Success     200     {object} model_http.Success "Score will be in the payload"
-// @Failure     400     {object} model_http.Error   "Error message with any available details in payload"
-// @Failure     404     {object} model_http.Error   "Error message with any available details in payload"
-// @Failure     500     {object} model_http.Error   "Error message with any available details in payload"
-// @Router      /score/test/{quiz_id} [get]
+//	@Summary		Get a user's score.
+//	@Description	Gets a scorecard for a user. Extracts username from the JWT and Test ID is provided as a path parameter.
+//	@Tags			score scores
+//	@Id				getScore
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			quiz_id	path		string				true	"The Test ID for the requested scorecard."
+//	@Success		200		{object}	model_http.Success	"Score will be in the payload"
+//	@Failure		400		{object}	model_http.Error	"Error message with any available details in payload"
+//	@Failure		404		{object}	model_http.Error	"Error message with any available details in payload"
+//	@Failure		500		{object}	model_http.Error	"Error message with any available details in payload"
+//	@Router			/score/test/{quiz_id} [get]
 func GetScore(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		var err error
@@ -66,20 +66,20 @@ func GetScore(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin
 }
 
 // GetStats will retrieve test statistics with the provided test id and the username from the JWT payload.
-// @Summary     Get all statistics associated with a specific test.
-// @Description Gets the statistics associated with a specific test if the user created the test.
-// @Description Extracts username from the JWT and the Test ID is provided as a path parameter.
-// @Tags        score scores stats statistics
-// @Id          getStats
-// @Produce     json
-// @Security    ApiKeyAuth
-// @Param       quiz_id path     string             true "The Test ID for the requested statistics."
-// @Success     200     {object} model_http.Success "Statistics will be in the payload"
-// @Failure     400     {object} model_http.Error   "Error message with any available details in payload"
-// @Failure     403     {object} model_http.Error   "Error message with any available details in payload"
-// @Failure     404     {object} model_http.Error   "Error message with any available details in payload"
-// @Failure     500     {object} model_http.Error   "Error message with any available details in payload"
-// @Router      /score/stats/{quiz_id} [get]
+//	@Summary		Get all statistics associated with a specific test.
+//	@Description	Gets the statistics associated with a specific test if the user created the test.
+//	@Description	Extracts username from the JWT and the Test ID is provided as a path parameter.
+//	@Tags			score scores stats statistics
+//	@Id				getStats
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			quiz_id	path		string				true	"The Test ID for the requested statistics."
+//	@Success		200		{object}	model_http.Success	"Statistics will be in the payload"
+//	@Failure		400		{object}	model_http.Error	"Error message with any available details in payload"
+//	@Failure		403		{object}	model_http.Error	"Error message with any available details in payload"
+//	@Failure		404		{object}	model_http.Error	"Error message with any available details in payload"
+//	@Failure		500		{object}	model_http.Error	"Error message with any available details in payload"
+//	@Router			/score/stats/{quiz_id} [get]
 func GetStats(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		var err error
@@ -123,23 +123,23 @@ func GetStats(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin
 }
 
 // GetStatsPage will retrieve paginated test statistics with the provided test id and the username from the JWT payload.
-// @Summary     Get paginated statistics associated with a specific test.
-// @Description Gets the paginated statistics associated with a specific test if the user created the test.
-// @Description Extracts username from the JWT and the Test ID is provided as a query parameter.
-// @Description A query string to be appended to the next request to retrieve the next page of data will be returned in the response.
-// @Tags        score scores stats statistics
-// @Id          getStatsPaged
-// @Produce     json
-// @Security    ApiKeyAuth
-// @Param       quiz_id    path     string                   true  "The Test ID for the requested statistics."
-// @Param       pageCursor query    string                   false "The page cursor into the query results records."
-// @Param       pageSize   query    int                      false "The number of records to retrieve on this page."
-// @Success     200        {object} model_http.StatsResponse "A page of statistics data"
-// @Failure     400        {object} model_http.Error         "Error message with any available details in payload"
-// @Failure     403        {object} model_http.Error         "Error message with any available details in payload"
-// @Failure     404        {object} model_http.Error         "Error message with any available details in payload"
-// @Failure     500        {object} model_http.Error         "Error message with any available details in payload"
-// @Router      /score/stats-paged/{quiz_id} [get]
+//	@Summary		Get paginated statistics associated with a specific test.
+//	@Description	Gets the paginated statistics associated with a specific test if the user created the test.
+//	@Description	Extracts username from the JWT and the Test ID is provided as a query parameter.
+//	@Description	A query string to be appended to the next request to retrieve the next page of data will be returned in the response.
+//	@Tags			score scores stats statistics
+//	@Id				getStatsPaged
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			quiz_id		path		string						true	"The Test ID for the requested statistics."
+//	@Param			pageCursor	query		string						false	"The page cursor into the query results records."
+//	@Param			pageSize	query		int							false	"The number of records to retrieve on this page."
+//	@Success		200			{object}	model_http.StatsResponse	"A page of statistics data"
+//	@Failure		400			{object}	model_http.Error			"Error message with any available details in payload"
+//	@Failure		403			{object}	model_http.Error			"Error message with any available details in payload"
+//	@Failure		404			{object}	model_http.Error			"Error message with any available details in payload"
+//	@Failure		500			{object}	model_http.Error			"Error message with any available details in payload"
+//	@Router			/score/stats-paged/{quiz_id} [get]
 func GetStatsPage(logger *logger.Logger, auth auth.Auth, db cassandra.Cassandra) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		var err error

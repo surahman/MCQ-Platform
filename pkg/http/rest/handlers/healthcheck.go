@@ -12,14 +12,14 @@ import (
 )
 
 // Healthcheck checks if the service is healthy.
-// @Summary     Healthcheck for service liveness.
-// @Description This endpoint is exposed to allow load balancers etc. to check the health of the service.
-// @Tags        health healthcheck liveness
-// @Id          healthcheck
-// @Produce     json
-// @Success     200 {object} model_http.Success "message: healthy"
-// @Failure     503 {object} model_http.Error   "error message with any available details"
-// @Router      /health [get]
+//	@Summary		Healthcheck for service liveness.
+//	@Description	This endpoint is exposed to allow load balancers etc. to check the health of the service.
+//	@Tags			health healthcheck liveness
+//	@Id				healthcheck
+//	@Produce		json
+//	@Success		200	{object}	model_http.Success	"message: healthy"
+//	@Failure		503	{object}	model_http.Error	"error message with any available details"
+//	@Router			/health [get]
 func Healthcheck(logger *logger.Logger, db cassandra.Cassandra, cache redis.Redis) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		var err error
