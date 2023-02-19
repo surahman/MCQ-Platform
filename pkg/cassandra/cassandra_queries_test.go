@@ -2,7 +2,6 @@ package cassandra
 
 import (
 	"fmt"
-	"math"
 	"net/http"
 	"reflect"
 	"testing"
@@ -554,7 +553,7 @@ func TestReadResponseStatisticsPageQuery(t *testing.T) {
 			}
 
 			// Iterate over all pages and tally up the total records retrieved.
-			expectedPageCount := int(math.Ceil(float64(testCase.expectedRecordCount / testCase.request.PageSize)))
+			expectedPageCount := testCase.expectedRecordCount / testCase.request.PageSize
 			pageCount := 0
 			recordCount := 0
 			request := &model_cassandra.StatsRequest{
