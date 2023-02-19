@@ -171,6 +171,13 @@ definitions:
     - threshold
     - token
     type: object
+  model_http.Metadata:
+    properties:
+      num_records:
+        type: integer
+      quiz_id:
+        type: string
+    type: object
   model_http.StatsResponse:
     properties:
       links:
@@ -178,10 +185,8 @@ definitions:
           next_page:
             type: string
         type: object
-      num_records:
-        type: integer
-      quiz_id:
-        type: string
+      metadata:
+        $ref: '#/definitions/model_http.Metadata'
       records:
         items:
           $ref: '#/definitions/model_cassandra.Response'
@@ -206,7 +211,7 @@ info:
     name: GPL-3.0
     url: https://opensource.org/licenses/GPL-3.0
   title: Multiple Choice Question Platform.
-  version: 1.6.1
+  version: 1.6.2
 paths:
   /health:
     get:
