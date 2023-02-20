@@ -82,7 +82,7 @@ func (s *Server) Run() {
 	}()
 
 	// Wait for interrupt signal to gracefully shut down the server.
-	quit := make(chan os.Signal)
+	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 	// Wait for interrupt.
