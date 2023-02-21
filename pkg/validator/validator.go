@@ -69,9 +69,5 @@ func validateNumAnswers(fieldValue validator.FieldLevel) bool {
 	numOptions := len(options)
 	numAnswers := fieldValue.Field().Len()
 
-	if numAnswers > numOptions {
-		return false
-	}
-
-	return true
+	return numAnswers <= numOptions
 }

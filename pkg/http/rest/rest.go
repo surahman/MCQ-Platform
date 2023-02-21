@@ -82,7 +82,7 @@ func (s *Server) Run() {
 	}()
 
 	// Wait for interrupt signal to gracefully shut down the server.
-	quit := make(chan os.Signal)
+	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 	// Wait for interrupt.
@@ -105,7 +105,7 @@ func (s *Server) initialize() {
 	s.router = gin.Default()
 
 	//	@title						Multiple Choice Question Platform.
-	//	@version					1.6.2
+	//	@version					1.7.0
 	//	@description				Multiple Choice Question Platform API.
 	//	@description				This application supports the creation, managing, marking, viewing, retrieving stats, and scores of quizzes.
 	//

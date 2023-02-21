@@ -30,11 +30,11 @@ func TestGinContextFromContext(t *testing.T) {
 			name:        "incorrect context",
 			expectedMsg: "information malformed",
 			expectErr:   require.Error,
-			ctx:         context.WithValue(context.TODO(), "GinContextKey", context.TODO()),
+			ctx:         context.WithValue(context.TODO(), GinContextKey{}, context.TODO()),
 		}, {
 			name:      "success",
 			expectErr: require.NoError,
-			ctx:       context.WithValue(context.TODO(), "GinContextKey", &gin.Context{}),
+			ctx:       context.WithValue(context.TODO(), GinContextKey{}, &gin.Context{}),
 		},
 		// ----- test cases end ----- //
 	}
@@ -82,7 +82,7 @@ func TestAuthorizationCheck(t *testing.T) {
 			name:        "incorrect context",
 			expectedMsg: "information malformed",
 			expectErr:   require.Error,
-			ctx:         context.WithValue(context.TODO(), "GinContextKey", context.TODO()),
+			ctx:         context.WithValue(context.TODO(), GinContextKey{}, context.TODO()),
 			authValidateJWTData: &http_common.MockAuthData{
 				OutputParam1: "",
 				OutputParam2: int64(-1),
@@ -93,7 +93,7 @@ func TestAuthorizationCheck(t *testing.T) {
 			name:        "no token",
 			expectedMsg: "does not contain",
 			expectErr:   require.Error,
-			ctx:         context.WithValue(context.TODO(), "GinContextKey", ginCtxNoAuth),
+			ctx:         context.WithValue(context.TODO(), GinContextKey{}, ginCtxNoAuth),
 			authValidateJWTData: &http_common.MockAuthData{
 				OutputParam1: "",
 				OutputParam2: int64(-1),
@@ -104,7 +104,7 @@ func TestAuthorizationCheck(t *testing.T) {
 			name:        "no token",
 			expectedMsg: "failed to authenticate token",
 			expectErr:   require.Error,
-			ctx:         context.WithValue(context.TODO(), "GinContextKey", ginCtxAuth),
+			ctx:         context.WithValue(context.TODO(), GinContextKey{}, ginCtxAuth),
 			authValidateJWTData: &http_common.MockAuthData{
 				OutputParam1: "",
 				OutputParam2: int64(-1),
@@ -114,7 +114,7 @@ func TestAuthorizationCheck(t *testing.T) {
 		}, {
 			name:      "success",
 			expectErr: require.NoError,
-			ctx:       context.WithValue(context.TODO(), "GinContextKey", ginCtxAuth),
+			ctx:       context.WithValue(context.TODO(), GinContextKey{}, ginCtxAuth),
 			authValidateJWTData: &http_common.MockAuthData{
 				OutputParam1: "successful token refresh",
 				OutputParam2: int64(999),

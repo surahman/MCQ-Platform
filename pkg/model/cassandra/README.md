@@ -17,6 +17,7 @@
   - [Responses](#responses)
   - [CQL Query](#cql-query)
 - [Schema Migration and Setup](#schema-migration-and-setup)
+  - [Liquibase Migration](#liquibase-migration)
  
 <br/>
 
@@ -160,3 +161,51 @@ to be deployed in the following order:
 1. [user.cql](user.cql)
 2. [quiz.cql](quiz.cql)
 3. [responses.cql](responses.cql)
+
+This can be achieved manually or through tooling such as [Liquibase](https://www.liquibase.com/) which is the industry
+standard for database migrations.
+
+### Liquibase Migration
+For convenience, a Liquibase database schema migration change set has been provided with stages for rollbacks. 
+
+Please ensure you have the following installed in the `lib` directory of your Liquibase installation:
+* [Liquibase Cassandra Plugin](https://github.com/liquibase/liquibase-cassandra)
+* [Datastax JDBC Driver for Apache Cassandra](https://downloads.datastax.com/#odbc-jdbc-drivers)
+
+The [properties file](liquibase.properties) with the login credentials for the Cassandra cluster will need to be
+updated appropriately.
+
+```text
+changeLogFile: cassandra_migration.sql
+url: jdbc:cassandra://localhost:9042/mcq_platform;DefaultKeyspace=mcq_platform;AuthMech=1
+username: admin
+password: root
+driver: com.simba.cassandra.jdbc42.Driver
+defaultSchemaName: mcq_platform
+```
+
+The following key space will need to be manually created in your Cassandra cluster before the migration can be executed:
+
+```cql
+CREATE KEYSPACE IF NOT EXISTS mcq_platform WITH replication = {'class' : 'SimpleStrategy', 'replication_factor' : 3};
+```
+
+If you are running a single-node cluster for testing you will need to set the `replication_factor` to `1`.
+
+At this point a test should be run to ensure Liquibase is able to connect to the database:
+
+```bash
+liquibase status
+```
+
+If a connection could be established, you should be ready to execute a migration:
+
+```bash
+liquibase update
+```
+
+Verification of the changes can be achieved through:
+
+```bash
+liquibase history
+```
