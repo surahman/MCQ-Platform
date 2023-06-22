@@ -21,7 +21,7 @@
             "name": "GPL-3.0",
             "url": "https://opensource.org/licenses/GPL-3.0"
         },
-        "version": "1.7.0"
+        "version": "1.7.2"
     },
     "host": "localhost:44243",
     "basePath": "/api/rest/v1",

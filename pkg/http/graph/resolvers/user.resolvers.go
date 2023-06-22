@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math"
 	"time"
 
 	"github.com/surahman/mcq-platform/pkg/cassandra"
@@ -143,8 +142,8 @@ func (r *mutationResolver) RefreshToken(ctx context.Context) (*model_http.JWTAut
 		return nil, errors.New("invalid token")
 	}
 
-	// Do not refresh tokens that have more than a minute left to expire.
-	if math.Abs(float64(time.Now().Unix()-expiresAt)) > float64(r.Auth.RefreshThreshold()) {
+	// Do not refresh tokens that have more than a minute left to expire. An already expired token will not reach here.
+	if expiresAt-time.Now().Unix() > r.Auth.RefreshThreshold() {
 		return nil, errors.New("JWT is still valid for more than 60 seconds")
 	}
 
