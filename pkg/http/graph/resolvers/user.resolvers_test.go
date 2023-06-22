@@ -401,7 +401,7 @@ func TestMutationResolver_RefreshToken(t *testing.T) {
 			expectErr: true,
 			authValidateJWTData: &http_common.MockAuthData{
 				OutputParam1: "username1",
-				OutputParam2: time.Now().Add(-time.Duration(3) * time.Minute).Unix(),
+				OutputParam2: time.Now().Add(time.Duration(3) * time.Minute).Unix(),
 				Times:        1,
 			},
 			cassandraReadData: &http_common.MockCassandraData{
