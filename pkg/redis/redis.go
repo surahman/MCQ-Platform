@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/go-redis/redis/v9"
+	"github.com/redis/go-redis/v9"
 	"github.com/spf13/afero"
 	"github.com/surahman/mcq-platform/pkg/logger"
 	"go.uber.org/zap"
