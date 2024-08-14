@@ -6,7 +6,7 @@
 
 
 ## Build
-FROM golang:1.18-alpine AS build
+FROM golang:1.22-alpine AS build
 
 RUN apk update && apk --no-cache --update add make
 
