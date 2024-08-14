@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-redis/redis/v9"
+	"github.com/redis/go-redis/v9"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 	"github.com/surahman/mcq-platform/pkg/constants"
