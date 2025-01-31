@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gin-gonic/gin"
 	"github.com/surahman/mcq-platform/pkg/auth"
@@ -18,7 +19,7 @@ import (
 // QueryHandler is the endpoint through which GraphQL can be accessed.
 func QueryHandler(authHeaderKey string, auth auth.Auth, cache redis.Redis, db cassandra.Cassandra,
 	grading grading.Grading, logger *logger.Logger) gin.HandlerFunc {
-	h := handler.NewDefaultServer(graphql_generated.NewExecutableSchema(
+	h := handler.New(graphql_generated.NewExecutableSchema(
 		graphql_generated.Config{
 			Resolvers: &Resolver{
 				AuthHeaderKey: authHeaderKey,
@@ -30,6 +31,7 @@ func QueryHandler(authHeaderKey string, auth auth.Auth, cache redis.Redis, db ca
 			},
 		},
 	))
+	h.AddTransport(transport.POST{})
 
 	return func(c *gin.Context) {
 		h.ServeHTTP(c.Writer, c.Request)
