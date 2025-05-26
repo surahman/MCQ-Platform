@@ -105,7 +105,7 @@ func (s *Server) initialize() {
 	s.router = gin.Default()
 
 	//	@title						Multiple Choice Question Platform.
-	//	@version					1.7.8
+	//	@version					1.7.9
 	//	@description				Multiple Choice Question Platform API.
 	//	@description				This application supports the creation, managing, marking, viewing, retrieving stats, and scores of quizzes.
 	//
