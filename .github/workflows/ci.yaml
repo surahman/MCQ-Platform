@@ -34,10 +34,10 @@ jobs:
 #          require-status: running
 #          require-healthy: true
 
-      - name: Set up Go 1.22
-        uses: actions/setup-go@v3
+      - name: Set up Go 1.24
+        uses: actions/setup-go@v6
         with:
-          go-version: '1.22'
+          go-version: '1.24'
           check-latest: true
           cache: true
         id: go
